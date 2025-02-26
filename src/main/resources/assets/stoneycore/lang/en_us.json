@@ -1,0 +1,27 @@
+{
+  "key.category.stoneycore": "StoneyCore",
+  "key.stoneycore.reload": "Reload",
+
+  "text.tooltip.stoneycore.hungerDrain": "Hunger Drain: +%s%%",
+  "text.tooltip.stoneycore.freezing": "Prevents freezing",
+  "text.tooltip.stoneycore.hideNameTag": "Hide Name Tag",
+  "text.tooltip.stoneycore.baseDamage": "%s Base Damage",
+  "text.tooltip.stoneycore.blockRange": "%s Block Range",
+  "text.tooltip.stoneycore.slashingResistance": "Slashing Resistance: +%s%% ",
+  "text.tooltip.stoneycore.bludgeoningResistance": "Bludgeoning Resistance: +%s%%",
+  "text.tooltip.stoneycore.piercingResistance": "Piercing Resistance: +%s%%",
+  "text.tooltip.stoneycore.slashingDamage": "Slashing Damage: %s",
+  "text.tooltip.stoneycore.bludgeoningDamage": "Bludgeoning Damage: %s",
+  "text.tooltip.stoneycore.piercingDamage": "Piercing Damage: %s",
+  
+  "text.config.stoneycore.title": "StoneyCore",
+  "text.config.stoneycore.option.getVanillaWeaponsDamage0": "Vanilla Weapons deals 0 Damage",
+  "text.config.stoneycore.option.getBlocking": "Use Stamina on or while Blocking",
+  "text.config.stoneycore.option.getWardartCooldown": "WarDart throw Cooldown",
+  "text.config.stoneycore.option.getDamageIndicator": "Damage Indicator",
+  "text.config.stoneycore.option.getVisoredHelmet": "Visored Helmet Overlay",
+  "text.config.stoneycore.option.getLowStaminaIndicator": "Low Stamina Indicator [Experimental]",
+  "text.config.stoneycore.option.getMuzzlesSmokeParticlesTime": "Muzzles Smoke Particles Time Active",
+  "text.config.stoneycore.option.getParry": "Parry [Experimental]",
+  "text.config.stoneycore.option.getStaminaBarYOffset": "Stamina Bar Y Offset"
+}
