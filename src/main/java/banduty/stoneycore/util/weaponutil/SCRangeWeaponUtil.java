@@ -5,6 +5,7 @@ import banduty.stoneycore.entity.custom.SCBulletEntity;
 import banduty.stoneycore.items.item.SCArrow;
 import banduty.stoneycore.items.item.SCRangeWeapon;
 import banduty.stoneycore.particle.ModParticles;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
@@ -73,9 +74,22 @@ public final class SCRangeWeaponUtil {
         }
 
         world.spawnEntity(arrowEntity);
-        int soundEventsLength = scRangeWeapon.soundEvents().length;
-        SoundEvent selectedSound = soundEventsLength > 0 ? scRangeWeapon.soundEvents()[random.nextInt(soundEventsLength)] : null;
-        if (selectedSound != null) world.playSoundFromEntity(null, arrowEntity, selectedSound, SoundCategory.PLAYERS, 1.0F, 1.0F);
+        float volume;
+        if (world instanceof ClientWorld clientWorld) {
+            for (PlayerEntity playerEntity : clientWorld.getPlayers()) {
+                if (playerEntity != null) {
+                    Vec3d playerPos = player.getPos();
+                    Vec3d hearPos = playerEntity.getPos();
+                    double distance = playerPos.distanceTo(hearPos);
+                    volume = (float) Math.max(0, 1 - (distance * 0.01));
+                    if (world.isClient() && volume != 0) {
+                        int soundEventsLength = scRangeWeapon.soundEvents().length;
+                        SoundEvent selectedSound = soundEventsLength > 0 ? scRangeWeapon.soundEvents()[random.nextInt(soundEventsLength)] : null;
+                        if (selectedSound != null) player.playSound(selectedSound, SoundCategory.PLAYERS, volume, 1.0F);
+                    }
+                }
+            }
+        }
     }
 
     public static void shootBullet(World world, ItemStack stack, SCRangeWeapon scRangeWeapon, PlayerEntity player) {
@@ -86,10 +100,22 @@ public final class SCRangeWeaponUtil {
         bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, scRangeWeapon.speed(), 1.0F);
 
         world.spawnEntity(bulletEntity);
-        int soundEventsLength = scRangeWeapon.soundEvents().length;
-        SoundEvent selectedSound = soundEventsLength > 0 ? scRangeWeapon.soundEvents()[random.nextInt(soundEventsLength)] : null;
-        if (selectedSound != null) world.playSound(null, player.getBlockPos(), selectedSound,
-                SoundCategory.PLAYERS, 1f, 1f);
+        float volume;
+        if (world instanceof ClientWorld clientWorld) {
+            for (PlayerEntity playerEntity : clientWorld.getPlayers()) {
+                if (playerEntity != null) {
+                    Vec3d playerPos = player.getPos();
+                    Vec3d hearPos = playerEntity.getPos();
+                    double distance = playerPos.distanceTo(hearPos);
+                    volume = (float) Math.max(0, 1 - (distance * 0.01));
+                    if (world.isClient() && volume != 0) {
+                        int soundEventsLength = scRangeWeapon.soundEvents().length;
+                        SoundEvent selectedSound = soundEventsLength > 0 ? scRangeWeapon.soundEvents()[random.nextInt(soundEventsLength)] : null;
+                        if (selectedSound != null) player.playSound(selectedSound, SoundCategory.PLAYERS, volume, 1.0F);
+                    }
+                }
+            }
+        }
 
         if (!player.isCreative()) {
             stack.damage(1, player, p -> p.sendToolBreakStatus(player.getActiveHand()));

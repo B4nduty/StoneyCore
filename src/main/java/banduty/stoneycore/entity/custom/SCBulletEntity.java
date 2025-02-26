@@ -55,8 +55,9 @@ public class SCBulletEntity extends PersistentProjectileEntity {
         World world = this.getWorld();
         BlockPos pos = blockHitResult.getBlockPos();
         BlockState state = world.getBlockState(pos);
+        if (!(world instanceof ServerWorld serverWorld)) return;
 
-        if (world instanceof ServerWorld serverWorld && (state.getBlock() == Blocks.POINTED_DRIPSTONE || state.getBlock() instanceof AbstractGlassBlock)) {
+        if ((state.getBlock() == Blocks.POINTED_DRIPSTONE || state.getBlock() instanceof AbstractGlassBlock)) {
             serverWorld.syncWorldEvent(2001, pos, Block.getRawIdFromState(state));
 
             world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL);
@@ -70,15 +71,17 @@ public class SCBulletEntity extends PersistentProjectileEntity {
         Vec3d vec3d2 = vec3d.normalize().multiply(0.05F);
         this.setPos(this.getX() - vec3d2.x, this.getY() - vec3d2.y, this.getZ() - vec3d2.z);
 
-        PlayerEntity player = (PlayerEntity) this.getOwner();
-        if (player != null) {
-            Vec3d playerPos = player.getPos();
-            Vec3d impactPos = blockHitResult.getPos();
-            double distance = playerPos.distanceTo(impactPos);
 
-            float volume = (float) Math.max(0, 1 - (distance * 0.1));
+        for (PlayerEntity player : serverWorld.getPlayers()) {
+            if (player != null) {
+                Vec3d playerPos = player.getPos();
+                Vec3d impactPos = blockHitResult.getPos();
+                double distance = playerPos.distanceTo(impactPos);
 
-            this.playSound(this.getSound(), volume, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
+                float volume = (float) Math.max(0, 1 - (distance * 0.1));
+
+                this.playSound(this.getSound(), volume, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
+            }
         }
 
         this.inGround = true;
