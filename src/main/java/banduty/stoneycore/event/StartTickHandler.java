@@ -107,7 +107,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         double foodLevel = playerEntity.getHungerManager().getFoodLevel();
         double health = playerEntity.getHealth();
         double ticksPerRecovery = (foodLevel + health) / 5.0d;
-        int roundOff = (int) (10 - Math.round(ticksPerRecovery));
+        int roundOff = Math.min(1, (int) (10 - Math.round(ticksPerRecovery)));
 
         StaminaData.addStamina((IEntityDataSaver) playerEntity, 0);
         if (ticksPerRecovery != 0 && playerEntity.age % roundOff == 0 && stamina < SharedParameters.TOTAL_STAMINA

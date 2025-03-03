@@ -261,7 +261,7 @@ public class InGameHudMixin {
         int stamina = ((IEntityDataSaver) player).stoneycore$getPersistentData().getInt("stamina_int");
         boolean staminaBlocked = ((IEntityDataSaver) player).stoneycore$getPersistentData().getBoolean("stamina_blocked");
 
-        if (!ableStamina(player) && player.isSpectator()) return;
+        if (!ableStamina(player) || player.isSpectator()) return;
         int x = getStaminaBarXPosition();
         int y = getStaminaBarYPosition(player);
         renderStaminaBar(context, x, y, stamina, staminaBlocked);
