@@ -4,7 +4,6 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
 import banduty.stoneycore.items.item.SCWeapon;
-import banduty.stoneycore.util.SharedParameters;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -85,16 +84,16 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
 
     private void handlePlayerTick(ServerPlayerEntity playerEntity) {
         IEntityDataSaver dataSaver = (IEntityDataSaver) playerEntity;
-        int stamina = dataSaver.stoneycore$getPersistentData().getInt("stamina_int");
+        float stamina = StaminaData.getStamina(dataSaver);
 
         if ((playerEntity.isCreative() || playerEntity.isSpectator())) {
-            if (stamina < SharedParameters.TOTAL_STAMINA) StaminaData.addStamina((IEntityDataSaver) playerEntity, SharedParameters.TOTAL_STAMINA - stamina);
+            if (stamina < StoneyCore.getConfig().maxStamina()) StaminaData.setStamina((IEntityDataSaver) playerEntity, StoneyCore.getConfig().maxStamina());
             removeStaminaEffects(playerEntity);
             StaminaData.setStaminaBlocked((IEntityDataSaver) playerEntity, false);
         }
 
-        if (stamina > SharedParameters.TOTAL_STAMINA)
-            StaminaData.removeStamina((IEntityDataSaver) playerEntity, stamina - SharedParameters.TOTAL_STAMINA);
+        if (stamina > StoneyCore.getConfig().maxStamina())
+            StaminaData.setStamina((IEntityDataSaver) playerEntity, StoneyCore.getConfig().maxStamina());
 
         if (!playerEntity.isCreative() || !playerEntity.isSpectator()) {
             handleStaminaRecovery(playerEntity, stamina);
@@ -103,24 +102,23 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         }
     }
 
-    private void handleStaminaRecovery(ServerPlayerEntity playerEntity, int stamina) {
+    private void handleStaminaRecovery(ServerPlayerEntity playerEntity, float stamina) {
         double foodLevel = playerEntity.getHungerManager().getFoodLevel();
         double health = playerEntity.getHealth();
         double ticksPerRecovery = (foodLevel + health) / 5.0d;
         int roundOff = Math.min(1, (int) (10 - Math.round(ticksPerRecovery)));
 
         StaminaData.addStamina((IEntityDataSaver) playerEntity, 0);
-        if (ticksPerRecovery != 0 && playerEntity.age % roundOff == 0 && stamina < SharedParameters.TOTAL_STAMINA
+        if (ticksPerRecovery != 0 && playerEntity.age % roundOff == 0 && stamina < StoneyCore.getConfig().maxStamina()
                 && !playerEntity.isTouchingWater()) {
-            StaminaData.addStamina((IEntityDataSaver) playerEntity, Math.min(1, SharedParameters.TOTAL_STAMINA - stamina));
+            StaminaData.addStamina((IEntityDataSaver) playerEntity, 0.1f);
         }
     }
 
-    private void handleStaminaEffects(ServerPlayerEntity playerEntity, int stamina) {
+    private void handleStaminaEffects(ServerPlayerEntity playerEntity, float stamina) {
         IEntityDataSaver dataSaver = (IEntityDataSaver) playerEntity;
-        boolean staminaBlocked = dataSaver.stoneycore$getPersistentData().getBoolean("stamina_blocked");
-        long firstLevel = Math.absExact((int) (SharedParameters.TOTAL_STAMINA * 0.3f));
-        long secondLevel = Math.absExact((int) (SharedParameters.TOTAL_STAMINA * 0.15f));
+        long firstLevel = Math.absExact((int) (StoneyCore.getConfig().maxStamina() * 0.3f));
+        long secondLevel = Math.absExact((int) (StoneyCore.getConfig().maxStamina() * 0.15f));
 
         if (stamina < firstLevel && stamina > secondLevel) {
             applyStaminaEffects(playerEntity, 0, 0);
@@ -131,39 +129,38 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
             applyStaminaEffects(playerEntity, 3, 3);
         }
 
-        if (staminaBlocked && stamina == secondLevel) {
+        if (StaminaData.isStaminaBlocked((IEntityDataSaver) playerEntity) && stamina >= secondLevel) {
             StaminaData.setStaminaBlocked(dataSaver, false);
             removeStaminaEffects(playerEntity);
         }
 
-        if (stamina == firstLevel) {
-            StaminaData.setStaminaBlocked(dataSaver, false);
+        if (stamina >= firstLevel) {
             removeStaminaEffects(playerEntity);
         }
     }
 
-    private void handleStaminaUsage(ServerPlayerEntity playerEntity, int stamina) {
+    private void handleStaminaUsage(ServerPlayerEntity playerEntity, float stamina) {
         IEntityDataSaver dataSaver = (IEntityDataSaver) playerEntity;
-        boolean staminaBlocked = dataSaver.stoneycore$getPersistentData().getBoolean("stamina_blocked");
+        boolean staminaBlocked = StaminaData.isStaminaBlocked((IEntityDataSaver) playerEntity);
 
         if (isHoldingSCWeapon(playerEntity) && !staminaBlocked && !StoneyCore.getConfig().getBlocking()
-                && playerEntity.isBlocking() && stamina >= 1 && playerEntity.age % 2 == 0) {
-            StaminaData.removeStamina(dataSaver, 1);
+                && playerEntity.isBlocking() && stamina >= 0.1f && playerEntity.age % 2 == 0) {
+            StaminaData.removeStamina(dataSaver, 0.1f);
         }
 
         if (isWearingSCArmor(playerEntity) && !staminaBlocked && playerEntity.isSprinting() && stamina >= 1) {
-            StaminaData.removeStamina(dataSaver, 1);
+            StaminaData.removeStamina(dataSaver, 0.1f);
         }
 
         if (isWearingSCArmor(playerEntity) && !staminaBlocked && !playerEntity.isOnGround()
                 && playerEntity.getVelocity().y > 0 && !playerEntity.isBlocking()
                 && !playerEntity.hasVehicle() && !playerEntity.isTouchingWater()) {
-            StaminaData.removeStamina(dataSaver, Math.min(stamina, 6));
+            StaminaData.removeStamina(dataSaver, 0.6f);
         }
 
-        if (isWearingSCArmor(playerEntity) && playerEntity.isTouchingWater() && stamina >= 1
+        if (isWearingSCArmor(playerEntity) && playerEntity.isTouchingWater() && stamina >= 0.1f
                 && playerEntity.age % 2 == 0) {
-            StaminaData.removeStamina(dataSaver, 1);
+            StaminaData.removeStamina(dataSaver, 0.1f);
         }
     }
 

@@ -3,6 +3,7 @@ package banduty.stoneycore.event;
 import banduty.stoneycore.items.item.SCWeapon;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.playerdata.StaminaData;
 import net.bettercombat.api.AttackHand;
 import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -18,15 +19,10 @@ public class PlayerAttackHit implements BetterCombatClientEvents.PlayerAttackHit
     public void onPlayerAttackStart(ClientPlayerEntity player, AttackHand attackHand, List<Entity> list, @Nullable Entity entity) {
         if (player.getMainHandStack().getItem() instanceof SCWeapon) {
             IEntityDataSaver dataSaver = (IEntityDataSaver) player;
-            var persistentData = dataSaver.stoneycore$getPersistentData();
 
             if (player.isCreative()) return;
 
-            boolean staminaBlocked = persistentData.getBoolean("stamina_blocked");
-            int stamina = persistentData.getInt("stamina_int");
-            int staminaCost = 10;
-
-            if (stamina < staminaCost || staminaBlocked) {
+            if (StaminaData.getStamina(dataSaver) < 1 || StaminaData.isStaminaBlocked(dataSaver)) {
                 return;
             }
 

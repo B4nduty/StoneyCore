@@ -5,13 +5,13 @@ import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
 import banduty.stoneycore.items.item.SCWeapon;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.playerdata.StaminaData;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import org.spongepowered.asm.mixin.Mixin;
@@ -97,7 +97,6 @@ public abstract class LivingEntityMixin {
 
     @Unique
     private boolean isStaminaBlocked(PlayerEntity player) {
-        NbtCompound persistentData = ((IEntityDataSaver) player).stoneycore$getPersistentData();
-        return persistentData.getBoolean("stamina_blocked");
+        return StaminaData.isStaminaBlocked((IEntityDataSaver) player);
     }
 }

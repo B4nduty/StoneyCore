@@ -11,6 +11,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public class AttackC2SPacket {
     public static void receive(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler,
                                PacketByteBuf buf, PacketSender responseSender) {
-        StaminaData.removeStamina((IEntityDataSaver) player, 10);
+        StaminaData.removeStamina((IEntityDataSaver) player, 1);
     }
 }

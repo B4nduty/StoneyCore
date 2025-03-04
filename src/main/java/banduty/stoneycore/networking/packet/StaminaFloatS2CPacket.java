@@ -6,11 +6,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketByteBuf;
 
-public class StaminaIntS2CPacket {
+public class StaminaFloatS2CPacket {
     public static void receive(MinecraftClient client, ClientPlayNetworkHandler handler,
                                PacketByteBuf buf, PacketSender responseSender) {
         if (client.player != null) {
-            ((IEntityDataSaver) client.player).stoneycore$getPersistentData().putInt("stamina_int", buf.readInt());
+            ((IEntityDataSaver) client.player).stoneycore$getPersistentData().putFloat("stamina", buf.readFloat());
         }
     }
 }

@@ -23,5 +23,6 @@
   "text.config.stoneycore.option.getLowStaminaIndicator": "Low Stamina Indicator [Experimental]",
   "text.config.stoneycore.option.getMuzzlesSmokeParticlesTime": "Muzzles Smoke Particles Time Active",
   "text.config.stoneycore.option.getParry": "Parry [Experimental]",
-  "text.config.stoneycore.option.getStaminaBarYOffset": "Stamina Bar Y Offset"
+  "text.config.stoneycore.option.getStaminaBarYOffset": "Stamina Bar Y Offset",
+  "text.config.stoneycore.option.maxStamina": "Max Stamina"
 }

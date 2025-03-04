@@ -25,7 +25,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
     private static final float WEAKNESS_MULTIPLIER = 4.0F;
     private static final int PARRY_WINDOW_TICKS = 10;
     private static final float PARRY_KNOCKBACK_STRENGTH = 0.5F;
-    private static final int STAMINA_COST_ON_PARRY = 20;
+    private static final float STAMINA_COST_ON_PARRY = 2f;
 
     @Override
     public float onDamage(LivingEntity target, DamageSource source, float amount) {

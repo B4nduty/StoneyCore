@@ -5,9 +5,9 @@ import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
 import banduty.stoneycore.items.item.SCWeapon;
 import banduty.stoneycore.util.SCDamageCalculator;
-import banduty.stoneycore.util.SharedParameters;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.playerdata.StaminaData;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.emi.trinkets.api.TrinketsApi;
@@ -258,13 +258,10 @@ public class InGameHudMixin {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null) return;
 
-        int stamina = ((IEntityDataSaver) player).stoneycore$getPersistentData().getInt("stamina_int");
-        boolean staminaBlocked = ((IEntityDataSaver) player).stoneycore$getPersistentData().getBoolean("stamina_blocked");
-
         if (!ableStamina(player) || player.isSpectator()) return;
         int x = getStaminaBarXPosition();
         int y = getStaminaBarYPosition(player);
-        renderStaminaBar(context, x, y, stamina, staminaBlocked);
+        renderStaminaBar(context, x, y, StaminaData.getStamina((IEntityDataSaver) player), StaminaData.isStaminaBlocked((IEntityDataSaver) player));
     }
 
     @Unique
@@ -292,18 +289,18 @@ public class InGameHudMixin {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client == null) return 0;
         int height = client.getWindow().getScaledHeight();
-        return player.isSubmergedInWater() ? height - 59 : height - 49;
+        return player.getAir() < player.getMaxAir() ? height - 59 : height - 49;
     }
 
     @Unique
-    private void renderStaminaBar(DrawContext drawContext, int x, int y, int stamina, boolean staminaBlocked) {
+    private void renderStaminaBar(DrawContext drawContext, int x, int y, float stamina, boolean staminaBlocked) {
         for (int i = 0; i < 10; i++) {
             renderEmptyStamina(drawContext, x + 82 - (i * STAMINA_UNIT_SIZE), y - StoneyCore.getConfig().getStaminaBarYOffset());
         }
 
-        for (int i = 0; i < SharedParameters.TOTAL_STAMINA; i++) {
+        for (int i = 0; i < StoneyCore.getConfig().maxStamina(); i++) {
             if (stamina < i) break;
-            int x1 = x + 82 - (i / (SharedParameters.TOTAL_STAMINA / 10) * STAMINA_UNIT_SIZE);
+            int x1 = x + 82 - Math.absExact((int) (i / (StoneyCore.getConfig().maxStamina() / 10))) * STAMINA_UNIT_SIZE;
             if (staminaBlocked) renderBlockedStamina(drawContext, x1, y - StoneyCore.getConfig().getStaminaBarYOffset());
             else renderFilledStamina(drawContext, x1, y - StoneyCore.getConfig().getStaminaBarYOffset());
         }
@@ -349,18 +346,15 @@ public class InGameHudMixin {
             });
         });
 
-        IEntityDataSaver dataSaver = (IEntityDataSaver) player;
-        var persistentData = dataSaver.stoneycore$getPersistentData();
+        float stamina = StaminaData.getStamina((IEntityDataSaver) player);
 
-        int stamina = persistentData.getInt("stamina_int");
-
-        long firstLevel = Math.absExact((int) (SharedParameters.TOTAL_STAMINA * 0.3f));
+        long firstLevel = Math.absExact((int) (StoneyCore.getConfig().maxStamina() * 0.3f));
         if (stamina <= firstLevel && StoneyCore.getConfig().getLowStaminaIndicator()) {
-            float opacity = Math.max(0.0f, Math.min(1.0f, (float) (firstLevel - stamina) / (firstLevel)));
+            float opacity = Math.max(0.0f, Math.min(1.0f, (firstLevel - stamina) / (firstLevel)));
 
             float red = 1.0F;
-            float green = (float) stamina / firstLevel;
-            if (persistentData.getBoolean("stamina_blocked")) green = 0;
+            float green = stamina / firstLevel;
+            if (StaminaData.isStaminaBlocked((IEntityDataSaver) player)) green = 0;
             float blue = 0.0F;
 
             RenderSystem.setShaderTexture(0, LOW_STAMINA);

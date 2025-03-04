@@ -42,4 +42,8 @@ public class SCConfigs {
     @Sync(Option.SyncMode.NONE)
     @Comment("Stamina Bar Y Offset")
     public int getStaminaBarYOffset = 0;
+
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    @Comment("Max Stamina")
+    public float maxStamina = 40f;
 }

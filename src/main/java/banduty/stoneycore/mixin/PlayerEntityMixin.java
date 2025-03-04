@@ -28,7 +28,7 @@ public abstract class PlayerEntityMixin implements IEntityDataSaver {
     private NbtCompound persistentData;
 
     @Unique
-    private static final int STAMINA_COST_ON_SHIELD_DAMAGE = 20;
+    private static final int STAMINA_COST_ON_SHIELD_DAMAGE = 2;
     @Unique
     private static final float SHIELD_DISABLE_CHANCE_BASE = 0.25F;
     @Unique
@@ -70,7 +70,7 @@ public abstract class PlayerEntityMixin implements IEntityDataSaver {
             ci.cancel();
 
             if (StoneyCore.getConfig().getBlocking()) {
-                int stamina = stoneycore$getPersistentData().getInt("stamina_int");
+                float stamina = StaminaData.getStamina((IEntityDataSaver) playerEntity);
                 StaminaData.removeStamina(this, Math.min(stamina, STAMINA_COST_ON_SHIELD_DAMAGE));
             }
         }
