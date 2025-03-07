@@ -42,6 +42,11 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         }
 
         ItemStack weaponStack = player.getMainHandStack();
+        if (weaponStack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
+            SCDamageCalculator.applyDamage(target, player, weaponStack, amount);
+            return 0;
+        }
+
         if (weaponStack.getItem() instanceof SCWeapon scWeapon) {
             amount = calculateWeaponDamage(player, target, scWeapon, weaponStack, amount);
         }
