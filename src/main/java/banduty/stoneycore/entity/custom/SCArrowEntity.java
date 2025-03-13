@@ -20,8 +20,8 @@ public class SCArrowEntity extends PersistentProjectileEntity {
         super(type, world);
     }
 
-    public SCArrowEntity(EntityType<SCArrowEntity> khArrow, LivingEntity shooter, World world) {
-        super(khArrow, shooter, world);
+    public SCArrowEntity(EntityType<SCArrowEntity> scArrow, LivingEntity shooter, World world) {
+        super(scArrow, shooter, world);
     }
 
     public void setDamageAmount(float damage) {
@@ -56,7 +56,7 @@ public class SCArrowEntity extends PersistentProjectileEntity {
         this.remove(RemovalReason.DISCARDED);
     }
 
-    public void hitKHEntity(LivingEntity target, ItemStack stack, float damage) {
+    public void scHitEntity(LivingEntity target, ItemStack stack, float damage) {
         damage = SCDamageCalculator.getSCDamage(target, damage, getDamageType());
         SCDamageCalculator.applyDamage(target, (PlayerEntity) getOwner(), stack, damage);
         if (this.isOnFire()) target.setOnFireFor(5);

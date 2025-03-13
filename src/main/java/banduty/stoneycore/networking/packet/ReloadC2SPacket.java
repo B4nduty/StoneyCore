@@ -15,7 +15,7 @@ public class ReloadC2SPacket {
         server.execute(() -> {
             ItemStack itemStack = player.getMainHandStack();
 
-            if (itemStack.getItem() instanceof SCRangeWeapon khRangeWeapons && khRangeWeapons.ammoRequirement() != null) {
+            if (itemStack.getItem() instanceof SCRangeWeapon scRangeWeapon && scRangeWeapon.ammoRequirement() != null) {
                 if (!SCRangeWeaponUtil.getWeaponState(itemStack).isCharged()) itemStack.getOrCreateNbt().putBoolean("sc_recharge", true);
             }
         });

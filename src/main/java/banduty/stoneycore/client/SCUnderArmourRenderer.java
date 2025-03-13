@@ -31,17 +31,17 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
 
     @Override
     public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, ItemStack stack, LivingEntity entity, EquipmentSlot slot, int light, BipedEntityModel<LivingEntity> contextModel) {
-        if (stack.getItem() instanceof SCUnderArmorItem khArmorItem && stack.getItem() instanceof ArmorItem armorItem) {
+        if (stack.getItem() instanceof SCUnderArmorItem scUnderArmorItem && stack.getItem() instanceof ArmorItem armorItem) {
             BipedEntityModel<LivingEntity> model = getModel(armorItem);
             if (model != null) {
                 TrinketRenderer.followBodyRotations(entity, model);
 
                 VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
-                        RenderLayer.getArmorCutoutNoCull(khArmorItem.getTexturePath()));
-                if (khArmorItem.isDyeable()) {
+                        RenderLayer.getArmorCutoutNoCull(scUnderArmorItem.getTexturePath()));
+                if (scUnderArmorItem.isDyeable()) {
                     float[] color = DyeUtil.getDyeColor(stack);
 
-                    Identifier textureOverlayPath = getIdentifier(khArmorItem);
+                    Identifier textureOverlayPath = getIdentifier(scUnderArmorItem);
 
                     model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
 
@@ -51,8 +51,8 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
         }
     }
 
-    private static @NotNull Identifier getIdentifier(SCUnderArmorItem khArmorItem) {
-        Identifier originalIdentifier = khArmorItem.getTexturePath();
+    private static @NotNull Identifier getIdentifier(SCUnderArmorItem scUnderArmorItem) {
+        Identifier originalIdentifier = scUnderArmorItem.getTexturePath();
 
         String textureOverlayString = originalIdentifier.getPath();
 

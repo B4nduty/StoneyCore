@@ -3,6 +3,7 @@ package banduty.stoneycore.client;
 import banduty.stoneycore.event.custom.RenderOverlayAndAdditionsEvents;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.util.DyeUtil;
+import banduty.stoneycore.util.ModRenderLayers;
 import banduty.stoneycore.util.itemdata.SCTags;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.client.TrinketRenderer;
@@ -28,20 +29,20 @@ public class SCTrinketsItemRenderer implements TrinketRenderer {
 
     @Override
     public void render(ItemStack stack, SlotReference slotReference, EntityModel<? extends LivingEntity> contextModel, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, LivingEntity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-        if (!(stack.getItem() instanceof SCTrinketsItem khTrinketsItem)) return;
-        BipedEntityModel<LivingEntity> model = khTrinketsItem.getModel();
+        if (!(stack.getItem() instanceof SCTrinketsItem scTrinketsItem)) return;
+        BipedEntityModel<LivingEntity> model = scTrinketsItem.getModel();
         TrinketRenderer.followBodyRotations(entity, model);
 
-        if (khTrinketsItem.unrenderCapeFeature()) {
+        if (scTrinketsItem.unrenderCapeFeature()) {
             model.setAngles(entity, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
         }
 
-        VertexConsumer baseConsumer = vertexConsumers.getBuffer(RenderLayer.getArmorCutoutNoCull(khTrinketsItem.getTexturePath()));
+        VertexConsumer baseConsumer = vertexConsumers.getBuffer(RenderLayer.getArmorCutoutNoCull(scTrinketsItem.getTexturePath()));
         float[] color = DyeUtil.getDyeColor(stack);
 
         model.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
         renderOverlayAndAdditions(entity, stack, matrices, vertexConsumers, light, model);
-        if (stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) renderBannerPatterns(stack, matrices, vertexConsumers, light, model, khTrinketsItem);
+        if (stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) renderBannerPatterns(stack, matrices, vertexConsumers, light, model, scTrinketsItem);
     }
 
     private void renderOverlayAndAdditions(LivingEntity entity, ItemStack stack, MatrixStack matrices,
@@ -53,8 +54,8 @@ public class SCTrinketsItemRenderer implements TrinketRenderer {
     @Environment(EnvType.CLIENT)
     private void renderBannerPatterns(ItemStack stack, MatrixStack matrices,
                                       VertexConsumerProvider vertexConsumers, int light,
-                                      BipedEntityModel<LivingEntity> model, SCTrinketsItem khTrinketsItem) {
-        List<Identifier> bannerPatterns = khTrinketsItem.getBannerPatterns(stack);
+                                      BipedEntityModel<LivingEntity> model, SCTrinketsItem scTrinketsItem) {
+        List<Identifier> bannerPatterns = scTrinketsItem.getBannerPatterns(stack);
         if (!bannerPatterns.isEmpty()) {
             for (Identifier pattern : bannerPatterns) {
                 String path = pattern.getPath();
@@ -75,7 +76,7 @@ public class SCTrinketsItemRenderer implements TrinketRenderer {
 
                 float[] rgb = dyeColor.getColorComponents();
 
-                VertexConsumer patternConsumer = vertexConsumers.getBuffer(RenderLayer.getArmorCutoutNoCull(textureIdentifier));
+                VertexConsumer patternConsumer = vertexConsumers.getBuffer(ModRenderLayers.getArmorTranslucentNoCull(textureIdentifier));
                 model.render(matrices, patternConsumer, light, OverlayTexture.DEFAULT_UV, rgb[0], rgb[1], rgb[2], 1.0F);
             }
         }
