@@ -2,7 +2,6 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
-import banduty.stoneycore.items.item.SCWeapon;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -83,7 +82,7 @@ public abstract class LivingEntityMixin {
     private void stoneycore$sendDamage(DamageSource source, float amount, CallbackInfo ci) {
         if (StoneyCore.getConfig().getDamageIndicator() && source.getAttacker() instanceof PlayerEntity player) {
             ItemStack mainHandStack = player.getMainHandStack();
-            if (mainHandStack.getItem() instanceof SCWeapon && !player.hasStatusEffect(StatusEffects.WEAKNESS)) {
+            if (mainHandStack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag()) && !player.hasStatusEffect(StatusEffects.WEAKNESS)) {
                 if (amount <= 0) amount = 0;
                 player.sendMessage(Text.literal("Damage: " + (int) amount), true);
             }

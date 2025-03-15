@@ -3,8 +3,8 @@ package banduty.stoneycore.mixin;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
-import banduty.stoneycore.items.item.SCWeapon;
 import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -17,6 +17,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
@@ -25,6 +26,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
+import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDefinitionData;
 
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
@@ -52,7 +56,7 @@ public class InGameHudMixin {
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
     private void stoneycore$renderCrosshair(DrawContext context, CallbackInfo ci) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player != null && player.getWorld() != null && player.getMainHandStack().getItem() instanceof SCWeapon) {
+        if (player != null && player.getWorld() != null && player.getMainHandStack().isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag())) {
             Vec3d playerPos = player.getPos();
             double closestDistance = Double.MAX_VALUE;
 
@@ -64,18 +68,20 @@ public class InGameHudMixin {
             }
 
             ItemStack mainHandStack = player.getMainHandStack();
-            if (mainHandStack.getItem() instanceof SCWeapon scWeapon) {
+            Item item = mainHandStack.getItem();
+            if (mainHandStack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag())) {
                 boolean bludgeoning = player.getMainHandStack().getOrCreateNbt().getBoolean("sc_bludgeoning");
-                boolean bludgeoningToPiercing = scWeapon.getAttackDamageValues()[0] == 0
-                        && scWeapon.getAttackDamageValues()[1] > 0 && scWeapon.getAttackDamageValues()[2] > 0;
-                boolean piercing = isPiercing((PlayerAttackProperties) player, scWeapon);
+                boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING.getName(), item) == 0
+                        && getDamageValues(SCDamageCalculator.DamageType.PIERCING.getName(), item) > 0
+                        && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.getName(), item) > 0;
+                boolean piercing = isPiercing((PlayerAttackProperties) player, item);
 
-                if (bludgeoning || scWeapon.getOnlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
-                    renderBludgeoningOverlay(scWeapon, context, closestDistance);
-                } else if (piercing || bludgeoningToPiercing || scWeapon.getOnlyDamageType() == SCDamageCalculator.DamageType.PIERCING) {
-                    renderPiercingOverlay(scWeapon,context, closestDistance);
+                if (bludgeoning || getDefinitionData(item).onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
+                    renderBludgeoningOverlay(item, context, closestDistance);
+                } else if (piercing || bludgeoningToPiercing || getDefinitionData(item).onlyDamageType() == SCDamageCalculator.DamageType.PIERCING) {
+                    renderPiercingOverlay(item,context, closestDistance);
                 } else {
-                    renderSlashingOverlay(scWeapon,context, closestDistance);
+                    renderSlashingOverlay(item,context, closestDistance);
                 }
             }
             ci.cancel();
@@ -86,27 +92,28 @@ public class InGameHudMixin {
     }
 
     @Unique
-    private static boolean isPiercing(PlayerAttackProperties player, SCWeapon weapon) {
+    private static boolean isPiercing(PlayerAttackProperties player, Item item) {
         int comboCount = player.getComboCount();
+        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = getDefinitionData(item);
+        int[] piercingAnimations = attributeData.piercingAnimation();
+        int animation = attributeData.animation();
         boolean piercing = false;
 
-        if (weapon.getAnimation() > 0) {
-            int[] piercingAnimations = weapon.getPiercingAnimation();
-            int animationLength = weapon.getAnimation();
+        if (animation > 0) {
             for (int piercingAnimation : piercingAnimations) {
-                if (comboCount % animationLength == piercingAnimation - 1) {
+                if (comboCount % animation == piercingAnimation - 1) {
                     piercing = true;
                     break;
                 }
             }
 
-            if (piercingAnimations.length == animationLength) piercing = true;
+            if (piercingAnimations.length == animation) piercing = true;
         }
         return piercing;
     }
 
     @Unique
-    private void renderBludgeoningOverlay(SCWeapon scWeapon, DrawContext drawContext, double distance) {
+    private void renderBludgeoningOverlay(net.minecraft.item.Item item, DrawContext drawContext, double distance) {
         int x = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
         int y = MinecraftClient.getInstance().getWindow().getScaledHeight();
         Integer[] indices = {0, 1, 2, 3, 4};
@@ -119,7 +126,7 @@ public class InGameHudMixin {
         textures[indices[4]] = BLUDGEONING_MAXIMUM;
 
         for (int i = 0; i < 4; i++) {
-            if (distance <= SCWeaponUtil.getRadius(scWeapon, i) + 0.25F) {
+            if (distance <= SCWeaponUtil.getRadius(item, i) + 0.25F) {
                 Identifier texture = textures[i];
                 int width, height, xT, yT;
                 if (texture == BLUDGEONING_CRITICAL) {
@@ -148,7 +155,7 @@ public class InGameHudMixin {
     }
 
     @Unique
-    private void renderPiercingOverlay(SCWeapon scWeapon, DrawContext drawContext, double distance) {
+    private void renderPiercingOverlay(net.minecraft.item.Item item, DrawContext drawContext, double distance) {
         int x = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
         int y = MinecraftClient.getInstance().getWindow().getScaledHeight();
         Integer[] indices = {0, 1, 2, 3, 4};
@@ -161,7 +168,7 @@ public class InGameHudMixin {
         textures[indices[4]] = PIERCING_MAXIMUM;
 
         for (int i = 0; i < 4; i++) {
-            if (distance <= SCWeaponUtil.getRadius(scWeapon, i) + 0.25F) {
+            if (distance <= SCWeaponUtil.getRadius(item, i) + 0.25F) {
                 Identifier texture = textures[i];
                 int width, height, xT, yT;
                 if (texture == PIERCING_CRITICAL) {
@@ -190,7 +197,7 @@ public class InGameHudMixin {
     }
 
     @Unique
-    private void renderSlashingOverlay(SCWeapon scWeapon, DrawContext drawContext, double distance) {
+    private void renderSlashingOverlay(Item item, DrawContext drawContext, double distance) {
         int x = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
         int y = MinecraftClient.getInstance().getWindow().getScaledHeight();
         Integer[] indices = {0, 1, 2, 3, 4};
@@ -204,7 +211,7 @@ public class InGameHudMixin {
 
         boolean textureFound = false;
         for (int i = 0; i < 4; i++) {
-            if (distance <= SCWeaponUtil.getRadius(scWeapon, i) + 0.25F) {
+            if (distance <= SCWeaponUtil.getRadius(item, i) + 0.25F) {
                 Identifier texture = textures[i];
                 int width, height, xT, yT;
                 if (texture == SLASHING_CRITICAL) {
@@ -266,7 +273,7 @@ public class InGameHudMixin {
 
     @Unique
     private boolean ableStamina(PlayerEntity player) {
-        boolean hasSCWeapon = player.getMainHandStack().getItem() instanceof SCWeapon;
+        boolean hasSCWeapon = player.getMainHandStack().isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag());
         boolean hasRequiredEquipment = false;
         for (ItemStack armorStack : player.getArmorItems()) {
             if (armorStack.getItem() instanceof SCUnderArmorItem) {

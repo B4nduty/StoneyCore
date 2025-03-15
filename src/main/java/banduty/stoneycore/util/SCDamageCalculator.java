@@ -38,24 +38,18 @@ public class SCDamageCalculator {
     }
 
     public enum DamageType {
-        SLASHING("slashing", 0),
-        PIERCING("piercing", 1),
-        BLUDGEONING("bludgeoning", 2);
+        SLASHING("slashing"),
+        PIERCING("piercing"),
+        BLUDGEONING("bludgeoning");
 
         private final String name;
-        private final int index;
 
-        DamageType(String name, int index) {
+        DamageType(String name) {
             this.name = name;
-            this.index = index;
         }
 
         public String getName() {
             return this.name;
-        }
-
-        public int getIndex() {
-            return this.index;
         }
     }
 }

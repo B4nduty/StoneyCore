@@ -1,7 +1,7 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.items.item.SCRangeWeapon;
 import banduty.stoneycore.util.SCInventoryItemFinder;
+import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -10,6 +10,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+
+import static banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil.getDefinitionData;
 
 public class ReloadTickHandler implements ServerTickEvents.StartTick {
     private ItemStack lastItemStack;
@@ -26,7 +28,7 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
 
         if (currentItem != lastItemStack) {
             if (lastItemStack != null) {
-                if (lastItemStack.getItem() instanceof SCRangeWeapon) {
+                if (lastItemStack.isIn(SCTags.RANGED_WEAPON_COMBAT_MECHANICS.getTag())) {
                     lastItemStack.getOrCreateNbt().putBoolean("sc_recharge", false);
                     resetWeaponState(player, lastItemStack);
                 }
@@ -52,8 +54,8 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
             return;
         }
 
-        Item weapon = currentItem.getItem();
-        if (player.getItemCooldownManager().isCoolingDown(weapon)) {
+        Item item = currentItem.getItem();
+        if (player.getItemCooldownManager().isCoolingDown(item)) {
             return;
         }
 
@@ -63,13 +65,13 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
 
         if (SCRangeWeaponUtil.getWeaponState(currentItem).isReloading()) {
             incrementRechargeTime(player);
-        } else if (hasRequiredAmmo(player, (SCRangeWeapon) weapon)) {
+        } else if (hasRequiredAmmo(player, item)) {
             startReload(player, currentItem);
         } else {
             currentItem.getOrCreateNbt().putBoolean("sc_recharge", false);
         }
 
-        if (getRechargeTime(player) >= ((SCRangeWeapon) weapon).rechargeTime() * 20) {
+        if (getRechargeTime(player) >= getDefinitionData(item).rechargeTime() * 20) {
             completeReload(player, currentItem);
         }
     }
@@ -84,20 +86,21 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
     }
 
     private boolean isValidRangeWeapon(ItemStack itemStack) {
-        return itemStack.getItem() instanceof SCRangeWeapon && ((SCRangeWeapon) itemStack.getItem()).ammoRequirement() != null;
+        return itemStack.isIn(SCTags.RANGED_WEAPON_COMBAT_MECHANICS.getTag());
     }
 
-    private boolean hasRequiredAmmo(ServerPlayerEntity player, SCRangeWeapon weapon) {
+    private boolean hasRequiredAmmo(ServerPlayerEntity player, Item item) {
+        SCRangeWeaponUtil.AmmoRequirement ammoRequirement = SCRangeWeaponUtil.getAmmoRequirement(item);
         ItemStack[] requiredItems = {
-                SCInventoryItemFinder.getItemFromInventory(player, weapon.ammoRequirement().firstItem(), weapon.ammoRequirement().firstItem2nOption()),
-                SCInventoryItemFinder.getItemFromInventory(player, weapon.ammoRequirement().secondItem(), weapon.ammoRequirement().secondItem2nOption()),
-                SCInventoryItemFinder.getItemFromInventory(player, weapon.ammoRequirement().thirdItem(), weapon.ammoRequirement().thirdItem2nOption())
+                SCInventoryItemFinder.getItemFromInventory(player, ammoRequirement.firstItem(), ammoRequirement.firstItem2nOption()),
+                SCInventoryItemFinder.getItemFromInventory(player, ammoRequirement.secondItem(), ammoRequirement.secondItem2nOption()),
+                SCInventoryItemFinder.getItemFromInventory(player, ammoRequirement.thirdItem(), ammoRequirement.thirdItem2nOption())
         };
 
         int[] requiredAmounts = {
-                weapon.ammoRequirement().amountFirstItem(),
-                weapon.ammoRequirement().amountSecondItem(),
-                weapon.ammoRequirement().amountThirdItem()
+                ammoRequirement.amountFirstItem(),
+                ammoRequirement.amountSecondItem(),
+                ammoRequirement.amountThirdItem()
         };
 
         return SCInventoryItemFinder.areItemsInInventory(requiredItems, requiredAmounts);
@@ -109,12 +112,12 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
     }
 
     private void completeReload(ServerPlayerEntity player, ItemStack itemStack) {
+        SCRangeWeaponUtil.AmmoRequirement ammoRequirement = SCRangeWeaponUtil.getAmmoRequirement(itemStack.getItem());
         if (!player.isCreative()) {
-            SCRangeWeapon weapon = ((SCRangeWeapon) itemStack.getItem());
             ItemStack[] ammoItems = {
-                    SCInventoryItemFinder.getItemFromInventory(player, weapon.ammoRequirement().firstItem(), weapon.ammoRequirement().firstItem2nOption()),
-                    SCInventoryItemFinder.getItemFromInventory(player, weapon.ammoRequirement().secondItem(), weapon.ammoRequirement().secondItem2nOption()),
-                    SCInventoryItemFinder.getItemFromInventory(player, weapon.ammoRequirement().thirdItem(), weapon.ammoRequirement().thirdItem2nOption())
+                    SCInventoryItemFinder.getItemFromInventory(player, ammoRequirement.firstItem(), ammoRequirement.firstItem2nOption()),
+                    SCInventoryItemFinder.getItemFromInventory(player, ammoRequirement.secondItem(), ammoRequirement.secondItem2nOption()),
+                    SCInventoryItemFinder.getItemFromInventory(player, ammoRequirement.thirdItem(), ammoRequirement.thirdItem2nOption())
             };
 
             for (ItemStack ammoItem : ammoItems) {

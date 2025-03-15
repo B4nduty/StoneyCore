@@ -1,18 +1,23 @@
 package banduty.stoneycore.util.weaponutil;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.item.SCWeapon;
 import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import net.minecraft.block.Block;
 import net.minecraft.block.CropBlock;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
+
+import java.util.Map;
 
 public final class SCWeaponUtil {
     private static final double BACKSTAB_ANGLE_THRESHOLD = -0.5;
@@ -23,13 +28,27 @@ public final class SCWeaponUtil {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
 
-    public static SCDamageCalculator.DamageType calculateDamageType(ItemStack stack, SCWeapon scWeapon, int comboCount) {
-        boolean bludgeoningToPiercing = scWeapon.getAttackDamageValues()[0] == 0
-                && scWeapon.getAttackDamageValues()[1] > 0 && scWeapon.getAttackDamageValues()[2] > 0;
-        boolean isBludgeoning = stack.getOrCreateNbt().getBoolean("sc_bludgeoning");
-        boolean isPiercing = isPiercingWeapon(scWeapon, comboCount);
+    public static SCMeleeWeaponDefinitionsLoader.DefinitionData getDefinitionData(Item item) {
+        Identifier itemId = Registries.ITEM.getId(item);
+        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        return SCMeleeWeaponDefinitionsLoader.getData(definitionId);
+    }
 
-        if (isBludgeoning || scWeapon.getOnlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
+    public static float getDamageValues(String key, Item item) {
+        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = getDefinitionData(item);
+        Map<String, Float> damageValues = attributeData.damage();
+
+        return damageValues.getOrDefault(key, 0f);
+    }
+
+    public static SCDamageCalculator.DamageType calculateDamageType(ItemStack stack, Item item, int comboCount) {
+        boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING.getName(), stack.getItem()) == 0
+                && getDamageValues(SCDamageCalculator.DamageType.PIERCING.getName(), stack.getItem()) > 0
+                && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.getName(), stack.getItem()) > 0;
+        boolean isBludgeoning = stack.getOrCreateNbt().getBoolean("sc_bludgeoning");
+        boolean isPiercing = isPiercingWeapon(item, comboCount);
+
+        if (isBludgeoning || getDefinitionData(item).onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
             return SCDamageCalculator.DamageType.BLUDGEONING;
         }
         if (isPiercing || bludgeoningToPiercing) {
@@ -38,22 +57,28 @@ public final class SCWeaponUtil {
         return SCDamageCalculator.DamageType.SLASHING;
     }
 
-    private static boolean isPiercingWeapon(SCWeapon scWeapon, int comboCount) {
-        return (scWeapon.getAnimation() > 0 && isComboCountPiercing(scWeapon, comboCount)) ||
-                scWeapon.getOnlyDamageType() == SCDamageCalculator.DamageType.PIERCING;
+    private static boolean isPiercingWeapon(Item item, int comboCount) {
+        return (getDefinitionData(item).animation() > 0 && isComboCountPiercing(item, comboCount)) ||
+                getDefinitionData(item).onlyDamageType() == SCDamageCalculator.DamageType.PIERCING;
     }
 
-    private static boolean isComboCountPiercing(SCWeapon scWeapon, int comboCount) {
-        int[] piercingAnimations = scWeapon.getPiercingAnimation();
-        validatePiercingAnimations(piercingAnimations);
+    private static boolean isComboCountPiercing(Item item, int comboCount) {
+        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = getDefinitionData(item);
+        int[] piercingAnimations = attributeData.piercingAnimation();
+        int animation = attributeData.animation();
+        boolean piercing = false;
 
-        int animationLength = scWeapon.getAnimation();
-        for (int piercingAnimation : piercingAnimations) {
-            if (comboCount % animationLength == piercingAnimation - 1) {
-                return true;
+        if (animation > 0) {
+            for (int piercingAnimation : piercingAnimations) {
+                if (comboCount % animation == piercingAnimation - 1) {
+                    piercing = true;
+                    break;
+                }
             }
+
+            if (piercingAnimations.length == animation) piercing = true;
         }
-        return piercingAnimations.length == animationLength;
+        return piercing;
     }
 
     public static float adjustDamageForBackstab(LivingEntity target, Vec3d playerPos, float damage) {
@@ -63,35 +88,25 @@ public final class SCWeaponUtil {
         return isBehind ? damage * 2 : damage;
     }
 
-    public static float getAttackDamage(SCWeapon scWeapon, int index) {
-        float[] damageValues = scWeapon.getAttackDamageValues();
-        return isValidIndex(index, damageValues.length) ? damageValues[index] : 0.0F;
+    public static double getMaxDistance(Item item) {
+        return getRadius(item, 4);
     }
 
-    public static double getMaxDistance(SCWeapon scWeapon) {
-        return getRadius(scWeapon, 4);
-    }
+    public static double getRadius(Item item, int index) {
+        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = getDefinitionData(item);
+        Map<String, Double> radiusValues = attributeData.radius();
 
-    public static double getRadius(SCWeapon scWeapon, int index) {
-        double[] radiusValues = scWeapon.getRadiusValues();
-        validateRadiusValues(radiusValues);
-
-        return isValidIndex(index, radiusValues.length) ? radiusValues[index] : 0.0;
-    }
-
-    private static boolean isValidIndex(int index, int arrayLength) {
-        return index >= 0 && index < arrayLength;
-    }
-
-    private static void validateRadiusValues(double[] radiusValues) {
-        for (int i = 1; i < radiusValues.length; i++) {
-            if (radiusValues[i - 1] > radiusValues[i]) {
-                String errorMessage = String.format("Critical error: Radius values are not sorted. Index %d > Index %d. Values: %s",
-                        i - 1, i, java.util.Arrays.toString(radiusValues));
-                StoneyCore.LOGGER.error(errorMessage);
-                throw new IllegalArgumentException(errorMessage);
-            }
+        String key;
+        switch (index) {
+            case 0 -> key = "level_0";
+            case 1 -> key = "level_1";
+            case 2 -> key = "level_2";
+            case 3 -> key = "level_3";
+            case 4 -> key = "level_4";
+            default -> throw new IllegalArgumentException("Invalid index: " + index);
         }
+
+        return radiusValues.getOrDefault(key, 0.0);
     }
 
     private static void validatePiercingAnimations(int[] piercingAnimations) {
@@ -102,11 +117,11 @@ public final class SCWeaponUtil {
         }
     }
 
-    public static float calculateDamage(SCWeapon scWeapon, double distance, SCDamageCalculator.DamageType damageType) {
+    public static float calculateDamage(Item item, double distance, String key) {
         for (int i = 0; i <= 4; i++) {
-            double radius = getRadius(scWeapon, i);
+            double radius = getRadius(item, i);
             if (distance < radius + RADIUS_TOLERANCE) {
-                float attackDamage = getAttackDamage(scWeapon, damageType.getIndex());
+                float attackDamage = getDamageValues(key, item);
                 float percentage = calculatePercentageForIndex(i);
                 return attackDamage * percentage;
             }

@@ -2,7 +2,6 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
-import banduty.stoneycore.items.item.SCWeapon;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
@@ -14,6 +13,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.sound.SoundCategory;
@@ -41,14 +41,14 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             return amount;
         }
 
-        ItemStack weaponStack = player.getMainHandStack();
-        if (weaponStack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
-            SCDamageCalculator.applyDamage(target, player, weaponStack, amount);
+        ItemStack stack = player.getMainHandStack();
+        if (stack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
+            SCDamageCalculator.applyDamage(target, player, stack, amount);
             return 0;
         }
 
-        if (weaponStack.getItem() instanceof SCWeapon scWeapon) {
-            amount = calculateWeaponDamage(player, target, scWeapon, weaponStack, amount);
+        if (stack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag())) {
+            amount = calculateWeaponDamage(player, target, stack.getItem(), stack, amount);
         }
 
         amount = applyStatusEffectModifiers(player, amount);
@@ -95,19 +95,19 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
     }
 
     private float calculateWeaponDamage(PlayerEntity player, LivingEntity target,
-                                        SCWeapon weapon, ItemStack stack, float originalDamage) {
+                                        Item item, ItemStack stack, float originalDamage) {
         int comboCount = ((PlayerAttackProperties) player).getComboCount();
 
-        SCDamageCalculator.DamageType damageType = SCWeaponUtil.calculateDamageType(stack, weapon, comboCount);
+        SCDamageCalculator.DamageType damageType = SCWeaponUtil.calculateDamageType(stack, item, comboCount);
 
-        double maxDistance = SCWeaponUtil.getMaxDistance(weapon);
+        double maxDistance = SCWeaponUtil.getMaxDistance(stack.getItem());
         double actualDistance = player.getPos().distanceTo(target.getPos());
 
         if (actualDistance > maxDistance + 1) {
             return originalDamage;
         }
 
-        float baseDamage = SCWeaponUtil.calculateDamage(weapon, actualDistance, damageType);
+        float baseDamage = SCWeaponUtil.calculateDamage(stack.getItem(), actualDistance, damageType.getName());
 
         float calculatedDamage = SCDamageCalculator.getSCDamage(target, baseDamage, damageType);
 

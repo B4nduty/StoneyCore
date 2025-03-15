@@ -13,6 +13,10 @@
   "text.tooltip.stoneycore.slashingDamage": "Slashing Damage: %s",
   "text.tooltip.stoneycore.bludgeoningDamage": "Bludgeoning Damage: %s",
   "text.tooltip.stoneycore.piercingDamage": "Piercing Damage: %s",
+  "text.tooltip.stoneycore.shift-right_click-bludgeoning": "§4Shift + Right-Click §rto change between §lSlashing §r& §lBludgeoning §rDamage Type",
+  "text.tooltip.stoneycore.shift-right_click-bludgeoning-piercing": "§4Shift + Right-Click §rto change between §lBludgeoning §r& §lPiercing §rDamage Type",
+  "text.tooltip.stoneycore.right_click-replant": "§4Right-Click Crops §rto §lHarvest §r& §lReplant",
+  "text.tooltip.stoneycore.need_to_hold": "§1Hold §r[ %s ] §1to Recharge",
   
   "text.config.stoneycore.title": "StoneyCore",
   "text.config.stoneycore.option.getVanillaWeaponsDamage0": "Vanilla Weapons deals 0 Damage",

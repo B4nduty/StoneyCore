@@ -1,7 +1,6 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.item.SCWeapon;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -63,7 +62,7 @@ public abstract class PlayerEntityMixin implements IEntityDataSaver {
     @Inject(method = "damageShield", at = @At("HEAD"), cancellable = true)
     private void stoneycore$onDamageShield(float amount, CallbackInfo ci) {
         ItemStack mainHandStack = playerEntity.getMainHandStack();
-        if (mainHandStack.getItem() instanceof SCWeapon && playerEntity.getActiveItem().isIn(SCTags.WEAPONS_SHIELD.getTag())) {
+        if (mainHandStack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag()) && playerEntity.getActiveItem().isIn(SCTags.WEAPONS_SHIELD.getTag())) {
             if (!playerEntity.getWorld().isClient) {
                 playerEntity.incrementStat(Stats.USED.getOrCreateStat(playerEntity.getActiveItem().getItem()));
             }
@@ -110,7 +109,7 @@ public abstract class PlayerEntityMixin implements IEntityDataSaver {
 
     @Unique
     private boolean isVanillaWeapon(ItemStack itemStack) {
-        Item item = itemStack.getItem();
+        net.minecraft.item.Item item = itemStack.getItem();
         return item instanceof SwordItem || item instanceof AxeItem ||
                 item instanceof ShovelItem || item instanceof HoeItem;
     }

@@ -43,7 +43,7 @@ public enum SCTags {
      */
     WEAPONS_SHIELD("weapons_shield"),
     /**
-     * If you want to have your Weapon deals x2 of its original damage when hit from Behind
+     * If you want to have your Weapon deals x2 of its original baseDamage when hit from Behind
      */
     WEAPONS_DAMAGE_BEHIND("weapons_damage_behind"),
     /**
@@ -84,6 +84,16 @@ public enum SCTags {
      *</pre>
      */
     GEO_2D_ITEMS("geo_2d_items"),
+    /**
+     * If you want your weapon works with SC Combat Mechanics.
+     * You need to add the corresponding json files.
+     */
+    MELEE_COMBAT_MECHANICS("melee_combat_mechanics"),
+    /**
+     * If you want your weapon works with SC Combat Mechanics.
+     * You need to add the corresponding json files.
+     */
+    RANGED_WEAPON_COMBAT_MECHANICS("ranged_weapon_combat_mechanics"),
 
     // Armor Tags
     /**

@@ -1,6 +1,6 @@
 package banduty.stoneycore.networking.packet;
 
-import banduty.stoneycore.items.item.SCRangeWeapon;
+import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.item.ItemStack;
@@ -15,7 +15,7 @@ public class ReloadC2SPacket {
         server.execute(() -> {
             ItemStack itemStack = player.getMainHandStack();
 
-            if (itemStack.getItem() instanceof SCRangeWeapon scRangeWeapon && scRangeWeapon.ammoRequirement() != null) {
+            if (itemStack.isIn(SCTags.RANGED_WEAPON_COMBAT_MECHANICS.getTag()) && SCRangeWeaponUtil.getAmmoRequirement(itemStack.getItem()) != null) {
                 if (!SCRangeWeaponUtil.getWeaponState(itemStack).isCharged()) itemStack.getOrCreateNbt().putBoolean("sc_recharge", true);
             }
         });

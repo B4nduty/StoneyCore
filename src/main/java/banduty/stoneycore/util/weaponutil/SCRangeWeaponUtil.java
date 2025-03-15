@@ -3,26 +3,26 @@ package banduty.stoneycore.util.weaponutil;
 import banduty.stoneycore.entity.custom.SCArrowEntity;
 import banduty.stoneycore.entity.custom.SCBulletEntity;
 import banduty.stoneycore.items.item.SCArrow;
-import banduty.stoneycore.items.item.SCRangeWeapon;
 import banduty.stoneycore.particle.ModParticles;
+import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 public final class SCRangeWeaponUtil {
     private static final Random random = new Random();
@@ -31,8 +31,14 @@ public final class SCRangeWeaponUtil {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
 
-    public static TypedActionResult<ItemStack> handleCrossbowUse(World world, PlayerEntity user, Hand hand, SCRangeWeapon scRangeWeapon, ItemStack itemStack) {
-        if (world == null || user == null || scRangeWeapon == null || itemStack == null) {
+    public static SCRangedWeaponDefinitionsLoader.DefinitionData getDefinitionData(Item item) {
+        Identifier itemId = Registries.ITEM.getId(item);
+        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        return SCRangedWeaponDefinitionsLoader.getData(definitionId);
+    }
+
+    public static TypedActionResult<ItemStack> handleCrossbowUse(World world, PlayerEntity user, Hand hand, ItemStack itemStack) {
+        if (world == null || user == null || itemStack == null) {
             return TypedActionResult.fail(ItemStack.EMPTY);
         }
 
@@ -46,7 +52,7 @@ public final class SCRangeWeaponUtil {
             if (weaponState.isCharged()) {
                 setWeaponState(itemStack, new WeaponState(weaponState.isReloading(), false, true));
                 projectiles.unloadProjectile();
-                shootArrow(world, itemStack, scRangeWeapon, user, scArrow.getDefaultStack(), 1f);
+                shootArrow(world, itemStack, user, scArrow.getDefaultStack(), 1f);
                 return TypedActionResult.consume(itemStack);
             } else if (projectiles.getArrowCount() < 1) {
                 setWeaponState(itemStack, new WeaponState(true, false, false));
@@ -59,12 +65,12 @@ public final class SCRangeWeaponUtil {
         return TypedActionResult.fail(itemStack);
     }
 
-    public static void shootArrow(World world, ItemStack stack, SCRangeWeapon scRangeWeapon, PlayerEntity player, ItemStack arrowStack, float pullProgress) {
+    public static void shootArrow(World world, ItemStack stack, PlayerEntity player, ItemStack arrowStack, float pullProgress) {
         SCArrowEntity arrowEntity = (SCArrowEntity) ((SCArrow) arrowStack.getItem()).createArrowEntity(player, world);
-        arrowEntity.setDamageAmount(scRangeWeapon.baseDamage());
-        arrowEntity.setDamageType(scRangeWeapon.getDamageType());
+        arrowEntity.setDamageAmount(getDefinitionData(stack.getItem()).baseDamage());
+        arrowEntity.setDamageType(getDefinitionData(stack.getItem()).damageType());
 
-        arrowEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, pullProgress * scRangeWeapon.speed(), 1.0F);
+        arrowEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, pullProgress * getDefinitionData(stack.getItem()).speed(), 1.0F);
 
         if (player.isCreative()) {
             arrowEntity.pickupType = PersistentProjectileEntity.PickupPermission.CREATIVE_ONLY;
@@ -83,8 +89,9 @@ public final class SCRangeWeaponUtil {
                     double distance = playerPos.distanceTo(hearPos);
                     volume = (float) Math.max(0, 1 - (distance * 0.01));
                     if (world.isClient() && volume != 0) {
-                        int soundEventsLength = scRangeWeapon.soundEvents().length;
-                        SoundEvent selectedSound = soundEventsLength > 0 ? scRangeWeapon.soundEvents()[random.nextInt(soundEventsLength)] : null;
+                        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangeWeaponUtil.getDefinitionData(stack.getItem());
+                        int soundEventsLength = definitionData.soundEvents().length;
+                        SoundEvent selectedSound = soundEventsLength > 0 ? definitionData.soundEvents()[random.nextInt(soundEventsLength)] : null;
                         if (selectedSound != null) player.playSound(selectedSound, SoundCategory.PLAYERS, volume, 1.0F);
                     }
                 }
@@ -92,12 +99,12 @@ public final class SCRangeWeaponUtil {
         }
     }
 
-    public static void shootBullet(World world, ItemStack stack, SCRangeWeapon scRangeWeapon, PlayerEntity player) {
+    public static void shootBullet(World world, ItemStack stack, PlayerEntity player) {
         SCBulletEntity bulletEntity = new SCBulletEntity(player, world);
-        bulletEntity.setDamageAmount(scRangeWeapon.baseDamage());
-        bulletEntity.setDamageType(scRangeWeapon.getDamageType());
+        bulletEntity.setDamageAmount(getDefinitionData(stack.getItem()).baseDamage());
+        bulletEntity.setDamageType(getDefinitionData(stack.getItem()).damageType());
 
-        bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, scRangeWeapon.speed(), 1.0F);
+        bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, getDefinitionData(stack.getItem()).speed(), 1.0F);
 
         world.spawnEntity(bulletEntity);
         float volume;
@@ -109,8 +116,9 @@ public final class SCRangeWeaponUtil {
                     double distance = playerPos.distanceTo(hearPos);
                     volume = (float) Math.max(0, 1 - (distance * 0.01));
                     if (world.isClient() && volume != 0) {
-                        int soundEventsLength = scRangeWeapon.soundEvents().length;
-                        SoundEvent selectedSound = soundEventsLength > 0 ? scRangeWeapon.soundEvents()[random.nextInt(soundEventsLength)] : null;
+                        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangeWeaponUtil.getDefinitionData(stack.getItem());
+                        int soundEventsLength = definitionData.soundEvents().length;
+                        SoundEvent selectedSound = soundEventsLength > 0 ? definitionData.soundEvents()[random.nextInt(soundEventsLength)] : null;
                         if (selectedSound != null) player.playSound(selectedSound, SoundCategory.PLAYERS, volume, 1.0F);
                     }
                 }
@@ -200,8 +208,8 @@ public final class SCRangeWeaponUtil {
         return Math.min((progress * progress + progress * 2.0F) / 3.0F, 1.0F);
     }
 
-    public static float getCrossbowPullProgress(int useTicks, SCRangeWeapon scRangeWeapon) {
-        return Math.min((float) useTicks / (scRangeWeapon.rechargeTime() * 20), 1.0F);
+    public static float getCrossbowPullProgress(int useTicks, Item item) {
+        return Math.min((float) useTicks / (getDefinitionData(item).rechargeTime() * 20), 1.0F);
     }
 
     public static WeaponState getWeaponState(ItemStack stack) {
@@ -249,4 +257,71 @@ public final class SCRangeWeaponUtil {
             nbt.putBoolean("sc_shoot", isShooting);
         }
     }
+
+    public static AmmoRequirement getAmmoRequirement(Item item) {
+        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = getDefinitionData(item);
+        Map<String, SCRangedWeaponDefinitionsLoader.AmmoRequirementData> ammoRequirementMap = definitionData.ammoRequirement();
+
+        int amountFirstItem = 0;
+        Item firstItem = null;
+        Item firstItem2nOption = null;
+
+        int amountSecondItem = 0;
+        Item secondItem = null;
+        Item secondItem2nOption = null;
+
+        int amountThirdItem = 0;
+        Item thirdItem = null;
+        Item thirdItem2nOption = null;
+
+        if (ammoRequirementMap.containsKey("item1")) {
+            SCRangedWeaponDefinitionsLoader.AmmoRequirementData item1Data = ammoRequirementMap.get("item1");
+            Set<String> item1Ids = item1Data.itemIds();
+            amountFirstItem = item1Data.amount();
+
+            firstItem = Registries.ITEM.get(new Identifier(item1Ids.iterator().next()));
+
+            if (item1Ids.size() > 1) {
+                firstItem2nOption = Registries.ITEM.get(new Identifier(item1Ids.stream().skip(1).findFirst().get()));
+            }
+        }
+
+        if (ammoRequirementMap.containsKey("item2")) {
+            SCRangedWeaponDefinitionsLoader.AmmoRequirementData item2Data = ammoRequirementMap.get("item2");
+            Set<String> item2Ids = item2Data.itemIds();
+            amountSecondItem = item2Data.amount();
+
+            secondItem = Registries.ITEM.get(new Identifier(item2Ids.iterator().next()));
+
+            if (item2Ids.size() > 1) {
+                secondItem2nOption = Registries.ITEM.get(new Identifier(item2Ids.stream().skip(1).findFirst().get()));
+            }
+        }
+
+        if (ammoRequirementMap.containsKey("item3")) {
+            SCRangedWeaponDefinitionsLoader.AmmoRequirementData item3Data = ammoRequirementMap.get("item3");
+            Set<String> item3Ids = item3Data.itemIds();
+            amountThirdItem = item3Data.amount();
+
+            thirdItem = Registries.ITEM.get(new Identifier(item3Ids.iterator().next()));
+
+            if (item3Ids.size() > 1) {
+                thirdItem2nOption = Registries.ITEM.get(new Identifier(item3Ids.stream().skip(1).findFirst().get()));
+            }
+        }
+
+        return amountFirstItem >= 1
+                ? new AmmoRequirement(
+                amountFirstItem, firstItem, firstItem2nOption,
+                amountSecondItem, secondItem, secondItem2nOption,
+                amountThirdItem, thirdItem, thirdItem2nOption
+        )
+                : null;
+    }
+
+    public record AmmoRequirement(
+            int amountFirstItem, Item firstItem, Item firstItem2nOption,
+            int amountSecondItem, Item secondItem, Item secondItem2nOption,
+            int amountThirdItem, Item thirdItem, Item thirdItem2nOption
+    ) {}
 }

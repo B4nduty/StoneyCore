@@ -3,7 +3,6 @@ package banduty.stoneycore.event;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
-import banduty.stoneycore.items.item.SCWeapon;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -181,7 +180,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
     }
 
     private boolean isSCWeapon(ItemStack stack) {
-        return stack.getItem() instanceof SCWeapon;
+        return stack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag());
     }
 
     private boolean isWearingSCArmor(ServerPlayerEntity playerEntity) {

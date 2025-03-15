@@ -28,7 +28,7 @@ public class SCConfigs {
 
     @Sync(Option.SyncMode.NONE)
     @Comment("Low Stamina Indicator [Experimental]")
-    public boolean getLowStaminaIndicator = true;
+    public boolean getLowStaminaIndicator = false;
 
     @RestartRequired
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
@@ -37,7 +37,7 @@ public class SCConfigs {
 
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
     @Comment("Parry [Experimental]")
-    public boolean getParry = true;
+    public boolean getParry = false;
 
     @Sync(Option.SyncMode.NONE)
     @Comment("Stamina Bar Y Offset")

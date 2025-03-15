@@ -7,7 +7,7 @@ import java.util.List;
 
 public class TooltipClientSide {
     public static void setTooltip(List<Text> tooltip) {
-        tooltip.add(Text.translatable("tooltip.stoneycore.need_to_hold",
+        tooltip.add(Text.translatable("text.tooltip.stoneycore.need_to_hold",
                 KeyInputHandler.reload.getBoundKeyLocalizedText()));
     }
 }

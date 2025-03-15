@@ -3,7 +3,7 @@ package banduty.stoneycore.client;
 import banduty.stoneycore.event.custom.RenderOverlayAndAdditionsEvents;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.util.DyeUtil;
-import banduty.stoneycore.util.ModRenderLayers;
+import banduty.stoneycore.util.SCRenderLayers;
 import banduty.stoneycore.util.itemdata.SCTags;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.client.TrinketRenderer;
@@ -76,7 +76,7 @@ public class SCTrinketsItemRenderer implements TrinketRenderer {
 
                 float[] rgb = dyeColor.getColorComponents();
 
-                VertexConsumer patternConsumer = vertexConsumers.getBuffer(ModRenderLayers.getArmorTranslucentNoCull(textureIdentifier));
+                VertexConsumer patternConsumer = vertexConsumers.getBuffer(SCRenderLayers.getArmorTranslucentNoCull(textureIdentifier));
                 model.render(matrices, patternConsumer, light, OverlayTexture.DEFAULT_UV, rgb[0], rgb[1], rgb[2], 1.0F);
             }
         }

@@ -9,7 +9,7 @@ import net.minecraft.util.Util;
 
 import java.util.function.Function;
 
-public class ModRenderLayers extends RenderLayer {
+public class SCRenderLayers extends RenderLayer {
     public static final Function<Identifier, RenderLayer> ARMOR_TRANSLUCENT_NO_CULL = Util.memoize(texture -> {
         var params = RenderLayer.MultiPhaseParameters.builder()
                 .program(ARMOR_CUTOUT_NO_CULL_PROGRAM)
@@ -26,7 +26,7 @@ public class ModRenderLayers extends RenderLayer {
         );
     });
 
-    public ModRenderLayers(String name, VertexFormat vertexFormat, VertexFormat.DrawMode drawMode, int expectedBufferSize, boolean hasCrumbling, boolean translucent, Runnable startAction, Runnable endAction) {
+    public SCRenderLayers(String name, VertexFormat vertexFormat, VertexFormat.DrawMode drawMode, int expectedBufferSize, boolean hasCrumbling, boolean translucent, Runnable startAction, Runnable endAction) {
         super(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, startAction, endAction);
     }
 
