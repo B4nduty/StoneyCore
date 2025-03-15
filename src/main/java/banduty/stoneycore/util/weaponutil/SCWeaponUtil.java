@@ -109,14 +109,6 @@ public final class SCWeaponUtil {
         return radiusValues.getOrDefault(key, 0.0);
     }
 
-    private static void validatePiercingAnimations(int[] piercingAnimations) {
-        if (piercingAnimations.length > MAX_PIERCING_ANIMATIONS) {
-            String errorMessage = "Critical error: Piercing Animations Index exceeds maximum allowed value of " + MAX_PIERCING_ANIMATIONS;
-            StoneyCore.LOGGER.error(errorMessage);
-            throw new IllegalArgumentException(errorMessage);
-        }
-    }
-
     public static float calculateDamage(Item item, double distance, String key) {
         for (int i = 0; i <= 4; i++) {
             double radius = getRadius(item, i);
