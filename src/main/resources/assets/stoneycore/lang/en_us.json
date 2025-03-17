@@ -19,7 +19,6 @@
   "text.tooltip.stoneycore.need_to_hold": "§1Hold §r[ %s ] §1to Recharge",
   
   "text.config.stoneycore.title": "StoneyCore",
-  "text.config.stoneycore.option.getVanillaWeaponsDamage0": "Vanilla Weapons deals 0 Damage",
   "text.config.stoneycore.option.getBlocking": "Use Stamina on or while Blocking",
   "text.config.stoneycore.option.getWardartCooldown": "WarDart throw Cooldown",
   "text.config.stoneycore.option.getDamageIndicator": "Damage Indicator",

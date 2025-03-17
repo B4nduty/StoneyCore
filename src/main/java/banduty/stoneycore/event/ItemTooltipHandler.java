@@ -2,6 +2,8 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
+import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
@@ -13,13 +15,11 @@ import net.minecraft.util.Formatting;
 
 import java.util.List;
 
-import static banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil.getDefinitionData;
-
 public class ItemTooltipHandler implements ItemTooltipCallback {
     @Override
     public void getTooltip(ItemStack stack, TooltipContext context, List<Text> lines) {
         Text attackDamage = Text.translatable("attribute.name.generic.attack_damage");
-        if (stack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag())) lines.removeIf(line -> line.contains(attackDamage));
+        if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) lines.removeIf(line -> line.contains(attackDamage));
 
         if (stack.getItem() instanceof SCTrinketsItem scTrinketsItem
                 && scTrinketsItem.hungerDrainAddition() != 0.0d) {
@@ -30,8 +30,8 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
         if (stack.isIn(SCTags.HIDE_NAME_TAG.getTag())) lines.add(Text.translatable("text.tooltip.stoneycore.hideNameTag").formatted(Formatting.BLUE));
         if (stack.isIn(ItemTags.FREEZE_IMMUNE_WEARABLES)) lines.add(Text.translatable("text.tooltip.stoneycore.freezing").formatted(Formatting.BLUE));
 
-        if (stack.isIn(SCTags.RANGED_WEAPON_COMBAT_MECHANICS.getTag())) {
-            lines.add(Text.translatable("text.tooltip.stoneycore.baseDamage", (int) getDefinitionData(stack.getItem()).baseDamage()).formatted(Formatting.GREEN));
+        if (SCRangedWeaponDefinitionsLoader.containsItem(stack.getItem())) {
+            lines.add(Text.translatable("text.tooltip.stoneycore.baseDamage", (int) SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).baseDamage()).formatted(Formatting.GREEN));
         }
 
         if (stack.getItem() instanceof SCUnderArmorItem scUnderArmorItem) {

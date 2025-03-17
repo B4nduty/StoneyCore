@@ -7,11 +7,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.minecraft.item.Item;
+import net.minecraft.registry.Registries;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceReloader;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
-import net.minecraft.resource.ResourceReloader;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -94,8 +96,16 @@ public class SCMeleeWeaponDefinitionsLoader implements IdentifiableResourceReloa
         }, applyExecutor);
     }
 
-    public static DefinitionData getData(Identifier id) {
-        return DEFINITIONS.getOrDefault(id, new DefinitionData(null, null, null, 0, null));
+    public static DefinitionData getData(Item item) {
+        Identifier itemId = Registries.ITEM.getId(item);
+        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(null, null, null, 0, null));
+    }
+
+    public static boolean containsItem(Item item) {
+        Identifier itemId = Registries.ITEM.getId(item);
+        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        return DEFINITIONS.containsKey(definitionId);
     }
 
     public record DefinitionData(Map<String, Float> damage, Map<String, Double> radius, int[] piercingAnimation,

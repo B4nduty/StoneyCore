@@ -3,6 +3,7 @@ package banduty.stoneycore.event;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
 import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -47,7 +48,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             return 0;
         }
 
-        if (stack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag())) {
+        if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) {
             amount = calculateWeaponDamage(player, target, stack.getItem(), stack, amount);
         }
 

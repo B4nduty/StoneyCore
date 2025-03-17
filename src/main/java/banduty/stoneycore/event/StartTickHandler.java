@@ -3,6 +3,7 @@ package banduty.stoneycore.event;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
+import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -142,7 +143,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         IEntityDataSaver dataSaver = (IEntityDataSaver) playerEntity;
         boolean staminaBlocked = StaminaData.isStaminaBlocked((IEntityDataSaver) playerEntity);
 
-        if (isHoldingSCWeapon(playerEntity) && !staminaBlocked && !StoneyCore.getConfig().getBlocking()
+        if (isSCWeapon(playerEntity.getMainHandStack()) && !staminaBlocked && !StoneyCore.getConfig().getBlocking()
                 && playerEntity.isBlocking() && stamina >= 0.1f && playerEntity.age % 2 == 0) {
             StaminaData.removeStamina(dataSaver, 0.1f);
         }
@@ -175,12 +176,8 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         playerEntity.removeStatusEffect(StatusEffects.MINING_FATIGUE);
     }
 
-    private boolean isHoldingSCWeapon(ServerPlayerEntity playerEntity) {
-        return isSCWeapon(playerEntity.getMainHandStack()) || isSCWeapon(playerEntity.getOffHandStack());
-    }
-
     private boolean isSCWeapon(ItemStack stack) {
-        return stack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag());
+        return SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem());
     }
 
     private boolean isWearingSCArmor(ServerPlayerEntity playerEntity) {

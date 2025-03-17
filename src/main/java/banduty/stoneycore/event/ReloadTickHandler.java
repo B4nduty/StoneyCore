@@ -1,7 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.util.SCInventoryItemFinder;
-import banduty.stoneycore.util.itemdata.SCTags;
+import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -10,8 +10,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-
-import static banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil.getDefinitionData;
 
 public class ReloadTickHandler implements ServerTickEvents.StartTick {
     private ItemStack lastItemStack;
@@ -28,7 +26,7 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
 
         if (currentItem != lastItemStack) {
             if (lastItemStack != null) {
-                if (lastItemStack.isIn(SCTags.RANGED_WEAPON_COMBAT_MECHANICS.getTag())) {
+                if (SCRangedWeaponDefinitionsLoader.containsItem(lastItemStack.getItem())) {
                     lastItemStack.getOrCreateNbt().putBoolean("sc_recharge", false);
                     resetWeaponState(player, lastItemStack);
                 }
@@ -44,7 +42,8 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
             return;
         }
 
-        if (!isValidRangeWeapon(currentItem)) {
+        Item item = currentItem.getItem();
+        if (!isValidRangeWeapon(item)) {
             resetRechargeTime(player);
             return;
         }
@@ -54,7 +53,6 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
             return;
         }
 
-        Item item = currentItem.getItem();
         if (player.getItemCooldownManager().isCoolingDown(item)) {
             return;
         }
@@ -71,7 +69,7 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
             currentItem.getOrCreateNbt().putBoolean("sc_recharge", false);
         }
 
-        if (getRechargeTime(player) >= getDefinitionData(item).rechargeTime() * 20) {
+        if (getRechargeTime(player) >= SCRangedWeaponDefinitionsLoader.getData(item).rechargeTime() * 20) {
             completeReload(player, currentItem);
         }
     }
@@ -85,8 +83,8 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
         return itemStack.getOrCreateNbt().getBoolean("sc_recharge");
     }
 
-    private boolean isValidRangeWeapon(ItemStack itemStack) {
-        return itemStack.isIn(SCTags.RANGED_WEAPON_COMBAT_MECHANICS.getTag());
+    private boolean isValidRangeWeapon(Item item) {
+        return SCRangedWeaponDefinitionsLoader.containsItem(item);
     }
 
     private boolean hasRequiredAmmo(ServerPlayerEntity player, Item item) {

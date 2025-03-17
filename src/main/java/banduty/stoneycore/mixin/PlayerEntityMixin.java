@@ -1,15 +1,14 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -62,7 +61,7 @@ public abstract class PlayerEntityMixin implements IEntityDataSaver {
     @Inject(method = "damageShield", at = @At("HEAD"), cancellable = true)
     private void stoneycore$onDamageShield(float amount, CallbackInfo ci) {
         ItemStack mainHandStack = playerEntity.getMainHandStack();
-        if (mainHandStack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag()) && playerEntity.getActiveItem().isIn(SCTags.WEAPONS_SHIELD.getTag())) {
+        if (SCMeleeWeaponDefinitionsLoader.containsItem(mainHandStack.getItem()) && playerEntity.getActiveItem().isIn(SCTags.WEAPONS_SHIELD.getTag())) {
             if (!playerEntity.getWorld().isClient) {
                 playerEntity.incrementStat(Stats.USED.getOrCreateStat(playerEntity.getActiveItem().getItem()));
             }
@@ -93,41 +92,6 @@ public abstract class PlayerEntityMixin implements IEntityDataSaver {
             playerEntity.clearActiveItem();
             world.sendEntityStatus(playerEntity, (byte) 30);
             ci.cancel();
-        }
-    }
-
-    @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
-    public void stoneycore$onAttack(Entity target, CallbackInfo ci) {
-        if (target.isAttackable()) {
-            ItemStack itemStack = playerEntity.getMainHandStack();
-            if (isVanillaWeapon(itemStack) && StoneyCore.getConfig().getVanillaWeaponsDamage0()) {
-                handleVanillaWeaponAttack(target);
-                ci.cancel();
-            }
-        }
-    }
-
-    @Unique
-    private boolean isVanillaWeapon(ItemStack itemStack) {
-        net.minecraft.item.Item item = itemStack.getItem();
-        return item instanceof SwordItem || item instanceof AxeItem ||
-                item instanceof ShovelItem || item instanceof HoeItem;
-    }
-
-    @Unique
-    private void handleVanillaWeaponAttack(Entity target) {
-        float attackDamage = 0.0F;
-        float attackStrength = playerEntity.getAttackCooldownProgress(0.5F);
-
-        if (attackStrength > 0.9F) {
-            playerEntity.getWorld().playSound(null, playerEntity.getX(), playerEntity.getY(), playerEntity.getZ(),
-                    SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, playerEntity.getSoundCategory(), 1.0F, 1.0F);
-        }
-
-        boolean damageApplied = target.damage(playerEntity.getDamageSources().playerAttack(playerEntity), attackDamage);
-
-        if (damageApplied) {
-            playerEntity.addExhaustion(0.1F);
         }
     }
 }

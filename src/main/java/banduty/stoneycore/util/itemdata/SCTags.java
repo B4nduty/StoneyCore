@@ -84,16 +84,6 @@ public enum SCTags {
      *</pre>
      */
     GEO_2D_ITEMS("geo_2d_items"),
-    /**
-     * If you want your weapon works with SC Combat Mechanics.
-     * You need to add the corresponding json files.
-     */
-    MELEE_COMBAT_MECHANICS("melee_combat_mechanics"),
-    /**
-     * If you want your weapon works with SC Combat Mechanics.
-     * You need to add the corresponding json files.
-     */
-    RANGED_WEAPON_COMBAT_MECHANICS("ranged_weapon_combat_mechanics"),
 
     // Armor Tags
     /**

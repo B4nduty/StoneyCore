@@ -1,6 +1,5 @@
 package banduty.stoneycore.util.weaponutil;
 
-import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import net.minecraft.block.Block;
@@ -9,9 +8,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -22,20 +19,13 @@ import java.util.Map;
 public final class SCWeaponUtil {
     private static final double BACKSTAB_ANGLE_THRESHOLD = -0.5;
     private static final double RADIUS_TOLERANCE = 0.25;
-    private static final int MAX_PIERCING_ANIMATIONS = 2;
 
     private SCWeaponUtil() {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
 
-    public static SCMeleeWeaponDefinitionsLoader.DefinitionData getDefinitionData(Item item) {
-        Identifier itemId = Registries.ITEM.getId(item);
-        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
-        return SCMeleeWeaponDefinitionsLoader.getData(definitionId);
-    }
-
     public static float getDamageValues(String key, Item item) {
-        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = getDefinitionData(item);
+        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = SCMeleeWeaponDefinitionsLoader.getData(item);
         Map<String, Float> damageValues = attributeData.damage();
 
         return damageValues.getOrDefault(key, 0f);
@@ -48,7 +38,7 @@ public final class SCWeaponUtil {
         boolean isBludgeoning = stack.getOrCreateNbt().getBoolean("sc_bludgeoning");
         boolean isPiercing = isPiercingWeapon(item, comboCount);
 
-        if (isBludgeoning || getDefinitionData(item).onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
+        if (isBludgeoning || SCMeleeWeaponDefinitionsLoader.getData(item).onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
             return SCDamageCalculator.DamageType.BLUDGEONING;
         }
         if (isPiercing || bludgeoningToPiercing) {
@@ -58,12 +48,12 @@ public final class SCWeaponUtil {
     }
 
     private static boolean isPiercingWeapon(Item item, int comboCount) {
-        return (getDefinitionData(item).animation() > 0 && isComboCountPiercing(item, comboCount)) ||
-                getDefinitionData(item).onlyDamageType() == SCDamageCalculator.DamageType.PIERCING;
+        return (SCMeleeWeaponDefinitionsLoader.getData(item).animation() > 0 && isComboCountPiercing(item, comboCount)) ||
+                SCMeleeWeaponDefinitionsLoader.getData(item).onlyDamageType() == SCDamageCalculator.DamageType.PIERCING;
     }
 
     private static boolean isComboCountPiercing(Item item, int comboCount) {
-        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = getDefinitionData(item);
+        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = SCMeleeWeaponDefinitionsLoader.getData(item);
         int[] piercingAnimations = attributeData.piercingAnimation();
         int animation = attributeData.animation();
         boolean piercing = false;
@@ -93,7 +83,7 @@ public final class SCWeaponUtil {
     }
 
     public static double getRadius(Item item, int index) {
-        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = getDefinitionData(item);
+        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = SCMeleeWeaponDefinitionsLoader.getData(item);
         Map<String, Double> radiusValues = attributeData.radius();
 
         String key;

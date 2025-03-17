@@ -7,6 +7,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
@@ -128,9 +129,17 @@ public class SCRangedWeaponDefinitionsLoader implements IdentifiableResourceRelo
         }, applyExecutor);
     }
 
-    public static DefinitionData getData(Identifier id) {
-        return DEFINITIONS.getOrDefault(id, new DefinitionData(0f, SCDamageCalculator.DamageType.BLUDGEONING,
+    public static SCRangedWeaponDefinitionsLoader.DefinitionData getData(Item item) {
+        Identifier itemId = Registries.ITEM.getId(item);
+        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        return DEFINITIONS.getOrDefault(definitionId, new SCRangedWeaponDefinitionsLoader.DefinitionData(0f, SCDamageCalculator.DamageType.BLUDGEONING,
                 0, 0, 0, false, UseAction.NONE, new HashMap<>(), null));
+    }
+
+    public static boolean containsItem(Item item) {
+        Identifier itemId = Registries.ITEM.getId(item);
+        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        return DEFINITIONS.containsKey(definitionId);
     }
 
     public record DefinitionData(float baseDamage, SCDamageCalculator.DamageType damageType, int maxUseTime, float speed,

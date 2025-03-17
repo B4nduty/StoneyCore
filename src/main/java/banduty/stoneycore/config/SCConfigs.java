@@ -11,10 +11,6 @@ import io.wispforest.owo.config.annotation.Sync;
 @Modmenu(modId = StoneyCore.MOD_ID)
 @Config(name = StoneyCore.MOD_ID, wrapperName = "StoneyCoreConfig")
 public class SCConfigs {
-    @Comment("Vanilla Weapons deals 0 Damage")
-    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-    public boolean getVanillaWeaponsDamage0 = false;
-
     @Comment("Use Stamina on or while Blocking")
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
     public boolean getBlocking = true;

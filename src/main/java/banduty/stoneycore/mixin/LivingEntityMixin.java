@@ -2,6 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
+import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -57,11 +58,7 @@ public abstract class LivingEntityMixin {
         boolean isWeaponOrInTag = mainStack.getItem() instanceof AxeItem
                 || mainStack.isIn(SCTags.WEAPONS_DISABLE_SHIELD.getTag());
 
-        if (StoneyCore.getConfig().getVanillaWeaponsDamage0()) {
-            cir.setReturnValue(mainStack.isIn(SCTags.WEAPONS_DISABLE_SHIELD.getTag()));
-        } else {
-            cir.setReturnValue(isWeaponOrInTag);
-        }
+        cir.setReturnValue(isWeaponOrInTag);
     }
 
     @Inject(method = "damage", at = @At("HEAD"))
@@ -82,7 +79,7 @@ public abstract class LivingEntityMixin {
     private void stoneycore$sendDamage(DamageSource source, float amount, CallbackInfo ci) {
         if (StoneyCore.getConfig().getDamageIndicator() && source.getAttacker() instanceof PlayerEntity player) {
             ItemStack mainHandStack = player.getMainHandStack();
-            if (mainHandStack.isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag()) && !player.hasStatusEffect(StatusEffects.WEAKNESS)) {
+            if (SCMeleeWeaponDefinitionsLoader.containsItem(mainHandStack.getItem()) && !player.hasStatusEffect(StatusEffects.WEAKNESS)) {
                 if (amount <= 0) amount = 0;
                 player.sendMessage(Text.literal("Damage: " + (int) amount), true);
             }

@@ -31,12 +31,6 @@ public final class SCRangeWeaponUtil {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
 
-    public static SCRangedWeaponDefinitionsLoader.DefinitionData getDefinitionData(Item item) {
-        Identifier itemId = Registries.ITEM.getId(item);
-        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
-        return SCRangedWeaponDefinitionsLoader.getData(definitionId);
-    }
-
     public static TypedActionResult<ItemStack> handleCrossbowUse(World world, PlayerEntity user, Hand hand, ItemStack itemStack) {
         if (world == null || user == null || itemStack == null) {
             return TypedActionResult.fail(ItemStack.EMPTY);
@@ -67,10 +61,10 @@ public final class SCRangeWeaponUtil {
 
     public static void shootArrow(World world, ItemStack stack, PlayerEntity player, ItemStack arrowStack, float pullProgress) {
         SCArrowEntity arrowEntity = (SCArrowEntity) ((SCArrow) arrowStack.getItem()).createArrowEntity(player, world);
-        arrowEntity.setDamageAmount(getDefinitionData(stack.getItem()).baseDamage());
-        arrowEntity.setDamageType(getDefinitionData(stack.getItem()).damageType());
+        arrowEntity.setDamageAmount(SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).baseDamage());
+        arrowEntity.setDamageType(SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).damageType());
 
-        arrowEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, pullProgress * getDefinitionData(stack.getItem()).speed(), 1.0F);
+        arrowEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, pullProgress * SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).speed(), 1.0F);
 
         if (player.isCreative()) {
             arrowEntity.pickupType = PersistentProjectileEntity.PickupPermission.CREATIVE_ONLY;
@@ -89,7 +83,7 @@ public final class SCRangeWeaponUtil {
                     double distance = playerPos.distanceTo(hearPos);
                     volume = (float) Math.max(0, 1 - (distance * 0.01));
                     if (world.isClient() && volume != 0) {
-                        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangeWeaponUtil.getDefinitionData(stack.getItem());
+                        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangedWeaponDefinitionsLoader.getData(stack.getItem());
                         int soundEventsLength = definitionData.soundEvents().length;
                         SoundEvent selectedSound = soundEventsLength > 0 ? definitionData.soundEvents()[random.nextInt(soundEventsLength)] : null;
                         if (selectedSound != null) player.playSound(selectedSound, SoundCategory.PLAYERS, volume, 1.0F);
@@ -101,10 +95,10 @@ public final class SCRangeWeaponUtil {
 
     public static void shootBullet(World world, ItemStack stack, PlayerEntity player) {
         SCBulletEntity bulletEntity = new SCBulletEntity(player, world);
-        bulletEntity.setDamageAmount(getDefinitionData(stack.getItem()).baseDamage());
-        bulletEntity.setDamageType(getDefinitionData(stack.getItem()).damageType());
+        bulletEntity.setDamageAmount(SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).baseDamage());
+        bulletEntity.setDamageType(SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).damageType());
 
-        bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, getDefinitionData(stack.getItem()).speed(), 1.0F);
+        bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).speed(), 1.0F);
 
         world.spawnEntity(bulletEntity);
         float volume;
@@ -116,7 +110,7 @@ public final class SCRangeWeaponUtil {
                     double distance = playerPos.distanceTo(hearPos);
                     volume = (float) Math.max(0, 1 - (distance * 0.01));
                     if (world.isClient() && volume != 0) {
-                        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangeWeaponUtil.getDefinitionData(stack.getItem());
+                        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangedWeaponDefinitionsLoader.getData(stack.getItem());
                         int soundEventsLength = definitionData.soundEvents().length;
                         SoundEvent selectedSound = soundEventsLength > 0 ? definitionData.soundEvents()[random.nextInt(soundEventsLength)] : null;
                         if (selectedSound != null) player.playSound(selectedSound, SoundCategory.PLAYERS, volume, 1.0F);
@@ -209,7 +203,7 @@ public final class SCRangeWeaponUtil {
     }
 
     public static float getCrossbowPullProgress(int useTicks, Item item) {
-        return Math.min((float) useTicks / (getDefinitionData(item).rechargeTime() * 20), 1.0F);
+        return Math.min((float) useTicks / (SCRangedWeaponDefinitionsLoader.getData(item).rechargeTime() * 20), 1.0F);
     }
 
     public static WeaponState getWeaponState(ItemStack stack) {
@@ -259,7 +253,7 @@ public final class SCRangeWeaponUtil {
     }
 
     public static AmmoRequirement getAmmoRequirement(Item item) {
-        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = getDefinitionData(item);
+        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangedWeaponDefinitionsLoader.getData(item);
         Map<String, SCRangedWeaponDefinitionsLoader.AmmoRequirementData> ammoRequirementMap = definitionData.ammoRequirement();
 
         int amountFirstItem = 0;

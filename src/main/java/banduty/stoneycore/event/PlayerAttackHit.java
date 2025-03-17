@@ -1,7 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.networking.ModMessages;
-import banduty.stoneycore.util.itemdata.SCTags;
+import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import net.bettercombat.api.AttackHand;
@@ -17,7 +17,7 @@ import java.util.List;
 public class PlayerAttackHit implements BetterCombatClientEvents.PlayerAttackHit {
     @Override
     public void onPlayerAttackStart(ClientPlayerEntity player, AttackHand attackHand, List<Entity> list, @Nullable Entity entity) {
-        if (player.getMainHandStack().isIn(SCTags.MELEE_COMBAT_MECHANICS.getTag())) {
+        if (SCMeleeWeaponDefinitionsLoader.containsItem(player.getMainHandStack().getItem())) {
             IEntityDataSaver dataSaver = (IEntityDataSaver) player;
 
             if (player.isCreative()) return;
