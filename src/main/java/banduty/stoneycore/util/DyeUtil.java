@@ -1,7 +1,7 @@
 package banduty.stoneycore.util;
 
 import banduty.stoneycore.items.armor.SCTrinketsItem;
-import banduty.stoneycore.items.armor.SCUnderArmorItem;
+import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import net.minecraft.item.DyeableItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -13,13 +13,13 @@ public class DyeUtil {
     }
 
     public static int getColor(ItemStack stack) {
-        if (stack.getItem() instanceof SCTrinketsItem scTrinketsItem && stack.getItem() instanceof DyeableItem) {
+        if (stack.getItem() instanceof SCTrinketsItem scTrinketsItem && scTrinketsItem instanceof DyeableItem) {
             NbtCompound nbtCompound = stack.getSubNbt("display");
             return nbtCompound != null && nbtCompound.contains("color", 99) ? nbtCompound.getInt("color") : scTrinketsItem.getDefaultColor();
         }
-        if (stack.getItem() instanceof SCUnderArmorItem scUnderArmorItem && scUnderArmorItem.isDyeable()) {
+        if (stack.getItem() instanceof SCDyeableUnderArmor scDyeableUnderArmor) {
             NbtCompound nbtCompound = stack.getSubNbt("display");
-            return nbtCompound != null && nbtCompound.contains("color", 99) ? nbtCompound.getInt("color") : scUnderArmorItem.getDefaultColor();
+            return nbtCompound != null && nbtCompound.contains("color", 99) ? nbtCompound.getInt("color") : scDyeableUnderArmor.getDefaultColor();
         }
         return 0xFFFFFF;
     }

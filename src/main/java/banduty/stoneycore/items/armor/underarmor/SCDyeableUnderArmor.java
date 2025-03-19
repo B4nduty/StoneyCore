@@ -14,11 +14,6 @@ public class SCDyeableUnderArmor extends SCUnderArmor implements DyeableItem {
     }
 
     @Override
-    public boolean isDyeable() {
-        return true;
-    }
-
-    @Override
     public int getDefaultColor() {
         return defaultColor;
     }

@@ -5,12 +5,12 @@ import banduty.stoneycore.entity.custom.SCBulletEntity;
 import banduty.stoneycore.items.item.SCArrow;
 import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.particle.ParticleEffect;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -23,9 +23,10 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class SCRangeWeaponUtil {
-    private static final Random random = new Random();
+    private static final ThreadLocalRandom random = ThreadLocalRandom.current();
 
     private SCRangeWeaponUtil() {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
@@ -45,7 +46,8 @@ public final class SCRangeWeaponUtil {
 
             if (weaponState.isCharged()) {
                 setWeaponState(itemStack, new WeaponState(weaponState.isReloading(), false, true));
-                projectiles.unloadProjectile();
+                projectiles = projectiles.unloadProjectile();
+                projectiles.applyToNbt(nbt);
                 shootArrow(world, itemStack, user, scArrow.getDefaultStack(), 1f);
                 return TypedActionResult.consume(itemStack);
             } else if (projectiles.getArrowCount() < 1) {
@@ -74,23 +76,7 @@ public final class SCRangeWeaponUtil {
         }
 
         world.spawnEntity(arrowEntity);
-        float volume;
-        if (world instanceof ClientWorld clientWorld) {
-            for (PlayerEntity playerEntity : clientWorld.getPlayers()) {
-                if (playerEntity != null) {
-                    Vec3d playerPos = player.getPos();
-                    Vec3d hearPos = playerEntity.getPos();
-                    double distance = playerPos.distanceTo(hearPos);
-                    volume = (float) Math.max(0, 1 - (distance * 0.01));
-                    if (world.isClient() && volume != 0) {
-                        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangedWeaponDefinitionsLoader.getData(stack.getItem());
-                        int soundEventsLength = definitionData.soundEvents().length;
-                        SoundEvent selectedSound = soundEventsLength > 0 ? definitionData.soundEvents()[random.nextInt(soundEventsLength)] : null;
-                        if (selectedSound != null) player.playSound(selectedSound, SoundCategory.PLAYERS, volume, 1.0F);
-                    }
-                }
-            }
-        }
+        playSoundForPlayers(world, stack, player);
     }
 
     public static void shootBullet(World world, ItemStack stack, PlayerEntity player) {
@@ -101,60 +87,46 @@ public final class SCRangeWeaponUtil {
         bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).speed(), 1.0F);
 
         world.spawnEntity(bulletEntity);
-        float volume;
-        if (world instanceof ClientWorld clientWorld) {
-            for (PlayerEntity playerEntity : clientWorld.getPlayers()) {
-                if (playerEntity != null) {
-                    Vec3d playerPos = player.getPos();
-                    Vec3d hearPos = playerEntity.getPos();
-                    double distance = playerPos.distanceTo(hearPos);
-                    volume = (float) Math.max(0, 1 - (distance * 0.01));
-                    if (world.isClient() && volume != 0) {
-                        SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangedWeaponDefinitionsLoader.getData(stack.getItem());
-                        int soundEventsLength = definitionData.soundEvents().length;
-                        SoundEvent selectedSound = soundEventsLength > 0 ? definitionData.soundEvents()[random.nextInt(soundEventsLength)] : null;
-                        if (selectedSound != null) player.playSound(selectedSound, SoundCategory.PLAYERS, volume, 1.0F);
-                    }
-                }
-            }
-        }
+        playSoundForPlayers(world, stack, player);
 
         if (!player.isCreative()) {
             stack.damage(1, player, p -> p.sendToolBreakStatus(player.getActiveHand()));
         }
 
         if (world instanceof ServerWorld serverWorld) {
-            spawnSmokeTrail(serverWorld, player, player.getActiveHand());
-            spawnFlashTrail(serverWorld, player, player.getActiveHand());
+            spawnParticleTrail(serverWorld, player, player.getActiveHand(), ModParticles.MUZZLES_SMOKE_PARTICLE, 100, 0.2f, 0.0005f, 5);
+            spawnParticleTrail(serverWorld, player, player.getActiveHand(), ModParticles.MUZZLES_FLASH_PARTICLE, 1, 0f, 0.1f, 6);
         }
     }
 
-    private static void spawnSmokeTrail(ServerWorld world, PlayerEntity player, Hand hand) {
+    private static void playSoundForPlayers(World world, ItemStack stack, PlayerEntity player) {
+        for (PlayerEntity playerEntity : world.getPlayers()) {
+            if (playerEntity != null) {
+                Vec3d playerPos = player.getPos();
+                Vec3d hearPos = playerEntity.getPos();
+                double distance = playerPos.distanceTo(hearPos);
+                float volume = (float) Math.max(0, 1 - (distance * 0.01));
+                if (volume != 0) {
+                    SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangedWeaponDefinitionsLoader.getData(stack.getItem());
+                    int soundEventsLength = definitionData.soundEvents().length;
+                    SoundEvent selectedSound = soundEventsLength > 0 ? definitionData.soundEvents()[random.nextInt(soundEventsLength)] : null;
+                    if (selectedSound != null) player.playSound(selectedSound, SoundCategory.PLAYERS, volume, 1.0F);
+                }
+            }
+        }
+    }
+
+    private static void spawnParticleTrail(ServerWorld world, PlayerEntity player, Hand hand, ParticleEffect particle, int count, float delta, float spread, int distance) {
         Vec3d handPos = getHandPosition(player, hand);
         Vec3d lookDir = player.getRotationVec(1.0F);
 
         List<Vec3d> trailPositions = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < distance; i++) {
             trailPositions.add(handPos.add(lookDir.multiply(i)));
         }
 
         for (Vec3d pos : trailPositions) {
-            world.spawnParticles(ModParticles.MUZZLES_SMOKE_PARTICLE, pos.x, pos.y, pos.z, 100,
-                    0.2, 0.1, 0.2, 0.0005f);
-        }
-    }
-
-    private static void spawnFlashTrail(ServerWorld world, PlayerEntity player, Hand hand) {
-        Vec3d handPos = getHandPosition(player, hand);
-        Vec3d lookDir = player.getRotationVec(1.0F);
-
-        List<Vec3d> trailPositions = new ArrayList<>();
-        for (int i = 0; i < 6; i++) {
-            trailPositions.add(handPos.add(lookDir.multiply(i)));
-        }
-
-        for (Vec3d pos : trailPositions) {
-            world.spawnParticles(ModParticles.MUZZLES_FLASH_PARTICLE, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0.1);
+            world.spawnParticles(particle, pos.x, pos.y, pos.z, count, delta, delta, delta, spread);
         }
     }
 
@@ -227,8 +199,12 @@ public final class SCRangeWeaponUtil {
             new Projectiles(scArrowEntity, arrowCount + 1);
         }
 
-        public void unloadProjectile() {
-            new Projectiles(scArrowEntity, Math.max(arrowCount - 1, 0));
+        public Projectiles unloadProjectile() {
+            return new Projectiles(scArrowEntity, Math.max(arrowCount - 1, 0));
+        }
+
+        public void applyToNbt(NbtCompound nbt) {
+            nbt.putInt(scArrowEntity.getEntityName(), arrowCount);
         }
 
         public int getArrowCount() {
@@ -252,63 +228,49 @@ public final class SCRangeWeaponUtil {
         }
     }
 
+    private static Item[] getItemsFromIds(Set<String> itemIds) {
+        return itemIds.stream()
+                .map(Identifier::new)
+                .map(Registries.ITEM::get)
+                .toArray(Item[]::new);
+    }
+
     public static AmmoRequirement getAmmoRequirement(Item item) {
         SCRangedWeaponDefinitionsLoader.DefinitionData definitionData = SCRangedWeaponDefinitionsLoader.getData(item);
         Map<String, SCRangedWeaponDefinitionsLoader.AmmoRequirementData> ammoRequirementMap = definitionData.ammoRequirement();
 
         int amountFirstItem = 0;
-        Item firstItem = null;
-        Item firstItem2nOption = null;
+        Item[] firstItems = null;
 
         int amountSecondItem = 0;
-        Item secondItem = null;
-        Item secondItem2nOption = null;
+        Item[] secondItems = null;
 
         int amountThirdItem = 0;
-        Item thirdItem = null;
-        Item thirdItem2nOption = null;
+        Item[] thirdItems = null;
 
         if (ammoRequirementMap.containsKey("item1")) {
             SCRangedWeaponDefinitionsLoader.AmmoRequirementData item1Data = ammoRequirementMap.get("item1");
-            Set<String> item1Ids = item1Data.itemIds();
             amountFirstItem = item1Data.amount();
-
-            firstItem = Registries.ITEM.get(new Identifier(item1Ids.iterator().next()));
-
-            if (item1Ids.size() > 1) {
-                firstItem2nOption = Registries.ITEM.get(new Identifier(item1Ids.stream().skip(1).findFirst().get()));
-            }
+            firstItems = getItemsFromIds(item1Data.itemIds());
         }
 
         if (ammoRequirementMap.containsKey("item2")) {
             SCRangedWeaponDefinitionsLoader.AmmoRequirementData item2Data = ammoRequirementMap.get("item2");
-            Set<String> item2Ids = item2Data.itemIds();
             amountSecondItem = item2Data.amount();
-
-            secondItem = Registries.ITEM.get(new Identifier(item2Ids.iterator().next()));
-
-            if (item2Ids.size() > 1) {
-                secondItem2nOption = Registries.ITEM.get(new Identifier(item2Ids.stream().skip(1).findFirst().get()));
-            }
+            secondItems = getItemsFromIds(item2Data.itemIds());
         }
 
         if (ammoRequirementMap.containsKey("item3")) {
             SCRangedWeaponDefinitionsLoader.AmmoRequirementData item3Data = ammoRequirementMap.get("item3");
-            Set<String> item3Ids = item3Data.itemIds();
             amountThirdItem = item3Data.amount();
-
-            thirdItem = Registries.ITEM.get(new Identifier(item3Ids.iterator().next()));
-
-            if (item3Ids.size() > 1) {
-                thirdItem2nOption = Registries.ITEM.get(new Identifier(item3Ids.stream().skip(1).findFirst().get()));
-            }
+            thirdItems = getItemsFromIds(item3Data.itemIds());
         }
 
         return amountFirstItem >= 1
                 ? new AmmoRequirement(
-                amountFirstItem, firstItem, firstItem2nOption,
-                amountSecondItem, secondItem, secondItem2nOption,
-                amountThirdItem, thirdItem, thirdItem2nOption
+                amountFirstItem, firstItems[0], firstItems.length > 1 ? firstItems[1] : null,
+                amountSecondItem, secondItems != null ? secondItems[0] : null, secondItems != null && secondItems.length > 1 ? secondItems[1] : null,
+                amountThirdItem, thirdItems != null ? thirdItems[0] : null, thirdItems != null && thirdItems.length > 1 ? thirdItems[1] : null
         )
                 : null;
     }

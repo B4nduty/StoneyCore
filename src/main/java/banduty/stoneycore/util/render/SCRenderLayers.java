@@ -1,4 +1,4 @@
-package banduty.stoneycore.util;
+package banduty.stoneycore.util.render;
 
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;

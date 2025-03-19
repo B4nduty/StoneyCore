@@ -17,6 +17,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
@@ -34,7 +35,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             return amount;
         }
 
-        if (handleParry(target, attacker)) {
+        if (handleParry(target, attacker, source)) {
             return 0.0F;
         }
 
@@ -56,7 +57,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         return Math.max(amount, 0.0F);
     }
 
-    private boolean handleParry(LivingEntity target, LivingEntity attacker) {
+    private boolean handleParry(LivingEntity target, LivingEntity attacker, DamageSource source) {
         if (!StoneyCore.getConfig().getParry() || !(target instanceof PlayerEntity player)) {
             return false;
         }
@@ -73,7 +74,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         int blockStartTick = persistentData.getInt("BlockStartTick");
         int currentTick = (int) player.getWorld().getTime();
 
-        if (currentTick - blockStartTick > PARRY_WINDOW_TICKS) {
+        if (currentTick - blockStartTick > PARRY_WINDOW_TICKS && !source.isIn(DamageTypeTags.IS_EXPLOSION) && !source.isIn(DamageTypeTags.IS_PROJECTILE)) {
             return false;
         }
 

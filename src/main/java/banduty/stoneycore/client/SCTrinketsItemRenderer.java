@@ -3,7 +3,7 @@ package banduty.stoneycore.client;
 import banduty.stoneycore.event.custom.RenderOverlayAndAdditionsEvents;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.util.DyeUtil;
-import banduty.stoneycore.util.SCRenderLayers;
+import banduty.stoneycore.util.render.SCRenderLayers;
 import banduty.stoneycore.util.itemdata.SCTags;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.client.TrinketRenderer;

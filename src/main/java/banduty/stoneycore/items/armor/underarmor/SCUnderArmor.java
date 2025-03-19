@@ -3,9 +3,6 @@ package banduty.stoneycore.items.armor.underarmor;
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ArmorMaterial;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.NotNull;
 
 public class SCUnderArmor extends ArmorItem implements SCUnderArmorItem {
     double slashingResistance;
@@ -33,10 +30,5 @@ public class SCUnderArmor extends ArmorItem implements SCUnderArmorItem {
     @Override
     public double piercingResistance() {
         return piercingResistance;
-    }
-
-    @Override
-    public @NotNull Identifier getTexturePath() {
-        return new Identifier(Registries.ITEM.getId(this).getNamespace(), "textures/models/armor/" + this.material.toString().toLowerCase() + ".png");
     }
 }

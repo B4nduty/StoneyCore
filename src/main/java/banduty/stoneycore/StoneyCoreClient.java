@@ -9,6 +9,7 @@ import banduty.stoneycore.event.ItemTooltipHandler;
 import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
+import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.particle.MuzzlesFlashParticle;
@@ -41,8 +42,7 @@ public class StoneyCoreClient implements ClientModInitializer {
 		ParticleFactoryRegistry.getInstance().register(ModParticles.MUZZLES_FLASH_PARTICLE, MuzzlesFlashParticle.Factory::new);
 
 		for (Item item : Registries.ITEM) {
-			if ((item instanceof SCTrinketsItem scTrinketsItem && scTrinketsItem.isDyeable()) ||
-					(item instanceof SCUnderArmorItem scUnderArmorItem && scUnderArmorItem.isDyeable())) {
+			if ((item instanceof SCTrinketsItem scTrinketsItem && scTrinketsItem.isDyeable()) || item instanceof SCDyeableUnderArmor) {
 				ColorProviderRegistry.ITEM.register((stack, tintIndex) ->
 						tintIndex > 0 ? -1 : DyeUtil.getColor(stack), item);
 			}

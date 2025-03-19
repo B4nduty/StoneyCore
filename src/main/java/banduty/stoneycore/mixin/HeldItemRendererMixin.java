@@ -2,6 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
+import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;
 import banduty.stoneycore.util.DyeUtil;
 import dev.emi.trinkets.api.SlotReference;
@@ -20,6 +21,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
@@ -58,16 +60,16 @@ public class HeldItemRendererMixin {
         ClientPlayerEntity player = this.client.player;
         if (player == null) return;
         ItemStack stack = player.getInventory().getArmorStack(2);
-        if (stack.getItem() instanceof SCUnderArmorItem scArmorItem &&
+        if (stack.getItem() instanceof SCUnderArmorItem &&
                 stack.getItem() instanceof ArmorItem armorItem && armorItem.getSlotType() == ArmorItem.Type.CHESTPLATE.getEquipmentSlot()) {
             UnderArmourArmModel model = new UnderArmourArmModel(UnderArmourArmModel.getTexturedModelData().createModel());
             VertexConsumer baseConsumer = vertexConsumers.getBuffer(
-                    RenderLayer.getArmorCutoutNoCull(scArmorItem.getTexturePath()));
+                    RenderLayer.getArmorCutoutNoCull(new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
             float[] color = new float[3];
             color[0] = 1;
             color[1] = 1;
             color[2] = 1;
-            if (scArmorItem.isDyeable()) {
+            if (stack.getItem() instanceof SCDyeableUnderArmor) {
                 color = DyeUtil.getDyeColor(stack);
             }
 
@@ -106,7 +108,7 @@ public class HeldItemRendererMixin {
     @Unique
     private @NotNull Identifier getOverlayIdentifier(Item item) {
         Identifier originalIdentifier = null;
-        if (item instanceof SCUnderArmorItem scArmorItem) originalIdentifier = scArmorItem.getTexturePath();
+        if (item instanceof ArmorItem armorItem) originalIdentifier = new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png");
         if (item instanceof SCTrinketsItem scTrinketsItem) originalIdentifier = scTrinketsItem.getTexturePath();
 
         String textureOverlayString = null;

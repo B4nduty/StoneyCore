@@ -1,6 +1,7 @@
 package banduty.stoneycore.client;
 
 import banduty.stoneycore.items.armor.SCUnderArmorItem;
+import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.model.UnderArmourBootsModel;
 import banduty.stoneycore.model.UnderArmourChestplateModel;
 import banduty.stoneycore.model.UnderArmourHelmetModel;
@@ -21,6 +22,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,11 +39,11 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
                 TrinketRenderer.followBodyRotations(entity, model);
 
                 VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
-                        RenderLayer.getArmorCutoutNoCull(scUnderArmorItem.getTexturePath()));
-                if (scUnderArmorItem.isDyeable()) {
+                        RenderLayer.getArmorCutoutNoCull(new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
+                if (scUnderArmorItem instanceof SCDyeableUnderArmor) {
                     float[] color = DyeUtil.getDyeColor(stack);
 
-                    Identifier textureOverlayPath = getIdentifier(scUnderArmorItem);
+                    Identifier textureOverlayPath = getIdentifier(armorItem);
 
                     model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
 
@@ -51,8 +53,8 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
         }
     }
 
-    private static @NotNull Identifier getIdentifier(SCUnderArmorItem scUnderArmorItem) {
-        Identifier originalIdentifier = scUnderArmorItem.getTexturePath();
+    private static @NotNull Identifier getIdentifier(ArmorItem armorItem) {
+        Identifier originalIdentifier = new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png");
 
         String textureOverlayString = originalIdentifier.getPath();
 

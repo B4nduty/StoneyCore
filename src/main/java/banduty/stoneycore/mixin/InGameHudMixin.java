@@ -8,6 +8,7 @@ import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
+import banduty.stoneycore.util.render.TextureData;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.emi.trinkets.api.TrinketsApi;
@@ -33,55 +34,45 @@ import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
 public class InGameHudMixin {
     @Unique
     private static final Identifier TOO_FAR_CLOSE = new Identifier(StoneyCore.MOD_ID, "textures/overlay/too_far_close.png");
-    @Unique
-    private static final Identifier SLASHING_EFFECTIVE = new Identifier(StoneyCore.MOD_ID, "textures/overlay/slashing_effective.png");
-    @Unique
-    private static final Identifier SLASHING_CRITICAL = new Identifier(StoneyCore.MOD_ID, "textures/overlay/slashing_critical.png");
-    @Unique
-    private static final Identifier SLASHING_MAXIMUM = new Identifier(StoneyCore.MOD_ID, "textures/overlay/slashing_maximum.png");
-    @Unique
-    private static final Identifier BLUDGEONING_EFFECTIVE = new Identifier(StoneyCore.MOD_ID, "textures/overlay/bludgeoning_effective.png");
-    @Unique
-    private static final Identifier BLUDGEONING_CRITICAL = new Identifier(StoneyCore.MOD_ID, "textures/overlay/bludgeoning_critical.png");
-    @Unique
-    private static final Identifier BLUDGEONING_MAXIMUM = new Identifier(StoneyCore.MOD_ID, "textures/overlay/bludgeoning_maximum.png");
-    @Unique
-    private static final Identifier PIERCING_EFFECTIVE = new Identifier(StoneyCore.MOD_ID, "textures/overlay/piercing_effective.png");
-    @Unique
-    private static final Identifier PIERCING_CRITICAL = new Identifier(StoneyCore.MOD_ID, "textures/overlay/piercing_critical.png");
-    @Unique
-    private static final Identifier PIERCING_MAXIMUM = new Identifier(StoneyCore.MOD_ID, "textures/overlay/piercing_maximum.png");
 
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
     private void stoneycore$renderCrosshair(DrawContext context, CallbackInfo ci) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (!(player != null && player.getWorld() != null && SCMeleeWeaponDefinitionsLoader.containsItem(player.getMainHandStack().getItem()))) return;
-        Vec3d playerPos = player.getPos();
-        double closestDistance = Double.MAX_VALUE;
-
-        double distance;
-        if (MinecraftClient.getInstance().targetedEntity == null) distance = 9999;
-        else distance = playerPos.distanceTo(MinecraftClient.getInstance().targetedEntity.getPos());
-        if (distance < closestDistance) {
-            closestDistance = distance;
-        }
+        MinecraftClient client = MinecraftClient.getInstance();
+        ClientPlayerEntity player = client.player;
+        if (player == null || player.getWorld() == null) return;
 
         ItemStack mainHandStack = player.getMainHandStack();
         Item item = mainHandStack.getItem();
-        boolean bludgeoning = player.getMainHandStack().getOrCreateNbt().getBoolean("sc_bludgeoning");
-        boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING.getName(), item) == 0
-                && getDamageValues(SCDamageCalculator.DamageType.PIERCING.getName(), item) > 0
-                && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.getName(), item) > 0;
-        boolean piercing = isPiercing((PlayerAttackProperties) player, item);
+        if (!SCMeleeWeaponDefinitionsLoader.containsItem(item)) return;
 
-        if (bludgeoning || SCMeleeWeaponDefinitionsLoader.getData(item).onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
-            renderBludgeoningOverlay(item, context, closestDistance);
-        } else if (piercing || bludgeoningToPiercing || SCMeleeWeaponDefinitionsLoader.getData(item).onlyDamageType() == SCDamageCalculator.DamageType.PIERCING) {
-            renderPiercingOverlay(item,context, closestDistance);
-        } else {
-            renderSlashingOverlay(item,context, closestDistance);
-        }
+        Vec3d playerPos = player.getPos();
+        double closestDistance = client.targetedEntity == null
+                ? 9999
+                : playerPos.distanceTo(client.targetedEntity.getPos());
+
+        SCMeleeWeaponDefinitionsLoader.DefinitionData weaponData = SCMeleeWeaponDefinitionsLoader.getData(item);
+
+        String damageType = determineDamageType(mainHandStack, weaponData, (PlayerAttackProperties) player);
+        renderOverlay(item, context, closestDistance, damageType);
+
         ci.cancel();
+    }
+
+    @Unique
+    private String determineDamageType(ItemStack mainHandStack, SCMeleeWeaponDefinitionsLoader.DefinitionData weaponData, PlayerAttackProperties player) {
+        boolean bludgeoning = mainHandStack.getOrCreateNbt().getBoolean("sc_bludgeoning");
+        boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING.getName(), mainHandStack.getItem()) == 0
+                && getDamageValues(SCDamageCalculator.DamageType.PIERCING.getName(), mainHandStack.getItem()) > 0
+                && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.getName(), mainHandStack.getItem()) > 0;
+        boolean piercing = isPiercing(player, mainHandStack.getItem());
+
+        if (bludgeoning || weaponData.onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
+            return "bludgeoning";
+        }
+        if (piercing || bludgeoningToPiercing || weaponData.onlyDamageType() == SCDamageCalculator.DamageType.PIERCING) {
+            return "piercing";
+        }
+        return "slashing";
     }
 
     @Unique
@@ -90,151 +81,82 @@ public class InGameHudMixin {
         SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = SCMeleeWeaponDefinitionsLoader.getData(item);
         int[] piercingAnimations = attributeData.piercingAnimation();
         int animation = attributeData.animation();
-        boolean piercing = false;
 
         if (animation > 0) {
             for (int piercingAnimation : piercingAnimations) {
                 if (comboCount % animation == piercingAnimation - 1) {
-                    piercing = true;
-                    break;
+                    return true;
                 }
             }
-
-            if (piercingAnimations.length == animation) piercing = true;
+            return piercingAnimations.length == animation;
         }
-        return piercing;
+        return false;
     }
 
     @Unique
-    private void renderBludgeoningOverlay(net.minecraft.item.Item item, DrawContext drawContext, double distance) {
-        int x = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
-        int y = MinecraftClient.getInstance().getWindow().getScaledHeight();
-        Integer[] indices = {0, 1, 2, 3, 4};
+    private void renderOverlay(Item item, DrawContext drawContext, double distance, String damageType) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        int centerX = client.getWindow().getScaledWidth() / 2;
+        int centerY = client.getWindow().getScaledHeight() / 2;
 
-        Identifier[] textures = new Identifier[5];
-        textures[indices[0]] = TOO_FAR_CLOSE;
-        textures[indices[1]] = BLUDGEONING_EFFECTIVE;
-        textures[indices[2]] = BLUDGEONING_CRITICAL;
-        textures[indices[3]] = BLUDGEONING_EFFECTIVE;
-        textures[indices[4]] = BLUDGEONING_MAXIMUM;
+        Identifier[] textures = {
+                TOO_FAR_CLOSE,
+                getCrosshair(damageType, "effective"),
+                getCrosshair(damageType, "critical"),
+                getCrosshair(damageType, "effective"),
+                getCrosshair(damageType, "maximum")
+        };
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < textures.length; i++) {
             if (distance <= SCWeaponUtil.getRadius(item, i) + 0.25F) {
                 Identifier texture = textures[i];
-                int width, height, xT, yT;
-                if (texture == BLUDGEONING_CRITICAL) {
-                    width = height = 9;
-                    xT = yT = 5;
-                } else if (texture == BLUDGEONING_EFFECTIVE) {
-                    width = height = 9;
-                    xT = yT = 5;
-                } else if (texture == BLUDGEONING_MAXIMUM) {
-                    width = height = 7;
-                    xT = yT = 4;
-                } else if (texture == TOO_FAR_CLOSE) {
-                    width = height = 1;
-                    xT = yT = 1;
-                } else {
-                    width = height = 9;
-                    xT = yT = 5;
-                }
+                TextureData textureData = getTextureData(texture);
+                int color = switch (i) {
+                    case 0 -> StoneyCore.getConfig().hexColorTooFarClose();
+                    case 1, 3 -> StoneyCore.getConfig().hexColorEffective();
+                    case 2 -> StoneyCore.getConfig().hexColorCritical();
+                    case 4 -> StoneyCore.getConfig().hexColorMaximum();
+                    default -> 0xFFFFFF;
+                };
+
+                float red = ((color >> 16) & 0xFF) / 255.0f;
+                float green = ((color >> 8) & 0xFF) / 255.0f;
+                float blue = (color & 0xFF) / 255.0f;
+
                 RenderSystem.setShaderTexture(0, texture);
-                drawContext.drawTexture(texture, x - xT, y / 2 - yT, 0, 0, width, height, width, height);
+                RenderSystem.setShaderColor(red, green, blue, 1);
+                drawContext.drawTexture(texture, centerX - textureData.offsetX(), centerY - textureData.offsetY(), 0, 0, textureData.width(), textureData.height(), textureData.width(), textureData.height());
+                RenderSystem.setShaderColor(1, 1, 1, 1);
                 return;
             }
         }
+        int color = StoneyCore.getConfig().hexColorTooFarClose();
+        float red = ((color >> 16) & 0xFF) / 255.0f;
+        float green = ((color >> 8) & 0xFF) / 255.0f;
+        float blue = (color & 0xFF) / 255.0f;
+
         RenderSystem.setShaderTexture(0, TOO_FAR_CLOSE);
-        drawContext.drawTexture(TOO_FAR_CLOSE, x - 1, y / 2 - 1, 0, 0, 1, 1, 1, 1);
+        RenderSystem.setShaderColor(red, green, blue, 1);
+        drawContext.drawTexture(TOO_FAR_CLOSE, centerX - 1, centerY - 1, 0, 0, 1, 1, 1, 1);
+        RenderSystem.setShaderColor(1, 1, 1, 1);
     }
 
     @Unique
-    private void renderPiercingOverlay(net.minecraft.item.Item item, DrawContext drawContext, double distance) {
-        int x = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
-        int y = MinecraftClient.getInstance().getWindow().getScaledHeight();
-        Integer[] indices = {0, 1, 2, 3, 4};
-
-        Identifier[] textures = new Identifier[5];
-        textures[indices[0]] = TOO_FAR_CLOSE;
-        textures[indices[1]] = PIERCING_EFFECTIVE;
-        textures[indices[2]] = PIERCING_CRITICAL;
-        textures[indices[3]] = PIERCING_EFFECTIVE;
-        textures[indices[4]] = PIERCING_MAXIMUM;
-
-        for (int i = 0; i < 4; i++) {
-            if (distance <= SCWeaponUtil.getRadius(item, i) + 0.25F) {
-                Identifier texture = textures[i];
-                int width, height, xT, yT;
-                if (texture == PIERCING_CRITICAL) {
-                    width = height = 11;
-                    xT = yT = 6;
-                } else if (texture == PIERCING_EFFECTIVE) {
-                    width = height = 11;
-                    xT = yT = 6;
-                } else if (texture == PIERCING_MAXIMUM) {
-                    width = height = 7;
-                    xT = yT = 4;
-                } else if (texture == TOO_FAR_CLOSE) {
-                    width = height = 1;
-                    xT = yT = 1;
-                } else {
-                    width = height = 11;
-                    xT = yT = 6;
-                }
-                RenderSystem.setShaderTexture(0, texture);
-                drawContext.drawTexture(texture, x - xT, y / 2 - yT, 0, 0, width, height, width, height);
-                return;
-            }
-        }
-        RenderSystem.setShaderTexture(0, TOO_FAR_CLOSE);
-        drawContext.drawTexture(TOO_FAR_CLOSE, x - 1, y / 2 - 1, 0, 0, 1, 1, 1, 1);
+    private static Identifier getCrosshair(String damageType, String crosshairType) {
+        return new Identifier(StoneyCore.MOD_ID, "textures/overlay/" + damageType + "_" + crosshairType + ".png");
     }
 
     @Unique
-    private void renderSlashingOverlay(Item item, DrawContext drawContext, double distance) {
-        int x = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
-        int y = MinecraftClient.getInstance().getWindow().getScaledHeight();
-        Integer[] indices = {0, 1, 2, 3, 4};
-
-        Identifier[] textures = new Identifier[5];
-        textures[indices[0]] = TOO_FAR_CLOSE;
-        textures[indices[1]] = SLASHING_EFFECTIVE;
-        textures[indices[2]] = SLASHING_CRITICAL;
-        textures[indices[3]] = SLASHING_EFFECTIVE;
-        textures[indices[4]] = SLASHING_MAXIMUM;
-
-        boolean textureFound = false;
-        for (int i = 0; i < 4; i++) {
-            if (distance <= SCWeaponUtil.getRadius(item, i) + 0.25F) {
-                Identifier texture = textures[i];
-                int width, height, xT, yT;
-                if (texture == SLASHING_CRITICAL) {
-                    width = height = 9;
-                    xT = yT = 5;
-                } else if (texture == SLASHING_EFFECTIVE) {
-                    width = height = 9;
-                    xT = yT = 5;
-                } else if (texture == SLASHING_MAXIMUM) {
-                    width = height = 7;
-                    xT = yT = 4;
-                } else if (texture == TOO_FAR_CLOSE) {
-                    width = height = 1;
-                    xT = yT = 1;
-                } else {
-                    width = height = 9;
-                    xT = yT = 5;
-                }
-                RenderSystem.setShaderTexture(0, texture);
-                drawContext.drawTexture(texture, x - xT, y / 2 - yT, 0, 0, width, height, width, height);
-                textureFound = true;
-                break;
-            }
-        }
-        if (!textureFound) {
-            RenderSystem.setShaderTexture(0, TOO_FAR_CLOSE);
-            drawContext.drawTexture(TOO_FAR_CLOSE, x - 1, y / 2 - 1, 0, 0, 1, 1, 1, 1);
+    private TextureData getTextureData(Identifier texture) {
+        String path = texture.getPath();
+        if (path.contains("critical") || path.contains("effective")) {
+            return new TextureData(9, 9, 5, 5);
+        } else if (path.contains("maximum")) {
+            return new TextureData(7, 7, 4, 4);
+        } else { // too_far_close
+            return new TextureData(1, 1, 1, 1);
         }
     }
-
 
     @Unique
     private static final Identifier STAMINA = new Identifier(StoneyCore.MOD_ID, "textures/overlay/stamina_bar.png");
@@ -243,6 +165,8 @@ public class InGameHudMixin {
     @Unique
     private static final Identifier STAMINA_BLOCKED = new Identifier(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_blocked.png");
     @Unique
+    private static final int STAMINA_UNIT_SIZE = 8;
+    @Unique
     private static final int EMPTY_STAMINA_WIDTH = 9;
     @Unique
     private static final int EMPTY_STAMINA_HEIGHT = 9;
@@ -250,75 +174,68 @@ public class InGameHudMixin {
     private static final int STAMINA_BAR_WIDTH = 9;
     @Unique
     private static final int STAMINA_BAR_HEIGHT = 9;
-    @Unique
-    private static final int STAMINA_UNIT_SIZE = 8;
 
     @Inject(method = "renderStatusBars", at = @At("HEAD"))
     private void stoneycore$renderStaminaBar(DrawContext context, CallbackInfo ci) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player == null) return;
+        MinecraftClient client = MinecraftClient.getInstance();
+        ClientPlayerEntity player = client.player;
+        if (player == null || player.isSpectator() || !ableStamina(player)) return;
 
-        if (!ableStamina(player) || player.isSpectator()) return;
-        int x = getStaminaBarXPosition();
-        int y = getStaminaBarYPosition(player);
-        renderStaminaBar(context, x, y, StaminaData.getStamina((IEntityDataSaver) player), StaminaData.isStaminaBlocked((IEntityDataSaver) player));
+        int staminaBarX = client.getWindow().getScaledWidth() / 2;
+        int staminaBarY = getStaminaBarYPosition(player);
+        float stamina = StaminaData.getStamina((IEntityDataSaver) player);
+        boolean isStaminaBlocked = StaminaData.isStaminaBlocked((IEntityDataSaver) player);
+
+        renderStaminaBar(context, staminaBarX, staminaBarY, stamina, isStaminaBlocked);
     }
 
     @Unique
     private boolean ableStamina(PlayerEntity player) {
+        if (player == null) return false;
+
         boolean hasSCWeapon = SCMeleeWeaponDefinitionsLoader.containsItem(player.getMainHandStack().getItem());
-        boolean hasRequiredEquipment = false;
-        for (ItemStack armorStack : player.getArmorItems()) {
-            if (armorStack.getItem() instanceof SCUnderArmorItem) {
-                hasRequiredEquipment = true;
-                break;
+        for (ItemStack stack : player.getArmorItems()) {
+            if (stack.getItem() instanceof SCUnderArmorItem) {
+                return true;
             }
         }
-        return hasSCWeapon || hasRequiredEquipment;
-    }
-
-    @Unique
-    private int getStaminaBarXPosition() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client == null) return 0;
-        return client.getWindow().getScaledWidth() / 2;
+        return hasSCWeapon;
     }
 
     @Unique
     private int getStaminaBarYPosition(ClientPlayerEntity player) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client == null) return 0;
-        int height = client.getWindow().getScaledHeight();
-        return player.getAir() < player.getMaxAir() ? height - 59 : height - 49;
+
+        int windowHeight = client.getWindow().getScaledHeight();
+        return player.getAir() < player.getMaxAir() ? windowHeight - 59 : windowHeight - 49;
     }
 
     @Unique
-    private void renderStaminaBar(DrawContext drawContext, int x, int y, float stamina, boolean staminaBlocked) {
+    private void renderStaminaBar(DrawContext drawContext, int staminaBarX, int staminaBarY, float stamina, boolean isStaminaBlocked) {
+        int yOffset = StoneyCore.getConfig().getStaminaBarYOffset();
+        int y = staminaBarY - yOffset;
+
+        // Render empty stamina units
         for (int i = 0; i < 10; i++) {
-            renderEmptyStamina(drawContext, x + 82 - (i * STAMINA_UNIT_SIZE), y - StoneyCore.getConfig().getStaminaBarYOffset());
+            int x = staminaBarX + 82 - (i * STAMINA_UNIT_SIZE);
+            renderStaminaUnit(drawContext, x, y, STAMINA_EMPTY, EMPTY_STAMINA_WIDTH, EMPTY_STAMINA_HEIGHT);
         }
 
-        for (int i = 0; i < StoneyCore.getConfig().maxStamina(); i++) {
+        // Render filled or blocked stamina units
+        float maxStamina = StoneyCore.getConfig().maxStamina();
+        for (int i = 0; i < maxStamina; i++) {
             if (stamina < i) break;
-            int x1 = x + 82 - Math.absExact((int) (i / (StoneyCore.getConfig().maxStamina() / 10))) * STAMINA_UNIT_SIZE;
-            if (staminaBlocked) renderBlockedStamina(drawContext, x1, y - StoneyCore.getConfig().getStaminaBarYOffset());
-            else renderFilledStamina(drawContext, x1, y - StoneyCore.getConfig().getStaminaBarYOffset());
+
+            int x = staminaBarX + 82 - Math.absExact((int) (i / (maxStamina / 10)) * STAMINA_UNIT_SIZE);
+            Identifier texture = isStaminaBlocked ? STAMINA_BLOCKED : STAMINA;
+            renderStaminaUnit(drawContext, x, y, texture, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT);
         }
     }
 
     @Unique
-    private void renderEmptyStamina(DrawContext drawContext, int x, int y) {
-        drawContext.drawTexture(STAMINA_EMPTY, x, y, 0, 0, EMPTY_STAMINA_WIDTH, EMPTY_STAMINA_HEIGHT, EMPTY_STAMINA_WIDTH, EMPTY_STAMINA_HEIGHT);
-    }
-
-    @Unique
-    private void renderFilledStamina(DrawContext drawContext, int x, int y) {
-        drawContext.drawTexture(STAMINA, x, y, 0, 0, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT);
-    }
-
-    @Unique
-    private void renderBlockedStamina(DrawContext drawContext, int x, int y) {
-        drawContext.drawTexture(STAMINA_BLOCKED, x, y, 0, 0, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT);
+    private void renderStaminaUnit(DrawContext drawContext, int x, int y, Identifier texture, int width, int height) {
+        drawContext.drawTexture(texture, x, y, 0, 0, width, height, width, height);
     }
 
     @Unique
@@ -328,14 +245,19 @@ public class InGameHudMixin {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void stoneycore$renderBackgroundOverlays(DrawContext context, float tickDelta, CallbackInfo ci) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player != null && player.isCreative()) return;
+        MinecraftClient client = MinecraftClient.getInstance();
+        ClientPlayerEntity player = client.player;
+        if (player == null || player.isCreative()) return;
+
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
+
         int width = context.getScaledWindowWidth();
         int height = context.getScaledWindowHeight();
+
+        // Render visor helmet overlay if equipped
         TrinketsApi.getTrinketComponent(player).ifPresent(trinketComponent -> {
             trinketComponent.getAllEquipped().forEach(pair -> {
                 ItemStack trinketStack = pair.getRight();
@@ -346,15 +268,14 @@ public class InGameHudMixin {
             });
         });
 
+        // Render low stamina overlay if applicable
         float stamina = StaminaData.getStamina((IEntityDataSaver) player);
+        int lowStaminaThreshold = (int) (StoneyCore.getConfig().maxStamina() * 0.3f);
 
-        long firstLevel = Math.absExact((int) (StoneyCore.getConfig().maxStamina() * 0.3f));
-        if (stamina <= firstLevel && StoneyCore.getConfig().getLowStaminaIndicator()) {
-            float opacity = Math.max(0.0f, Math.min(1.0f, (firstLevel - stamina) / (firstLevel)));
-
+        if (stamina <= lowStaminaThreshold && StoneyCore.getConfig().getLowStaminaIndicator()) {
+            float opacity = Math.max(0.0f, Math.min(1.0f, (lowStaminaThreshold - stamina) / lowStaminaThreshold));
             float red = 1.0F;
-            float green = stamina / firstLevel;
-            if (StaminaData.isStaminaBlocked((IEntityDataSaver) player)) green = 0;
+            float green = StaminaData.isStaminaBlocked((IEntityDataSaver) player) ? 0 : stamina / lowStaminaThreshold;
             float blue = 0.0F;
 
             RenderSystem.setShaderTexture(0, LOW_STAMINA);
