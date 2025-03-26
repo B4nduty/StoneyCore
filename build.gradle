@@ -76,6 +76,8 @@ dependencies {
 	modApi("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config}") {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
+
+	modImplementation project(':streq')
 }
 
 processResources {

@@ -1,12 +1,14 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.config.StoneyCoreConfig;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
-import banduty.stoneycore.items.armor.SCUnderArmorItem;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
+import banduty.streq.StrEq;
 import dev.emi.trinkets.api.TrinketsApi;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.EquipmentSlot;
@@ -17,6 +19,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class StartTickHandler implements ServerTickEvents.StartTick {
     private int damageTick;
@@ -70,7 +75,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (isArmorSlot(slot)) {
                 ItemStack armorPiece = entity.getEquippedStack(slot);
-                if (!(armorPiece.getItem() instanceof SCUnderArmorItem)) {
+                if (!SCUnderArmorDefinitionsLoader.containsItem(armorPiece.getItem())) {
                     return false;
                 }
             }
@@ -86,7 +91,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         IEntityDataSaver dataSaver = (IEntityDataSaver) playerEntity;
         float stamina = StaminaData.getStamina(dataSaver);
 
-        if ((playerEntity.isCreative() || playerEntity.isSpectator())) {
+        if ((playerEntity.isCreative() || playerEntity.isSpectator() || StoneyCore.getConfig().maxStamina() <= 0)) {
             if (stamina < StoneyCore.getConfig().maxStamina()) StaminaData.setStamina((IEntityDataSaver) playerEntity, StoneyCore.getConfig().maxStamina());
             removeStaminaEffects(playerEntity);
             StaminaData.setStaminaBlocked((IEntityDataSaver) playerEntity, false);
@@ -96,21 +101,22 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
             StaminaData.setStamina((IEntityDataSaver) playerEntity, StoneyCore.getConfig().maxStamina());
 
         if (!playerEntity.isCreative() || !playerEntity.isSpectator()) {
-            handleStaminaRecovery(playerEntity, stamina);
+            if (!isUsingStamina(playerEntity)) handleStaminaRecovery(playerEntity, stamina);
             handleStaminaEffects(playerEntity, stamina);
-            handleStaminaUsage(playerEntity, stamina);
         }
     }
 
     private void handleStaminaRecovery(ServerPlayerEntity playerEntity, float stamina) {
         double foodLevel = playerEntity.getHungerManager().getFoodLevel();
         double health = playerEntity.getHealth();
-        double ticksPerRecovery = (foodLevel + health) / 5.0d;
-        int roundOff = Math.min(1, (int) (10 - Math.round(ticksPerRecovery)));
+        String formula = StoneyCore.getConfig().staminaRecoveryFormula();
+        Map<String, Double> variables = new HashMap<>();
+        variables.put("foodLevel", foodLevel);
+        variables.put("health", health);
+        int ticksPerRecovery = Math.max(1, (int) StrEq.evaluate(formula, variables));
 
         StaminaData.addStamina((IEntityDataSaver) playerEntity, 0);
-        if (ticksPerRecovery != 0 && playerEntity.age % roundOff == 0 && stamina < StoneyCore.getConfig().maxStamina()
-                && !playerEntity.isTouchingWater()) {
+        if (playerEntity.age % ticksPerRecovery == 0 && stamina < StoneyCore.getConfig().maxStamina()) {
             StaminaData.addStamina((IEntityDataSaver) playerEntity, 0.1f);
         }
     }
@@ -139,29 +145,45 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         }
     }
 
-    private void handleStaminaUsage(ServerPlayerEntity playerEntity, float stamina) {
-        IEntityDataSaver dataSaver = (IEntityDataSaver) playerEntity;
-        boolean staminaBlocked = StaminaData.isStaminaBlocked((IEntityDataSaver) playerEntity);
+    private boolean isUsingStamina(ServerPlayerEntity player) {
+        IEntityDataSaver dataSaver = (IEntityDataSaver) player;
+        boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
+        boolean usingStamina = false;
 
-        if (isSCWeapon(playerEntity.getMainHandStack()) && !staminaBlocked && !StoneyCore.getConfig().getBlocking()
-                && playerEntity.isBlocking() && stamina >= 0.1f && playerEntity.age % 2 == 0) {
-            StaminaData.removeStamina(dataSaver, 0.1f);
+        var persistentData = dataSaver.stoneycore$getPersistentData();
+        boolean wasInAir = persistentData.getBoolean("wasInAir");
+        boolean isInAir = !player.isOnGround() && !player.isClimbing();
+
+        boolean wearingSCArmor = isWearingSCArmor(player);
+        boolean hasSCWeapon = isSCWeapon(player.getMainHandStack());
+        StoneyCoreConfig config = StoneyCore.getConfig();
+
+        if (!staminaBlocked) {
+            if (hasSCWeapon && player.isBlocking()) {
+                StaminaData.removeStamina(dataSaver, config.blockingStaminaPerSecond() / 20f);
+                usingStamina = true;
+            }
+
+            if (wearingSCArmor) {
+                if (player.isSprinting()) {
+                    StaminaData.removeStamina(dataSaver, config.sprintingStaminaPerSecond() / 20f);
+                    usingStamina = true;
+                }
+
+                if (player.isSwimming()) {
+                    StaminaData.removeStamina(dataSaver, config.swimmingStaminaPerSecond() / 20f);
+                    usingStamina = true;
+                }
+
+                if (isInAir && !wasInAir) {
+                    StaminaData.removeStamina(dataSaver, config.jumpingStamina());
+                    usingStamina = true;
+                }
+            }
         }
 
-        if (isWearingSCArmor(playerEntity) && !staminaBlocked && playerEntity.isSprinting() && stamina >= 1) {
-            StaminaData.removeStamina(dataSaver, 0.1f);
-        }
-
-        if (isWearingSCArmor(playerEntity) && !staminaBlocked && !playerEntity.isOnGround()
-                && playerEntity.getVelocity().y > 0 && !playerEntity.isBlocking()
-                && !playerEntity.hasVehicle() && !playerEntity.isTouchingWater()) {
-            StaminaData.removeStamina(dataSaver, 0.6f);
-        }
-
-        if (isWearingSCArmor(playerEntity) && playerEntity.isTouchingWater() && stamina >= 0.1f
-                && playerEntity.age % 2 == 0) {
-            StaminaData.removeStamina(dataSaver, 0.1f);
-        }
+        persistentData.putBoolean("wasInAir", isInAir);
+        return usingStamina;
     }
 
     private void applyStaminaEffects(ServerPlayerEntity playerEntity, int miningFatigueLevel, int slownessLevel) {
@@ -182,7 +204,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
 
     private boolean isWearingSCArmor(ServerPlayerEntity playerEntity) {
         for (ItemStack armorStack : playerEntity.getArmorItems()) {
-            if (armorStack.getItem() instanceof SCUnderArmorItem) {
+            if (SCUnderArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
                 return true;
             }
         }

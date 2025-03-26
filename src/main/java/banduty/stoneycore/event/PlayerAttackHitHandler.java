@@ -1,5 +1,6 @@
 package banduty.stoneycore.event;
 
+import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
@@ -14,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class PlayerAttackHit implements BetterCombatClientEvents.PlayerAttackHit {
+public class PlayerAttackHitHandler implements BetterCombatClientEvents.PlayerAttackHit {
     @Override
     public void onPlayerAttackStart(ClientPlayerEntity player, AttackHand attackHand, List<Entity> list, @Nullable Entity entity) {
         if (SCMeleeWeaponDefinitionsLoader.containsItem(player.getMainHandStack().getItem())) {
@@ -22,7 +23,7 @@ public class PlayerAttackHit implements BetterCombatClientEvents.PlayerAttackHit
 
             if (player.isCreative()) return;
 
-            if (StaminaData.getStamina(dataSaver) < 1 || StaminaData.isStaminaBlocked(dataSaver)) {
+            if (StaminaData.isStaminaBlocked(dataSaver) || StoneyCore.getConfig().maxStamina() <= 0) {
                 return;
             }
 

@@ -1,6 +1,5 @@
 package banduty.stoneycore.client;
 
-import banduty.stoneycore.items.armor.SCUnderArmorItem;
 import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.model.UnderArmourBootsModel;
 import banduty.stoneycore.model.UnderArmourChestplateModel;
@@ -33,27 +32,26 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
 
     @Override
     public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, ItemStack stack, LivingEntity entity, EquipmentSlot slot, int light, BipedEntityModel<LivingEntity> contextModel) {
-        if (stack.getItem() instanceof SCUnderArmorItem scUnderArmorItem && stack.getItem() instanceof ArmorItem armorItem) {
-            BipedEntityModel<LivingEntity> model = getModel(armorItem);
-            if (model != null) {
-                TrinketRenderer.followBodyRotations(entity, model);
+        ArmorItem armorItem = (ArmorItem) stack.getItem();
+        BipedEntityModel<LivingEntity> model = getModel(armorItem);
+        if (model != null) {
+            TrinketRenderer.followBodyRotations(entity, model);
 
-                VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
-                        RenderLayer.getArmorCutoutNoCull(new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
-                if (scUnderArmorItem instanceof SCDyeableUnderArmor) {
-                    float[] color = DyeUtil.getDyeColor(stack);
+            VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
+                    RenderLayer.getArmorCutoutNoCull(new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
+            if (armorItem instanceof SCDyeableUnderArmor) {
+                float[] color = DyeUtil.getDyeColor(stack);
 
-                    Identifier textureOverlayPath = getIdentifier(armorItem);
+                Identifier textureOverlayPath = getOverlayIdentifier(armorItem);
 
-                    model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
+                model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
 
-                    ArmorRenderer.renderPart(matrices, vertexConsumers, light, stack, model, textureOverlayPath);
-                } else model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, 1, 1, 1, 1);
-            }
+                ArmorRenderer.renderPart(matrices, vertexConsumers, light, stack, model, textureOverlayPath);
+            } else model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, 1, 1, 1, 1);
         }
     }
 
-    private static @NotNull Identifier getIdentifier(ArmorItem armorItem) {
+    private static @NotNull Identifier getOverlayIdentifier(ArmorItem armorItem) {
         Identifier originalIdentifier = new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png");
 
         String textureOverlayString = originalIdentifier.getPath();

@@ -2,7 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.event.custom.TrinketsModifiersEvents;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
-import banduty.stoneycore.items.armor.SCUnderArmorItem;
+import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -14,6 +14,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -57,7 +58,7 @@ public class TrinketMixin implements Trinket {
                 if (optional.isPresent()) {
                     EntityAttributeModifier entityAttributeModifier = EntityAttributeModifier.fromNbt(tag);
                     if (entityAttributeModifier != null && entityAttributeModifier.getId().getLeastSignificantBits() != 0L && entityAttributeModifier.getId().getMostSignificantBits() != 0L) {
-                        map.put((EntityAttribute)optional.get(), entityAttributeModifier);
+                        map.put(optional.get(), entityAttributeModifier);
                     }
                 }
             }
@@ -70,10 +71,10 @@ public class TrinketMixin implements Trinket {
     public boolean canEquip(ItemStack stack, SlotReference slot, LivingEntity entity) {
         if (!(stack.getItem() instanceof SCTrinketsItem)) return true;
 
-        return Arrays.stream(EquipmentSlot.values())
+        return stack.isIn(SCTags.ALWAYS_WEARABLE.getTag()) || Arrays.stream(EquipmentSlot.values())
                 .filter(this::isArmorSlot)
-                .allMatch(slotType -> stack.isIn(SCTags.ALWAYS_WEARABLE.getTag()) ||
-                        entity.getEquippedStack(slotType).getItem() instanceof SCUnderArmorItem);
+                .allMatch(slotType -> entity.getEquippedStack(slotType).getItem() instanceof ArmorItem armorItem
+                                && SCUnderArmorDefinitionsLoader.containsItem(armorItem));
     }
 
     @Unique

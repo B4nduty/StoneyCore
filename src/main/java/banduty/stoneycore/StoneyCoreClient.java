@@ -8,7 +8,7 @@ import banduty.stoneycore.event.AttackCancelHandler;
 import banduty.stoneycore.event.ItemTooltipHandler;
 import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
-import banduty.stoneycore.items.armor.SCUnderArmorItem;
+import banduty.stoneycore.items.armor.ISCUnderArmor;
 import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
@@ -27,7 +27,6 @@ import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 
 public class StoneyCoreClient implements ClientModInitializer {
-
 	@Override
 	public void onInitializeClient() {
 		ModMessages.registerS2CPackets();
@@ -49,7 +48,7 @@ public class StoneyCoreClient implements ClientModInitializer {
 			if (item instanceof SCTrinketsItem) {
 				TrinketRendererRegistry.registerRenderer(item, new SCTrinketsItemRenderer());
 			}
-			if (item instanceof SCUnderArmorItem) {
+			if (item instanceof ISCUnderArmor) {
 				ArmorRenderer.register(new SCUnderArmourRenderer(), item);
 			}
 		}

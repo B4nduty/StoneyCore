@@ -27,7 +27,6 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
     private static final float WEAKNESS_MULTIPLIER = 4.0F;
     private static final int PARRY_WINDOW_TICKS = 10;
     private static final float PARRY_KNOCKBACK_STRENGTH = 0.5F;
-    private static final float STAMINA_COST_ON_PARRY = 2f;
 
     @Override
     public float onDamage(LivingEntity target, DamageSource source, float amount) {
@@ -74,12 +73,12 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         int blockStartTick = persistentData.getInt("BlockStartTick");
         int currentTick = (int) player.getWorld().getTime();
 
-        if (currentTick - blockStartTick > PARRY_WINDOW_TICKS && !source.isIn(DamageTypeTags.IS_EXPLOSION) && !source.isIn(DamageTypeTags.IS_PROJECTILE)) {
+        if (currentTick - blockStartTick > PARRY_WINDOW_TICKS || source.isIn(DamageTypeTags.IS_EXPLOSION) || source.isIn(DamageTypeTags.IS_PROJECTILE)) {
             return false;
         }
 
         performParryEffects(player, attacker);
-        StaminaData.removeStamina((IEntityDataSaver) player, STAMINA_COST_ON_PARRY);
+        StaminaData.removeStamina((IEntityDataSaver) player, StoneyCore.getConfig().onParryStamina());
         return true;
     }
 
@@ -109,7 +108,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             return originalDamage;
         }
 
-        float baseDamage = SCWeaponUtil.calculateDamage(stack.getItem(), actualDistance, damageType.getName());
+        float baseDamage = SCWeaponUtil.calculateDamage(stack.getItem(), actualDistance, damageType.name());
 
         float calculatedDamage = SCDamageCalculator.getSCDamage(target, baseDamage, damageType);
 

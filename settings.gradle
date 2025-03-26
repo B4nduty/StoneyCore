@@ -9,3 +9,6 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
+
+include ':streq'
+project(':streq').projectDir = new File("C:\\Users\\regan\\OneDrive\\Escritorio\\Banduty's Mods\\streq-mod")

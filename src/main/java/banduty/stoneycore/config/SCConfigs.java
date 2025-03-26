@@ -8,10 +8,6 @@ import io.wispforest.owo.config.annotation.*;
 @Modmenu(modId = StoneyCore.MOD_ID)
 @Config(name = StoneyCore.MOD_ID, wrapperName = "StoneyCoreConfig")
 public class SCConfigs {
-    @Comment("Use Stamina on or while Blocking")
-    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-    public boolean getBlocking = true;
-
     @Comment("Damage Indicator")
     public boolean getDamageIndicator = false;
 
@@ -37,8 +33,43 @@ public class SCConfigs {
     public int getStaminaBarYOffset = 0;
 
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-    @Comment("Max Stamina")
-    public float maxStamina = 40f;
+    @Comment("""
+            Max Stamina
+            If set to 0, it will be disabled
+            """)
+    public float maxStamina = 20f;
+
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    @Comment("Stamina Recovery Formula")
+    public String staminaRecoveryFormula = "10 - (foodLevel + health) / 5";
+
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    @Comment("Blocking Stamina Per Second")
+    public float blockingStaminaPerSecond = 0.5f;
+
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    @Comment("On Block Stamina")
+    public float onBlockStamina = 1.5f;
+
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    @Comment("On Parry Stamina")
+    public float onParryStamina = 2.5f;
+
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    @Comment("Sprinting Stamina Per Second")
+    public float sprintingStaminaPerSecond = 2f;
+
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    @Comment("Sprinting Stamina")
+    public float jumpingStamina = 1f;
+
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    @Comment("Swimming Stamina Per Second")
+    public float swimmingStaminaPerSecond = 1f;
+
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    @Comment("Attack Stamina")
+    public float attackStamina = 2f;
 
     @Sync(Option.SyncMode.NONE)
     @Comment("Hex Color Too/Far Close")

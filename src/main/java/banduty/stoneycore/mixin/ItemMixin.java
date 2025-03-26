@@ -5,6 +5,8 @@ import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
+import banduty.stoneycore.util.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.playerdata.StaminaData;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import banduty.stoneycore.util.weaponutil.TooltipClientSide;
@@ -57,10 +59,22 @@ public class ItemMixin {
         if (SCRangedWeaponDefinitionsLoader.containsItem(stack.getItem())) {
             cir.setReturnValue(SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).maxUseTime());
         }
+        if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) {
+            cir.setReturnValue(72000);
+        }
     }
 
     @Inject(method = "usageTick", at = @At("HEAD"))
     public void stoneycore$usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks, CallbackInfo ci) {
+        if (user instanceof PlayerEntity playerEntity) {
+            IEntityDataSaver dataSaver = (IEntityDataSaver) playerEntity;
+            boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
+
+            if (staminaBlocked) {
+                playerEntity.clearActiveItem();
+            }
+        }
+
         if (world.isClient
                 || !(user instanceof PlayerEntity player)
                 || !(SCRangedWeaponDefinitionsLoader.containsItem(stack.getItem()))
@@ -107,6 +121,15 @@ public class ItemMixin {
             return;
         }
 
+        IEntityDataSaver dataSaver = (IEntityDataSaver) user;
+        boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
+
+        if (staminaBlocked) {
+            user.clearActiveItem();
+            cir.setReturnValue(TypedActionResult.fail(stack));
+            return;
+        }
+
         user.setCurrentHand(hand);
         cir.setReturnValue(stack.isIn(SCTags.WEAPONS_SHIELD.getTag())
                 ? TypedActionResult.consume(stack)
@@ -115,7 +138,7 @@ public class ItemMixin {
 
     @Unique
     private boolean isBludgeoningWeapon(Item item) {
-        return getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.getName(), item) > 0;
+        return getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.name(), item) > 0;
     }
 
     @Unique
@@ -232,9 +255,9 @@ public class ItemMixin {
         if (world == null) return;
         Item item = stack.getItem();
         if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) {
-            float slashingDamage = getDamageValues(SCDamageCalculator.DamageType.SLASHING.getName(), item);
-            float piercingDamage = getDamageValues(SCDamageCalculator.DamageType.PIERCING.getName(), item);
-            float bludgeoningDamage = getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.getName(), item);
+            float slashingDamage = getDamageValues(SCDamageCalculator.DamageType.SLASHING.name(), item);
+            float piercingDamage = getDamageValues(SCDamageCalculator.DamageType.PIERCING.name(), item);
+            float bludgeoningDamage = getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.name(), item);
 
             if (slashingDamage > 0 && bludgeoningDamage > 0) {
                 tooltip.add(Text.translatable("text.tooltip.stoneycore.shift-right_click-bludgeoning"));

@@ -49,7 +49,7 @@ public class SCMeleeWeaponDefinitionsLoader implements IdentifiableResourceReloa
                     if (json.has("damage")) {
                         JsonObject attributesJson = json.getAsJsonObject("damage");
                         for (Map.Entry<String, JsonElement> entry : attributesJson.entrySet()) {
-                            damage.put(entry.getKey(), entry.getValue().getAsFloat());
+                            damage.put(entry.getKey().toUpperCase(), entry.getValue().getAsFloat());
                         }
                     }
 

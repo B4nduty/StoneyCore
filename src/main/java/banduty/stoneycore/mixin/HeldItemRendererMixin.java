@@ -1,10 +1,10 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.items.armor.SCTrinketsItem;
-import banduty.stoneycore.items.armor.SCUnderArmorItem;
 import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;
 import banduty.stoneycore.util.DyeUtil;
+import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.TrinketsApi;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
@@ -60,8 +60,8 @@ public class HeldItemRendererMixin {
         ClientPlayerEntity player = this.client.player;
         if (player == null) return;
         ItemStack stack = player.getInventory().getArmorStack(2);
-        if (stack.getItem() instanceof SCUnderArmorItem &&
-                stack.getItem() instanceof ArmorItem armorItem && armorItem.getSlotType() == ArmorItem.Type.CHESTPLATE.getEquipmentSlot()) {
+        if (stack.getItem() instanceof ArmorItem armorItem && SCUnderArmorDefinitionsLoader.containsItem(armorItem)
+                && armorItem.getSlotType() == ArmorItem.Type.CHESTPLATE.getEquipmentSlot()) {
             UnderArmourArmModel model = new UnderArmourArmModel(UnderArmourArmModel.getTexturedModelData().createModel());
             VertexConsumer baseConsumer = vertexConsumers.getBuffer(
                     RenderLayer.getArmorCutoutNoCull(new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));

@@ -2,9 +2,9 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
-import banduty.stoneycore.items.armor.SCUnderArmorItem;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -61,9 +61,9 @@ public class InGameHudMixin {
     @Unique
     private String determineDamageType(ItemStack mainHandStack, SCMeleeWeaponDefinitionsLoader.DefinitionData weaponData, PlayerAttackProperties player) {
         boolean bludgeoning = mainHandStack.getOrCreateNbt().getBoolean("sc_bludgeoning");
-        boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING.getName(), mainHandStack.getItem()) == 0
-                && getDamageValues(SCDamageCalculator.DamageType.PIERCING.getName(), mainHandStack.getItem()) > 0
-                && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.getName(), mainHandStack.getItem()) > 0;
+        boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING.name(), mainHandStack.getItem()) == 0
+                && getDamageValues(SCDamageCalculator.DamageType.PIERCING.name(), mainHandStack.getItem()) > 0
+                && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.name(), mainHandStack.getItem()) > 0;
         boolean piercing = isPiercing(player, mainHandStack.getItem());
 
         if (bludgeoning || weaponData.onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
@@ -179,7 +179,7 @@ public class InGameHudMixin {
     private void stoneycore$renderStaminaBar(DrawContext context, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;
-        if (player == null || player.isSpectator() || !ableStamina(player)) return;
+        if (player == null || player.isSpectator() || !ableStamina(player) || StoneyCore.getConfig().maxStamina() <= 0) return;
 
         int staminaBarX = client.getWindow().getScaledWidth() / 2;
         int staminaBarY = getStaminaBarYPosition(player);
@@ -195,7 +195,7 @@ public class InGameHudMixin {
 
         boolean hasSCWeapon = SCMeleeWeaponDefinitionsLoader.containsItem(player.getMainHandStack().getItem());
         for (ItemStack stack : player.getArmorItems()) {
-            if (stack.getItem() instanceof SCUnderArmorItem) {
+            if (SCUnderArmorDefinitionsLoader.containsItem(stack.getItem())) {
                 return true;
             }
         }

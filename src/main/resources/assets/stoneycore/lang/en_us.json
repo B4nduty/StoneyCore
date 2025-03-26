@@ -19,7 +19,6 @@
   "text.tooltip.stoneycore.need_to_hold": "§1Hold §r[ %s ] §1to Recharge",
   
   "text.config.stoneycore.title": "StoneyCore",
-  "text.config.stoneycore.option.getBlocking": "Use Stamina on or while Blocking",
   "text.config.stoneycore.option.getWardartCooldown": "WarDart throw Cooldown",
   "text.config.stoneycore.option.getDamageIndicator": "Damage Indicator",
   "text.config.stoneycore.option.getVisoredHelmet": "Visored Helmet Overlay",
@@ -27,5 +26,17 @@
   "text.config.stoneycore.option.getMuzzlesSmokeParticlesTime": "Muzzles Smoke Particles Time Active",
   "text.config.stoneycore.option.getParry": "Parry [Experimental]",
   "text.config.stoneycore.option.getStaminaBarYOffset": "Stamina Bar Y Offset",
-  "text.config.stoneycore.option.maxStamina": "Max Stamina"
+  "text.config.stoneycore.option.maxStamina": "Max Stamina | Set to 0 to disable",
+  "text.config.stoneycore.option.staminaRecoveryFormula": "Stamina Recovery Formula",
+  "text.config.stoneycore.option.blockingStaminaPerSecond": "Blocking Stamina Per Second",
+  "text.config.stoneycore.option.onBlockStamina": "On Block Stamina",
+  "text.config.stoneycore.option.onParryStamina": "On Parry Stamina",
+  "text.config.stoneycore.option.sprintingStaminaPerSecond": "Sprinting Stamina Per Second",
+  "text.config.stoneycore.option.jumpingStamina": "Sprinting Stamina",
+  "text.config.stoneycore.option.swimmingStaminaPerSecond": "Swimming Stamina Per Second",
+  "text.config.stoneycore.option.attackStamina": "Attack Stamina",
+  "text.config.stoneycore.option.hexColorTooFarClose": "Hex Color Too/Far Close",
+  "text.config.stoneycore.option.hexColorEffective": "Hex Color Effective",
+  "text.config.stoneycore.option.hexColorCritical": "Hex Color Critical",
+  "text.config.stoneycore.option.hexColorMaximum": "Hex Color Maximum"
 }

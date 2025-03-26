@@ -37,13 +37,8 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
 
         if (currentItem.getNbt() == null) return;
 
-        if (!isReloading(currentItem)) {
-            resetRechargeTime(player);
-            return;
-        }
-
         Item item = currentItem.getItem();
-        if (!isValidRangeWeapon(item)) {
+        if (!isReloading(currentItem) || !isValidRangeWeapon(item)) {
             resetRechargeTime(player);
             return;
         }
