@@ -59,7 +59,7 @@ public class ItemMixin {
         if (SCRangedWeaponDefinitionsLoader.containsItem(stack.getItem())) {
             cir.setReturnValue(SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).maxUseTime());
         }
-        if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) {
+        if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem()) && stack.isIn(SCTags.WEAPONS_SHIELD.getTag())) {
             cir.setReturnValue(72000);
         }
     }
@@ -130,10 +130,12 @@ public class ItemMixin {
             return;
         }
 
-        user.setCurrentHand(hand);
-        cir.setReturnValue(stack.isIn(SCTags.WEAPONS_SHIELD.getTag())
-                ? TypedActionResult.consume(stack)
-                : TypedActionResult.fail(stack));
+        if (stack.isIn(SCTags.WEAPONS_SHIELD.getTag())) {
+            user.setCurrentHand(hand);
+            cir.setReturnValue(TypedActionResult.consume(stack));
+            return;
+        }
+        cir.setReturnValue(TypedActionResult.fail(stack));
     }
 
     @Unique

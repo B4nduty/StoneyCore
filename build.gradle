@@ -88,7 +88,7 @@ dependencies {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
 
-	modImplementation "curse.maven:streq-1139970:6363000"
+	include modImplementation(project(':streq'))
 }
 
 processResources {
