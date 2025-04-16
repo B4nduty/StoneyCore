@@ -46,14 +46,17 @@ public class InGameHudMixin {
         if (!SCMeleeWeaponDefinitionsLoader.containsItem(item)) return;
 
         Vec3d playerPos = player.getPos();
-        double closestDistance = client.targetedEntity == null
+        double distance = client.targetedEntity == null
                 ? 9999
                 : playerPos.distanceTo(client.targetedEntity.getPos());
 
         SCMeleeWeaponDefinitionsLoader.DefinitionData weaponData = SCMeleeWeaponDefinitionsLoader.getData(item);
 
+        StoneyCore.LOGGER.info("Distance: {}", distance);
+        StoneyCore.LOGGER.info("Targeted Entity: {}", client.targetedEntity);
+
         String damageType = determineDamageType(mainHandStack, weaponData, (PlayerAttackProperties) player);
-        renderOverlay(item, context, closestDistance, damageType);
+        renderOverlay(item, context, distance, damageType);
 
         ci.cancel();
     }
