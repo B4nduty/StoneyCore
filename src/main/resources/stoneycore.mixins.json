@@ -7,7 +7,6 @@
     "ItemMixin",
     "LivingEntityMixin",
     "PlayerEntityMixin",
-    "ReachEntityAttributesMixin",
     "StatusEffectsMixin",
     "TrinketMixin"
   ],
@@ -17,7 +16,6 @@
   "client": [
     "CapeFeatureRendererMixin",
     "EntityRendererMixin",
-    "GameRendererMixin",
     "HeldItemRendererMixin",
     "InGameHudMixin",
     "ItemRendererMixin",

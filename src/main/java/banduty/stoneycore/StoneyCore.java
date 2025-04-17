@@ -34,6 +34,7 @@ public class StoneyCore implements ModInitializer {
 		ServerTickEvents.START_SERVER_TICK.register(new ReloadTickHandler());
 		PlayerBlockBreakEvents.AFTER.register(new PlayerBlockBreakHandler());
 		BetterCombatClientEvents.ATTACK_HIT.register(new PlayerAttackHitHandler());
+		ServerTickEvents.START_SERVER_TICK.register(new SCReachHandler());
 		ModParticles.registerParticles();
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SCMeleeWeaponDefinitionsLoader());

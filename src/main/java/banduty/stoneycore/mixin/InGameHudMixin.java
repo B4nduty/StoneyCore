@@ -52,9 +52,6 @@ public class InGameHudMixin {
 
         SCMeleeWeaponDefinitionsLoader.DefinitionData weaponData = SCMeleeWeaponDefinitionsLoader.getData(item);
 
-        StoneyCore.LOGGER.info("Distance: {}", distance);
-        StoneyCore.LOGGER.info("Targeted Entity: {}", client.targetedEntity);
-
         String damageType = determineDamageType(mainHandStack, weaponData, (PlayerAttackProperties) player);
         renderOverlay(item, context, distance, damageType);
 
