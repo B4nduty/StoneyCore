@@ -3,7 +3,6 @@ package banduty.stoneycore.entity.custom;
 import banduty.stoneycore.util.SCDamageCalculator;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.listener.ClientPlayPacketListener;
@@ -58,7 +57,7 @@ public class SCArrowEntity extends PersistentProjectileEntity {
 
     public void scHitEntity(LivingEntity target, ItemStack stack, float damage) {
         damage = SCDamageCalculator.getSCDamage(target, damage, getDamageType());
-        SCDamageCalculator.applyDamage(target, (PlayerEntity) getOwner(), stack, damage);
+        SCDamageCalculator.applyDamage(target, (LivingEntity) getOwner(), stack, damage);
         if (this.isOnFire()) target.setOnFireFor(5);
     }
 }

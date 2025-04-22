@@ -38,21 +38,17 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             return 0.0F;
         }
 
-        if (!(source.getAttacker() instanceof PlayerEntity player)) {
-            return amount;
-        }
-
-        ItemStack stack = player.getMainHandStack();
+        ItemStack stack = attacker.getMainHandStack();
         if (stack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
-            SCDamageCalculator.applyDamage(target, player, stack, amount);
+            SCDamageCalculator.applyDamage(target, attacker, stack, amount);
             return 0;
         }
 
         if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) {
-            amount = calculateWeaponDamage(player, target, stack.getItem(), stack, amount);
+            amount = calculateWeaponDamage(attacker, target, stack.getItem(), stack, amount);
         }
 
-        amount = applyStatusEffectModifiers(player, amount);
+        amount = applyStatusEffectModifiers(attacker, amount);
         return Math.max(amount, 0.0F);
     }
 
@@ -95,14 +91,14 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         );
     }
 
-    private float calculateWeaponDamage(PlayerEntity player, LivingEntity target,
+    private float calculateWeaponDamage(LivingEntity attacker, LivingEntity target,
                                         Item item, ItemStack stack, float originalDamage) {
-        int comboCount = ((PlayerAttackProperties) player).getComboCount();
+        int comboCount = attacker instanceof PlayerEntity player ? ((PlayerAttackProperties) player).getComboCount() : 0;
 
         SCDamageCalculator.DamageType damageType = SCWeaponUtil.calculateDamageType(stack, item, comboCount);
 
         double maxDistance = SCWeaponUtil.getMaxDistance(stack.getItem());
-        double actualDistance = player.getPos().distanceTo(target.getPos());
+        double actualDistance = attacker.getPos().distanceTo(target.getPos());
 
         if (actualDistance > maxDistance + 1) {
             return originalDamage;
@@ -113,15 +109,15 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         float calculatedDamage = SCDamageCalculator.getSCDamage(target, baseDamage, damageType);
 
         if (stack.isIn(SCTags.WEAPONS_DAMAGE_BEHIND.getTag())) {
-            calculatedDamage = SCWeaponUtil.adjustDamageForBackstab(target, player.getPos(), calculatedDamage);
+            calculatedDamage = SCWeaponUtil.adjustDamageForBackstab(target, attacker.getPos(), calculatedDamage);
         }
 
         return calculatedDamage != 0 ? calculatedDamage : originalDamage;
     }
 
-    private float applyStatusEffectModifiers(PlayerEntity player, float damage) {
-        StatusEffectInstance strength = player.getStatusEffect(StatusEffects.STRENGTH);
-        StatusEffectInstance weakness = player.getStatusEffect(StatusEffects.WEAKNESS);
+    private float applyStatusEffectModifiers(LivingEntity attacker, float damage) {
+        StatusEffectInstance strength = attacker.getStatusEffect(StatusEffects.STRENGTH);
+        StatusEffectInstance weakness = attacker.getStatusEffect(StatusEffects.WEAKNESS);
 
         if (strength != null) {
             damage += STRENGTH_MULTIPLIER * (strength.getAmplifier() + 1);

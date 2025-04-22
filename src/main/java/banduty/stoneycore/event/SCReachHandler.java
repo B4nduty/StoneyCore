@@ -12,7 +12,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import java.util.UUID;
 
 public class SCReachHandler implements ServerTickEvents.StartTick {
-    private static final UUID REACH_MODIFIER_ID = UUID.randomUUID();
     private static final UUID ATTACK_RANGE_MODIFIER_ID = UUID.randomUUID();
 
     @Override
@@ -26,12 +25,8 @@ public class SCReachHandler implements ServerTickEvents.StartTick {
         if (player == null) return;
 
         ItemStack mainHandStack = player.getMainHandStack();
-        var reachAttribute = player.getAttributeInstance(ReachEntityAttributes.REACH);
         var attackRangeAttribute = player.getAttributeInstance(ReachEntityAttributes.ATTACK_RANGE);
 
-        if (reachAttribute != null) {
-            reachAttribute.removeModifier(REACH_MODIFIER_ID);
-        }
         if (attackRangeAttribute != null) {
             attackRangeAttribute.removeModifier(ATTACK_RANGE_MODIFIER_ID);
         }
@@ -40,17 +35,6 @@ public class SCReachHandler implements ServerTickEvents.StartTick {
                 SCMeleeWeaponDefinitionsLoader.containsItem(mainHandStack.getItem())) {
 
             double extraReach = SCWeaponUtil.getMaxDistance(mainHandStack.getItem());
-
-            if (reachAttribute != null) {
-                reachAttribute.addPersistentModifier(
-                        new EntityAttributeModifier(
-                                REACH_MODIFIER_ID,
-                                "Stoneycore reach distance",
-                                extraReach,
-                                EntityAttributeModifier.Operation.ADDITION
-                        )
-                );
-            }
 
             if (attackRangeAttribute != null) {
                 attackRangeAttribute.addPersistentModifier(
