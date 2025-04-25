@@ -333,9 +333,10 @@ public class ItemMixin {
             }
         }
 
-        if (!bannerStack.isEmpty() && stack.getItem() instanceof SCTrinketsItem armorItem) {
+        if (!bannerStack.isEmpty() && stack.getItem() instanceof SCTrinketsItem scTrinketsItem && stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) {
             List<Identifier> bannerPatterns = getBannerPatternIdentifiers(bannerStack, stack.getItem());
-            armorItem.setBannerPatterns(stack, bannerPatterns);
+            scTrinketsItem.setBannerPatterns(stack, bannerPatterns);
+            scTrinketsItem.setBannerDyeColor(stack, ((BannerItem) bannerStack.getItem()).getColor());
         }
     }
 

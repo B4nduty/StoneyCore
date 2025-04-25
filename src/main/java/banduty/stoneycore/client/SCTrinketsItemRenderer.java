@@ -39,6 +39,8 @@ public class SCTrinketsItemRenderer implements TrinketRenderer {
 
         VertexConsumer baseConsumer = vertexConsumers.getBuffer(RenderLayer.getArmorCutoutNoCull(scTrinketsItem.getTexturePath()));
         float[] color = DyeUtil.getDyeColor(stack);
+        if (stack.isIn(SCTags.BANNER_COMPATIBLE.getTag()) && scTrinketsItem.getBannerDyeColor(stack) != null)
+            color = scTrinketsItem.getBannerDyeColor(stack);
 
         model.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
         renderOverlayAndAdditions(entity, stack, matrices, vertexConsumers, light, model);

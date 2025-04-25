@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
+import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -65,5 +66,23 @@ public interface SCTrinketsItem {
             }
         }
         return patterns;
+    }
+
+    default void setBannerDyeColor(ItemStack stack, DyeColor dyeColor) {
+        NbtCompound nbt = stack.getOrCreateNbt();
+        float[] components = dyeColor.getColorComponents();
+        nbt.putFloat("dyeColorR", components[0]);
+        nbt.putFloat("dyeColorG", components[1]);
+        nbt.putFloat("dyeColorB", components[2]);
+    }
+
+    default float[] getBannerDyeColor(ItemStack stack) {
+        NbtCompound nbt = stack.getOrCreateNbt();
+        if (!nbt.contains("dyeColorR")) return null;
+        return new float[] {
+                nbt.getFloat("dyeColorR"),
+                nbt.getFloat("dyeColorG"),
+                nbt.getFloat("dyeColorB")
+        };
     }
 }
