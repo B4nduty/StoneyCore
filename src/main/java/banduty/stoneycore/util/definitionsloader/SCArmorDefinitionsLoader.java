@@ -20,11 +20,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
-public class SCUnderArmorDefinitionsLoader implements IdentifiableResourceReloadListener {
+public class SCArmorDefinitionsLoader implements IdentifiableResourceReloadListener {
 
     private static final Map<Identifier, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
 
-    private static final Identifier RELOAD_LISTENER_ID = new Identifier(StoneyCore.MOD_ID, "under_armor_definitions_loader");
+    private static final Identifier RELOAD_LISTENER_ID = new Identifier(StoneyCore.MOD_ID, "armor_definitions_loader");
 
     @Override
     public Identifier getFabricId() {
@@ -36,7 +36,7 @@ public class SCUnderArmorDefinitionsLoader implements IdentifiableResourceReload
         return CompletableFuture.runAsync(() -> {
             DEFINITIONS.clear();
 
-            Map<Identifier, Resource> resources = resourceManager.findResources("definitions/underarmor", id -> id.getPath().endsWith(".json"));
+            Map<Identifier, Resource> resources = resourceManager.findResources("definitions/armor", id -> id.getPath().endsWith(".json"));
 
             resources.forEach((id, resource) -> {
                 try (InputStream stream = resource.getInputStream()) {
@@ -50,7 +50,7 @@ public class SCUnderArmorDefinitionsLoader implements IdentifiableResourceReload
                         }
                     }
 
-                    Identifier attributeId = Identifier.of(id.getNamespace(), id.getPath().substring("definitions/underarmor/".length(), id.getPath().length() - 5));
+                    Identifier attributeId = Identifier.of(id.getNamespace(), id.getPath().substring("definitions/armor/".length(), id.getPath().length() - 5));
                     DEFINITIONS.put(attributeId, new DefinitionData(damage));
                 } catch (Exception e) {
                     StoneyCore.LOGGER.error("Failed to load definitions data from {}: {}", id, e.getMessage(), e);

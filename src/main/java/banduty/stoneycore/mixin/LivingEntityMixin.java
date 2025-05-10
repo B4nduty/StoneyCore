@@ -2,6 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
+import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
@@ -12,6 +13,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import org.spongepowered.asm.mixin.Mixin;
@@ -86,6 +88,18 @@ public abstract class LivingEntityMixin {
         }
     }
 
+    @Inject(method = "jump", at = @At("HEAD"))
+    private void stoneycore$jump(CallbackInfo ci) {
+        if ((Object) this instanceof ServerPlayerEntity player) {
+            IEntityDataSaver dataSaver = (IEntityDataSaver) player;
+            boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
+            boolean wearingSCArmor = isWearingSCArmor(player);
+            if (!staminaBlocked && wearingSCArmor) {
+                StaminaData.removeStamina(dataSaver, StoneyCore.getConfig().jumpingStamina());
+            }
+        }
+    }
+
     @Redirect(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;blockedByShield(Lnet/minecraft/entity/damage/DamageSource;)Z"))
     private boolean stoneycore$redirectBlockedByShield(LivingEntity instance, DamageSource source) {
         return blockShield && instance.blockedByShield(source);
@@ -94,5 +108,15 @@ public abstract class LivingEntityMixin {
     @Unique
     private boolean isStaminaBlocked(PlayerEntity player) {
         return StaminaData.isStaminaBlocked((IEntityDataSaver) player);
+    }
+
+    @Unique
+    private boolean isWearingSCArmor(ServerPlayerEntity playerEntity) {
+        for (ItemStack armorStack : playerEntity.getArmorItems()) {
+            if (SCArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

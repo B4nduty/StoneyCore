@@ -4,6 +4,7 @@ import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 public class SCReachHandler implements ServerTickEvents.StartTick {
     private static final UUID ATTACK_RANGE_MODIFIER_ID = UUID.randomUUID();
+    private static final UUID RANGE_MODIFIER_ID = UUID.randomUUID();
 
     @Override
     public void onStartTick(MinecraftServer server) {
@@ -26,26 +28,41 @@ public class SCReachHandler implements ServerTickEvents.StartTick {
 
         ItemStack mainHandStack = player.getMainHandStack();
         var attackRangeAttribute = player.getAttributeInstance(ReachEntityAttributes.ATTACK_RANGE);
+        var rangeAttribute = player.getAttributeInstance(ReachEntityAttributes.REACH);
 
-        if (attackRangeAttribute != null) {
-            attackRangeAttribute.removeModifier(ATTACK_RANGE_MODIFIER_ID);
-        }
+        boolean shouldHaveModifier = !mainHandStack.isEmpty() &&
+                SCMeleeWeaponDefinitionsLoader.containsItem(mainHandStack.getItem());
 
-        if (!mainHandStack.isEmpty() &&
-                SCMeleeWeaponDefinitionsLoader.containsItem(mainHandStack.getItem())) {
-
+        if (shouldHaveModifier) {
             double extraReach = SCWeaponUtil.getMaxDistance(mainHandStack.getItem());
+            double reachModifier = extraReach - 4.5F;
 
-            if (attackRangeAttribute != null) {
-                attackRangeAttribute.addPersistentModifier(
-                        new EntityAttributeModifier(
-                                ATTACK_RANGE_MODIFIER_ID,
-                                "Stoneycore attack range",
-                                extraReach,
-                                EntityAttributeModifier.Operation.ADDITION
-                        )
-                );
-            }
+            updateModifier(attackRangeAttribute, ATTACK_RANGE_MODIFIER_ID,
+                    "Stoneycore attack range", reachModifier);
+            updateModifier(rangeAttribute, RANGE_MODIFIER_ID,
+                    "Stoneycore range", reachModifier);
+        } else {
+            removeModifierIfPresent(attackRangeAttribute, ATTACK_RANGE_MODIFIER_ID);
+            removeModifierIfPresent(rangeAttribute, RANGE_MODIFIER_ID);
+        }
+    }
+
+    private static void updateModifier(EntityAttributeInstance attribute, UUID uuid,
+                                       String name, double value) {
+        if (attribute == null) return;
+
+        EntityAttributeModifier existingModifier = attribute.getModifier(uuid);
+        if (existingModifier == null || existingModifier.getValue() != value) {
+            attribute.removeModifier(uuid);
+            attribute.addTemporaryModifier(
+                    new EntityAttributeModifier(uuid, name, value,
+                            EntityAttributeModifier.Operation.ADDITION));
+        }
+    }
+
+    private static void removeModifierIfPresent(EntityAttributeInstance attribute, UUID uuid) {
+        if (attribute != null && attribute.getModifier(uuid) != null) {
+            attribute.removeModifier(uuid);
         }
     }
 }

@@ -4,7 +4,7 @@ import banduty.stoneycore.event.custom.RenderFirstPersonTrinketsArmorEvents;
 import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;
 import banduty.stoneycore.util.DyeUtil;
-import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.TrinketItem;
 import dev.emi.trinkets.api.TrinketsApi;
@@ -59,7 +59,7 @@ public class HeldItemRendererMixin {
         ClientPlayerEntity player = this.client.player;
         if (player == null) return;
         ItemStack stack = player.getInventory().getArmorStack(2);
-        if (stack.getItem() instanceof ArmorItem armorItem && SCUnderArmorDefinitionsLoader.containsItem(armorItem)
+        if (stack.getItem() instanceof ArmorItem armorItem && SCArmorDefinitionsLoader.containsItem(armorItem)
                 && armorItem.getSlotType() == ArmorItem.Type.CHESTPLATE.getEquipmentSlot()) {
             UnderArmourArmModel model = new UnderArmourArmModel(UnderArmourArmModel.getTexturedModelData().createModel());
             VertexConsumer baseConsumer = vertexConsumers.getBuffer(
@@ -69,7 +69,7 @@ public class HeldItemRendererMixin {
             color[1] = 1;
             color[2] = 1;
             if (stack.getItem() instanceof SCDyeableUnderArmor) {
-                color = DyeUtil.getDyeColor(stack);
+                color = DyeUtil.getFloatDyeColor(stack);
             }
 
             Identifier textureOverlayPath = getOverlayIdentifier(armorItem);

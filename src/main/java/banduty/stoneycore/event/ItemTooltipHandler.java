@@ -4,7 +4,7 @@ import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
@@ -36,7 +36,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             lines.add(Text.translatable("text.tooltip.stoneycore.baseDamage", (int) SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).baseDamage()).formatted(Formatting.GREEN));
         }
 
-        if (stack.getItem() instanceof ArmorItem armorItem && SCUnderArmorDefinitionsLoader.containsItem(armorItem)) {
+        if (stack.getItem() instanceof ArmorItem armorItem && SCArmorDefinitionsLoader.containsItem(armorItem)) {
             double slashingResistance = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.SLASHING, armorItem) * 100;
             double bludgeoningResistance = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.BLUDGEONING, armorItem) * 100;
             double piercingResistance = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.PIERCING, armorItem) * 100;

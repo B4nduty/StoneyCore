@@ -4,24 +4,32 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import banduty.stoneycore.util.render.TextureData;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.emi.trinkets.api.TrinketsApi;
 import net.bettercombat.logic.PlayerAttackProperties;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -195,7 +203,7 @@ public class InGameHudMixin {
 
         boolean hasSCWeapon = SCMeleeWeaponDefinitionsLoader.containsItem(player.getMainHandStack().getItem());
         for (ItemStack stack : player.getArmorItems()) {
-            if (SCUnderArmorDefinitionsLoader.containsItem(stack.getItem())) {
+            if (SCArmorDefinitionsLoader.containsItem(stack.getItem())) {
                 return true;
             }
         }
@@ -240,14 +248,12 @@ public class InGameHudMixin {
 
     @Unique
     private static final Identifier VISOR_HELMET = new Identifier(StoneyCore.MOD_ID, "textures/overlay/visor_helmet.png");
-    @Unique
-    private static final Identifier LOW_STAMINA = new Identifier(StoneyCore.MOD_ID, "textures/overlay/low_stamina.png");
 
     @Inject(method = "render", at = @At("HEAD"))
     private void stoneycore$renderBackgroundOverlays(DrawContext context, float tickDelta, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;
-        if (player == null || player.isCreative()) return;
+        if (player == null || player.isCreative() || player.isSpectator()) return;
 
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
@@ -273,19 +279,105 @@ public class InGameHudMixin {
         int lowStaminaThreshold = (int) (StoneyCore.getConfig().maxStamina() * 0.3f);
 
         if (stamina <= lowStaminaThreshold && StoneyCore.getConfig().getLowStaminaIndicator()) {
-            float opacity = Math.max(0.0f, Math.min(1.0f, (lowStaminaThreshold - stamina) / lowStaminaThreshold));
-            float red = 1.0F;
-            float green = StaminaData.isStaminaBlocked((IEntityDataSaver) player) ? 0 : stamina / lowStaminaThreshold;
-            float blue = 0.0F;
+            if (StoneyCore.getConfig().getRealisticCombat()) {
+                renderBlurEffect(context, width, height);
+            } else {
+                float staminaPercentage = stamina / lowStaminaThreshold;
+                int opacity = (int) ((int)((Math.max(0, 0.4f - staminaPercentage) * 255)));
+                int green = StaminaData.isStaminaBlocked((IEntityDataSaver) player) ? 0 : (int) (stamina / lowStaminaThreshold);
+                int gradientColorEnd = opacity << 24 | green | 0x00FF0000;
 
-            RenderSystem.setShaderTexture(0, LOW_STAMINA);
-            RenderSystem.setShaderColor(red, green, blue, opacity);
-            context.drawTexture(LOW_STAMINA, 0, 0, 0, 0, width, height, width, height);
+                context.fillGradient(0, 0, width, height, 0x00000000, gradientColorEnd);
+            }
         }
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
         RenderSystem.disableBlend();
+    }
+
+    @Unique
+    private int frameCapturedTime = 0;
+    @Unique
+    private int blurTextureId = -1;
+    @Unique
+    private static final int BLUR_DURATION_TICKS = 5 * 20;
+
+    @Unique
+    private void captureScreenToTexture(MinecraftClient client) {
+        if (blurTextureId != -1) {
+            RenderSystem.deleteTexture(blurTextureId);
+            blurTextureId = -1;
+        }
+
+        Framebuffer mainFb = client.getFramebuffer();
+
+        blurTextureId = GlStateManager._genTexture();
+        RenderSystem.bindTexture(blurTextureId);
+
+        GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+
+        GlStateManager._texImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8,
+                mainFb.textureWidth, mainFb.textureHeight,
+                0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, null);
+
+        GL30.glCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, 0, 0,
+                mainFb.textureWidth, mainFb.textureHeight);
+
+        frameCapturedTime = BLUR_DURATION_TICKS;
+    }
+
+    @Unique
+    private void renderBlurEffect(DrawContext context, int width, int height) {
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        if (frameCapturedTime <= 0) {
+            captureScreenToTexture(client);
+        }
+
+        if (blurTextureId == -1) {
+            return;
+        }
+
+        if (frameCapturedTime > 0) {
+            frameCapturedTime--;
+        }
+
+        MatrixStack matrices = context.getMatrices();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        RenderSystem.setShaderTexture(0, blurTextureId);
+        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+
+        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+
+        float alpha = (float) frameCapturedTime / BLUR_DURATION_TICKS;
+        alpha = MathHelper.clamp(alpha, 0.0f, 1.0f);
+
+        RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
+        renderTexturedQuad(buffer, matrices.peek().getPositionMatrix(),
+                0, 0, width, height, 0, 1, 1, 0);
+
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        RenderSystem.disableBlend();
+
+        if (frameCapturedTime <= 0) {
+            RenderSystem.deleteTexture(blurTextureId);
+            blurTextureId = -1;
+        }
+    }
+
+
+    @Unique
+    private void renderTexturedQuad(BufferBuilder buffer, Matrix4f matrix, int x, int y, int width, int height, float u1, float u2, float v1, float v2) {
+        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+        buffer.vertex(matrix, x, y, 0).texture(u1, v1).next();
+        buffer.vertex(matrix, x, y + height, 0).texture(u1, v2).next();
+        buffer.vertex(matrix, x + width, y + height, 0).texture(u2, v2).next();
+        buffer.vertex(matrix, x + width, y, 0).texture(u2, v1).next();
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
     }
 }

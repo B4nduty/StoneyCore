@@ -18,6 +18,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.tag.DamageTypeTags;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
@@ -39,6 +40,14 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         }
 
         ItemStack stack = attacker.getMainHandStack();
+        if (target instanceof ServerPlayerEntity playerEntity && StaminaData.isStaminaBlocked((IEntityDataSaver) playerEntity) && StoneyCore.getConfig().getRealisticCombat()) {
+            ItemStack handStack = playerEntity.getMainHandStack();
+            if (!handStack.isEmpty()) {
+                playerEntity.dropItem(handStack, false, true);
+                playerEntity.setStackInHand(playerEntity.getActiveHand(), ItemStack.EMPTY);
+            }
+        }
+
         if (stack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
             SCDamageCalculator.applyDamage(target, attacker, stack, amount);
             return 0;

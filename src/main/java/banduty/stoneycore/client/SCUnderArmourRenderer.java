@@ -40,7 +40,7 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
                     RenderLayer.getArmorCutoutNoCull(new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
             if (armorItem instanceof SCDyeableUnderArmor) {
-                float[] color = DyeUtil.getDyeColor(stack);
+                float[] color = DyeUtil.getFloatDyeColor(stack);
 
                 Identifier textureOverlayPath = getOverlayIdentifier(armorItem);
 

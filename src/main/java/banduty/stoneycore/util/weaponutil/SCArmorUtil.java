@@ -1,7 +1,7 @@
 package banduty.stoneycore.util.weaponutil;
 
 import banduty.stoneycore.util.SCDamageCalculator;
-import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import net.minecraft.item.Item;
 
 import java.util.Map;
@@ -16,7 +16,7 @@ public class SCArmorUtil {
     }
 
     public static double getDamageResistances(String key, Item item) {
-        SCUnderArmorDefinitionsLoader.DefinitionData attributeData = SCUnderArmorDefinitionsLoader.getData(item);
+        SCArmorDefinitionsLoader.DefinitionData attributeData = SCArmorDefinitionsLoader.getData(item);
         Map<String, Double> damageValues = attributeData.damageResistance();
 
         return damageValues.getOrDefault(key, 0d);

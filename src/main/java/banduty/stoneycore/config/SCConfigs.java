@@ -8,6 +8,10 @@ import io.wispforest.owo.config.annotation.*;
 @Modmenu(modId = StoneyCore.MOD_ID)
 @Config(name = StoneyCore.MOD_ID, wrapperName = "StoneyCoreConfig")
 public class SCConfigs {
+    @Comment("Realistic Combat")
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    public boolean getRealisticCombat = true;
+
     @Comment("Damage Indicator")
     public boolean getDamageIndicator = false;
 
@@ -15,9 +19,9 @@ public class SCConfigs {
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
     public boolean getVisoredHelmet = true;
 
-    @Sync(Option.SyncMode.NONE)
-    @Comment("Low Stamina Indicator [Experimental]")
-    public boolean getLowStaminaIndicator = false;
+    @Comment("Low Stamina Indicator")
+    @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+    public boolean getLowStaminaIndicator = true;
 
     @RestartRequired
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
@@ -25,8 +29,8 @@ public class SCConfigs {
     public int getMuzzlesSmokeParticlesTime = 60;
 
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-    @Comment("Parry [Experimental]")
-    public boolean getParry = false;
+    @Comment("Parry")
+    public boolean getParry = true;
 
     @Sync(Option.SyncMode.NONE)
     @Comment("Stamina Bar Y Offset")

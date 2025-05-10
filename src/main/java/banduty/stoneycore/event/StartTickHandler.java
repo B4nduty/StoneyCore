@@ -4,7 +4,7 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.config.StoneyCoreConfig;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -41,7 +41,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
                                 playerEntity.giveItemStack(trinketStack);
                                 trinketStack.setCount(0);
                             }
-                }));
+                        }));
             }
 
             int swallowTailArrowCount = ((IEntityDataSaver) playerEntity).stoneycore$getPersistentData().getInt("swallowtail_arrow_count");
@@ -75,7 +75,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (isArmorSlot(slot)) {
                 ItemStack armorPiece = entity.getEquippedStack(slot);
-                if (!SCUnderArmorDefinitionsLoader.containsItem(armorPiece.getItem())) {
+                if (!SCArmorDefinitionsLoader.containsItem(armorPiece.getItem())) {
                     return false;
                 }
             }
@@ -101,7 +101,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
             StaminaData.setStamina((IEntityDataSaver) playerEntity, StoneyCore.getConfig().maxStamina());
 
         if (!playerEntity.isCreative() || !playerEntity.isSpectator()) {
-            if (!isUsingStamina(playerEntity)) handleStaminaRecovery(playerEntity, stamina);
+            if (!StoneyCore.getConfig().getRealisticCombat() || !isUsingStamina(playerEntity) || playerEntity.isOnGround() || playerEntity.isClimbing()) handleStaminaRecovery(playerEntity, stamina);
             handleStaminaEffects(playerEntity, stamina);
         }
     }
@@ -116,7 +116,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         int ticksPerRecovery = Math.max(1, (int) StrEq.evaluate(formula, variables));
 
         StaminaData.addStamina((IEntityDataSaver) playerEntity, 0);
-        if (playerEntity.age % ticksPerRecovery == 0 && stamina < StoneyCore.getConfig().maxStamina()) {
+        if (playerEntity.age % ticksPerRecovery == 0 && stamina < StoneyCore.getConfig().maxStamina() && !(foodLevel == 0 && StoneyCore.getConfig().getRealisticCombat())) {
             StaminaData.addStamina((IEntityDataSaver) playerEntity, 0.1f);
         }
     }
@@ -150,10 +150,6 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
         boolean usingStamina = false;
 
-        var persistentData = dataSaver.stoneycore$getPersistentData();
-        boolean wasInAir = persistentData.getBoolean("wasInAir");
-        boolean isInAir = !player.isOnGround() && !player.isClimbing();
-
         boolean wearingSCArmor = isWearingSCArmor(player);
         boolean hasSCWeapon = isSCWeapon(player.getMainHandStack());
         StoneyCoreConfig config = StoneyCore.getConfig();
@@ -174,15 +170,9 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
                     StaminaData.removeStamina(dataSaver, config.swimmingStaminaPerSecond() / 20f);
                     usingStamina = true;
                 }
-
-                if (isInAir && !wasInAir) {
-                    StaminaData.removeStamina(dataSaver, config.jumpingStamina());
-                    usingStamina = true;
-                }
             }
         }
 
-        persistentData.putBoolean("wasInAir", isInAir);
         return usingStamina;
     }
 
@@ -204,7 +194,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
 
     private boolean isWearingSCArmor(ServerPlayerEntity playerEntity) {
         for (ItemStack armorStack : playerEntity.getArmorItems()) {
-            if (SCUnderArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
+            if (SCArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
                 return true;
             }
         }

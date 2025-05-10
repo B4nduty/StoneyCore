@@ -2,7 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.event.custom.TrinketsModifiersEvents;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
-import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -74,7 +74,7 @@ public class TrinketMixin implements Trinket {
         return stack.isIn(SCTags.ALWAYS_WEARABLE.getTag()) || Arrays.stream(EquipmentSlot.values())
                 .filter(this::isArmorSlot)
                 .allMatch(slotType -> entity.getEquippedStack(slotType).getItem() instanceof ArmorItem armorItem
-                                && SCUnderArmorDefinitionsLoader.containsItem(armorItem));
+                                && SCArmorDefinitionsLoader.containsItem(armorItem));
     }
 
     @Unique

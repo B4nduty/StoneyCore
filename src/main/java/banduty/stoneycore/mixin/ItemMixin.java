@@ -1,10 +1,12 @@
 package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCTrinketsItem;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
+import banduty.stoneycore.util.patterns.PatternHelper;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
@@ -40,7 +42,7 @@ import java.util.List;
 
 import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
 
-@Mixin(net.minecraft.item.Item.class)
+@Mixin(Item.class)
 public class ItemMixin {
     @Unique
     private static final String NBT_BLUDGEONING_KEY = "sc_bludgeoning";
@@ -333,16 +335,17 @@ public class ItemMixin {
             }
         }
 
-        if (!bannerStack.isEmpty() && stack.getItem() instanceof SCTrinketsItem scTrinketsItem && stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) {
-            List<Identifier> bannerPatterns = getBannerPatternIdentifiers(bannerStack, stack.getItem());
-            scTrinketsItem.setBannerPatterns(stack, bannerPatterns);
-            scTrinketsItem.setBannerDyeColor(stack, ((BannerItem) bannerStack.getItem()).getColor());
+        if (!bannerStack.isEmpty() && stack.getItem() instanceof SCTrinketsItem && stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) {
+            List<Pair<Identifier, DyeColor>> bannerPatterns = getBannerPatterns(bannerStack, stack.getItem());
+            PatternHelper.setBannerPatterns(stack, bannerPatterns);
+            PatternHelper.setBannerDyeColor(stack, ((BannerItem) bannerStack.getItem()).getColor());
         }
     }
 
     @Unique
-    private List<Identifier> getBannerPatternIdentifiers(ItemStack bannerStack, net.minecraft.item.Item armor) {
-        List<Identifier> patterns = new ArrayList<>();
+    private List<Pair<Identifier, DyeColor>> getBannerPatterns(ItemStack bannerStack, Item armor) {
+        List<Pair<Identifier, DyeColor>> patterns = new ArrayList<>();
+
         if (!bannerStack.isEmpty() && bannerStack.getItem() instanceof BannerItem) {
             NbtCompound nbt = bannerStack.getNbt();
             if (nbt != null && nbt.contains("BlockEntityTag")) {
@@ -352,11 +355,17 @@ public class ItemMixin {
                     for (int i = 0; i < patternList.size(); i++) {
                         NbtCompound patternTag = patternList.getCompound(i);
                         String pattern = patternTag.getString("Pattern");
-                        int color = patternTag.getInt("Color");
+                        int colorId = patternTag.getInt("Color");
+                        DyeColor color = DyeColor.byId(colorId);
+
                         Identifier itemId = Registries.ITEM.getId(armor);
-                        String itemIdPath = itemId.getPath();
-                        String modId = itemId.getNamespace();
-                        patterns.add(new Identifier(modId, "textures/banner_pattern/" + itemIdPath + "/" + pattern + "_" + color));
+                        Identifier patternId = new Identifier(
+                                itemId.getNamespace(),
+                                "textures/banner_pattern/" + itemId.getPath() + "/" + pattern + ".png"
+                        );
+
+                        patterns.add(new Pair<>(patternId, color));
+                        StoneyCore.LOGGER.info("Set Banner Pattern: {} Color: {}", patternId, color);
                     }
                 }
             }

@@ -1,20 +1,19 @@
 package banduty.stoneycore.util;
 
-import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class SCDamageCalculator {
     public static float getSCDamage(LivingEntity livingEntity, float initialDamage, DamageType damageType) {
         for (ItemStack armorStack : livingEntity.getArmorItems()) {
-            if (armorStack.getItem() instanceof ArmorItem armorItem && SCUnderArmorDefinitionsLoader.containsItem(armorItem)) {
-                float resistance = (float) getResistance(armorItem, damageType);
+            if (SCArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
+                float resistance = (float) getResistance(armorStack.getItem(), damageType);
                 initialDamage *= Math.max(1 - resistance, 0);
             }
         }
@@ -26,7 +25,7 @@ public class SCDamageCalculator {
             case SLASHING -> SCArmorUtil.getResistance(SCDamageCalculator.DamageType.SLASHING, item);
             case PIERCING -> SCArmorUtil.getResistance(SCDamageCalculator.DamageType.PIERCING, item);
             case BLUDGEONING -> SCArmorUtil.getResistance(SCDamageCalculator.DamageType.BLUDGEONING, item);
-        } * 100;
+        };
     }
 
     public static void applyDamage(LivingEntity target, LivingEntity attacker, ItemStack stack, float damage) {

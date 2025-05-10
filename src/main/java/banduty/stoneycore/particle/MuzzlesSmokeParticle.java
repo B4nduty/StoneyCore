@@ -21,7 +21,7 @@ public class MuzzlesSmokeParticle extends SpriteBillboardParticle {
         this.velocityY += world.random.nextDouble() * 0.02;
         this.velocityZ += (world.random.nextDouble() - 0.5) * 0.02;
 
-        this.scale *= 0.6f;
+        this.scale *= 1.8f;
         this.maxAge = StoneyCore.getConfig().getMuzzlesSmokeParticlesTime() * 20;
         this.spriteProvider = spriteSet;
         this.setSpriteForAge(spriteSet);
@@ -34,6 +34,7 @@ public class MuzzlesSmokeParticle extends SpriteBillboardParticle {
     @Override
     public void tick() {
         super.tick();
+        this.alpha = 1f - ((float)this.age / (float)this.maxAge);
 
         if (!this.dead) {
             this.setSpriteForAge(this.spriteProvider);

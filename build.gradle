@@ -13,10 +13,6 @@ base {
 repositories {
 	maven { url "https://maven.shedaniel.me" }
 	maven { url 'https://maven.wispforest.io/releases/' }
-	maven {
-		name = 'GeckoLib'
-		url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
-	}
 	maven { url "https://maven.terraformersmc.com/releases/" }
 	maven {
 		name "KosmX's maven"
@@ -66,8 +62,6 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-	modImplementation "software.bernie.geckolib:geckolib-fabric-1.20.1:${project.geckolib}"
 
 	modApi "com.terraformersmc:modmenu:${project.modmenu}"
 

@@ -9,7 +9,7 @@ import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.sounds.ModSounds;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCUnderArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -39,7 +39,7 @@ public class StoneyCore implements ModInitializer {
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SCMeleeWeaponDefinitionsLoader());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SCRangedWeaponDefinitionsLoader());
-		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SCUnderArmorDefinitionsLoader());
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SCArmorDefinitionsLoader());
 	}
 
 	public static StoneyCoreConfig getConfig() {
