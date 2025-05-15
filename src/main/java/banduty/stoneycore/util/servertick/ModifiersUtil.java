@@ -1,27 +1,18 @@
-package banduty.stoneycore.event;
+package banduty.stoneycore.util.servertick;
 
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.UUID;
 
-public class SCReachHandler implements ServerTickEvents.StartTick {
+public class ModifiersUtil {
     private static final UUID ATTACK_RANGE_MODIFIER_ID = UUID.randomUUID();
     private static final UUID RANGE_MODIFIER_ID = UUID.randomUUID();
-
-    @Override
-    public void onStartTick(MinecraftServer server) {
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            updatePlayerReachAttributes(player);
-        }
-    }
 
     public static void updatePlayerReachAttributes(ServerPlayerEntity player) {
         if (player == null) return;

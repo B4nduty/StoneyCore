@@ -87,7 +87,7 @@ public enum SCTags {
 
     // Armor Tags
     /**
-     * Trinkets Items that can be Wearable, also if there's not the full Under Armor
+     * Accessory Items that can be Wearable, also if there's not the full Under Armor
      */
     ALWAYS_WEARABLE("always_wearable"),
     /**

@@ -1,13 +1,12 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.event.custom.RenderFirstPersonTrinketsArmorEvents;
+import banduty.stoneycore.event.custom.RenderFirstPersonAccesoryArmorEvents;
 import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;
 import banduty.stoneycore.util.DyeUtil;
 import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
-import dev.emi.trinkets.api.SlotReference;
-import dev.emi.trinkets.api.TrinketItem;
-import dev.emi.trinkets.api.TrinketsApi;
+import io.wispforest.accessories.api.AccessoriesCapability;
+import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -23,7 +22,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -80,10 +78,10 @@ public class HeldItemRendererMixin {
             if (!textureOverlayPath.equals(new Identifier(""))) ArmorRenderer.renderPart(matrices, vertexConsumers, light, stack, model, textureOverlayPath);
         }
 
-        if (TrinketsApi.getTrinketComponent(player).isPresent()) {
-            for (Pair<SlotReference, ItemStack> equipped : TrinketsApi.getTrinketComponent(player).get().getEquipped(trinketStack -> trinketStack.getItem() instanceof TrinketItem)) {
-                ItemStack trinket = equipped.getRight();
-                RenderFirstPersonTrinketsArmorEvents.EVENT.invoker().onRenderInFirstPerson(trinket, matrices, vertexConsumers, light, arm);
+        if (AccessoriesCapability.getOptionally(player).isPresent()) {
+            for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
+                ItemStack itemStack = equipped.stack();
+                RenderFirstPersonAccesoryArmorEvents.EVENT.invoker().onRenderInFirstPerson(itemStack, matrices, vertexConsumers, light, arm);
             }
         }
     }

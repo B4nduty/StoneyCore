@@ -83,7 +83,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         }
 
         performParryEffects(player, attacker);
-        StaminaData.removeStamina((IEntityDataSaver) player, StoneyCore.getConfig().onParryStamina());
+        StaminaData.removeStamina(player, StoneyCore.getConfig().onParryStamina());
         return true;
     }
 

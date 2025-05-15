@@ -1,17 +1,13 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.items.armor.SCTrinketsItem;
-import dev.emi.trinkets.api.TrinketsApi;
+import banduty.stoneycore.util.playerdata.SCAttributes;
 import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 @Mixin(HungerManager.class)
 public abstract class HungerManagerMixin {
@@ -27,16 +23,13 @@ public abstract class HungerManagerMixin {
     public void stoneycore$onAddExhaustion(float exhaustion, CallbackInfo ci) {
         if (player == null) return;
 
-        AtomicReference<Double> totalHungerAddition = new AtomicReference<>(1.0d);
+        double totalHungerAddition = 1;
 
-        TrinketsApi.getTrinketComponent(player).ifPresent(trinketComponent ->
-                trinketComponent.getEquipped(stack -> stack.getItem() instanceof SCTrinketsItem).forEach(equipped -> {
-                    ItemStack trinket = equipped.getRight();
-                    SCTrinketsItem scTrinket = (SCTrinketsItem) trinket.getItem();
-                    totalHungerAddition.updateAndGet(current -> current + scTrinket.hungerDrainAddition());
-                }));
+        if (player.getAttributeInstance(SCAttributes.HUNGER_DRAIN_MULTIPLIER) != null) {
+            totalHungerAddition += player.getAttributeInstance(SCAttributes.HUNGER_DRAIN_MULTIPLIER).getValue();
+        }
 
-        float modifiedExhaustion = (float) Math.min(((HungerManager) (Object) this).getExhaustion() + exhaustion * totalHungerAddition.get(), 40.0F);
+        float modifiedExhaustion = (float) Math.min(((HungerManager) (Object) this).getExhaustion() + exhaustion * totalHungerAddition, 40.0F);
         player.getHungerManager().setExhaustion(modifiedExhaustion);
 
         ci.cancel();

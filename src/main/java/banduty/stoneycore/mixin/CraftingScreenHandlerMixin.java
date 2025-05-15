@@ -1,7 +1,7 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.armor.SCTrinketsItem;
+import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.patterns.PatternHelper;
 import net.minecraft.entity.player.PlayerEntity;
@@ -36,7 +36,7 @@ public abstract class CraftingScreenHandlerMixin {
     )
     private static void onUpdateResult(ScreenHandler handler, World world, PlayerEntity player, RecipeInputInventory craftingInventory, CraftingResultInventory resultInventory, CallbackInfo ci) {
         ItemStack result = resultInventory.getStack(0);
-        if (result.getItem() instanceof SCTrinketsItem) {
+        if (result.getItem() instanceof SCAccessoryItem) {
             ItemStack modified = result.copy();
             applyPreviewModifiers(modified, craftingInventory);
             resultInventory.setStack(0, modified);
@@ -54,7 +54,7 @@ public abstract class CraftingScreenHandlerMixin {
             }
         }
 
-        if (!bannerStack.isEmpty() && stack.getItem() instanceof SCTrinketsItem && stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) {
+        if (!bannerStack.isEmpty() && stack.getItem() instanceof SCAccessoryItem && stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) {
             List<Pair<Identifier, DyeColor>> bannerPatterns = getBannerPatterns(bannerStack, stack.getItem());
             PatternHelper.setBannerPatterns(stack, bannerPatterns);
             PatternHelper.setBannerDyeColor(stack, ((BannerItem) bannerStack.getItem()).getColor());

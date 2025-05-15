@@ -23,7 +23,9 @@ public class SCConfigs {
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
     public boolean getLowStaminaIndicator = true;
 
-    @RestartRequired
+    @Comment("Noise Effect in Low Stamina Indicator")
+    public boolean getNoiseEffect = true;
+
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
     @Comment("Muzzles Smoke Particles Time Active (In Seconds)")
     public int getMuzzlesSmokeParticlesTime = 60;
@@ -38,10 +40,10 @@ public class SCConfigs {
 
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
     @Comment("""
-            Max Stamina
-            If set to 0, it will be disabled
+            Max Base Stamina
+            If set to 0 or less, it will be disabled
             """)
-    public float maxStamina = 20f;
+    public float maxBaseStamina = 20f;
 
     @Sync(Option.SyncMode.OVERRIDE_CLIENT)
     @Comment("Stamina Recovery Formula")

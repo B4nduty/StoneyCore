@@ -1,13 +1,13 @@
 package banduty.stoneycore.client;
 
 import banduty.stoneycore.event.custom.RenderOverlayAndAdditionsEvents;
-import banduty.stoneycore.items.armor.SCTrinketsItem;
+import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.DyeUtil;
 import banduty.stoneycore.util.patterns.PatternHelper;
 import banduty.stoneycore.util.render.SCRenderLayers;
 import banduty.stoneycore.util.itemdata.SCTags;
-import dev.emi.trinkets.api.SlotReference;
-import dev.emi.trinkets.api.client.TrinketRenderer;
+import io.wispforest.accessories.api.client.SimpleAccessoryRenderer;
+import io.wispforest.accessories.api.slot.SlotReference;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.OverlayTexture;
@@ -26,25 +26,25 @@ import net.minecraft.util.Pair;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public class SCTrinketsItemRenderer implements TrinketRenderer {
-    public SCTrinketsItemRenderer() {}
+public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
+    public SCAccessoryItemRenderer() {}
 
     @Override
-    public void render(ItemStack stack, SlotReference slotReference, EntityModel<? extends LivingEntity> contextModel, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, LivingEntity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-        if (!(stack.getItem() instanceof SCTrinketsItem scTrinketsItem)) return;
-        BipedEntityModel<LivingEntity> model = scTrinketsItem.getModel();
-        TrinketRenderer.followBodyRotations(entity, model);
+    public <M extends LivingEntity> void render(ItemStack stack, SlotReference reference, MatrixStack matrices, EntityModel<M> model, VertexConsumerProvider multiBufferSource, int light, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+        if (!(stack.getItem() instanceof SCAccessoryItem scAccessoryItem)) return;
+        BipedEntityModel<LivingEntity> accessoryItemModel = scAccessoryItem.getModel(stack);
+        if (model instanceof BipedEntityModel bipedEntityModel) bipedEntityModel.copyBipedStateTo(accessoryItemModel);
 
-        if (scTrinketsItem.hasCustomAngles()) model.setAngles(entity, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
+        if (scAccessoryItem.hasCustomAngles(stack)) accessoryItemModel.setAngles(reference.entity(), limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 
-        VertexConsumer baseConsumer = vertexConsumers.getBuffer(RenderLayer.getArmorCutoutNoCull(scTrinketsItem.getTexturePath()));
+        VertexConsumer baseConsumer = multiBufferSource.getBuffer(RenderLayer.getArmorCutoutNoCull(scAccessoryItem.getTexturePath(stack)));
         float[] color = DyeUtil.getFloatDyeColor(stack);
         if (stack.isIn(SCTags.BANNER_COMPATIBLE.getTag()))
             color = PatternHelper.getBannerDyeColor(stack);
 
-        model.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
-        renderOverlayAndAdditions(entity, stack, matrices, vertexConsumers, light, model);
-        if (stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) renderBannerPatterns(stack, matrices, vertexConsumers, light, model);
+        accessoryItemModel.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
+        renderOverlayAndAdditions(reference.entity(), stack, matrices, multiBufferSource, light, accessoryItemModel);
+        if (stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) renderBannerPatterns(stack, matrices, multiBufferSource, light, accessoryItemModel);
     }
 
     private void renderOverlayAndAdditions(LivingEntity entity, ItemStack stack, MatrixStack matrices,
@@ -70,5 +70,10 @@ public class SCTrinketsItemRenderer implements TrinketRenderer {
                         rgb[0], rgb[1], rgb[2], 1.0F);
             }
         }
+    }
+
+
+    @Override
+    public <M extends LivingEntity> void align(ItemStack itemStack, SlotReference slotReference, EntityModel<M> entityModel, MatrixStack matrixStack) {
     }
 }

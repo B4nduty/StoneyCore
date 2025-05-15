@@ -2,7 +2,9 @@
   "key.category.stoneycore": "StoneyCore",
   "key.stoneycore.reload": "Reload",
 
-  "text.tooltip.stoneycore.hungerDrain": "Hunger Drain: +%s%%",
+  "text.tooltip.stoneycore.hungerDrain": "+%s%% Hunger Drain",
+  "text.tooltip.stoneycore.armor": "+%s Armor",
+  "text.tooltip.stoneycore.armor_toughness": "+%s Armor Toughness",
   "text.tooltip.stoneycore.freezing": "Prevents freezing",
   "text.tooltip.stoneycore.hideNameTag": "Hide Name Tag",
   "text.tooltip.stoneycore.baseDamage": "%s Base Damage",
@@ -24,10 +26,11 @@
   "text.config.stoneycore.option.getDamageIndicator": "Damage Indicator",
   "text.config.stoneycore.option.getVisoredHelmet": "Visored Helmet Overlay",
   "text.config.stoneycore.option.getLowStaminaIndicator": "Low Stamina Indicator",
+  "text.config.stoneycore.option.getNoiseEffect": "Noise Effect in Low Stamina Indicator",
   "text.config.stoneycore.option.getMuzzlesSmokeParticlesTime": "Muzzles Smoke Particles Time Active",
   "text.config.stoneycore.option.getParry": "Parry",
   "text.config.stoneycore.option.getStaminaBarYOffset": "Stamina Bar Y Offset",
-  "text.config.stoneycore.option.maxStamina": "Max Stamina | Set to 0 to disable",
+  "text.config.stoneycore.option.maxBaseStamina": "Max Base Stamina | Set to 0 or less to disable",
   "text.config.stoneycore.option.staminaRecoveryFormula": "Stamina Recovery Formula",
   "text.config.stoneycore.option.blockingStaminaPerSecond": "Blocking Stamina Per Second",
   "text.config.stoneycore.option.onBlockStamina": "On Block Stamina",
@@ -39,5 +42,9 @@
   "text.config.stoneycore.option.hexColorTooFarClose": "Hex Color Too/Far Close",
   "text.config.stoneycore.option.hexColorEffective": "Hex Color Effective",
   "text.config.stoneycore.option.hexColorCritical": "Hex Color Critical",
-  "text.config.stoneycore.option.hexColorMaximum": "Hex Color Maximum"
+  "text.config.stoneycore.option.hexColorMaximum": "Hex Color Maximum",
+
+  "text.warning.stoneycore.full_armor_needed": "You need Full Under Armor to equip (Not for cosmetic slot)",
+
+  "attribute.name.generic.stoneycore.hunger_drain_multiplier": "Hunger Drain Multiplier"
 }

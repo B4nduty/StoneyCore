@@ -1,28 +1,53 @@
-package banduty.stoneycore.event;
+package banduty.stoneycore.util.servertick;
 
+import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.util.SCInventoryItemFinder;
 import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
+import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.spongepowered.asm.mixin.Unique;
 
-public class ReloadTickHandler implements ServerTickEvents.StartTick {
-    private ItemStack lastItemStack;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
-    @Override
-    public void onStartTick(MinecraftServer server) {
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            handlePlayerReload(player);
+public class MechanicsUtil {
+    @Unique
+    private static final Map<LivingEntity, ItemStack> LAST_ITEMSTACK_MAP = Collections.synchronizedMap(new WeakHashMap<>());
+
+    public static void handleParry(ServerPlayerEntity player) {
+        boolean isBlocking = player.isBlocking();
+        ItemStack activeItem = player.getActiveItem();
+        boolean usingCustomShield = activeItem.isIn(SCTags.WEAPONS_SHIELD.getTag());
+
+        NbtCompound persistentData = ((IEntityDataSaver) player).stoneycore$getPersistentData();
+        boolean wasBlocking = persistentData.contains("BlockStartTick");
+
+        if (isBlocking && usingCustomShield) {
+            if (!wasBlocking) {
+                persistentData.putInt("BlockStartTick", (int) player.getWorld().getTime());
+            }
+        } else {
+            persistentData.remove("BlockStartTick");
         }
     }
 
-    private void handlePlayerReload(ServerPlayerEntity player) {
+    public static void handlePlayerReload(ServerPlayerEntity player) {
         ItemStack currentItem = player.getMainHandStack();
+
+        if (SCRangeWeaponUtil.getWeaponState(player.getMainHandStack()).isReloading() && StoneyCore.getConfig().getRealisticCombat()) {
+            player.setVelocity(0, player.getVelocity().y, 0);
+            player.velocityDirty = true;
+        }
+
+        ItemStack lastItemStack = LAST_ITEMSTACK_MAP.get(player);
 
         if (currentItem != lastItemStack) {
             if (lastItemStack != null) {
@@ -31,7 +56,7 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
                     resetWeaponState(player, lastItemStack);
                 }
             }
-            lastItemStack = currentItem;
+            LAST_ITEMSTACK_MAP.put(player, currentItem);
             return;
         }
 
@@ -69,20 +94,20 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
         }
     }
 
-    private void resetWeaponState(ServerPlayerEntity player, ItemStack itemStack) {
+    private static void resetWeaponState(ServerPlayerEntity player, ItemStack itemStack) {
         SCRangeWeaponUtil.setWeaponState(itemStack, new SCRangeWeaponUtil.WeaponState(false, SCRangeWeaponUtil.getWeaponState(itemStack).isCharged(), false));
         setRechargeTime(player, 0);
     }
 
-    private boolean isReloading(ItemStack itemStack) {
+    private static boolean isReloading(ItemStack itemStack) {
         return itemStack.getOrCreateNbt().getBoolean("sc_recharge");
     }
 
-    private boolean isValidRangeWeapon(Item item) {
+    private static boolean isValidRangeWeapon(Item item) {
         return SCRangedWeaponDefinitionsLoader.containsItem(item);
     }
 
-    private boolean hasRequiredAmmo(ServerPlayerEntity player, Item item) {
+    private static boolean hasRequiredAmmo(ServerPlayerEntity player, Item item) {
         SCRangeWeaponUtil.AmmoRequirement ammoRequirement = SCRangeWeaponUtil.getAmmoRequirement(item);
         ItemStack[] requiredItems = {
                 SCInventoryItemFinder.getItemFromInventory(player, ammoRequirement.firstItem(), ammoRequirement.firstItem2nOption()),
@@ -99,12 +124,12 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
         return SCInventoryItemFinder.areItemsInInventory(requiredItems, requiredAmounts);
     }
 
-    private void startReload(ServerPlayerEntity player, ItemStack itemStack) {
+    private static void startReload(ServerPlayerEntity player, ItemStack itemStack) {
         SCRangeWeaponUtil.setWeaponState(itemStack, new SCRangeWeaponUtil.WeaponState(true, SCRangeWeaponUtil.getWeaponState(itemStack).isCharged(), false));
         incrementRechargeTime(player);
     }
 
-    private void completeReload(ServerPlayerEntity player, ItemStack itemStack) {
+    private static void completeReload(ServerPlayerEntity player, ItemStack itemStack) {
         SCRangeWeaponUtil.AmmoRequirement ammoRequirement = SCRangeWeaponUtil.getAmmoRequirement(itemStack.getItem());
         if (!player.isCreative()) {
             ItemStack[] ammoItems = {
@@ -123,19 +148,19 @@ public class ReloadTickHandler implements ServerTickEvents.StartTick {
         itemStack.getOrCreateNbt().putBoolean("sc_recharge", false);
     }
 
-    private void resetRechargeTime(PlayerEntity player) {
+    private static void resetRechargeTime(PlayerEntity player) {
         setRechargeTime(player, 0);
     }
 
-    private void incrementRechargeTime(PlayerEntity player) {
+    private static void incrementRechargeTime(PlayerEntity player) {
         setRechargeTime(player, getRechargeTime(player) + 1);
     }
 
-    private int getRechargeTime(PlayerEntity player) {
+    private static int getRechargeTime(PlayerEntity player) {
         return ((IEntityDataSaver) player).stoneycore$getPersistentData().getInt("rechargeTime");
     }
 
-    private void setRechargeTime(PlayerEntity player, int time) {
+    private static void setRechargeTime(PlayerEntity player, int time) {
         ((IEntityDataSaver) player).stoneycore$getPersistentData().putInt("rechargeTime", time);
     }
 }

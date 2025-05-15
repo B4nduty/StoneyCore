@@ -1,7 +1,7 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.armor.SCTrinketsItem;
+import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
@@ -44,6 +44,7 @@ import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
 
 @Mixin(Item.class)
 public class ItemMixin {
+
     @Unique
     private static final String NBT_BLUDGEONING_KEY = "sc_bludgeoning";
 
@@ -314,7 +315,7 @@ public class ItemMixin {
 
     @Inject(method = "onCraft", at = @At("TAIL"))
     public void onCraft(ItemStack stack, World world, PlayerEntity player, CallbackInfo ci) {
-        if (!(stack.getItem() instanceof SCTrinketsItem)) return;
+        if (!(stack.getItem() instanceof SCAccessoryItem)) return;
 
         if (player.currentScreenHandler instanceof CraftingScreenHandler craftingInventory) {
             applyCraftingModifiers(stack, craftingInventory.getCraftingSlotCount(), craftingInventory::getSlot);
@@ -335,7 +336,7 @@ public class ItemMixin {
             }
         }
 
-        if (!bannerStack.isEmpty() && stack.getItem() instanceof SCTrinketsItem && stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) {
+        if (!bannerStack.isEmpty() && stack.getItem() instanceof SCAccessoryItem && stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) {
             List<Pair<Identifier, DyeColor>> bannerPatterns = getBannerPatterns(bannerStack, stack.getItem());
             PatternHelper.setBannerPatterns(stack, bannerPatterns);
             PatternHelper.setBannerDyeColor(stack, ((BannerItem) bannerStack.getItem()).getColor());

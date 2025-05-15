@@ -1,8 +1,8 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
+import banduty.stoneycore.util.playerdata.SCAttributes;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import net.bettercombat.api.AttackHand;
@@ -23,7 +23,7 @@ public class PlayerAttackHitHandler implements BetterCombatClientEvents.PlayerAt
 
             if (player.isCreative()) return;
 
-            if (StaminaData.isStaminaBlocked(dataSaver) || StoneyCore.getConfig().maxStamina() <= 0) {
+            if (StaminaData.isStaminaBlocked(dataSaver) || player.getAttributeValue(SCAttributes.MAX_STAMINA) <= 0) {
                 return;
             }
 

@@ -5,30 +5,25 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 
-public interface SCTrinketsItem {
-    double armor();
-
-    double toughness();
-
-    double hungerDrainAddition();
+public interface SCAccessoryItem {
+    @Environment(EnvType.CLIENT)
+    BipedEntityModel<LivingEntity> getModel(ItemStack itemStack);
 
     @Environment(EnvType.CLIENT)
-    BipedEntityModel<LivingEntity> getModel();
-
-    @Environment(EnvType.CLIENT)
-    default BipedEntityModel<LivingEntity> getFirstPersonModel() {
+    default BipedEntityModel<LivingEntity> getFirstPersonModel(ItemStack itemStack) {
         return null;
     }
 
-    Identifier getTexturePath();
+    Identifier getTexturePath(ItemStack itemStack);
 
     default boolean hasOverlay() {
         return false;
     }
 
-    default boolean hasCustomAngles() {
+    default boolean hasCustomAngles(ItemStack stack) {
         return false;
     }
 }

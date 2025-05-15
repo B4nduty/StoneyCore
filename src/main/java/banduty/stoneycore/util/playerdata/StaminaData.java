@@ -2,60 +2,52 @@ package banduty.stoneycore.util.playerdata;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.networking.ModMessages;
+import banduty.stoneycore.util.ModifiersHelper;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import java.util.UUID;
+
 public class StaminaData {
-    private static final String STAMINA_KEY = "stamina";
+    private static final UUID GENERIC_STAMINA_MODIFIER_ID = UUID.randomUUID();
     private static final String STAMINA_BLOCKED_KEY = "stamina_blocked";
 
-    public static void setStamina(IEntityDataSaver player, float stamina) {
-        NbtCompound nbt = player.stoneycore$getPersistentData();
-        nbt.putFloat(STAMINA_KEY, stamina);
-        syncStamina(stamina, (ServerPlayerEntity) player);
+    public static void setStamina(LivingEntity livingEntity, double stamina) {
+        ModifiersHelper.updateModifier(livingEntity.getAttributeInstance(SCAttributes.STAMINA),
+                new EntityAttributeModifier(GENERIC_STAMINA_MODIFIER_ID,
+                        StoneyCore.MOD_ID + ":stamina", clampStamina(livingEntity, stamina), EntityAttributeModifier.Operation.ADDITION)
+        );
     }
 
-    public static void addStamina(IEntityDataSaver player, float amount) {
-        NbtCompound nbt = player.stoneycore$getPersistentData();
-        float currentStamina = nbt.getFloat(STAMINA_KEY);
-        float newStamina = clampStamina(currentStamina + amount);
-        nbt.putFloat(STAMINA_KEY, newStamina);
-        syncStamina(newStamina, (ServerPlayerEntity) player);
+    public static void addStamina(LivingEntity livingEntity, double amount) {
+        setStamina(livingEntity, clampStamina(livingEntity, livingEntity.getAttributeValue(SCAttributes.STAMINA) + amount));
     }
 
-    public static void removeStamina(IEntityDataSaver player, float amount) {
-        NbtCompound nbt = player.stoneycore$getPersistentData();
-        float currentStamina = nbt.getFloat(STAMINA_KEY);
-        float newStamina = clampStamina(currentStamina - amount);
-        nbt.putFloat(STAMINA_KEY, newStamina);
-        syncStamina(newStamina, (ServerPlayerEntity) player);
+    public static void removeStamina(LivingEntity livingEntity, double amount) {
+        setStamina(livingEntity, clampStamina(livingEntity, livingEntity.getAttributeValue(SCAttributes.STAMINA) - amount));
     }
 
-    public static float getStamina(IEntityDataSaver player) {
-        return player.stoneycore$getPersistentData().getFloat(STAMINA_KEY);
+    public static double getStamina(LivingEntity livingEntity) {
+        return livingEntity.getAttributeValue(SCAttributes.STAMINA);
     }
 
-    private static float clampStamina(float value) {
-        return Math.max(0, Math.min(value, StoneyCore.getConfig().maxStamina()));
+    private static double clampStamina(LivingEntity livingEntity, double value) {
+        return Math.max(0, Math.min(value, livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA)));
     }
 
-    public static void setStaminaBlocked(IEntityDataSaver player, boolean blocked) {
-        NbtCompound nbt = player.stoneycore$getPersistentData();
+    public static void setStaminaBlocked(IEntityDataSaver livingEntity, boolean blocked) {
+        NbtCompound nbt = livingEntity.stoneycore$getPersistentData();
         nbt.putBoolean(STAMINA_BLOCKED_KEY, blocked);
-        syncStaminaBlocked(blocked, (ServerPlayerEntity) player);
+        syncStaminaBlocked(blocked, (ServerPlayerEntity) livingEntity);
     }
 
-    public static boolean isStaminaBlocked(IEntityDataSaver player) {
-        return player.stoneycore$getPersistentData().getBoolean(STAMINA_BLOCKED_KEY);
-    }
-
-    public static void syncStamina(float stamina, ServerPlayerEntity player) {
-        PacketByteBuf buffer = PacketByteBufs.create();
-        buffer.writeFloat(stamina);
-        ServerPlayNetworking.send(player, ModMessages.STAMINA_FLOAT_ID, buffer);
+    public static boolean isStaminaBlocked(IEntityDataSaver livingEntity) {
+        return livingEntity.stoneycore$getPersistentData().getBoolean(STAMINA_BLOCKED_KEY);
     }
 
     public static void syncStaminaBlocked(boolean blocked, ServerPlayerEntity player) {

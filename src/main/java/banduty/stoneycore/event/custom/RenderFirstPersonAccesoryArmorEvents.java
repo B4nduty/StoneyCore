@@ -7,12 +7,12 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
 
-public interface RenderFirstPersonTrinketsArmorEvents {
-    Event<RenderFirstPersonTrinketsArmorEvents> EVENT = EventFactory.createArrayBacked(
-            RenderFirstPersonTrinketsArmorEvents.class,
+public interface RenderFirstPersonAccesoryArmorEvents {
+    Event<RenderFirstPersonAccesoryArmorEvents> EVENT = EventFactory.createArrayBacked(
+            RenderFirstPersonAccesoryArmorEvents.class,
             listeners -> (itemStack, matrices,
                           vertexConsumers, light, arm) -> {
-                for (RenderFirstPersonTrinketsArmorEvents listener : listeners) {
+                for (RenderFirstPersonAccesoryArmorEvents listener : listeners) {
                     listener.onRenderInFirstPerson(itemStack, matrices, vertexConsumers, light, arm);
                 }
             }

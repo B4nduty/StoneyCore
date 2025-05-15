@@ -6,7 +6,6 @@ import banduty.stoneycore.model.UnderArmourChestplateModel;
 import banduty.stoneycore.model.UnderArmourHelmetModel;
 import banduty.stoneycore.model.UnderArmourLeggingsModel;
 import banduty.stoneycore.util.DyeUtil;
-import dev.emi.trinkets.api.client.TrinketRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
@@ -35,7 +34,7 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
         ArmorItem armorItem = (ArmorItem) stack.getItem();
         BipedEntityModel<LivingEntity> model = getModel(armorItem);
         if (model != null) {
-            TrinketRenderer.followBodyRotations(entity, model);
+            contextModel.copyBipedStateTo(model);
 
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
                     RenderLayer.getArmorCutoutNoCull(new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
