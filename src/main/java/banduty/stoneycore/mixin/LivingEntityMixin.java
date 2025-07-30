@@ -3,10 +3,10 @@ package banduty.stoneycore.mixin;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
 import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
-import banduty.stoneycore.util.playerdata.SCAttributes;
+import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.playerdata.SCAttributes;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -113,16 +113,30 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         }
     }
 
-    @ModifyVariable(method = "damage", at = @At("HEAD"), argsOnly = true)
-    private float stoneycore$modifyDamageAmount(float amount, DamageSource source) {
-        return LivingEntityDamageEvents.EVENT.invoker().onDamage((LivingEntity) (Object) this, source, amount);
+    @ModifyVariable(
+            method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z",
+            at = @At("HEAD"),
+            argsOnly = true,
+            index = 2
+    )
+    private float modifyDamageAmount(float amount, DamageSource source) {
+        amount = LivingEntityDamageEvents.EVENT.invoker().onDamage((LivingEntity) (Object) this, source, amount);
+        return amount;
+    }
+
+    @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
+    private void stoneycore$cancelZeroDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (amount <= 0) {
+            cir.setReturnValue(false);
+            cir.cancel();
+        }
     }
 
     @Inject(method = "applyDamage", at = @At("TAIL"))
     private void stoneycore$sendDamage(DamageSource source, float amount, CallbackInfo ci) {
-        if (StoneyCore.getConfig().getDamageIndicator() && source.getAttacker() instanceof PlayerEntity player) {
+        if (StoneyCore.getConfig().visualOptions.getDamageIndicator() && source.getAttacker() instanceof PlayerEntity player) {
             ItemStack mainHandStack = player.getMainHandStack();
-            if (SCMeleeWeaponDefinitionsLoader.containsItem(mainHandStack.getItem()) && !player.hasStatusEffect(StatusEffects.WEAKNESS)) {
+            if (SCWeaponDefinitionsLoader.isMelee(mainHandStack.getItem()) && !player.hasStatusEffect(StatusEffects.WEAKNESS)) {
                 if (amount <= 0) amount = 0;
                 player.sendMessage(Text.literal("Damage: " + (int) amount), true);
             }
@@ -136,7 +150,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
             boolean wearingSCArmor = isWearingSCArmor(livingEntity);
             if (!staminaBlocked && wearingSCArmor) {
-                StaminaData.removeStamina(livingEntity, StoneyCore.getConfig().jumpingStamina());
+                StaminaData.removeStamina(livingEntity, StoneyCore.getConfig().combatOptions.jumpingStamina());
             }
         }
     }

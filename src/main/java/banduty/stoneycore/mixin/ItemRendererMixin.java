@@ -41,7 +41,11 @@ public abstract class ItemRendererMixin {
             at = @At("HEAD"),
             cancellable = true)
     public void stoneycore$onRenderItem(LivingEntity entity, ItemStack itemStack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, World world, int light, int overlay, int seed, CallbackInfo ci) {
-        if (itemStack.isEmpty() || (!(itemStack.isIn(SCTags.WEAPONS_3D.getTag()) || (PatternHelper.getBannerPatterns(itemStack).isEmpty() || (itemStack.getNbt() != null && !itemStack.getNbt().contains("dyeColorR")))))) {
+        boolean isValid = itemStack.isIn(SCTags.WEAPONS_3D.getTag())
+                || !PatternHelper.getBannerPatterns(itemStack).isEmpty()
+                || itemStack.getNbt() != null && itemStack.getNbt().contains("dyeColorR");
+
+        if (itemStack.isEmpty() || !isValid) {
             return;
         }
 

@@ -13,6 +13,9 @@
 		"main": [
           "banduty.stoneycore.StoneyCore"
 		],
+		"fabric-datagen": [
+          "banduty.stoneycore.StoneyCore"
+		],
 		"client": [
 			"banduty.stoneycore.StoneyCoreClient"
 		]
@@ -26,6 +29,7 @@
 		"bettercombat": ">=1.8.5+1.20.1",
 		"accessories": ">=1.0.0-beta.47+1.20.1",
 		"streq": ">=1.0.9",
+		"architectury": ">=9.2.14",
 		"minecraft": "~1.20.1",
 		"java": ">=17",
 		"fabric-api": "*"

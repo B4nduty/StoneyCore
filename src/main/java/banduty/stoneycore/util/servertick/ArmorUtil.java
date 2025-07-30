@@ -12,35 +12,43 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 public class ArmorUtil {
-    public static void startArmorCheck(ServerPlayerEntity serverPlayerEntity) {
-        if (!isWearingFullSCArmorSet(serverPlayerEntity)) {
-            if (AccessoriesCapability.getOptionally(serverPlayerEntity).isPresent()) {
-                for (SlotEntryReference equipped : AccessoriesCapability.get(serverPlayerEntity).getAllEquipped()) {
-                    ItemStack itemStack = equipped.stack();
-                    if (itemStack.getItem() instanceof SCAccessoryItem && !itemStack.isIn(SCTags.ALWAYS_WEARABLE.getTag())) {
-                        serverPlayerEntity.giveItemStack(itemStack);
-                        itemStack.setCount(0);
-                        serverPlayerEntity.sendMessage(Text.translatable("text.warning.stoneycore.full_armor_needed").formatted(Formatting.DARK_RED), true);
-                    }
+
+    private static final Set<EquipmentSlot> ARMOR_SLOTS = EnumSet.of(
+            EquipmentSlot.HEAD,
+            EquipmentSlot.CHEST,
+            EquipmentSlot.LEGS,
+            EquipmentSlot.FEET
+    );
+
+    public static void startArmorCheck(ServerPlayerEntity player) {
+        if (isWearingFullSCArmorSet(player)) return;
+
+        AccessoriesCapability.getOptionally(player).ifPresent(accessories -> {
+            for (SlotEntryReference equipped : accessories.getAllEquipped()) {
+                ItemStack stack = equipped.stack();
+                if (stack.getItem() instanceof SCAccessoryItem && !stack.isIn(SCTags.ALWAYS_WEARABLE.getTag())) {
+                    player.giveItemStack(stack);
+                    stack.setCount(0);
+                    player.sendMessage(
+                            Text.translatable("text.warning.stoneycore.full_armor_needed").formatted(Formatting.DARK_RED),
+                            true
+                    );
                 }
             }
-        }
+        });
     }
 
     private static boolean isWearingFullSCArmorSet(LivingEntity entity) {
-        for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (isArmorSlot(slot)) {
-                ItemStack armorPiece = entity.getEquippedStack(slot);
-                if (!SCArmorDefinitionsLoader.containsItem(armorPiece.getItem())) {
-                    return false;
-                }
+        for (EquipmentSlot slot : ARMOR_SLOTS) {
+            ItemStack equipped = entity.getEquippedStack(slot);
+            if (!SCArmorDefinitionsLoader.containsItem(equipped.getItem())) {
+                return false;
             }
         }
         return true;
-    }
-
-    private static boolean isArmorSlot(EquipmentSlot slot) {
-        return slot == EquipmentSlot.HEAD || slot == EquipmentSlot.CHEST || slot == EquipmentSlot.LEGS || slot == EquipmentSlot.FEET;
     }
 }

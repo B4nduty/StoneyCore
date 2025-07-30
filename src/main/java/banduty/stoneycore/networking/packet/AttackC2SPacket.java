@@ -11,6 +11,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public class AttackC2SPacket {
     public static void receive(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler,
                                PacketByteBuf buf, PacketSender responseSender) {
-        StaminaData.removeStamina(player, StoneyCore.getConfig().attackStamina());
+        StaminaData.removeStamina(player, StoneyCore.getConfig().combatOptions.attackStamina());
     }
 }

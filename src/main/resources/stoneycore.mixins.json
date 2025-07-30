@@ -3,20 +3,30 @@
   "package": "banduty.stoneycore.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "AbstractBlockMixin",
     "CraftingScreenHandlerMixin",
     "HungerManagerMixin",
     "ItemMixin",
     "LivingEntityMixin",
-    "PlayerEntityMixin"
+    "PersistentProjectileEntityAccessor",
+    "PersistentProjectileEntityMixin",
+    "PlayerEntityMixin",
+    "SpawnHelperMixin",
+    "StairsBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
+    "BipedEntityModelMixin",
+    "CameraAccessor",
+    "CameraMixin",
     "HeldItemRendererMixin",
+    "HorseEntityModelMixin",
     "InGameHudMixin",
     "ItemRendererMixin",
     "MinecraftClientMixin",
+    "ModelLoaderMixin",
     "PlayerEntityRendererMixin"
   ]
 }

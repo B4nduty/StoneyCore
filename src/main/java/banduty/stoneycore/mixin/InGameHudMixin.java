@@ -1,11 +1,11 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.StoneyCoreClient;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.SCDamageCalculator;
-import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
-import banduty.stoneycore.util.playerdata.SCAttributes;
+import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -20,7 +20,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.*;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -48,14 +51,14 @@ public class InGameHudMixin {
 
         ItemStack mainHandStack = player.getMainHandStack();
         Item item = mainHandStack.getItem();
-        if (!SCMeleeWeaponDefinitionsLoader.containsItem(item)) return;
+        if (!SCWeaponDefinitionsLoader.isMelee(item)) return;
 
         Vec3d playerPos = player.getPos();
         double distance = client.targetedEntity == null
                 ? 9999
                 : playerPos.distanceTo(client.targetedEntity.getPos());
 
-        SCMeleeWeaponDefinitionsLoader.DefinitionData weaponData = SCMeleeWeaponDefinitionsLoader.getData(item);
+        SCWeaponDefinitionsLoader.DefinitionData weaponData = SCWeaponDefinitionsLoader.getData(item);
 
         String damageType = determineDamageType(mainHandStack, weaponData, (PlayerAttackProperties) player);
         renderCrosshair(item, context, distance, damageType);
@@ -64,15 +67,15 @@ public class InGameHudMixin {
     }
 
     @Unique
-    private String determineDamageType(ItemStack mainHandStack, SCMeleeWeaponDefinitionsLoader.DefinitionData weaponData, PlayerAttackProperties player) {
+    private String determineDamageType(ItemStack mainHandStack, SCWeaponDefinitionsLoader.DefinitionData weaponData, PlayerAttackProperties player) {
         Item item = mainHandStack.getItem();
-        boolean isBludgeoning = mainHandStack.getOrCreateNbt().getBoolean("sc_bludgeoning");
+        boolean isBludgeoning = mainHandStack.getNbt() != null && mainHandStack.getNbt().getBoolean("sc_bludgeoning");
         boolean isPiercing = isPiercing(player, item);
         boolean bludgeoningToPiercing = getDamageValues("SLASHING", item) == 0
                 && getDamageValues("PIERCING", item) > 0
                 && getDamageValues("BLUDGEONING", item) > 0;
 
-        SCDamageCalculator.DamageType onlyType = weaponData.onlyDamageType();
+        SCDamageCalculator.DamageType onlyType = weaponData.melee().onlyDamageType();
 
         if (isBludgeoning || onlyType == SCDamageCalculator.DamageType.BLUDGEONING) return "bludgeoning";
         if (isPiercing || bludgeoningToPiercing || onlyType == SCDamageCalculator.DamageType.PIERCING) return "piercing";
@@ -82,9 +85,9 @@ public class InGameHudMixin {
     @Unique
     private static boolean isPiercing(PlayerAttackProperties player, Item item) {
         int comboCount = player.getComboCount();
-        SCMeleeWeaponDefinitionsLoader.DefinitionData attributeData = SCMeleeWeaponDefinitionsLoader.getData(item);
-        int[] piercingAnimations = attributeData.piercingAnimation();
-        int animation = attributeData.animation();
+        SCWeaponDefinitionsLoader.DefinitionData attributeData = SCWeaponDefinitionsLoader.getData(item);
+        int[] piercingAnimations = attributeData.melee().piercingAnimation();
+        int animation = attributeData.melee().animation();
 
         if (animation > 0) {
             for (int piercingAnimation : piercingAnimations) {
@@ -119,7 +122,7 @@ public class InGameHudMixin {
             }
         }
 
-        renderCrosshairTexture(context, TOO_FAR_CLOSE, centerX, centerY, StoneyCore.getConfig().hexColorTooFarClose());
+        renderCrosshairTexture(context, TOO_FAR_CLOSE, centerX, centerY, StoneyCore.getConfig().visualOptions.hexColorTooFarClose());
     }
 
     @Unique
@@ -136,10 +139,10 @@ public class InGameHudMixin {
     @Unique
     private int getColorForIndex(int i) {
         return switch (i) {
-            case 0 -> StoneyCore.getConfig().hexColorTooFarClose();
-            case 1, 3 -> StoneyCore.getConfig().hexColorEffective();
-            case 2 -> StoneyCore.getConfig().hexColorCritical();
-            case 4 -> StoneyCore.getConfig().hexColorMaximum();
+            case 0 -> StoneyCore.getConfig().visualOptions.hexColorTooFarClose();
+            case 1, 3 -> StoneyCore.getConfig().visualOptions.hexColorEffective();
+            case 2 -> StoneyCore.getConfig().visualOptions.hexColorCritical();
+            case 4 -> StoneyCore.getConfig().visualOptions.hexColorMaximum();
             default -> 0xFFFFFF;
         };
     }
@@ -194,7 +197,7 @@ public class InGameHudMixin {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;
         if (player == null || player.isSpectator() || !ableStaminaOverlay(player)) return;
-        double maxStamina = player.getAttributeValue(SCAttributes.MAX_STAMINA);
+        double maxStamina = player.getAttributeValue(StoneyCore.MAX_STAMINA.get());
         if (maxStamina <= 0) return;
 
         int staminaBarX = client.getWindow().getScaledWidth() / 2;
@@ -209,7 +212,7 @@ public class InGameHudMixin {
     private boolean ableStaminaOverlay(PlayerEntity player) {
         if (player == null) return false;
 
-        boolean hasSCWeapon = SCMeleeWeaponDefinitionsLoader.containsItem(player.getMainHandStack().getItem());
+        boolean hasSCWeapon = SCWeaponDefinitionsLoader.isMelee(player.getMainHandStack());
         for (ItemStack stack : player.getArmorItems()) {
             if (SCArmorDefinitionsLoader.containsItem(stack.getItem())) {
                 return true;
@@ -229,7 +232,7 @@ public class InGameHudMixin {
 
     @Unique
     private void renderStaminaBar(DrawContext drawContext, int staminaBarX, int staminaBarY, double stamina, boolean isStaminaBlocked) {
-        int yOffset = StoneyCore.getConfig().getStaminaBarYOffset();
+        int yOffset = StoneyCore.getConfig().visualOptions.getStaminaBarYOffset();
         int baseY = staminaBarY - yOffset;
 
         // Render empty stamina units
@@ -256,15 +259,16 @@ public class InGameHudMixin {
             float[] color = rowColors[Math.min(row, rowColors.length - 1)];
 
             for (int i = 0; i < maxUnitsPerRow; i++) {
-                if (!isStaminaBlocked) RenderSystem.setShaderColor(color[0], color[1], color[2], 1.0f);
                 int unitIndex = (row * maxUnitsPerRow + i) * 2;
                 if (unitIndex >= stamina) break;
 
+                if (!isStaminaBlocked) drawContext.setShaderColor(color[0], color[1], color[2], 1.0f);
                 int x = staminaBarX + 82 - (i * STAMINA_UNIT_SIZE);
                 Identifier texture = isStaminaBlocked ? STAMINA_BLOCKED : STAMINA;
+                RenderSystem.setShaderTexture(0, texture);
                 renderStaminaUnit(drawContext, x, baseY, texture, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT);
 
-                RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                drawContext.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
                 if (!isStaminaBlocked) renderStaminaUnit(drawContext, x, baseY, STAMINA_OVERLAY, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT);
             }
@@ -283,6 +287,9 @@ public class InGameHudMixin {
     private void stoneycore$renderBackgroundOverlays(DrawContext context, float tickDelta, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;
+
+        StoneyCoreClient.LAND_TITLE_RENDERER.render(context);
+
         if (player == null || player.isCreative() || player.isSpectator()) return;
 
         int width = context.getScaledWindowWidth();
@@ -296,7 +303,7 @@ public class InGameHudMixin {
         if (AccessoriesCapability.getOptionally(player).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                 ItemStack itemStack = equipped.stack();
-                if (itemStack.getItem() instanceof SCAccessoryItem && itemStack.isIn(SCTags.VISORED_HELMET.getTag()) && StoneyCore.getConfig().getVisoredHelmet()) {
+                if (itemStack.getItem() instanceof SCAccessoryItem && itemStack.isIn(SCTags.VISORED_HELMET.getTag()) && StoneyCore.getConfig().visualOptions.getVisoredHelmet()) {
                     RenderSystem.setShaderTexture(0, VISOR_HELMET);
                     context.drawTexture(VISOR_HELMET, 0, 0, 0, 0, width, height, width, height);
                 }
@@ -315,17 +322,18 @@ public class InGameHudMixin {
     private void stoneycore$renderBackgroundOverlaysTail(DrawContext context, float tickDelta, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;
+
         if (player == null || player.isCreative() || player.isSpectator()) return;
 
         int width = context.getScaledWindowWidth();
         int height = context.getScaledWindowHeight();
 
         double stamina = StaminaData.getStamina(player);
-        double secondLevel = player.getAttributeBaseValue(SCAttributes.MAX_STAMINA) * 0.15d;
+        double secondLevel = player.getAttributeBaseValue(StoneyCore.MAX_STAMINA.get()) * 0.15d;
 
-        if (StaminaData.isStaminaBlocked((IEntityDataSaver) player) && StoneyCore.getConfig().getLowStaminaIndicator()) {
+        if (StaminaData.isStaminaBlocked((IEntityDataSaver) player) && StoneyCore.getConfig().visualOptions.getLowStaminaIndicator()) {
             double staminaPercentage = stamina / secondLevel;
-            if (StoneyCore.getConfig().getRealisticCombat()) {
+            if (StoneyCore.getConfig().combatOptions.getRealisticCombat()) {
                 if (noiseTextures == null) initNoiseTextures();
                 renderBlurEffect(context, width, height, staminaPercentage);
             } else {
@@ -357,7 +365,7 @@ public class InGameHudMixin {
     private void renderBlurEffect(DrawContext context, int width, int height, double staminaPercentage) {
         renderBlur(context, width, height, staminaPercentage);
         renderTunnelVision(context, width, height, staminaPercentage);
-        if (StoneyCore.getConfig().getNoiseEffect()) renderNoise(context, width, height, staminaPercentage);
+        if (StoneyCore.getConfig().visualOptions.getNoiseEffect()) renderNoise(context, width, height, staminaPercentage);
     }
 
     @Unique

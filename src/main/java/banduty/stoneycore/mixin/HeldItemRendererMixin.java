@@ -14,6 +14,8 @@ import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ArmorItem;
@@ -56,34 +58,60 @@ public class HeldItemRendererMixin {
     private void modelLoader(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, Arm arm) {
         ClientPlayerEntity player = this.client.player;
         if (player == null) return;
-        ItemStack stack = player.getInventory().getArmorStack(2);
-        if (stack.getItem() instanceof ArmorItem armorItem && SCArmorDefinitionsLoader.containsItem(armorItem)
-                && armorItem.getSlotType() == ArmorItem.Type.CHESTPLATE.getEquipmentSlot()) {
+
+        ItemStack chestStack = player.getInventory().getArmorStack(2); // Chestplate
+        if (chestStack.getItem() instanceof ArmorItem armorItem &&
+                SCArmorDefinitionsLoader.containsItem(armorItem) &&
+                armorItem.getSlotType() == ArmorItem.Type.CHESTPLATE.getEquipmentSlot()) {
+
+            // Load your custom model
             UnderArmourArmModel model = new UnderArmourArmModel(UnderArmourArmModel.getTexturedModelData().createModel());
-            VertexConsumer baseConsumer = vertexConsumers.getBuffer(
-                    RenderLayer.getArmorCutoutNoCull(new Identifier(Registries.ITEM.getId(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
-            float[] color = new float[3];
-            color[0] = 1;
-            color[1] = 1;
-            color[2] = 1;
-            if (stack.getItem() instanceof SCDyeableUnderArmor) {
-                color = DyeUtil.getFloatDyeColor(stack);
+
+            // Get structureId for the base layer
+            Identifier baseTexture = new Identifier(
+                    Registries.ITEM.getId(armorItem).getNamespace(),
+                    "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png"
+            );
+            VertexConsumer baseConsumer = vertexConsumers.getBuffer(RenderLayer.getArmorCutoutNoCull(baseTexture));
+
+            // Handle color if it's dyeable
+            float[] color = new float[] { 1f, 1f, 1f };
+            if (chestStack.getItem() instanceof SCDyeableUnderArmor) {
+                color = DyeUtil.getFloatDyeColor(chestStack);
             }
 
-            Identifier textureOverlayPath = getOverlayIdentifier(armorItem);
+            // Render the arm part based on left/right
+            PlayerEntityModel<?> playerModel = ((PlayerEntityModel<?>) ((LivingEntityRenderer<?, ?>)
+                    MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(player)).getModel());
 
-            if (arm == Arm.RIGHT) model.armorRightArm.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
-            if (arm == Arm.LEFT) model.armorLeftArm.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
+            float armOffset = 0.0625f; // This is 1px in model units
 
-            if (!textureOverlayPath.equals(new Identifier(""))) ArmorRenderer.renderPart(matrices, vertexConsumers, light, stack, model, textureOverlayPath);
+            matrices.push();
+            if (arm == Arm.RIGHT) {
+                matrices.translate(-armOffset, 0.0F, 0.0F);
+                model.armorRightArm.copyTransform(playerModel.rightArm);
+                model.armorRightArm.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
+            } else {
+                matrices.translate(armOffset, 0.0F, 0.0F);
+                model.armorLeftArm.copyTransform(playerModel.leftArm);
+                model.armorLeftArm.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
+            }
+            matrices.pop();
+
+            // Render overlay if available
+            Identifier overlayTexture = getOverlayIdentifier(armorItem);
+            if (!overlayTexture.getPath().isEmpty()) {
+                ArmorRenderer.renderPart(matrices, vertexConsumers, light, chestStack, model, overlayTexture);
+            }
         }
 
-        if (AccessoriesCapability.getOptionally(player).isPresent()) {
-            for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
+        // Accessories rendering support
+        AccessoriesCapability.getOptionally(player).ifPresent(accessories -> {
+            for (SlotEntryReference equipped : accessories.getAllEquipped()) {
                 ItemStack itemStack = equipped.stack();
-                RenderFirstPersonAccesoryArmorEvents.EVENT.invoker().onRenderInFirstPerson(itemStack, matrices, vertexConsumers, light, arm);
+                RenderFirstPersonAccesoryArmorEvents.EVENT.invoker().onRenderInFirstPerson(player, itemStack, matrices, vertexConsumers, light, arm);
             }
-        }
+        });
     }
 
     @Unique

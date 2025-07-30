@@ -31,9 +31,9 @@ public class UnderArmourArmModel extends BipedEntityModel<LivingEntity> {
 	public static TexturedModelData getTexturedModelData() {
 		ModelData modelData = BipedEntityModel.getModelData(Dilation.NONE, 0f);
 		ModelPartData modelPartData = modelData.getRoot();
-		modelPartData.addChild("armorRightArm", ModelPartBuilder.create().uv(24, 80).cuboid(-2.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new Dilation(0.33F)), ModelTransform.pivot(-7.0F, 2.0F, 0.0F));
+		modelPartData.addChild("armorRightArm", ModelPartBuilder.create().uv(24, 80).cuboid(-2.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new Dilation(0.33F)), ModelTransform.pivot(-5.0F, 2.0F, 0.0F));
 
-		modelPartData.addChild("armorLeftArm", ModelPartBuilder.create().uv(24, 80).mirrored().cuboid(-2.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new Dilation(0.33F)).mirrored(false), ModelTransform.pivot(7.0F, 2.0F, 0.0F));
+		modelPartData.addChild("armorLeftArm", ModelPartBuilder.create().uv(24, 80).mirrored().cuboid(-2.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new Dilation(0.33F)).mirrored(false), ModelTransform.pivot(5.0F, 2.0F, 0.0F));
 		return TexturedModelData.of(modelData, 128, 128);
 	}
 }

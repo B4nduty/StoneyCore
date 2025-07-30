@@ -1,6 +1,6 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.util.playerdata.SCAttributes;
+import banduty.stoneycore.StoneyCore;
 import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,8 +25,8 @@ public abstract class HungerManagerMixin {
 
         double totalHungerAddition = 1;
 
-        if (player.getAttributeInstance(SCAttributes.HUNGER_DRAIN_MULTIPLIER) != null) {
-            totalHungerAddition += player.getAttributeInstance(SCAttributes.HUNGER_DRAIN_MULTIPLIER).getValue();
+        if (player.getAttributeInstance(StoneyCore.HUNGER_DRAIN_MULTIPLIER.get()) != null) {
+            totalHungerAddition += player.getAttributeInstance(StoneyCore.HUNGER_DRAIN_MULTIPLIER.get()).getValue();
         }
 
         float modifiedExhaustion = (float) Math.min(((HungerManager) (Object) this).getExhaustion() + exhaustion * totalHungerAddition, 40.0F);

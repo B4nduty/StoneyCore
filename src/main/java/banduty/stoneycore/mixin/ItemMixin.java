@@ -3,8 +3,7 @@ package banduty.stoneycore.mixin;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.SCDamageCalculator;
-import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCRangedWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.patterns.PatternHelper;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
@@ -50,19 +49,18 @@ public class ItemMixin {
 
     @Inject(method = "getUseAction", at = @At("HEAD"), cancellable = true)
     public void stoneycore$getUseAction(ItemStack stack, CallbackInfoReturnable<UseAction> cir) {
-        if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) {
+        if (SCWeaponDefinitionsLoader.isMelee(stack)) {
             cir.setReturnValue(stack.isIn(SCTags.WEAPONS_SHIELD.getTag()) ? UseAction.BLOCK : UseAction.NONE);
-        } else if (SCRangedWeaponDefinitionsLoader.containsItem(stack.getItem())) {
-            cir.setReturnValue(SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).useAction() == UseAction.BOW ? UseAction.BOW : UseAction.NONE);
+        } else if (SCWeaponDefinitionsLoader.isRanged(stack)) {
+            cir.setReturnValue(SCWeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.BOW ? UseAction.BOW : UseAction.NONE);
         }
     }
 
     @Inject(method = "getMaxUseTime", at = @At("HEAD"), cancellable = true)
     public void stoneycore$getMaxUseTime(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
-        if (SCRangedWeaponDefinitionsLoader.containsItem(stack.getItem())) {
-            cir.setReturnValue(SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).maxUseTime());
-        }
-        if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem()) && stack.isIn(SCTags.WEAPONS_SHIELD.getTag())) {
+        if (SCWeaponDefinitionsLoader.isRanged(stack)) {
+            cir.setReturnValue(SCWeaponDefinitionsLoader.getData(stack).ranged().maxUseTime());
+        } else if (SCWeaponDefinitionsLoader.isMelee(stack) && stack.isIn(SCTags.WEAPONS_SHIELD.getTag())) {
             cir.setReturnValue(72000);
         }
     }
@@ -80,13 +78,13 @@ public class ItemMixin {
 
         if (world.isClient
                 || !(user instanceof PlayerEntity player)
-                || !(SCRangedWeaponDefinitionsLoader.containsItem(stack.getItem()))
+                || !(SCWeaponDefinitionsLoader.isRanged(stack))
                 || SCRangeWeaponUtil.getAmmoRequirement(stack.getItem()) != null) {
             return;
         }
 
-        int useTime = SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).maxUseTime() - remainingUseTicks;
-        if (SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).useAction() == UseAction.CROSSBOW) {
+        int useTime = SCWeaponDefinitionsLoader.getData(stack).ranged().maxUseTime() - remainingUseTicks;
+        if (SCWeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.CROSSBOW) {
             handleCrossbowCharging(world, stack, player, useTime);
         }
     }
@@ -108,9 +106,9 @@ public class ItemMixin {
                                     CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         ItemStack stack = user.getStackInHand(hand);
 
-        if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) {
+        if (SCWeaponDefinitionsLoader.isMelee(stack)) {
             handleWeaponUse(world, user, hand, stack, cir);
-        } else if (SCRangedWeaponDefinitionsLoader.containsItem(stack.getItem())) {
+        } else if (SCWeaponDefinitionsLoader.isRanged(stack)) {
             handleRangeWeaponUse(world, user, hand, stack, cir);
         }
     }
@@ -148,8 +146,9 @@ public class ItemMixin {
 
     @Unique
     private void toggleBludgeoningMode(ItemStack stack) {
-        stack.getOrCreateNbt().putBoolean(NBT_BLUDGEONING_KEY,
-                !stack.getOrCreateNbt().getBoolean(NBT_BLUDGEONING_KEY));
+        if (stack.getNbt() == null) return;
+        stack.getNbt().putBoolean(NBT_BLUDGEONING_KEY,
+                !stack.getNbt().getBoolean(NBT_BLUDGEONING_KEY));
     }
 
     @Unique
@@ -175,7 +174,7 @@ public class ItemMixin {
         }
 
         ItemStack offHandStack = user.getOffHandStack();
-        if (SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).needsFlintAndSteel() && offHandStack.getItem() != Items.FLINT_AND_STEEL && !user.isCreative()) {
+        if (SCWeaponDefinitionsLoader.getData(stack).ranged().needsFlintAndSteel() && offHandStack.getItem() != Items.FLINT_AND_STEEL && !user.isCreative()) {
             cir.setReturnValue(TypedActionResult.fail(stack));
             return;
         }
@@ -185,7 +184,7 @@ public class ItemMixin {
         SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(
                 weaponState.isReloading(), false, true));
 
-        if (!user.getAbilities().creativeMode && SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).needsFlintAndSteel() && user instanceof ServerPlayerEntity serverPlayer) {
+        if (!user.getAbilities().creativeMode && SCWeaponDefinitionsLoader.getData(stack).ranged().needsFlintAndSteel() && user instanceof ServerPlayerEntity serverPlayer) {
             offHandStack.damage(1, serverPlayer, p -> p.sendToolBreakStatus(hand));
         }
 
@@ -203,7 +202,7 @@ public class ItemMixin {
         }
 
         user.setCurrentHand(hand);
-        if (SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).useAction() == UseAction.CROSSBOW) {
+        if (SCWeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.CROSSBOW) {
             cir.setReturnValue(SCRangeWeaponUtil.handleCrossbowUse(user.getWorld(), user, hand, stack));
         } else {
             cir.setReturnValue(TypedActionResult.consume(stack));
@@ -215,11 +214,11 @@ public class ItemMixin {
                                                int remainingUseTicks, CallbackInfo ci) {
         if (world.isClient
                 || !(user instanceof PlayerEntity player)
-                || !(SCRangedWeaponDefinitionsLoader.containsItem(stack.getItem()))) {
+                || !(SCWeaponDefinitionsLoader.isRanged(stack))) {
             return;
         }
 
-        int useTime = SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).maxUseTime() - remainingUseTicks;
+        int useTime = SCWeaponDefinitionsLoader.getData(stack).ranged().maxUseTime() - remainingUseTicks;
         SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack ->
                 handleWeaponRelease(stack, world, player, useTime, arrowStack)
         );
@@ -228,9 +227,9 @@ public class ItemMixin {
     @Unique
     private void handleWeaponRelease(ItemStack stack, World world, PlayerEntity player,
                                      int useTime, ItemStack arrowStack) {
-        if (SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).useAction() == UseAction.BOW) {
+        if (SCWeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.BOW) {
             handleBowRelease(world, stack, player, arrowStack, useTime);
-        } else if (SCRangedWeaponDefinitionsLoader.getData(stack.getItem()).useAction() == UseAction.CROSSBOW) {
+        } else if (SCWeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.CROSSBOW) {
             handleCrossbowRelease(stack, useTime);
         }
     }
@@ -259,7 +258,7 @@ public class ItemMixin {
                                               TooltipContext context, CallbackInfo ci) {
         if (world == null) return;
         Item item = stack.getItem();
-        if (SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) {
+        if (SCWeaponDefinitionsLoader.isMelee(stack)) {
             float slashingDamage = getDamageValues(SCDamageCalculator.DamageType.SLASHING.name(), item);
             float piercingDamage = getDamageValues(SCDamageCalculator.DamageType.PIERCING.name(), item);
             float bludgeoningDamage = getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.name(), item);
@@ -281,7 +280,7 @@ public class ItemMixin {
             if (piercingDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.piercingDamage", (int) piercingDamage).formatted(Formatting.GREEN));
         }
 
-        if (SCRangedWeaponDefinitionsLoader.containsItem(item) && SCRangeWeaponUtil.getAmmoRequirement(stack.getItem()) != null && world.isClient()) {
+        if (SCWeaponDefinitionsLoader.isRanged(item) && SCRangeWeaponUtil.getAmmoRequirement(stack.getItem()) != null && world.isClient()) {
             TooltipClientSide.setTooltip(tooltip);
         }
     }
@@ -289,7 +288,7 @@ public class ItemMixin {
     @Inject(method = "useOnBlock", at = @At("HEAD"), cancellable = true)
     public void stoneycore$useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
         ItemStack stack = context.getStack();
-        if (!(SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem())) || !stack.isIn(SCTags.WEAPONS_HARVEST.getTag())) {
+        if (!(SCWeaponDefinitionsLoader.isMelee(stack)) || !stack.isIn(SCTags.WEAPONS_HARVEST.getTag())) {
             return;
         }
 

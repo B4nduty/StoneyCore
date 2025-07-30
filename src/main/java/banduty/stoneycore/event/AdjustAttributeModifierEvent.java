@@ -2,7 +2,6 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.util.definitionsloader.SCAccessoriesDefinitionsLoader;
-import banduty.stoneycore.util.playerdata.SCAttributes;
 import io.wispforest.accessories.api.attributes.AccessoryAttributeBuilder;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import io.wispforest.accessories.api.slot.SlotReference;
@@ -16,7 +15,7 @@ import net.minecraft.util.Identifier;
 public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCallback {
     @Override
     public void adjustAttributes(ItemStack stack, SlotReference reference, AccessoryAttributeBuilder builder) {
-        if (!SCAccessoriesDefinitionsLoader.containsItem(stack.getItem())) return;
+        if (!SCAccessoriesDefinitionsLoader.containsItem(stack)) return;
         updatePlayerAttributes(stack, reference, builder);
     }
 
@@ -28,10 +27,10 @@ public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCall
     }
 
     private static void updatePlayerAttributes(ItemStack stack, SlotReference reference, AccessoryAttributeBuilder builder) {
-        var data = SCAccessoriesDefinitionsLoader.getData(stack.getItem());
+        var data = SCAccessoriesDefinitionsLoader.getData(stack);
 
         handleAttribute(reference, EntityAttributes.GENERIC_ARMOR, "armor", data.armor(), builder);
         handleAttribute(reference, EntityAttributes.GENERIC_ARMOR_TOUGHNESS, "armor_toughness", data.toughness(), builder);
-        handleAttribute(reference, SCAttributes.HUNGER_DRAIN_MULTIPLIER, "hunger_drain_multiplier", data.hungerDrainAddition(), builder);
+        handleAttribute(reference, StoneyCore.HUNGER_DRAIN_MULTIPLIER.get(), "hunger_drain_multiplier", data.hungerDrainMultiplier(), builder);
     }
 }

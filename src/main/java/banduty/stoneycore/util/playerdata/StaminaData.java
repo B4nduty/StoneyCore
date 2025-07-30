@@ -18,26 +18,26 @@ public class StaminaData {
     private static final String STAMINA_BLOCKED_KEY = "stamina_blocked";
 
     public static void setStamina(LivingEntity livingEntity, double stamina) {
-        ModifiersHelper.updateModifier(livingEntity.getAttributeInstance(SCAttributes.STAMINA),
+        ModifiersHelper.updateModifier(livingEntity.getAttributeInstance(StoneyCore.STAMINA.get()),
                 new EntityAttributeModifier(GENERIC_STAMINA_MODIFIER_ID,
                         StoneyCore.MOD_ID + ":stamina", clampStamina(livingEntity, stamina), EntityAttributeModifier.Operation.ADDITION)
         );
     }
 
     public static void addStamina(LivingEntity livingEntity, double amount) {
-        setStamina(livingEntity, clampStamina(livingEntity, livingEntity.getAttributeValue(SCAttributes.STAMINA) + amount));
+        setStamina(livingEntity, clampStamina(livingEntity, livingEntity.getAttributeValue(StoneyCore.STAMINA.get()) + amount));
     }
 
     public static void removeStamina(LivingEntity livingEntity, double amount) {
-        setStamina(livingEntity, clampStamina(livingEntity, livingEntity.getAttributeValue(SCAttributes.STAMINA) - amount));
+        setStamina(livingEntity, clampStamina(livingEntity, livingEntity.getAttributeValue(StoneyCore.STAMINA.get()) - amount));
     }
 
     public static double getStamina(LivingEntity livingEntity) {
-        return livingEntity.getAttributeValue(SCAttributes.STAMINA);
+        return livingEntity.getAttributeValue(StoneyCore.STAMINA.get());
     }
 
     private static double clampStamina(LivingEntity livingEntity, double value) {
-        return Math.max(0, Math.min(value, livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA)));
+        return Math.max(0, Math.min(value, livingEntity.getAttributeValue(StoneyCore.MAX_STAMINA.get())));
     }
 
     public static void setStaminaBlocked(IEntityDataSaver livingEntity, boolean blocked) {

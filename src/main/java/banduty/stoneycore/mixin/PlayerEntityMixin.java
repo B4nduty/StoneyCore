@@ -1,7 +1,7 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -32,13 +32,13 @@ public abstract class PlayerEntityMixin {
     @Inject(method = "damageShield", at = @At("HEAD"), cancellable = true)
     private void stoneycore$onDamageShield(float amount, CallbackInfo ci) {
         ItemStack mainHandStack = playerEntity.getMainHandStack();
-        if (SCMeleeWeaponDefinitionsLoader.containsItem(mainHandStack.getItem()) && playerEntity.getActiveItem().isIn(SCTags.WEAPONS_SHIELD.getTag())) {
+        if (SCWeaponDefinitionsLoader.isMelee(mainHandStack.getItem()) && playerEntity.getActiveItem().isIn(SCTags.WEAPONS_SHIELD.getTag())) {
             if (!playerEntity.getWorld().isClient) {
                 playerEntity.incrementStat(Stats.USED.getOrCreateStat(playerEntity.getActiveItem().getItem()));
             }
             ci.cancel();
 
-            StaminaData.removeStamina((LivingEntity) (Object) this, StoneyCore.getConfig().onBlockStamina());
+            StaminaData.removeStamina((LivingEntity) (Object) this, StoneyCore.getConfig().combatOptions.onBlockStamina());
         }
     }
 

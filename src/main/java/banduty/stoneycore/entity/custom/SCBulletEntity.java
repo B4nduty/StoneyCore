@@ -31,7 +31,7 @@ public class SCBulletEntity extends PersistentProjectileEntity {
     }
 
     public SCBulletEntity(LivingEntity shooter, World world) {
-        super(ModEntities.SC_BULLET, shooter, world);
+        super(ModEntities.SC_BULLET.get(), shooter, world);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class SCBulletEntity extends PersistentProjectileEntity {
 
     @Override
     protected SoundEvent getHitSound() {
-        return ModSounds.BULLET_CRACK;
+        return ModSounds.BULLET_CRACK.get();
     }
 
     public void setDamageAmount(float damage) {

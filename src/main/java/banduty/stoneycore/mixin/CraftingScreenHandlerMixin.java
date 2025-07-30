@@ -1,6 +1,5 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.patterns.PatternHelper;
@@ -84,7 +83,6 @@ public abstract class CraftingScreenHandlerMixin {
                         );
 
                         patterns.add(new Pair<>(patternId, color));
-                        StoneyCore.LOGGER.info("Set Banner Pattern: {} Color: {}", patternId, color);
                     }
                 }
             }

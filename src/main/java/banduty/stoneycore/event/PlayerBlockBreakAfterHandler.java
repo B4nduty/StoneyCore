@@ -14,7 +14,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 
-public class PlayerBlockBreakHandler implements PlayerBlockBreakEvents.After {
+public class PlayerBlockBreakAfterHandler implements PlayerBlockBreakEvents.After {
     @Override
     public void afterBlockBreak(World world, PlayerEntity player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity) {
         ItemStack heldItem = player.getStackInHand(Hand.MAIN_HAND);

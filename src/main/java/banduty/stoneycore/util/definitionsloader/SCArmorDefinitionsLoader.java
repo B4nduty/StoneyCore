@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
@@ -50,8 +51,18 @@ public class SCArmorDefinitionsLoader implements IdentifiableResourceReloadListe
                         }
                     }
 
+                    Map<String, Double> deflectChance = new ConcurrentHashMap<>();
+                    if (json.has("deflectChance") && json.get("deflectChance").isJsonObject()) {
+                        JsonObject deflectJson = json.getAsJsonObject("deflectChance");
+                        for (Map.Entry<String, com.google.gson.JsonElement> entry : deflectJson.entrySet()) {
+                            String key = entry.getKey();
+                            double value = entry.getValue().getAsDouble();
+                            deflectChance.put(key, value);
+                        }
+                    }
+
                     Identifier attributeId = Identifier.of(id.getNamespace(), id.getPath().substring("definitions/armor/".length(), id.getPath().length() - 5));
-                    DEFINITIONS.put(attributeId, new DefinitionData(damage));
+                    DEFINITIONS.put(attributeId, new DefinitionData(damage, deflectChance));
                 } catch (Exception e) {
                     StoneyCore.LOGGER.error("Failed to load definitions data from {}: {}", id, e.getMessage(), e);
                 }
@@ -60,10 +71,18 @@ public class SCArmorDefinitionsLoader implements IdentifiableResourceReloadListe
         }, applyExecutor);
     }
 
+    public static DefinitionData getData(ItemStack itemStack) {
+        return getData(itemStack.getItem());
+    }
+
     public static DefinitionData getData(Item item) {
         Identifier itemId = Registries.ITEM.getId(item);
         Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
-        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(null));
+        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(null, null));
+    }
+
+    public static boolean containsItem(ItemStack itemStack) {
+        return containsItem(itemStack.getItem());
     }
 
     public static boolean containsItem(Item item) {
@@ -72,5 +91,5 @@ public class SCArmorDefinitionsLoader implements IdentifiableResourceReloadListe
         return DEFINITIONS.containsKey(definitionId);
     }
 
-    public record DefinitionData(Map<String, Double> damageResistance) {}
+    public record DefinitionData(Map<String, Double> damageResistance, Map<String, Double> deflectChance) {}
 }

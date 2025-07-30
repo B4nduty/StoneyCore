@@ -3,8 +3,7 @@ package banduty.stoneycore.util.servertick;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.config.StoneyCoreConfig;
 import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCMeleeWeaponDefinitionsLoader;
-import banduty.stoneycore.util.playerdata.SCAttributes;
+import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import banduty.streq.StrEq;
@@ -14,116 +13,118 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class StaminaUtil {
-    public static void startStaminaTrack(LivingEntity livingEntity) {
-        double stamina = StaminaData.getStamina(livingEntity);
 
-        if ((livingEntity instanceof PlayerEntity playerEntity && (playerEntity.isCreative() || livingEntity.isSpectator()) || livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA) <= 0)) {
-            if (stamina < livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA)) StaminaData.setStamina(livingEntity, livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA));
-            removeStaminaEffects(livingEntity);
-            StaminaData.setStaminaBlocked((IEntityDataSaver) livingEntity, false);
+    public static void startStaminaTrack(LivingEntity entity) {
+        double maxStamina = entity.getAttributeValue(StoneyCore.MAX_STAMINA.get());
+        double currentStamina = StaminaData.getStamina(entity);
+        boolean isCreativeOrSpectator = entity instanceof PlayerEntity player &&
+                (player.isCreative() || player.isSpectator());
+
+        if (isCreativeOrSpectator || maxStamina <= 0) {
+            if (currentStamina < maxStamina) {
+                StaminaData.setStamina(entity, maxStamina);
+            }
+            removeStaminaEffects(entity);
+            StaminaData.setStaminaBlocked((IEntityDataSaver) entity, false);
+            return;
         }
 
-        if (stamina > livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA))
-            StaminaData.setStamina(livingEntity, livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA));
+        if (currentStamina > maxStamina) {
+            StaminaData.setStamina(entity, maxStamina);
+        }
 
-        if (!(livingEntity instanceof PlayerEntity playerEntity && (playerEntity.isCreative() || livingEntity.isSpectator()))) {
-            if (!StoneyCore.getConfig().getRealisticCombat() || !isUsingStamina(livingEntity) || livingEntity.isOnGround() || livingEntity.isClimbing()) handleStaminaRecovery(livingEntity, stamina);
-            handleStaminaEffects(livingEntity, stamina);
+        boolean skipDrain = !StoneyCore.getConfig().combatOptions.getRealisticCombat() ||
+                !isUsingStamina(entity) ||
+                entity.isOnGround() || entity.isClimbing();
+
+        if (skipDrain) {
+            handleStaminaRecovery(entity, currentStamina);
+        }
+
+        handleStaminaEffects(entity, currentStamina, maxStamina);
+    }
+
+    private static void handleStaminaRecovery(LivingEntity entity, double currentStamina) {
+        StoneyCoreConfig.CombatOptions config = StoneyCore.getConfig().combatOptions;
+
+        double foodLevel = entity instanceof PlayerEntity player ? player.getHungerManager().getFoodLevel() : 20;
+        double health = entity.getHealth();
+
+        Map<String, Double> vars = Map.of("foodLevel", foodLevel, "health", health);
+        int recoveryRate = Math.max(1, (int) StrEq.evaluate(config.staminaRecoveryFormula(), vars));
+
+        if (entity.age % recoveryRate != 0) return;
+
+        double maxStamina = entity.getAttributeValue(StoneyCore.MAX_STAMINA.get());
+        if (currentStamina < maxStamina && (foodLevel > 0 || !config.getRealisticCombat())) {
+            StaminaData.addStamina(entity, 0.1d);
         }
     }
 
-    private static void handleStaminaRecovery(LivingEntity livingEntity, double stamina) {
-        double foodLevel = livingEntity instanceof PlayerEntity playerEntity ? playerEntity.getHungerManager().getFoodLevel() : 20;
-        double health = livingEntity.getHealth();
-        String formula = StoneyCore.getConfig().staminaRecoveryFormula();
-        Map<String, Double> variables = new HashMap<>();
-        variables.put("foodLevel", foodLevel);
-        variables.put("health", health);
-        int ticksPerRecovery = Math.max(1, (int) StrEq.evaluate(formula, variables));
+    private static void handleStaminaEffects(LivingEntity entity, double currentStamina, double maxStamina) {
+        IEntityDataSaver dataSaver = (IEntityDataSaver) entity;
+        double level1 = maxStamina * 0.3;
+        double level2 = maxStamina * 0.15;
 
-        StaminaData.addStamina(livingEntity, 0);
-        if (livingEntity.age % ticksPerRecovery == 0 && stamina < livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA) && !(foodLevel == 0 && StoneyCore.getConfig().getRealisticCombat())) {
-            StaminaData.addStamina(livingEntity, 0.1d);
-        }
-    }
-
-    private static void handleStaminaEffects(LivingEntity livingEntity, double stamina) {
-        IEntityDataSaver dataSaver = (IEntityDataSaver) livingEntity;
-        long firstLevel = Math.absExact((int) (livingEntity.getAttributeBaseValue(SCAttributes.MAX_STAMINA) * 0.3d));
-        long secondLevel = Math.absExact((int) (livingEntity.getAttributeBaseValue(SCAttributes.MAX_STAMINA) * 0.15d));
-
-        if (stamina < firstLevel && stamina > secondLevel) {
-            applyStaminaEffects(livingEntity, 0, 0);
-        }
-
-        if (stamina == 0) {
+        if (currentStamina < level1 && currentStamina > level2) {
+            applyStaminaEffects(entity, 0, 0);
+        } else if (currentStamina == 0) {
             StaminaData.setStaminaBlocked(dataSaver, true);
-            applyStaminaEffects(livingEntity, 3, 3);
-        }
-
-        if (StaminaData.isStaminaBlocked((IEntityDataSaver) livingEntity) && stamina >= secondLevel) {
+            applyStaminaEffects(entity, 3, 3);
+        } else if (StaminaData.isStaminaBlocked(dataSaver) && currentStamina >= level2) {
             StaminaData.setStaminaBlocked(dataSaver, false);
-            removeStaminaEffects(livingEntity);
-        }
-
-        if (stamina >= firstLevel) {
-            removeStaminaEffects(livingEntity);
+            removeStaminaEffects(entity);
+        } else if (currentStamina >= level1) {
+            removeStaminaEffects(entity);
         }
     }
 
-    private static boolean isUsingStamina(LivingEntity livingEntity) {
-        IEntityDataSaver dataSaver = (IEntityDataSaver) livingEntity;
-        boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
+    private static boolean isUsingStamina(LivingEntity entity) {
+        IEntityDataSaver dataSaver = (IEntityDataSaver) entity;
+        if (StaminaData.isStaminaBlocked(dataSaver)) return false;
+
         boolean usingStamina = false;
+        StoneyCoreConfig.CombatOptions config = StoneyCore.getConfig().combatOptions;
 
-        boolean wearingSCArmor = isWearingSCArmor(livingEntity);
-        boolean hasSCWeapon = isSCWeapon(livingEntity.getMainHandStack());
-        StoneyCoreConfig config = StoneyCore.getConfig();
+        if (isSCWeapon(entity.getMainHandStack()) && entity.isBlocking()) {
+            StaminaData.removeStamina(entity, config.blockingStaminaPerSecond() / 20.0);
+            usingStamina = true;
+        }
 
-        if (!staminaBlocked) {
-            if (hasSCWeapon && livingEntity.isBlocking()) {
-                StaminaData.removeStamina(livingEntity, config.blockingStaminaPerSecond() / 20d);
-                usingStamina = true;
-            }
+        if (!isWearingSCArmor(entity)) return usingStamina;
 
-            if (wearingSCArmor) {
-                if (livingEntity.isSprinting()) {
-                    StaminaData.removeStamina(livingEntity, config.sprintingStaminaPerSecond() / 20d);
-                    usingStamina = true;
-                }
+        if (entity.isSprinting()) {
+            StaminaData.removeStamina(entity, config.sprintingStaminaPerSecond() / 20.0);
+            usingStamina = true;
+        }
 
-                if (livingEntity.isSwimming()) {
-                    StaminaData.removeStamina(livingEntity, config.swimmingStaminaPerSecond() / 20d);
-                    usingStamina = true;
-                }
-            }
+        if (entity.isSwimming()) {
+            StaminaData.removeStamina(entity, config.swimmingStaminaPerSecond() / 20.0);
+            usingStamina = true;
         }
 
         return usingStamina;
     }
 
-    private static void applyStaminaEffects(LivingEntity livingEntity, int miningFatigueLevel, int slownessLevel) {
-        livingEntity.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, -1,
-                miningFatigueLevel, false, false, false));
-        livingEntity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, -1,
-                slownessLevel, false, false, false));
+    private static void applyStaminaEffects(LivingEntity entity, int fatigueLevel, int slownessLevel) {
+        entity.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, -1, fatigueLevel, false, false, false));
+        entity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, -1, slownessLevel, false, false, false));
     }
 
-    private static void removeStaminaEffects(LivingEntity livingEntity) {
-        livingEntity.removeStatusEffect(StatusEffects.SLOWNESS);
-        livingEntity.removeStatusEffect(StatusEffects.MINING_FATIGUE);
+    private static void removeStaminaEffects(LivingEntity entity) {
+        entity.removeStatusEffect(StatusEffects.MINING_FATIGUE);
+        entity.removeStatusEffect(StatusEffects.SLOWNESS);
     }
 
     private static boolean isSCWeapon(ItemStack stack) {
-        return SCMeleeWeaponDefinitionsLoader.containsItem(stack.getItem());
+        return SCWeaponDefinitionsLoader.isMelee(stack.getItem());
     }
 
-    private static boolean isWearingSCArmor(LivingEntity livingEntity) {
-        for (ItemStack armorStack : livingEntity.getArmorItems()) {
+    private static boolean isWearingSCArmor(LivingEntity entity) {
+        for (ItemStack armorStack : entity.getArmorItems()) {
             if (SCArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
                 return true;
             }
