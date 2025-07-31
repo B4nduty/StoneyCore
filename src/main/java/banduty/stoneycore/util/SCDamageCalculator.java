@@ -39,7 +39,8 @@ public class SCDamageCalculator {
             target.setHealth(target.getHealth() - (damage - 1));
         } else {
             if (attacker instanceof PlayerEntity player) target.damage(attacker.getWorld().getDamageSources().playerAttack(player), damage - 1);
-            else target.damage(attacker.getWorld().getDamageSources().mobAttack(attacker), damage - 1);
+            else if (attacker != null) target.damage(attacker.getWorld().getDamageSources().mobAttack(attacker), damage - 1);
+            else target.damage(target.getWorld().getDamageSources().generic(), damage - 1);
         }
     }
 

@@ -72,6 +72,7 @@ public class SCArmorDefinitionsLoader implements IdentifiableResourceReloadListe
     }
 
     public static DefinitionData getData(ItemStack itemStack) {
+        if (itemStack == null) itemStack = ItemStack.EMPTY;
         return getData(itemStack.getItem());
     }
 
@@ -82,6 +83,7 @@ public class SCArmorDefinitionsLoader implements IdentifiableResourceReloadListe
     }
 
     public static boolean containsItem(ItemStack itemStack) {
+        if (itemStack == null) itemStack = ItemStack.EMPTY;
         return containsItem(itemStack.getItem());
     }
 

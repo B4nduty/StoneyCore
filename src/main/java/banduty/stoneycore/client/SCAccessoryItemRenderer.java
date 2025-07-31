@@ -10,6 +10,7 @@ import io.wispforest.accessories.api.client.SimpleAccessoryRenderer;
 import io.wispforest.accessories.api.slot.SlotReference;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -50,6 +51,10 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
     private void renderOverlayAndAdditions(LivingEntity entity, ItemStack stack, MatrixStack matrices,
                                            VertexConsumerProvider vertexConsumers, int light,
                                            BipedEntityModel<LivingEntity> model) {
+        if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.shouldNotRenderOnHeadInFirstPerson() &&
+                entity == MinecraftClient.getInstance().player && MinecraftClient.getInstance().options.getPerspective().isFirstPerson()) {
+            return;
+        }
         RenderOverlayAndAdditionsEvents.EVENT.invoker().onRenderOverlayAndAdditionsEvents(entity, stack, matrices, vertexConsumers, light, model);
     }
 

@@ -164,6 +164,7 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
     }
 
     public static DefinitionData getData(ItemStack stack) {
+        if (stack == null) stack = ItemStack.EMPTY;
         return getData(stack.getItem());
     }
 
@@ -173,6 +174,7 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
     }
 
     public static boolean containsItem(ItemStack stack) {
+        if (stack == null) stack = ItemStack.EMPTY;
         return containsItem(stack.getItem());
     }
 
@@ -181,18 +183,22 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
     }
 
     public static boolean isMelee(ItemStack stack) {
+        if (stack == null) stack = ItemStack.EMPTY;
         return isMelee(stack.getItem());
     }
 
     public static boolean isRanged(ItemStack stack) {
+        if (stack == null) stack = ItemStack.EMPTY;
         return isRanged(stack.getItem());
     }
 
     public static boolean isBoth(ItemStack stack) {
+        if (stack == null) stack = ItemStack.EMPTY;
         return isBoth(stack.getItem());
     }
 
     public static boolean isAmmo(ItemStack stack) {
+        if (stack == null) stack = ItemStack.EMPTY;
         return isAmmo(stack.getItem());
     }
 

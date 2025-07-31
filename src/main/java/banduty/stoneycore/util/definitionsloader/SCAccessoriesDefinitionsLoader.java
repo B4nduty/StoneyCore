@@ -77,6 +77,7 @@ public class SCAccessoriesDefinitionsLoader implements IdentifiableResourceReloa
     }
 
     public static DefinitionData getData(ItemStack itemStack) {
+        if (itemStack == null) itemStack = ItemStack.EMPTY;
         return getData(itemStack.getItem());
     }
 
@@ -87,6 +88,7 @@ public class SCAccessoriesDefinitionsLoader implements IdentifiableResourceReloa
     }
 
     public static boolean containsItem(ItemStack itemStack) {
+        if (itemStack == null) itemStack = ItemStack.EMPTY;
         return containsItem(itemStack.getItem());
     }
 

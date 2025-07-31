@@ -104,6 +104,8 @@ public class ItemMixin {
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     public void stoneycore$use(World world, PlayerEntity user, Hand hand,
                                     CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
+        if (hand == Hand.OFF_HAND || user.getOffHandStack().getItem() instanceof ShieldItem) return;
+
         ItemStack stack = user.getStackInHand(hand);
 
         if (SCWeaponDefinitionsLoader.isMelee(stack)) {

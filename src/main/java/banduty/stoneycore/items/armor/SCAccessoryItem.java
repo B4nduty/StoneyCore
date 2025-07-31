@@ -26,4 +26,6 @@ public interface SCAccessoryItem {
     default boolean hasCustomAngles(ItemStack stack) {
         return false;
     }
+
+    default boolean shouldNotRenderOnHeadInFirstPerson(){return false;};
 }
