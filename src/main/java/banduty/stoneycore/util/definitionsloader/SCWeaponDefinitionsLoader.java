@@ -44,14 +44,19 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
                 try (InputStream stream = resource.getInputStream()) {
                     JsonObject json = new Gson().fromJson(new InputStreamReader(stream), JsonObject.class);
 
-                    Usage usage = json.has("usage")
-                            ? Usage.fromString(json.get("usage").getAsString())
-                            : Usage.MELEE;
+                    boolean hasMelee = json.has("melee");
+                    boolean hasRanged = json.has("ranged");
+                    boolean hasAmmo = json.has("ammo");
+
+                    EnumSet<Usage> usage = EnumSet.noneOf(Usage.class);
+                    if (hasMelee) usage.add(Usage.MELEE);
+                    if (hasRanged) usage.add(Usage.RANGED);
+                    if (hasAmmo) usage.add(Usage.AMMO);
 
                     // --- MELEE ---
                     MeleeData meleeData = null;
-                    if (json.has("melee") || usage == Usage.MELEE || usage == Usage.BOTH) {
-                        JsonObject meleeJson = json.has("melee") ? json.getAsJsonObject("melee") : json;
+                    if (hasMelee) {
+                        JsonObject meleeJson = json.getAsJsonObject("melee");
 
                         Map<String, Float> damage = new HashMap<>();
                         if (meleeJson.has("damage")) {
@@ -92,23 +97,25 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
 
                     // --- RANGED ---
                     RangedData rangedData = null;
-                    if (usage == Usage.RANGED && !json.has("ranged")) {
-                        float baseDamage = json.has("baseDamage") ? json.get("baseDamage").getAsFloat() : 0f;
-                        SCDamageCalculator.DamageType damageType = json.has("damageType")
-                                ? SCDamageCalculator.DamageType.valueOf(json.get("damageType").getAsString().toUpperCase())
+                    if (hasRanged) {
+                        JsonObject rangedJson = json.getAsJsonObject("ranged");
+
+                        float baseDamage = rangedJson.has("baseDamage") ? rangedJson.get("baseDamage").getAsFloat() : 0f;
+                        SCDamageCalculator.DamageType damageType = rangedJson.has("damageType")
+                                ? SCDamageCalculator.DamageType.valueOf(rangedJson.get("damageType").getAsString().toUpperCase())
                                 : null;
-                        int maxUseTime = json.has("maxUseTime") ? json.get("maxUseTime").getAsInt() : 0;
-                        float speed = json.has("speed") ? json.get("speed").getAsFloat() : 0f;
-                        float divergence = json.has("divergence") ? json.get("divergence").getAsFloat() : 0f;
-                        int rechargeTime = json.has("rechargeTime") ? json.get("rechargeTime").getAsInt() : 0;
-                        boolean needsFlintAndSteel = json.has("needsFlintAndSteel") && json.get("needsFlintAndSteel").getAsBoolean();
-                        UseAction useAction = json.has("useAction")
-                                ? UseAction.valueOf(json.get("useAction").getAsString().toUpperCase())
+                        int maxUseTime = rangedJson.has("maxUseTime") ? rangedJson.get("maxUseTime").getAsInt() : 0;
+                        float speed = rangedJson.has("speed") ? rangedJson.get("speed").getAsFloat() : 0f;
+                        float divergence = rangedJson.has("divergence") ? rangedJson.get("divergence").getAsFloat() : 0f;
+                        int rechargeTime = rangedJson.has("rechargeTime") ? rangedJson.get("rechargeTime").getAsInt() : 0;
+                        boolean needsFlintAndSteel = rangedJson.has("needsFlintAndSteel") && rangedJson.get("needsFlintAndSteel").getAsBoolean();
+                        UseAction useAction = rangedJson.has("useAction")
+                                ? UseAction.valueOf(rangedJson.get("useAction").getAsString().toUpperCase())
                                 : UseAction.NONE;
 
                         Map<String, AmmoRequirementData> ammoRequirement = new HashMap<>();
-                        if (json.has("ammoRequirement")) {
-                            JsonObject ammoJson = json.getAsJsonObject("ammoRequirement");
+                        if (rangedJson.has("ammoRequirement")) {
+                            JsonObject ammoJson = rangedJson.getAsJsonObject("ammoRequirement");
                             for (Map.Entry<String, JsonElement> entry : ammoJson.entrySet()) {
                                 JsonArray arr = entry.getValue().getAsJsonArray();
 
@@ -130,8 +137,8 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
                         }
 
                         SoundEvent soundEvent = null;
-                        if (json.has("soundEvent")) {
-                            String soundEventId = json.get("soundEvent").getAsString();
+                        if (rangedJson.has("soundEvent")) {
+                            String soundEventId = rangedJson.get("soundEvent").getAsString();
                             soundEvent = Registries.SOUND_EVENT.get(new Identifier(soundEventId));
                         }
 
@@ -141,9 +148,11 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
 
                     // --- AMMO ---
                     AmmoData ammoData = null;
-                    if (json.has("usage") && Usage.fromString(json.get("usage").getAsString()) == Usage.AMMO) {
-                        double deflectChance = json.has("deflectChance")
-                                ? json.get("deflectChance").getAsDouble()
+                    if (hasAmmo) {
+                        JsonObject ammoJson = json.getAsJsonObject("ammo");
+
+                        double deflectChance = ammoJson.has("deflectChance")
+                                ? ammoJson.get("deflectChance").getAsDouble()
                                 : 0.0;
 
                         ammoData = new AmmoData(deflectChance);
@@ -170,7 +179,7 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
 
     public static DefinitionData getData(Item item) {
         Identifier id = Registries.ITEM.getId(item);
-        return DEFINITIONS.getOrDefault(id, new DefinitionData(Usage.NONE, null, null, null));
+        return DEFINITIONS.getOrDefault(id, new DefinitionData(EnumSet.noneOf(Usage.class), null, null, null));
     }
 
     public static boolean containsItem(ItemStack stack) {
@@ -192,11 +201,6 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
         return isRanged(stack.getItem());
     }
 
-    public static boolean isBoth(ItemStack stack) {
-        if (stack == null) stack = ItemStack.EMPTY;
-        return isBoth(stack.getItem());
-    }
-
     public static boolean isAmmo(ItemStack stack) {
         if (stack == null) stack = ItemStack.EMPTY;
         return isAmmo(stack.getItem());
@@ -204,27 +208,20 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
 
     public static boolean isMelee(Item item) {
         DefinitionData data = getData(item);
-        return data.melee() != null && (data.usage() == Usage.MELEE || data.usage() == Usage.BOTH);
+        return data.melee() != null && data.usage().contains(Usage.MELEE);
     }
 
     public static boolean isRanged(Item item) {
         DefinitionData data = getData(item);
-        return data.ranged() != null && (data.usage() == Usage.RANGED || data.usage() == Usage.BOTH);
-    }
-
-    public static boolean isBoth(Item item) {
-        if (getData(item) == null || getData(item).ammo() == null || getData(item).ranged() == null) {
-            return false;
-        }
-        return getData(item).usage() == Usage.BOTH;
+        return data.ranged() != null && data.usage().contains(Usage.RANGED);
     }
 
     public static boolean isAmmo(Item item) {
         DefinitionData data = getData(item);
-        return data.ammo() != null && data.usage() == Usage.AMMO;
+        return data.ammo() != null && data.usage().contains(Usage.AMMO);
     }
 
-    public record DefinitionData(Usage usage, MeleeData melee, RangedData ranged, AmmoData ammo) {}
+    public record DefinitionData(EnumSet<Usage> usage, MeleeData melee, RangedData ranged, AmmoData ammo) {}
     public record MeleeData(Map<String, Float> damage, Map<String, Double> radius, int[] piercingAnimation,
                             int animation, SCDamageCalculator.DamageType onlyDamageType, double deflectChance) {}
     public record RangedData(float baseDamage, SCDamageCalculator.DamageType damageType, int maxUseTime, float speed,
@@ -234,14 +231,6 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
     public record AmmoRequirementData(Set<String> itemIds, int amount) {}
 
     public enum Usage {
-        NONE, MELEE, RANGED, BOTH, AMMO;
-
-        public static Usage fromString(String value) {
-            try {
-                return Usage.valueOf(value.trim().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return MELEE;
-            }
-        }
+        MELEE, RANGED, AMMO
     }
 }

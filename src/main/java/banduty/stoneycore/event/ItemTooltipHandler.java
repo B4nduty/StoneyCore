@@ -35,7 +35,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
 
         if (SCWeaponDefinitionsLoader.isRanged(stack)) {
             double baseDamage = SCWeaponDefinitionsLoader.getData(stack).ranged().baseDamage();
-            lines.add(Text.translatable("text.tooltip.stoneycore.baseDamage", (int) baseDamage).formatted(Formatting.GREEN));
+            lines.add(Text.translatable("text.tooltip.stoneycore.baseDamage", baseDamage).formatted(Formatting.GREEN));
         }
 
         if (stack.getItem() instanceof ArmorItem armorItem && SCArmorDefinitionsLoader.containsItem(armorItem)) {
@@ -43,8 +43,8 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             double bludgeoning = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.BLUDGEONING, armorItem) * 100;
             double piercing = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.PIERCING, armorItem) * 100;
 
-            if (slashing != 0) lines.add(Text.translatable("text.tooltip.stoneycore.slashingResistance", (int) slashing).formatted(Formatting.BLUE));
-            if (bludgeoning != 0) lines.add(Text.translatable("text.tooltip.stoneycore.bludgeoningResistance", (int) bludgeoning).formatted(Formatting.BLUE));
+            if (slashing != 0) lines.add(Text.translatable("text.tooltip.stoneycore.slashingResistance", slashing).formatted(Formatting.BLUE));
+            if (bludgeoning != 0) lines.add(Text.translatable("text.tooltip.stoneycore.bludgeoningResistance", bludgeoning).formatted(Formatting.BLUE));
             if (piercing != 0) lines.add(Text.translatable("text.tooltip.stoneycore.piercingResistance", (int) piercing).formatted(Formatting.BLUE));
         }
 
