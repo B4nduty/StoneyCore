@@ -1,11 +1,13 @@
 package banduty.stoneycore.lands.util;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.event.StartTickHandler;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.streq.StrEq;
+import com.mojang.authlib.GameProfile;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -29,23 +31,21 @@ public class Land {
     private final UUID owner;
     private int radius;
     private final BlockPos corePos;
-    private String name;
+    private String customName;
     private long expandItemStored = 0L;
     private final LandType landType;
     private final Set<UUID> allies = new HashSet<>();
     private final LongSet claimed = new LongOpenHashSet();
-    private final LongSet validCols = new LongOpenHashSet();
-    private final LongSet invalidCols = new LongOpenHashSet();
 
     public Land(UUID owner, BlockPos coreBlock, int radius, LandType landType, String name) {
         this.owner    = owner;
         this.corePos = coreBlock;
         this.radius   = radius;
         this.landType = landType;
-        this.name = name;
+        this.customName = name;
     }
 
-    public void initializeClaim(ServerWorld world, int radiusToIncrease, Queue<ClaimWorker> taskQueue, ServerPlayerEntity player) {
+    public void initializeClaim(ServerWorld world, int radiusToIncrease, Queue<ClaimWorker> taskQueue) {
         int newRadius = radius + radiusToIncrease;
         long coreX = corePos.getX();
         long coreZ = corePos.getZ();
@@ -75,20 +75,16 @@ public class Land {
     }
 
     public boolean columnInvalid(ServerWorld world, long posKey) {
-        if (validCols.contains(posKey)) return false;
-        if (invalidCols.contains(posKey)) return true;
-        BlockPos pos = BlockPos.fromLong(posKey);
-        boolean invalid = ClaimUtils.isInvalidClaimColumn(world, pos, landType);
-        (invalid ? invalidCols : validCols).add(posKey);
-        return invalid;
+        return ClaimUtils.isInvalidClaimColumn(world, BlockPos.fromLong(posKey), landType);
     }
 
     public boolean pathBlocked(ServerWorld world, long fromKey, long toKey) {
         return ClaimUtils.pathContainsInvalidBlock(world, BlockPos.fromLong(fromKey), BlockPos.fromLong(toKey), landType);
     }
 
-    public void depositExpandItem(PlayerEntity player, ServerWorld world, int amount, Queue<ClaimWorker> taskQueue) {
+    public void depositExpandItem(PlayerEntity player, ServerWorld world, int amount) {
         if (!(player instanceof ServerPlayerEntity serverPlayerEntity)) return;
+
         LandState state = LandState.get(world);
         expandItemStored += amount;
 
@@ -97,37 +93,49 @@ public class Land {
         double testRadius = radius;
 
         int maxRadius = StoneyCore.getConfig().technicalOptions.maxLandExpandRadius();
-        double maxAllowedRadius = maxRadius < 0 ? Double.MAX_VALUE : maxRadius + this.getLandType().baseRadius();
+        double maxAllowedRadius = maxRadius < 0 ? Double.MAX_VALUE : maxRadius + landType.baseRadius();
+
+        Map<String, Double> vars = new HashMap<>(1);
+        String formula = landType.expandFormula();
 
         while (testRadius < maxAllowedRadius) {
-            String formula = landType.expandFormula();
-            Map<String, Double> variables = new HashMap<>();
-            variables.put("radius", testRadius);
-            if (totalCost + Math.max(0, (int) StrEq.evaluate(formula, variables)) > expandItemStored) break;
+            vars.put("radius", testRadius);
+            int cost = Math.max(0, (int) StrEq.evaluate(formula, vars));
 
-            totalCost += Math.max(0, (int) StrEq.evaluate(formula, variables));
+            if (totalCost + cost > expandItemStored) break;
+
+            totalCost += cost;
             testRadius++;
             radiusToIncrease++;
         }
 
         if (radiusToIncrease <= 0) {
-            player.sendMessage(Text.translatable("text.land." + landType.id().getNamespace() + ".stored", expandItemStored), true);
+            player.sendMessage(Text.translatable(
+                    "text.land." + landType.id().getNamespace() + ".stored", expandItemStored
+            ), true);
             return;
         }
 
         expandItemStored -= totalCost;
-        Land newLand = new Land(player.getUuid(), getCorePos(), getRadius(), landType, name);
-        newLand.expandItemStored = expandItemStored;
-
-        newLand.initializeClaim(world, radiusToIncrease, taskQueue, serverPlayerEntity);
+        Land newLand = this.copy();
+        newLand.initializeClaim(world, radiusToIncrease, StartTickHandler.CLAIM_TASKS);
 
         state.removeLand(this);
         state.addLand(newLand);
 
         sendTitle(serverPlayerEntity, Text.translatable(
-                "text.land.stoneycore.expansion.increased", getRadius(), getRadius() + radiusToIncrease
+                "text.land.stoneycore.expansion.increased", radius, radius + radiusToIncrease
         ));
         ((IEntityDataSaver) player).stoneycore$getPersistentData().putBoolean("land_expanded", true);
+    }
+
+    public Land copy() {
+        Land copy = new Land(this.owner, this.corePos, this.radius, this.landType, this.customName);
+
+        copy.expandItemStored = this.expandItemStored;
+        copy.allies.addAll(this.allies);
+
+        return copy;
     }
 
     private static void sendTitle(ServerPlayerEntity player, Text mainTitle) {
@@ -152,8 +160,9 @@ public class Land {
     }
 
     public void setRadius(int radius, ServerWorld world) {
+        int actualRadius = this.radius;
         this.radius = radius;
-        removeClaimsOutsideRadius(world);
+        if (actualRadius > radius) removeClaimsOutsideRadius(world);
     }
 
     public void removeClaimsOutsideRadius(ServerWorld world) {
@@ -165,7 +174,7 @@ public class Land {
 
         List<Long> toRemove = new ArrayList<>();
 
-        for (Long posKey : claimed) {
+        for (long posKey : claimed) {
             BlockPos pos = BlockPos.fromLong(posKey);
             long dx = pos.getX() - coreX;
             long dz = pos.getZ() - coreZ;
@@ -189,7 +198,14 @@ public class Land {
 
     public static String getOwnerName(ServerWorld world, UUID uuid) {
         ServerPlayerEntity player = world.getServer().getPlayerManager().getPlayer(uuid);
-        return player != null ? player.getName().getString() : "Unknown";
+        if (player != null) {
+            return player.getGameProfile().getName();
+        }
+
+        if (world.getServer().getUserCache() == null) return "Unknown";
+
+        GameProfile profile = world.getServer().getUserCache().getByUuid(uuid).orElse(null);
+        return profile != null ? profile.getName() : "Unknown";
     }
 
     public long getExpandItemStored() {
@@ -208,20 +224,6 @@ public class Land {
         Set<BlockPos> set = new HashSet<>(claimed.size());
         claimed.forEach(posKey -> set.add(BlockPos.fromLong(posKey)));
         return Collections.unmodifiableSet(set);
-    }
-
-    public boolean hasAdjacentClaim(long posKey) {
-        BlockPos pos = BlockPos.fromLong(posKey);
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                if (dx == 0 && dz == 0) continue;
-                long neighborKey = new BlockPos(pos.getX() + dx, 0, pos.getZ() + dz).asLong();
-                if (claimed.contains(neighborKey)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     public Set<UUID> getAllies() {
@@ -244,20 +246,28 @@ public class Land {
         return landType;
     }
 
-    public String getName(ServerWorld serverWorld) {
-        String ownerName = Land.getOwnerName(serverWorld, this.getOwnerUUID());
-        return name != null && !name.isEmpty() ? name : ownerName;
+    public Text getLandTitle(ServerWorld serverWorld) {
+        if (hasCustomName()) return Text.literal(getCustomName());
+        return Text.translatable("text.land." + getLandType().id().getNamespace() + ".land_name", getOwnerName(serverWorld, getOwnerUUID()));
     }
 
-    public void setName(String name) {
-        this.name = name != null && !name.isEmpty() ? name : this.name;
+    public String getCustomName() {
+        return customName;
+    }
+
+    public boolean hasCustomName() {
+        return customName != null && !customName.isEmpty();
+    }
+
+    public void setCustomName(String name) {
+        this.customName = name != null && !name.isEmpty() ? name : this.customName;
     }
 
     public NbtCompound toNbt() {
         NbtCompound nbt = new NbtCompound();
         nbt.putUuid("Owner", owner);
         nbt.putInt("Radius", radius);
-        nbt.putString("Name", name);
+        nbt.putString("CustomName", customName);
         nbt.putLong("CorePos", corePos.asLong());
         nbt.putLong("ExpandItemStored", expandItemStored);
 
@@ -283,7 +293,7 @@ public class Land {
     public static Land fromNbt(NbtCompound nbt) {
         UUID owner   = nbt.getUuid("Owner");
         int radius   = nbt.getInt("Radius");
-        String name   = nbt.getString("Name");
+        String name   = nbt.getString("CustomName");
         BlockPos corePos = BlockPos.fromLong(nbt.getLong("CorePos"));
         Identifier landTypeId = new Identifier(nbt.getString("LandType"));
         LandType landType = LandTypeRegistry.getById(landTypeId)

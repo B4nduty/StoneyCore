@@ -31,7 +31,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +39,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractSiegeEntity extends LivingEntity {
-    public final Map<BlockPos, Float> blockDamageMap = new HashMap<>();
     private Entity owner;
 
     // DataTracker fields
@@ -253,6 +251,29 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     @Override public boolean canMoveVoluntarily() { return false; }
 
     @Override
+    public Vec3d updatePassengerForDismount(LivingEntity passenger) {
+        float yawRadians = (float) Math.toRadians(getBodyYaw());
+        Vec3d offset = getPassengerOffset(passenger);
+        double leftOffset = offset.x;
+        double backOffset = offset.z;
+
+        double forwardX = -Math.sin(yawRadians);
+        double forwardZ =  Math.cos(yawRadians);
+
+        double rightX =  Math.cos(yawRadians);
+        double rightZ =  Math.sin(yawRadians);
+
+        double offsetX = rightX * leftOffset - forwardX * backOffset;
+        double offsetZ = rightZ * leftOffset - forwardZ * backOffset;
+
+        double x = getX() + offsetX;
+        double y = getY() + offset.y;
+        double z = getZ() + offsetZ;
+
+        return new Vec3d(x, y, z);
+    }
+
+    @Override
     public ActionResult interact(PlayerEntity player, Hand hand) {
         if (!(this.getWorld() instanceof ServerWorld serverWorld) || hand != Hand.MAIN_HAND || this.submergedInWater) return super.interact(player, hand);
 
@@ -314,7 +335,7 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         }
 
         if (getCooldown() > 0) {
-            player.sendMessage(Text.translatable("text.siege_machine." + Registries.ENTITY_TYPE.getId(this.getType()).getNamespace()
+            player.sendMessage(Text.translatable("text.siege_engine." + Registries.ENTITY_TYPE.getId(this.getType()).getNamespace()
                     + ".cooling_down", this.getName().getString()), true);
         }
 

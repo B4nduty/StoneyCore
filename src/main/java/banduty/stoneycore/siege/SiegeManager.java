@@ -38,8 +38,8 @@ public class SiegeManager {
             this.attackingLand = attackingLand;
             this.defendingLand = defendingLand;
             this.initialRadius = defendingLand.getRadius();
-            String attackerName = LandManager.getLandName(world, attacker);
-            String defenderName = LandManager.getLandName(world, defender);
+            String attackerName = LandManager.getLandName(world, attacker).getString();
+            String defenderName = LandManager.getLandName(world, defender).getString();
 
             attackerBar = new ServerBossBar(
                     Text.literal("Defenders Remaining: " + defenderName),
@@ -120,9 +120,9 @@ public class SiegeManager {
             float attackersRatio = totalAttackers == 0 ? 0f : (float) aliveAttackers / totalAttackers;
 
             attackerBar.setName(Text.translatable("text.land." + attackingLand.getLandType().id().getNamespace() + ".defenders_remaining",
-                    attackingLand.getName(world), defendingLand.getName(world), aliveDefenders, totalDefenders));
+                    attackingLand.getLandTitle(world).getString(), defendingLand.getLandTitle(world).getString(), aliveDefenders, totalDefenders));
             defenderBar.setName(Text.translatable("text.land." + defendingLand.getLandType().id().getNamespace() + ".attackers_remaining",
-                    attackingLand.getName(world), defendingLand.getName(world), aliveAttackers, totalAttackers));
+                    attackingLand.getLandTitle(world).getString(), defendingLand.getLandTitle(world).getString(), aliveAttackers, totalAttackers));
 
             attackerBar.setPercent(defendersRatio);
             defenderBar.setPercent(attackersRatio);
@@ -291,7 +291,7 @@ public class SiegeManager {
     public static ActionResult surrender(ServerWorld serverWorld, PlayerEntity player, Land land) {
         LandState stateManager = LandState.get(serverWorld);
         for (ServerPlayerEntity serverPlayerEntity : SiegeManager.getAllParticipants(serverWorld)) {
-            sendTitle(serverPlayerEntity, Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".surrender", land.getName(serverWorld)));
+            sendTitle(serverPlayerEntity, Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".surrender", land.getLandTitle(serverWorld).getString()));
         }
         stateManager.removeLand(land);
         player.getMainHandStack().decrement(1);

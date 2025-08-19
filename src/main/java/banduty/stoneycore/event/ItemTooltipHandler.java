@@ -1,6 +1,8 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.lands.LandType;
+import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.SCAccessoriesDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
@@ -29,6 +31,13 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
         if (player == null) return;
         Text attackDamage = Text.translatable("attribute.name.generic.attack_damage");
         if (SCWeaponDefinitionsLoader.containsItem(stack)) lines.removeIf(line -> line.contains(attackDamage));
+
+        for (LandType landType : LandTypeRegistry.getAll()) {
+            if (stack.getItem() == landType.coreItem()) {
+                lines.add(Text.translatable("text.tooltip.stoneycore.coreItem").formatted(Formatting.GOLD));
+                break;
+            }
+        }
 
         if (stack.isIn(SCTags.HIDE_NAME_TAG.getTag())) lines.add(Text.translatable("text.tooltip.stoneycore.hideNameTag").formatted(Formatting.BLUE));
         if (stack.isIn(ItemTags.FREEZE_IMMUNE_WEARABLES)) lines.add(Text.translatable("text.tooltip.stoneycore.freezing").formatted(Formatting.BLUE));

@@ -63,8 +63,7 @@ public class LandTracker {
 
                 if (!nbt.getBoolean("land_expanded")) {
                     Land land = optionalLand.get();
-                    String translationKey = "text.land." + land.getLandType().id().getNamespace() + ".land_name";
-                    sendTitle(player, Text.translatable(translationKey, land.getName(world)));
+                    sendTitle(player, land.getLandTitle(world));
                 } else {
                     data.stoneycore$getPersistentData().putBoolean("land_expanded", false);
                 }

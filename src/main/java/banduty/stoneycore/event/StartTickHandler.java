@@ -83,7 +83,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
                     player.sendMessage(
                             net.minecraft.text.Text.translatable(
                                     "text.land." + land.getLandType().id().getNamespace() + ".fall",
-                                    Land.getOwnerName(world, land.getOwnerUUID())
+                                    land.getLandTitle(world).getString()
                             ), true
                     );
                 }

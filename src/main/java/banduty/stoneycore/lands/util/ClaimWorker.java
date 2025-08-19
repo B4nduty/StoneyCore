@@ -1,13 +1,10 @@
 package banduty.stoneycore.lands.util;
 
 import banduty.stoneycore.StoneyCore;
-import it.unimi.dsi.fastutil.ints.Int2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.*;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.function.Consumer;
 
 public class ClaimWorker {
@@ -16,17 +13,12 @@ public class ClaimWorker {
     private final Consumer<Boolean> onComplete;
 
     // Two queues: high priority (likely claimable) and normal queue
-    private final Deque<Long> priorityQueue = new ArrayDeque<>();
-    private final Deque<Long> queue = new ArrayDeque<>();
+    private final LongArrayFIFOQueue priorityQueue = new LongArrayFIFOQueue();
+    private final LongArrayFIFOQueue queue = new LongArrayFIFOQueue();
+    private final LongSet invalid = new LongOpenHashSet();
 
     private final LongArrayList acceptedKeys = new LongArrayList();
-    private final LongOpenHashSet visited = new LongOpenHashSet();
-    private static final Int2ByteOpenHashMap neighborMask = new Int2ByteOpenHashMap();
-
-    static {
-        // Default return value avoids creating entries for empty masks
-        neighborMask.defaultReturnValue((byte) 0);
-    }
+    private final Long2ByteOpenHashMap neighborMask = new Long2ByteOpenHashMap();
 
     private int totalAccepted = 0;
     private final long startTime;
@@ -53,23 +45,24 @@ public class ClaimWorker {
         this.land = land;
         this.onComplete = onComplete;
 
+        neighborMask.defaultReturnValue((byte) 0);
+
         for (BlockPos claimedPos : land.getClaimed()) {
-            priorityQueue.add(claimedPos.asLong());
-            visited.add(claimedPos.asLong());
+            long key = claimedPos.asLong();
+            priorityQueue.enqueue(key);
+            updateNeighborMask(key);
         }
 
         for (BlockPos pos : candidates) {
             long key = pos.asLong();
-            if (!land.isAlreadyClaimed(key)) {
-                if (land.columnInvalid(world, key)) {
-                    visited.add(key);
-                } else {
-                    queue.add(key);
-                }
+            if (land.columnInvalid(world, key)) {
+                invalid.add(key);
+            } else if (!land.isAlreadyClaimed(key)) {
+                queue.enqueue(key);
             }
         }
 
-        this.requiredTicksForZeroCpsStop = Math.max(1, radius / 10);
+        this.requiredTicksForZeroCpsStop = Math.max(1, radius / 100);
         long currentTickTime = world.getServer().getTicks();
         this.startTime = currentTickTime;
         this.lastZeroCpsCheckTime = currentTickTime;
@@ -82,25 +75,23 @@ public class ClaimWorker {
 
         final long coreKey = land.getCorePos().asLong();
         int workDone = 0;
-        int queueSizeBefore = queue.size() + priorityQueue.size();
+        int initialQueueSize = queue.size() + priorityQueue.size();
 
-        while (workDone < this.maxWorkPerTick && (!priorityQueue.isEmpty() || !queue.isEmpty())) {
-            long key = !priorityQueue.isEmpty() ? priorityQueue.poll() : queue.poll();
-
-            if (visited.contains(key)) continue;
-
-            boolean blockedPath = land.pathBlocked(world, coreKey, key);
-            boolean hasNeighbor = totalAccepted == 0 || land.hasAdjacentClaim(key) || fastHasAcceptedNeighbor(key);
+        while (workDone < maxWorkPerTick && (!priorityQueue.isEmpty() || !queue.isEmpty())) {
+            long key = !priorityQueue.isEmpty() ? priorityQueue.dequeueLong() : queue.dequeueLong();
 
             workDone++;
 
+            if (invalid.contains(key)) continue;
+
+            boolean blockedPath = land.pathBlocked(world, coreKey, key);
+            boolean hasNeighbor = totalAccepted == 0 || fastHasAcceptedNeighbor(key);
+
             if (blockedPath && !hasNeighbor) {
-                queue.addLast(key);
+                queue.enqueue(key); // push back for later
                 continue;
             }
 
-            // Accept claim
-            visited.add(key);
             acceptedKeys.add(key);
             updateNeighborMask(key);
             totalAccepted++;
@@ -115,7 +106,7 @@ public class ClaimWorker {
 
         logProgress();
 
-        if ((priorityQueue.isEmpty() && queue.isEmpty()) || (workDone == 0 && queue.size() + priorityQueue.size() == queueSizeBefore)) {
+        if ((priorityQueue.isEmpty() && queue.isEmpty()) || (workDone == 0 && queue.size() + priorityQueue.size() == initialQueueSize)) {
             finish();
             return true;
         }
@@ -156,12 +147,13 @@ public class ClaimWorker {
         long elapsed = (world.getServer().getTicks() - startTime);
         double totalCps = totalAccepted / (elapsed / 20.0);
         StoneyCore.LOGGER.info("[ClaimWorker] Finished claiming {} blocks in {} ticks (~{} CPS) for land '{}'.",
-                totalAccepted, elapsed, totalCps, land.getName(world));
+                totalAccepted, elapsed, totalCps, land.getLandTitle(world).getString());
         onComplete.accept(totalAccepted > 0);
     }
 
-    private static int packXZ(int x, int z) {
-        return (x * 73428767) ^ z;
+    private boolean fastHasAcceptedNeighbor(long key) {
+        long xyNormalizedKey = BlockPos.asLong(BlockPos.unpackLongX(key), 0, BlockPos.unpackLongZ(key));
+        return neighborMask.get(xyNormalizedKey) != 0;
     }
 
     private void updateNeighborMask(long key) {
@@ -169,13 +161,11 @@ public class ClaimWorker {
         int z = BlockPos.unpackLongZ(key);
 
         for (int i = 0; i < NEIGHBOR_OFFSETS.length; i++) {
-            int packedKey = packXZ(x + NEIGHBOR_OFFSETS[i][0], z + NEIGHBOR_OFFSETS[i][1]);
-
-            neighborMask.addTo(packedKey, (byte) (1 << i));
+            int nx = x + NEIGHBOR_OFFSETS[i][0];
+            int nz = z + NEIGHBOR_OFFSETS[i][1];
+            long neighborKey = BlockPos.asLong(nx, 0, nz);
+            neighborMask.addTo(neighborKey, (byte) (1 << i));
         }
     }
 
-    private boolean fastHasAcceptedNeighbor(long key) {
-        return neighborMask.get(packXZ(BlockPos.unpackLongX(key), BlockPos.unpackLongZ(key))) != 0;
-    }
 }

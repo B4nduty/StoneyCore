@@ -23,7 +23,7 @@ public class LandManager {
         }
 
         Land land = new Land(player.getUuid(), blockPos, landType.baseRadius(), landType, "");
-        land.initializeClaim(world, 0, StartTickHandler.CLAIM_TASKS, player);
+        land.initializeClaim(world, 0, StartTickHandler.CLAIM_TASKS);
         state.addLand(land);
         giveCoreItem(player, landType);
 
@@ -57,10 +57,10 @@ public class LandManager {
         player.getInventory().insertStack(coreItem);
     }
 
-    public static String getLandName(ServerWorld serverWorld, UUID attacker) {
+    public static Text getLandName(ServerWorld serverWorld, UUID attacker) {
         Optional<Land> land = LandState.get(serverWorld).getLandByOwner(attacker);
-        if (land.isEmpty()) return "";
-        return land.get().getName(serverWorld);
+        if (land.isEmpty()) return Text.literal("");
+        return land.get().getLandTitle(serverWorld);
     }
 }
 

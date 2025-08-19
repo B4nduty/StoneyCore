@@ -5,16 +5,13 @@ import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.siege.SiegeManager;
+import banduty.stoneycore.util.DeflectChanceHelper;
 import banduty.stoneycore.util.SCDamageCalculator;
-import banduty.stoneycore.util.definitionsloader.SCAccessoriesDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
-import io.wispforest.accessories.api.AccessoriesCapability;
-import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.bettercombat.logic.PlayerAttackProperties;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -24,20 +21,16 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.Optional;
-import java.util.Random;
 
 public class EntityDamageHandler implements LivingEntityDamageEvents {
-    private final Random random = new Random();
     private static final float STRENGTH_MULTIPLIER = 3.0F;
     private static final float WEAKNESS_MULTIPLIER = 4.0F;
     private static final int PARRY_WINDOW_TICKS = 10;
@@ -51,7 +44,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             return amount;
         }
 
-        if (shouldDeflect(target, attacker)) {
+        if (DeflectChanceHelper.shouldDeflect(target, attacker.getMainHandStack())) {
             return 0;
         }
 
@@ -164,39 +157,5 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         }
 
         return damage;
-    }
-
-    private boolean shouldDeflect(LivingEntity livingEntity, LivingEntity attacker) {
-        double deflectProbability = calculateDeflectProbability(livingEntity, attacker);
-        double random2 = random.nextDouble();
-        return random2 < deflectProbability;
-    }
-
-    private double calculateDeflectProbability(LivingEntity livingEntity, LivingEntity attacker) {
-        Item item = attacker.getMainHandStack().getItem();
-        Identifier itemId = Registries.ITEM.getId(item);
-        String itemKey = itemId.toString();
-        double deflectChance = 0f;
-
-        if (AccessoriesCapability.getOptionally(livingEntity).isPresent()) {
-            for (SlotEntryReference equipped : AccessoriesCapability.get(livingEntity).getAllEquipped()) {
-                ItemStack itemStack = equipped.stack();
-                if (SCAccessoriesDefinitionsLoader.containsItem(itemStack)) {
-                    deflectChance += SCAccessoriesDefinitionsLoader.getData(itemStack).deflectChance().getOrDefault(itemKey, 0.0);
-                }
-            }
-        }
-
-        for (ItemStack itemStack : livingEntity.getArmorItems()) {
-            if (SCArmorDefinitionsLoader.containsItem(itemStack)) {
-                deflectChance += SCArmorDefinitionsLoader.getData(itemStack).deflectChance().getOrDefault(itemKey, 0.0);
-            }
-        }
-
-        if (SCWeaponDefinitionsLoader.isMelee(item)) {
-            deflectChance += SCWeaponDefinitionsLoader.getData(item).melee().deflectChance();
-        }
-
-        return deflectChance;
     }
 }

@@ -49,12 +49,12 @@ public class UseEntityHandler implements UseEntityCallback {
                 if (land.isAlly(playerEntity.getUuid())) {
                     land.removeAlly(playerEntity.getUuid());
                     player.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".owner.remove_ally", player.getName()).formatted(Formatting.DARK_RED), true);
-                    playerEntity.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".ally.remove_ally", land.getName(serverWorld)).formatted(Formatting.DARK_RED), true);
+                    playerEntity.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".ally.remove_ally", land.getLandTitle(serverWorld).getString()).formatted(Formatting.DARK_RED), true);
                     cooldowns.put(playerId, now);
                 } else {
                     land.addAlly(playerEntity.getUuid());
                     player.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".owner.add_ally", player.getName()).formatted(Formatting.DARK_GREEN), true);
-                    playerEntity.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".ally.add_ally", land.getName(serverWorld)).formatted(Formatting.DARK_GREEN), true);
+                    playerEntity.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".ally.add_ally", land.getLandTitle(serverWorld).getString()).formatted(Formatting.DARK_GREEN), true);
                     cooldowns.put(playerId, now);
                 }
             }

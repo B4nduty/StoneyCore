@@ -30,7 +30,7 @@ import java.util.Optional;
 public class UseBlockHandler implements UseBlockCallback {
     @Override
     public ActionResult interact(PlayerEntity player, World world, Hand hand, BlockHitResult hit) {
-        if (!(world instanceof ServerWorld serverWorld) || hand != Hand.MAIN_HAND) {
+        if (!(world instanceof ServerWorld serverWorld)) {
             return ActionResult.PASS;
         }
 
@@ -90,8 +90,8 @@ public class UseBlockHandler implements UseBlockCallback {
 
         if (landTypeOpt.isPresent()) {
             if (player.getStackInHand(hand).getItem() instanceof NameTagItem) {
-                land.setName(player.getStackInHand(hand).getName().getString());
-                player.sendMessage(Text.translatable("text.land." + landTypeOpt.get().id().getNamespace() + ".changed_name", land.getName(serverWorld)), true);
+                land.setCustomName(player.getStackInHand(hand).getName().getString());
+                player.sendMessage(Text.literal(land.getCustomName()), true);
                 player.getStackInHand(hand).decrement(1);
                 return ActionResult.PASS;
             }
@@ -114,7 +114,7 @@ public class UseBlockHandler implements UseBlockCallback {
             }
 
             removeItems(player, available, landTypeOpt.get());
-            land.depositExpandItem(player, serverWorld, available, StartTickHandler.CLAIM_TASKS);
+            land.depositExpandItem(player, serverWorld, available);
         }
 
         return ActionResult.PASS;

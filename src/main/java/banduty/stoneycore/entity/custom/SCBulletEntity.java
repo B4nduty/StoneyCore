@@ -41,17 +41,20 @@ public class SCBulletEntity extends PersistentProjectileEntity {
 
     @Override
     protected void onEntityHit(EntityHitResult entityHitResult) {
-        if (entityHitResult.getEntity() instanceof LivingEntity target) {
+        super.onEntityHit(entityHitResult);
+        if (this.getWorld().isClient()) return;
+
+        if (entityHitResult.getEntity() instanceof LivingEntity target && this.getOwner() instanceof LivingEntity livingEntity) {
             damage = SCDamageCalculator.getSCDamage(target, this.damage, this.damageType);
-            SCDamageCalculator.applyDamage(target, (PlayerEntity) getOwner(), ItemStack.EMPTY, damage);
+            SCDamageCalculator.applyDamage(target, livingEntity, ItemStack.EMPTY, damage);
             if (this.isOnFire()) target.setOnFireFor(5);
         }
-        super.onEntityHit(entityHitResult);
         this.discard();
     }
 
     @Override
     protected void onBlockHit(BlockHitResult blockHitResult) {
+        if (this.getWorld().isClient()) return;
         World world = this.getWorld();
         BlockPos pos = blockHitResult.getBlockPos();
         BlockState state = world.getBlockState(pos);
