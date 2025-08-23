@@ -1,5 +1,6 @@
 package banduty.stoneycore.lands;
 
+import banduty.stoneycore.util.definitionsloader.LandDefinitionsLoader;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.util.Identifier;
@@ -8,12 +9,13 @@ import java.util.*;
 
 public class LandTypeRegistry {
     private static final Map<Identifier, LandType> TYPES = new LinkedHashMap<>();
+    private static final Map<Identifier, LandDefinitionsLoader.LandValues> OVERRIDES = new HashMap<>();
 
-    public static LandType register(Identifier id, Block coreBlock, Item coreItem, int baseRadius, Map<Item, Integer> itemsToExpand, String expandFormula, LandType.TerrainType terrainType) {
+    public static LandType register(Identifier id, Block coreBlock, Item coreItem, int baseRadius,
+                                    Map<Item, Integer> itemsToExpand, String expandFormula, LandType.TerrainType terrainType) {
         if (TYPES.containsKey(id)) {
             throw new IllegalArgumentException("LandType with id " + id + " is already registered!");
         }
-
         boolean blockAlreadyUsed = TYPES.values().stream()
                 .anyMatch(type -> type.coreBlock() == coreBlock);
         if (blockAlreadyUsed) {
@@ -25,17 +27,44 @@ public class LandTypeRegistry {
         return type;
     }
 
+    public static void applyOverride(Identifier id, LandDefinitionsLoader.LandValues values) {
+        OVERRIDES.put(id, values);
+    }
+
+    public static void clearOverrides() {
+        OVERRIDES.clear();
+    }
+
     public static Optional<LandType> getById(Identifier id) {
-        return Optional.ofNullable(TYPES.get(id));
+        LandType type = TYPES.get(id);
+        if (type == null) return Optional.empty();
+
+        LandDefinitionsLoader.LandValues override = OVERRIDES.get(id);
+        if (override != null) {
+            return Optional.of(new LandType(
+                    type.id(),
+                    type.coreBlock(),
+                    type.coreItem(),
+                    override.baseRadius() > 0 ? override.baseRadius() : type.baseRadius(),
+                    override.itemsToExpand().isEmpty() ? type.itemsToExpand() : override.itemsToExpand(),
+                    !override.expandFormula().isEmpty() ? override.expandFormula() : type.expandFormula(),
+                    type.terrainType()
+            ));
+        }
+        return Optional.of(type);
     }
 
     public static Optional<LandType> getByBlock(Block block) {
         return TYPES.values().stream()
                 .filter(type -> type.coreBlock() == block)
-                .findFirst();
+                .findFirst()
+                .flatMap(type -> getById(type.id())); // include overrides
     }
 
     public static Collection<LandType> getAll() {
-        return Collections.unmodifiableCollection(TYPES.values());
+        return TYPES.keySet().stream()
+                .map(id -> getById(id).orElse(null))
+                .filter(Objects::nonNull)
+                .toList();
     }
 }

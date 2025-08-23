@@ -4,7 +4,7 @@ import banduty.stoneycore.entity.custom.SCArrowEntity;
 import banduty.stoneycore.entity.custom.SCBulletEntity;
 import banduty.stoneycore.items.item.SCArrow;
 import banduty.stoneycore.particle.ModParticles;
-import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.Item;
@@ -59,11 +59,11 @@ public final class SCRangeWeaponUtil {
 
     public static void shootArrow(World world, ItemStack stack, PlayerEntity player, ItemStack arrowStack, float pullProgress) {
         SCArrowEntity arrowEntity = (SCArrowEntity) ((SCArrow) arrowStack.getItem()).createArrowEntity(player, world);
-        arrowEntity.setDamageAmount(SCWeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
-        arrowEntity.setDamageType(SCWeaponDefinitionsLoader.getData(stack).ranged().damageType());
+        arrowEntity.setDamageAmount(WeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
+        arrowEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
         arrowEntity.setOwner(player);
 
-        arrowEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, pullProgress * SCWeaponDefinitionsLoader.getData(stack).ranged().speed(), SCWeaponDefinitionsLoader.getData(stack).ranged().divergence());
+        arrowEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, pullProgress * WeaponDefinitionsLoader.getData(stack).ranged().speed(), WeaponDefinitionsLoader.getData(stack).ranged().divergence());
 
         if (player.isCreative()) {
             arrowEntity.pickupType = PersistentProjectileEntity.PickupPermission.CREATIVE_ONLY;
@@ -78,11 +78,11 @@ public final class SCRangeWeaponUtil {
 
     public static void shootBullet(World world, ItemStack stack, PlayerEntity player) {
         SCBulletEntity bulletEntity = new SCBulletEntity(player, world);
-        bulletEntity.setDamageAmount(SCWeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
-        bulletEntity.setDamageType(SCWeaponDefinitionsLoader.getData(stack).ranged().damageType());
+        bulletEntity.setDamageAmount(WeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
+        bulletEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
         bulletEntity.setOwner(player);
 
-        bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, SCWeaponDefinitionsLoader.getData(stack).ranged().speed(), SCWeaponDefinitionsLoader.getData(stack).ranged().divergence());
+        bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, WeaponDefinitionsLoader.getData(stack).ranged().speed(), WeaponDefinitionsLoader.getData(stack).ranged().divergence());
 
         world.spawnEntity(bulletEntity);
         playSoundForPlayers(world, stack, player);
@@ -105,7 +105,7 @@ public final class SCRangeWeaponUtil {
                 double distance = playerPos.distanceTo(hearPos);
                 float volume = (float) Math.max(0, 1 - (distance * 0.01));
                 if (volume != 0) {
-                    SCWeaponDefinitionsLoader.DefinitionData definitionData = SCWeaponDefinitionsLoader.getData(stack);
+                    WeaponDefinitionsLoader.DefinitionData definitionData = WeaponDefinitionsLoader.getData(stack);
                     if (definitionData.ranged().soundEvent() != null) player.playSound(definitionData.ranged().soundEvent(), SoundCategory.BLOCKS, volume, 1.0F);
                 }
             }
@@ -171,7 +171,7 @@ public final class SCRangeWeaponUtil {
     }
 
     public static float getCrossbowPullProgress(int useTicks, Item item) {
-        return Math.min((float) useTicks / (SCWeaponDefinitionsLoader.getData(item).ranged().rechargeTime() * 20), 1.0F);
+        return Math.min((float) useTicks / (WeaponDefinitionsLoader.getData(item).ranged().rechargeTime() * 20), 1.0F);
     }
 
     public static WeaponState getWeaponState(ItemStack stack) {
@@ -232,8 +232,8 @@ public final class SCRangeWeaponUtil {
     }
 
     public static AmmoRequirement getAmmoRequirement(Item item) {
-        SCWeaponDefinitionsLoader.DefinitionData definitionData = SCWeaponDefinitionsLoader.getData(item);
-        Map<String, SCWeaponDefinitionsLoader.AmmoRequirementData> ammoRequirementMap = definitionData.ranged().ammoRequirement();
+        WeaponDefinitionsLoader.DefinitionData definitionData = WeaponDefinitionsLoader.getData(item);
+        Map<String, WeaponDefinitionsLoader.AmmoRequirementData> ammoRequirementMap = definitionData.ranged().ammoRequirement();
 
         int amountFirstItem = 0;
         Item[] firstItems = null;
@@ -245,19 +245,19 @@ public final class SCRangeWeaponUtil {
         Item[] thirdItems = null;
 
         if (ammoRequirementMap.containsKey("item1")) {
-            SCWeaponDefinitionsLoader.AmmoRequirementData item1Data = ammoRequirementMap.get("item1");
+            WeaponDefinitionsLoader.AmmoRequirementData item1Data = ammoRequirementMap.get("item1");
             amountFirstItem = item1Data.amount();
             firstItems = getItemsFromIds(item1Data.itemIds());
         }
 
         if (ammoRequirementMap.containsKey("item2")) {
-            SCWeaponDefinitionsLoader.AmmoRequirementData item2Data = ammoRequirementMap.get("item2");
+            WeaponDefinitionsLoader.AmmoRequirementData item2Data = ammoRequirementMap.get("item2");
             amountSecondItem = item2Data.amount();
             secondItems = getItemsFromIds(item2Data.itemIds());
         }
 
         if (ammoRequirementMap.containsKey("item3")) {
-            SCWeaponDefinitionsLoader.AmmoRequirementData item3Data = ammoRequirementMap.get("item3");
+            WeaponDefinitionsLoader.AmmoRequirementData item3Data = ammoRequirementMap.get("item3");
             amountThirdItem = item3Data.amount();
             thirdItems = getItemsFromIds(item3Data.itemIds());
         }

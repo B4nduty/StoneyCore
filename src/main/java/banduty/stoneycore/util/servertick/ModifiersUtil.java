@@ -1,6 +1,6 @@
 package banduty.stoneycore.util.servertick;
 
-import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -22,7 +22,7 @@ public class ModifiersUtil {
         var rangeAttribute = player.getAttributeInstance(ReachEntityAttributes.REACH);
 
         boolean shouldHaveModifier = !mainHandStack.isEmpty() &&
-                SCWeaponDefinitionsLoader.isMelee(mainHandStack);
+                WeaponDefinitionsLoader.isMelee(mainHandStack);
 
         if (shouldHaveModifier) {
             double extraReach = SCWeaponUtil.getMaxDistance(mainHandStack.getItem());

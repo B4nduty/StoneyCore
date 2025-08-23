@@ -20,6 +20,8 @@ import net.minecraft.nbt.NbtLong;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -262,6 +264,14 @@ public class Land {
     public void setCustomName(String name) {
         this.customName = name != null && !name.isEmpty() ? name : this.customName;
     }
+
+    public MutableText getLandTag(ServerWorld serverWorld) {
+        return Text.literal("[")
+                .append(getLandTitle(serverWorld))
+                .append("]")
+                .setStyle(Style.EMPTY.withColor(LandColors.getColorForLand(this)));
+    }
+
 
     public NbtCompound toNbt() {
         NbtCompound nbt = new NbtCompound();

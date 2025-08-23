@@ -8,11 +8,13 @@
     "HungerManagerMixin",
     "ItemMixin",
     "LivingEntityMixin",
+    "MobEntityAccessor",
     "PersistentProjectileEntityAccessor",
     "PersistentProjectileEntityMixin",
     "PlayerEntityMixin",
     "SpawnHelperMixin",
-    "StairsBlockMixin"
+    "StairsBlockMixin",
+    "VindicatorEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

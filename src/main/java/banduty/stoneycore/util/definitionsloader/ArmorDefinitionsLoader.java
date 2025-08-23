@@ -21,10 +21,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
-public class SCArmorDefinitionsLoader implements IdentifiableResourceReloadListener {
-
+public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListener {
+    private static final Gson GSON = new Gson();
     private static final Map<Identifier, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
-
     private static final Identifier RELOAD_LISTENER_ID = new Identifier(StoneyCore.MOD_ID, "armor_definitions_loader");
 
     @Override
@@ -41,7 +40,7 @@ public class SCArmorDefinitionsLoader implements IdentifiableResourceReloadListe
 
             resources.forEach((id, resource) -> {
                 try (InputStream stream = resource.getInputStream()) {
-                    JsonObject json = new Gson().fromJson(new InputStreamReader(stream), JsonObject.class);
+                    JsonObject json = GSON.fromJson(new InputStreamReader(stream), JsonObject.class);
 
                     Map<String, Double> damage = new HashMap<>();
                     if (json.has("damageResistance")) {

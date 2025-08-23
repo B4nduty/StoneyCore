@@ -15,6 +15,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.VindicatorEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.AxeItem;
@@ -225,6 +226,10 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
                 );
                 return false;
             }
+        }
+
+        if (attacker instanceof VindicatorEntity) {
+            return super.damage(source, amount);
         }
 
         if (attacker instanceof AbstractSiegeEntity) {

@@ -2,8 +2,8 @@ package banduty.stoneycore.util.servertick;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.config.StoneyCoreConfig;
-import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import banduty.streq.StrEq;
@@ -120,12 +120,12 @@ public class StaminaUtil {
     }
 
     private static boolean isSCWeapon(ItemStack stack) {
-        return SCWeaponDefinitionsLoader.isMelee(stack.getItem());
+        return WeaponDefinitionsLoader.isMelee(stack.getItem());
     }
 
     private static boolean isWearingSCArmor(LivingEntity entity) {
         for (ItemStack armorStack : entity.getArmorItems()) {
-            if (SCArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
+            if (ArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
                 return true;
             }
         }

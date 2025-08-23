@@ -2,8 +2,8 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
-import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.SCAttributes;
@@ -136,7 +136,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     private void stoneycore$sendDamage(DamageSource source, float amount, CallbackInfo ci) {
         if (StoneyCore.getConfig().visualOptions.getDamageIndicator() && source.getAttacker() instanceof PlayerEntity player) {
             ItemStack mainHandStack = player.getMainHandStack();
-            if (SCWeaponDefinitionsLoader.isMelee(mainHandStack.getItem()) && !player.hasStatusEffect(StatusEffects.WEAKNESS)) {
+            if (WeaponDefinitionsLoader.isMelee(mainHandStack.getItem()) && !player.hasStatusEffect(StatusEffects.WEAKNESS)) {
                 if (amount <= 0) amount = 0;
                 player.sendMessage(Text.literal("Damage: " + (int) amount), true);
             }
@@ -168,7 +168,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     @Unique
     private boolean isWearingSCArmor(LivingEntity livingEntity) {
         for (ItemStack armorStack : livingEntity.getArmorItems()) {
-            if (SCArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
+            if (ArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
                 return true;
             }
         }

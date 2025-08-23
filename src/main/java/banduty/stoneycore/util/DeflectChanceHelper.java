@@ -1,12 +1,11 @@
 package banduty.stoneycore.util;
 
-import banduty.stoneycore.util.definitionsloader.SCAccessoriesDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
@@ -30,20 +29,20 @@ public class DeflectChanceHelper {
         if (AccessoriesCapability.getOptionally(livingEntity).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(livingEntity).getAllEquipped()) {
                 ItemStack equippedStack = equipped.stack();
-                if (SCAccessoriesDefinitionsLoader.containsItem(equippedStack)) {
-                    deflectChance += SCAccessoriesDefinitionsLoader.getData(equippedStack).deflectChance().getOrDefault(itemKey, 0.0);
+                if (AccessoriesDefinitionsLoader.containsItem(equippedStack)) {
+                    deflectChance += AccessoriesDefinitionsLoader.getData(equippedStack).deflectChance().getOrDefault(itemKey, 0.0);
                 }
             }
         }
 
         for (ItemStack armorStack : livingEntity.getArmorItems()) {
-            if (SCArmorDefinitionsLoader.containsItem(armorStack)) {
-                deflectChance += SCArmorDefinitionsLoader.getData(armorStack).deflectChance().getOrDefault(itemKey, 0.0);
+            if (ArmorDefinitionsLoader.containsItem(armorStack)) {
+                deflectChance += ArmorDefinitionsLoader.getData(armorStack).deflectChance().getOrDefault(itemKey, 0.0);
             }
         }
 
-        if (SCWeaponDefinitionsLoader.isMelee(itemStack)) {
-            deflectChance += SCWeaponDefinitionsLoader.getData(itemStack).melee().deflectChance();
+        if (WeaponDefinitionsLoader.isMelee(itemStack)) {
+            deflectChance += WeaponDefinitionsLoader.getData(itemStack).melee().deflectChance();
         }
 
         return deflectChance;

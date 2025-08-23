@@ -72,9 +72,10 @@ public class StoneyCore implements ModInitializer, DataGeneratorEntrypoint {
 		UseEntityCallback.EVENT.register(new UseEntityHandler());
 		ModParticles.registerParticles();
 
-		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SCWeaponDefinitionsLoader());
-		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SCArmorDefinitionsLoader());
-		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SCAccessoriesDefinitionsLoader());
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new WeaponDefinitionsLoader());
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new ArmorDefinitionsLoader());
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new AccessoriesDefinitionsLoader());
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new LandDefinitionsLoader());
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			ServerPlayerEntity player = handler.getPlayer();

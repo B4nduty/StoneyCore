@@ -1,7 +1,7 @@
 package banduty.stoneycore.util.servertick;
 
 import banduty.stoneycore.items.armor.SCAccessoryItem;
-import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
@@ -45,7 +45,7 @@ public class ArmorUtil {
     private static boolean isWearingFullSCArmorSet(LivingEntity entity) {
         for (EquipmentSlot slot : ARMOR_SLOTS) {
             ItemStack equipped = entity.getEquippedStack(slot);
-            if (!SCArmorDefinitionsLoader.containsItem(equipped.getItem())) {
+            if (!ArmorDefinitionsLoader.containsItem(equipped.getItem())) {
                 return false;
             }
         }

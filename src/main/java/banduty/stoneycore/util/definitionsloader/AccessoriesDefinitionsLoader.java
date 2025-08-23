@@ -19,10 +19,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
-public class SCAccessoriesDefinitionsLoader implements IdentifiableResourceReloadListener {
-
+public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadListener {
+    private static final Gson GSON = new Gson();
     private static final Map<Identifier, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
-
     private static final Identifier RELOAD_LISTENER_ID = new Identifier(StoneyCore.MOD_ID, "accessories_definitions_loader");
 
     @Override
@@ -39,7 +38,7 @@ public class SCAccessoriesDefinitionsLoader implements IdentifiableResourceReloa
 
             resources.forEach((id, resource) -> {
                 try (InputStream stream = resource.getInputStream()) {
-                    JsonObject json = new Gson().fromJson(new InputStreamReader(stream), JsonObject.class);
+                    JsonObject json = GSON.fromJson(new InputStreamReader(stream), JsonObject.class);
 
                     double armor = 0;
                     if (json.has("armor")) {

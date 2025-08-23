@@ -21,8 +21,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
-public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadListener {
-
+public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListener {
+    private static final Gson GSON = new Gson();
     private static final Map<Identifier, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
     private static final Identifier RELOAD_LISTENER_ID = new Identifier(StoneyCore.MOD_ID, "weapon_definitions_loader");
 
@@ -42,7 +42,7 @@ public class SCWeaponDefinitionsLoader implements IdentifiableResourceReloadList
 
             resources.forEach((id, resource) -> {
                 try (InputStream stream = resource.getInputStream()) {
-                    JsonObject json = new Gson().fromJson(new InputStreamReader(stream), JsonObject.class);
+                    JsonObject json = GSON.fromJson(new InputStreamReader(stream), JsonObject.class);
 
                     boolean hasMelee = json.has("melee");
                     boolean hasRanged = json.has("ranged");

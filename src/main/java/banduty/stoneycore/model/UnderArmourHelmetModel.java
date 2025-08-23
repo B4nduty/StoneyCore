@@ -11,36 +11,21 @@
 
 	@Environment(EnvType.CLIENT)
 	public class UnderArmourHelmetModel extends BipedEntityModel<LivingEntity> {
-		public final ModelPart head;
-		public final ModelPart hat;
-		public final ModelPart body;
-		public final ModelPart rightArm;
-		public final ModelPart leftArm;
-		public final ModelPart rightLeg;
-		public final ModelPart leftLeg;
 		private final ModelPart armorHead;
 		public UnderArmourHelmetModel(ModelPart root) {
 			super(root);
 			this.setVisible(false);
-			this.head = root.getChild("head");
-			this.hat = root.getChild("hat");
-			this.body = root.getChild("body");
-			this.rightArm = root.getChild("right_arm");
-			this.leftArm = root.getChild("left_arm");
-			this.rightLeg = root.getChild("right_leg");
-			this.leftLeg = root.getChild("left_leg");
 			this.armorHead = root.getChild("armorHead");
 		}
 
 		@Override
 		protected Iterable<ModelPart> getHeadParts() {
-			return ImmutableList.of(this.head);
+			return ImmutableList.of(this.armorHead);
 		}
 
 		@Override
 		protected Iterable<ModelPart> getBodyParts() {
-			return ImmutableList.of(this.body, this.rightArm, this.leftArm, this.rightLeg, this.leftLeg, this.hat,
-					this.armorHead);
+			return ImmutableList.of();
 		}
 
 		public static TexturedModelData getTexturedModelData() {

@@ -37,13 +37,14 @@ public class UseEntityHandler implements UseEntityCallback {
             return ActionResult.FAIL;
         }
 
-        LandState stateManager = LandState.get(serverWorld);
-        Optional<Land> maybeLand = stateManager.getLandAt(player.getBlockPos());
+        Optional<Land> landOpt = LandState.get(serverWorld).getAllLands().stream()
+                .filter(land -> land.getOwnerUUID().equals(playerId) || land.isAlly(playerId))
+                .findFirst();
 
-        if (maybeLand.isPresent() && SiegeManager.isLandDefenseSiege(serverWorld, maybeLand.get()) &&
+        if (landOpt.isPresent() && SiegeManager.isLandDefenseSiege(serverWorld, landOpt.get()) &&
                 !SiegeManager.getAllParticipants(serverWorld).contains(serverPlayerEntity)) return ActionResult.FAIL;
 
-        maybeLand.ifPresent(land -> {
+        landOpt.ifPresent(land -> {
             if (land.getOwnerUUID().equals(player.getUuid()) && player.getEquippedStack(EquipmentSlot.HEAD).isOf(land.getLandType().coreItem())
                     && player.isSneaking() && entity instanceof PlayerEntity playerEntity) {
                 if (land.isAlly(playerEntity.getUuid())) {

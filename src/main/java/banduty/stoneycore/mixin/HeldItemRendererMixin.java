@@ -4,7 +4,7 @@ import banduty.stoneycore.event.custom.RenderFirstPersonAccesoryArmorEvents;
 import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;
 import banduty.stoneycore.util.DyeUtil;
-import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
@@ -61,7 +61,7 @@ public class HeldItemRendererMixin {
 
         ItemStack chestStack = player.getInventory().getArmorStack(2); // Chestplate
         if (chestStack.getItem() instanceof ArmorItem armorItem &&
-                SCArmorDefinitionsLoader.containsItem(armorItem) &&
+                ArmorDefinitionsLoader.containsItem(armorItem) &&
                 armorItem.getSlotType() == ArmorItem.Type.CHESTPLATE.getEquipmentSlot()) {
 
             // Load your custom model

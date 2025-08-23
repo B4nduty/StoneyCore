@@ -4,8 +4,8 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.StoneyCoreClient;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.SCDamageCalculator;
-import banduty.stoneycore.util.definitionsloader.SCArmorDefinitionsLoader;
-import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -51,41 +51,49 @@ public class InGameHudMixin {
 
         ItemStack mainHandStack = player.getMainHandStack();
         Item item = mainHandStack.getItem();
-        if (!SCWeaponDefinitionsLoader.isMelee(item)) return;
+        if (!WeaponDefinitionsLoader.isMelee(item)) return;
 
         Vec3d playerPos = player.getPos();
         double distance = client.targetedEntity == null
                 ? 9999
                 : playerPos.distanceTo(client.targetedEntity.getPos());
 
-        SCWeaponDefinitionsLoader.DefinitionData weaponData = SCWeaponDefinitionsLoader.getData(item);
+        WeaponDefinitionsLoader.DefinitionData weaponData = WeaponDefinitionsLoader.getData(item);
 
-        String damageType = determineDamageType(mainHandStack, weaponData, (PlayerAttackProperties) player);
+        SCDamageCalculator.DamageType damageType = determineDamageType(mainHandStack, weaponData, (PlayerAttackProperties) player);
         renderCrosshair(item, context, distance, damageType);
 
         ci.cancel();
     }
 
     @Unique
-    private String determineDamageType(ItemStack mainHandStack, SCWeaponDefinitionsLoader.DefinitionData weaponData, PlayerAttackProperties player) {
+    private SCDamageCalculator.DamageType determineDamageType(ItemStack mainHandStack, WeaponDefinitionsLoader.DefinitionData weaponData, PlayerAttackProperties player) {
         Item item = mainHandStack.getItem();
         boolean isBludgeoning = mainHandStack.getNbt() != null && mainHandStack.getNbt().getBoolean("sc_bludgeoning");
         boolean isPiercing = isPiercing(player, item);
-        boolean bludgeoningToPiercing = getDamageValues("SLASHING", item) == 0
-                && getDamageValues("PIERCING", item) > 0
-                && getDamageValues("BLUDGEONING", item) > 0;
+
+        boolean bludgeoningToPiercing =
+                getDamageValues(SCDamageCalculator.DamageType.SLASHING, item) == 0 &&
+                        getDamageValues(SCDamageCalculator.DamageType.PIERCING, item) > 0 &&
+                        getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, item) > 0;
 
         SCDamageCalculator.DamageType onlyType = weaponData.melee().onlyDamageType();
 
-        if (isBludgeoning || onlyType == SCDamageCalculator.DamageType.BLUDGEONING) return "bludgeoning";
-        if (isPiercing || bludgeoningToPiercing || onlyType == SCDamageCalculator.DamageType.PIERCING) return "piercing";
-        return "slashing";
+        if (isBludgeoning || onlyType == SCDamageCalculator.DamageType.BLUDGEONING) {
+            return SCDamageCalculator.DamageType.BLUDGEONING;
+        }
+
+        if (isPiercing || bludgeoningToPiercing || onlyType == SCDamageCalculator.DamageType.PIERCING) {
+            return SCDamageCalculator.DamageType.PIERCING;
+        }
+
+        return SCDamageCalculator.DamageType.SLASHING;
     }
 
     @Unique
     private static boolean isPiercing(PlayerAttackProperties player, Item item) {
         int comboCount = player.getComboCount();
-        SCWeaponDefinitionsLoader.DefinitionData attributeData = SCWeaponDefinitionsLoader.getData(item);
+        WeaponDefinitionsLoader.DefinitionData attributeData = WeaponDefinitionsLoader.getData(item);
         int[] piercingAnimations = attributeData.melee().piercingAnimation();
         int animation = attributeData.melee().animation();
 
@@ -101,7 +109,7 @@ public class InGameHudMixin {
     }
 
     @Unique
-    private void renderCrosshair(Item item, DrawContext context, double distance, String damageType) {
+    private void renderCrosshair(Item item, DrawContext context, double distance, SCDamageCalculator.DamageType damageType) {
         MinecraftClient client = MinecraftClient.getInstance();
         int centerX = client.getWindow().getScaledWidth() / 2;
         int centerY = client.getWindow().getScaledHeight() / 2;
@@ -157,8 +165,8 @@ public class InGameHudMixin {
     }
 
     @Unique
-    private static Identifier getCrosshair(String damageType, String crosshairType) {
-        return new Identifier(StoneyCore.MOD_ID, "textures/overlay/" + damageType + "_" + crosshairType + ".png");
+    private static Identifier getCrosshair(SCDamageCalculator.DamageType damageType, String crosshairType) {
+        return new Identifier(StoneyCore.MOD_ID, "textures/overlay/" + damageType.name().toLowerCase() + "_" + crosshairType + ".png");
     }
 
     @Unique
@@ -212,9 +220,9 @@ public class InGameHudMixin {
     private boolean ableStaminaOverlay(PlayerEntity player) {
         if (player == null) return false;
 
-        boolean hasSCWeapon = SCWeaponDefinitionsLoader.isMelee(player.getMainHandStack());
+        boolean hasSCWeapon = WeaponDefinitionsLoader.isMelee(player.getMainHandStack());
         for (ItemStack stack : player.getArmorItems()) {
-            if (SCArmorDefinitionsLoader.containsItem(stack.getItem())) {
+            if (ArmorDefinitionsLoader.containsItem(stack.getItem())) {
                 return true;
             }
         }

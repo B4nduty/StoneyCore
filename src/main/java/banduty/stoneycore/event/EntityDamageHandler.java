@@ -7,12 +7,13 @@ import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.DeflectChanceHelper;
 import banduty.stoneycore.util.SCDamageCalculator;
-import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import net.bettercombat.logic.PlayerAttackProperties;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -68,12 +69,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             }
         }
 
-        if (stack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
-            SCDamageCalculator.applyDamage(target, attacker, stack, amount);
-            return 0;
-        }
-
-        if (SCWeaponDefinitionsLoader.isMelee(stack.getItem())) {
+        if (WeaponDefinitionsLoader.isMelee(stack.getItem())) {
             amount = calculateWeaponDamage(attacker, target, stack.getItem(), stack, amount);
         }
 
@@ -133,7 +129,14 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             return originalDamage;
         }
 
-        float baseDamage = SCWeaponUtil.calculateDamage(stack.getItem(), actualDistance, damageType.name());
+        float baseDamage = SCWeaponUtil.calculateDamage(stack.getItem(), actualDistance, damageType);
+
+        float enchantmentBonus = EnchantmentHelper.getAttackDamage(stack, target.getGroup());
+        baseDamage += enchantmentBonus;
+
+        if (stack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
+            return baseDamage;
+        }
 
         float calculatedDamage = SCDamageCalculator.getSCDamage(target, baseDamage, damageType);
 
@@ -141,7 +144,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             calculatedDamage = SCWeaponUtil.adjustDamageForBackstab(target, attacker.getPos(), calculatedDamage);
         }
 
-        return calculatedDamage != 0 ? calculatedDamage : originalDamage;
+        return calculatedDamage;
     }
 
     private float applyStatusEffectModifiers(LivingEntity attacker, float damage) {

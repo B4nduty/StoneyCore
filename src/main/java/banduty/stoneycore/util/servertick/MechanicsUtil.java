@@ -1,7 +1,7 @@
 package banduty.stoneycore.util.servertick;
 
 import banduty.stoneycore.util.SCInventoryItemFinder;
-import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
@@ -50,7 +50,7 @@ public class MechanicsUtil {
 
         ItemStack lastItem = LAST_ITEMSTACK_MAP.get(player);
         if (currentItem != lastItem) {
-            if (lastItem != null && lastItem.getNbt() != null && SCWeaponDefinitionsLoader.isRanged(lastItem)) {
+            if (lastItem != null && lastItem.getNbt() != null && WeaponDefinitionsLoader.isRanged(lastItem)) {
                 lastItem.getNbt().putBoolean("sc_recharge", false);
                 resetWeaponState(player, lastItem);
             }
@@ -78,7 +78,7 @@ public class MechanicsUtil {
             currentItem.getOrCreateNbt().putBoolean("sc_recharge", false);
         }
 
-        int requiredTicks = SCWeaponDefinitionsLoader.getData(currentItemType).ranged().rechargeTime() * 20;
+        int requiredTicks = WeaponDefinitionsLoader.getData(currentItemType).ranged().rechargeTime() * 20;
         if (getRechargeTime(player) >= requiredTicks) {
             completeReload(player, currentItem);
         }
@@ -89,7 +89,7 @@ public class MechanicsUtil {
     }
 
     private static boolean isValidRangeWeapon(Item item) {
-        return SCWeaponDefinitionsLoader.isRanged(item);
+        return WeaponDefinitionsLoader.isRanged(item);
     }
 
     private static boolean hasRequiredAmmo(ServerPlayerEntity player, Item item) {

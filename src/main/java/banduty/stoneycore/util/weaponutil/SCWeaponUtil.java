@@ -1,7 +1,7 @@
 package banduty.stoneycore.util.weaponutil;
 
 import banduty.stoneycore.util.SCDamageCalculator;
-import banduty.stoneycore.util.definitionsloader.SCWeaponDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import net.minecraft.block.Block;
 import net.minecraft.block.CropBlock;
 import net.minecraft.entity.LivingEntity;
@@ -24,21 +24,21 @@ public final class SCWeaponUtil {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
 
-    public static float getDamageValues(String key, Item item) {
-        SCWeaponDefinitionsLoader.DefinitionData attributeData = SCWeaponDefinitionsLoader.getData(item);
+    public static float getDamageValues(SCDamageCalculator.DamageType key, Item item) {
+        WeaponDefinitionsLoader.DefinitionData attributeData = WeaponDefinitionsLoader.getData(item);
         Map<String, Float> damageValues = attributeData.melee().damage();
 
-        return damageValues.getOrDefault(key, 0f);
+        return damageValues.getOrDefault(key.name(), 0f);
     }
 
     public static SCDamageCalculator.DamageType calculateDamageType(ItemStack stack, Item item, int comboCount) {
-        boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING.name(), stack.getItem()) == 0
-                && getDamageValues(SCDamageCalculator.DamageType.PIERCING.name(), stack.getItem()) > 0
-                && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING.name(), stack.getItem()) > 0;
+        boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING, stack.getItem()) == 0
+                && getDamageValues(SCDamageCalculator.DamageType.PIERCING, stack.getItem()) > 0
+                && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, stack.getItem()) > 0;
         boolean isBludgeoning = stack.getNbt() != null && stack.getNbt().getBoolean("sc_bludgeoning");
         boolean isPiercing = isPiercingWeapon(item, comboCount);
 
-        if (isBludgeoning || SCWeaponDefinitionsLoader.getData(item).melee().onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
+        if (isBludgeoning || WeaponDefinitionsLoader.getData(item).melee().onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
             return SCDamageCalculator.DamageType.BLUDGEONING;
         }
         if (isPiercing || bludgeoningToPiercing) {
@@ -48,12 +48,12 @@ public final class SCWeaponUtil {
     }
 
     private static boolean isPiercingWeapon(Item item, int comboCount) {
-        return (SCWeaponDefinitionsLoader.getData(item).melee().animation() > 0 && isComboCountPiercing(item, comboCount)) ||
-                SCWeaponDefinitionsLoader.getData(item).melee().onlyDamageType() == SCDamageCalculator.DamageType.PIERCING;
+        return (WeaponDefinitionsLoader.getData(item).melee().animation() > 0 && isComboCountPiercing(item, comboCount)) ||
+                WeaponDefinitionsLoader.getData(item).melee().onlyDamageType() == SCDamageCalculator.DamageType.PIERCING;
     }
 
     private static boolean isComboCountPiercing(Item item, int comboCount) {
-        SCWeaponDefinitionsLoader.DefinitionData attributeData = SCWeaponDefinitionsLoader.getData(item);
+        WeaponDefinitionsLoader.DefinitionData attributeData = WeaponDefinitionsLoader.getData(item);
         int[] piercingAnimations = attributeData.melee().piercingAnimation();
         int animation = attributeData.melee().animation();
         boolean piercing = false;
@@ -83,7 +83,7 @@ public final class SCWeaponUtil {
     }
 
     public static double getRadius(Item item, int index) {
-        SCWeaponDefinitionsLoader.DefinitionData attributeData = SCWeaponDefinitionsLoader.getData(item);
+        WeaponDefinitionsLoader.DefinitionData attributeData = WeaponDefinitionsLoader.getData(item);
         Map<String, Double> radiusValues = attributeData.melee().radius();
 
         String key;
@@ -99,7 +99,7 @@ public final class SCWeaponUtil {
         return radiusValues.getOrDefault(key, 0.0);
     }
 
-    public static float calculateDamage(Item item, double distance, String key) {
+    public static float calculateDamage(Item item, double distance, SCDamageCalculator.DamageType key) {
         for (int i = 0; i <= 4; i++) {
             double radius = getRadius(item, i);
             if (distance < radius + RADIUS_TOLERANCE) {

@@ -1,7 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.util.definitionsloader.SCAccessoriesDefinitionsLoader;
+import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import io.wispforest.accessories.api.attributes.AccessoryAttributeBuilder;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import io.wispforest.accessories.api.slot.SlotReference;
@@ -15,7 +15,7 @@ import net.minecraft.util.Identifier;
 public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCallback {
     @Override
     public void adjustAttributes(ItemStack stack, SlotReference reference, AccessoryAttributeBuilder builder) {
-        if (!SCAccessoriesDefinitionsLoader.containsItem(stack)) return;
+        if (!AccessoriesDefinitionsLoader.containsItem(stack)) return;
         updatePlayerAttributes(stack, reference, builder);
     }
 
@@ -27,7 +27,7 @@ public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCall
     }
 
     private static void updatePlayerAttributes(ItemStack stack, SlotReference reference, AccessoryAttributeBuilder builder) {
-        var data = SCAccessoriesDefinitionsLoader.getData(stack);
+        var data = AccessoriesDefinitionsLoader.getData(stack);
 
         handleAttribute(reference, EntityAttributes.GENERIC_ARMOR, "armor", data.armor(), builder);
         handleAttribute(reference, EntityAttributes.GENERIC_ARMOR_TOUGHNESS, "armor_toughness", data.toughness(), builder);
