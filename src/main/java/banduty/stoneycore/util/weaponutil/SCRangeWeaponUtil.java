@@ -62,6 +62,10 @@ public final class SCRangeWeaponUtil {
         arrowEntity.setDamageAmount(WeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
         arrowEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
         arrowEntity.setOwner(player);
+        if (arrowStack.getNbt() != null && arrowStack.getNbt().getBoolean("ignited")) {
+            arrowEntity.setOnFire(true);
+            arrowEntity.setFireTicks(1000);
+        }
 
         arrowEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, pullProgress * WeaponDefinitionsLoader.getData(stack).ranged().speed(), WeaponDefinitionsLoader.getData(stack).ranged().divergence());
 

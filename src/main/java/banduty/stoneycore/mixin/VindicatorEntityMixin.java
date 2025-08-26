@@ -1,6 +1,7 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.goals.TargetSiegeEntitiesGoal;
+import banduty.stoneycore.entity.custom.AbstractSiegeEntity;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.mob.VindicatorEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,6 +15,6 @@ public class VindicatorEntityMixin {
     private void initGoals(CallbackInfo ci) {
         VindicatorEntity vindicator = (VindicatorEntity) (Object) this;
         GoalSelector targetSelector = ((MobEntityAccessor) vindicator).getTargetSelector();
-        targetSelector.add(1, new TargetSiegeEntitiesGoal(vindicator));
+        targetSelector.add(1, new ActiveTargetGoal<>(vindicator, AbstractSiegeEntity.class, true));
     }
 }

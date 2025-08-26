@@ -30,32 +30,32 @@ public class SCConfigs {
         public String staminaRecoveryFormula = "10 - (foodLevel + health) / 5";
 
         @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-        @Comment("Blocking Stamina Per Second")
-        public float blockingStaminaPerSecond = 0.5f;
+        @Comment("Blocking Stamina Constant")
+        public double blockingStaminaConstant = 0.01d;
 
         @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-        @Comment("On Block Stamina")
-        public float onBlockStamina = 1.5f;
+        @Comment("On Block Stamina Constant")
+        public double onBlockStaminaConstant = 0.03d;
 
         @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-        @Comment("On Parry Stamina")
-        public float onParryStamina = 2.5f;
+        @Comment("On Parry Stamina Constant")
+        public double onParryStaminaConstant = 0.025d;
 
         @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-        @Comment("Sprinting Stamina Per Second")
-        public float sprintingStaminaPerSecond = 2f;
+        @Comment("Sprinting Stamina Constant")
+        public double sprintingStaminaConstant = 0.04d;
 
         @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-        @Comment("Sprinting Stamina")
-        public float jumpingStamina = 1f;
+        @Comment("Sprinting Stamina Constant")
+        public double jumpingStaminaConstant = 0.04d;
 
         @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-        @Comment("Swimming Stamina Per Second")
-        public float swimmingStaminaPerSecond = 1f;
+        @Comment("Swimming Stamina Constant")
+        public double swimmingStaminaConstant = 0.02d;
 
         @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-        @Comment("Attack Stamina")
-        public float attackStamina = 2f;
+        @Comment("Attack Stamina Constant")
+        public double attackStaminaConstant = 0.02d;
     }
 
     @Nest

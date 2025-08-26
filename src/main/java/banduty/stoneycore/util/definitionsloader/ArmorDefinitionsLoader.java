@@ -60,8 +60,13 @@ public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListene
                         }
                     }
 
+                    double weight = 0;
+                    if (json.has("weight")) {
+                        weight = json.get("weight").getAsDouble();
+                    }
+
                     Identifier attributeId = Identifier.of(id.getNamespace(), id.getPath().substring("definitions/armor/".length(), id.getPath().length() - 5));
-                    DEFINITIONS.put(attributeId, new DefinitionData(damage, deflectChance));
+                    DEFINITIONS.put(attributeId, new DefinitionData(damage, deflectChance, weight));
                 } catch (Exception e) {
                     StoneyCore.LOGGER.error("Failed to load definitions data from {}: {}", id, e.getMessage(), e);
                 }
@@ -78,7 +83,7 @@ public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListene
     public static DefinitionData getData(Item item) {
         Identifier itemId = Registries.ITEM.getId(item);
         Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
-        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(null, null));
+        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(null, null, 0));
     }
 
     public static boolean containsItem(ItemStack itemStack) {
@@ -92,5 +97,5 @@ public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListene
         return DEFINITIONS.containsKey(definitionId);
     }
 
-    public record DefinitionData(Map<String, Double> damageResistance, Map<String, Double> deflectChance) {}
+    public record DefinitionData(Map<String, Double> damageResistance, Map<String, Double> deflectChance, double weight) {}
 }

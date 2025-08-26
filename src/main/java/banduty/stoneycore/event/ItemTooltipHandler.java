@@ -66,7 +66,23 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
 
         if (WeaponDefinitionsLoader.isAmmo(stack)) {
             double deflectChance = WeaponDefinitionsLoader.getData(stack).ammo().deflectChance();
-            lines.add(Text.translatable("text.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).formatted(Formatting.AQUA));
+            if (deflectChance != 0) {
+                lines.add(Text.translatable("text.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).formatted(Formatting.AQUA));
+            }
+        }
+
+        if (ArmorDefinitionsLoader.containsItem(stack)) {
+            double weight = ArmorDefinitionsLoader.getData(stack).weight();
+            if (weight != 0) {
+                lines.add(Text.translatable("text.tooltip.stoneycore.weight", (int) weight).formatted(Formatting.BLUE));
+            }
+        }
+
+        if (AccessoriesDefinitionsLoader.containsItem(stack)) {
+            double weight = AccessoriesDefinitionsLoader.getData(stack).weight();
+            if (weight != 0) {
+                lines.add(Text.translatable("text.tooltip.stoneycore.weight", (int) weight).formatted(Formatting.BLUE));
+            }
         }
 
         if (ArmorDefinitionsLoader.containsItem(stack)) {

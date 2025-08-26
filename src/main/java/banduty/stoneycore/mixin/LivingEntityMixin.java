@@ -2,6 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
+import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
@@ -150,7 +151,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
             boolean wearingSCArmor = isWearingSCArmor(livingEntity);
             if (!staminaBlocked && wearingSCArmor) {
-                StaminaData.removeStamina(livingEntity, StoneyCore.getConfig().combatOptions.jumpingStamina());
+                StaminaData.removeStamina(livingEntity, StoneyCore.getConfig().combatOptions.jumpingStaminaConstant() * WeightUtil.getCachedWeight(livingEntity));
             }
         }
     }

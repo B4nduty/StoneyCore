@@ -7,6 +7,7 @@ import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.DeflectChanceHelper;
 import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
@@ -15,6 +16,7 @@ import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import net.bettercombat.logic.PlayerAttackProperties;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -99,7 +101,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         }
 
         performParryEffects(player, attacker);
-        StaminaData.removeStamina(player, StoneyCore.getConfig().combatOptions.onParryStamina());
+        StaminaData.removeStamina(player, StoneyCore.getConfig().combatOptions.onParryStaminaConstant() * WeightUtil.getCachedWeight(player));
         return true;
     }
 
@@ -135,7 +137,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         baseDamage += enchantmentBonus;
 
         if (stack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
-            return baseDamage;
+            return baseDamage * (float) attacker.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
         }
 
         float calculatedDamage = SCDamageCalculator.getSCDamage(target, baseDamage, damageType);
@@ -144,7 +146,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             calculatedDamage = SCWeaponUtil.adjustDamageForBackstab(target, attacker.getPos(), calculatedDamage);
         }
 
-        return calculatedDamage;
+        return calculatedDamage * (float) attacker.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
     }
 
     private float applyStatusEffectModifiers(LivingEntity attacker, float damage) {

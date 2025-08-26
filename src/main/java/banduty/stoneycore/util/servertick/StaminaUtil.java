@@ -2,6 +2,7 @@ package banduty.stoneycore.util.servertick;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.config.StoneyCoreConfig;
+import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
@@ -89,20 +90,20 @@ public class StaminaUtil {
         boolean usingStamina = false;
         StoneyCoreConfig.CombatOptions config = StoneyCore.getConfig().combatOptions;
 
-        if (isSCWeapon(entity.getMainHandStack()) && entity.isBlocking()) {
-            StaminaData.removeStamina(entity, config.blockingStaminaPerSecond() / 20.0);
+        if (isSCWeapon(entity.getMainHandStack()) && entity.isBlocking()) { // Blocking
+            StaminaData.removeStamina(entity, config.blockingStaminaConstant() * WeightUtil.getCachedWeight(entity) / 20.0);
             usingStamina = true;
         }
 
         if (!isWearingSCArmor(entity)) return usingStamina;
 
-        if (entity.isSprinting()) {
-            StaminaData.removeStamina(entity, config.sprintingStaminaPerSecond() / 20.0);
+        if (entity.isSprinting()) { // Running
+            StaminaData.removeStamina(entity, config.sprintingStaminaConstant() * WeightUtil.getCachedWeight(entity) / 20.0);
             usingStamina = true;
         }
 
-        if (entity.isSwimming()) {
-            StaminaData.removeStamina(entity, config.swimmingStaminaPerSecond() / 20.0);
+        if (entity.isSwimming()) { // Swimming
+            StaminaData.removeStamina(entity, config.swimmingStaminaConstant() * WeightUtil.getCachedWeight(entity) / 40.0);
             usingStamina = true;
         }
 

@@ -3,6 +3,7 @@ package banduty.stoneycore.mixin;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.StaminaData;
@@ -73,7 +74,7 @@ public abstract class PlayerEntityMixin {
             }
             ci.cancel();
 
-            StaminaData.removeStamina((LivingEntity) (Object) this, StoneyCore.getConfig().combatOptions.onBlockStamina());
+            StaminaData.removeStamina((LivingEntity) (Object) this, StoneyCore.getConfig().combatOptions.onBlockStaminaConstant() * WeightUtil.getCachedWeight(playerEntity));
         }
     }
 

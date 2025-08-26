@@ -65,8 +65,13 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                         }
                     }
 
+                    double weight = 0;
+                    if (json.has("weight")) {
+                        weight = json.get("weight").getAsDouble();
+                    }
+
                     Identifier attributeId = Identifier.of(id.getNamespace(), id.getPath().substring("definitions/accessories/".length(), id.getPath().length() - 5));
-                    DEFINITIONS.put(attributeId, new DefinitionData(armor, toughness, hungerDrainMultiplier, deflectChance));
+                    DEFINITIONS.put(attributeId, new DefinitionData(armor, toughness, hungerDrainMultiplier, deflectChance, weight));
                 } catch (Exception e) {
                     StoneyCore.LOGGER.error("Failed to load definitions data from {}: {}", id, e.getMessage(), e);
                 }
@@ -83,7 +88,7 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
     public static DefinitionData getData(Item item) {
         Identifier itemId = Registries.ITEM.getId(item);
         Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
-        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(0, 0, 0, null));
+        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(0, 0, 0, null, 0));
     }
 
     public static boolean containsItem(ItemStack itemStack) {
@@ -97,5 +102,5 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
         return DEFINITIONS.containsKey(definitionId);
     }
 
-    public record DefinitionData(double armor, double toughness, double hungerDrainMultiplier, Map<String, Double> deflectChance) {}
+    public record DefinitionData(double armor, double toughness, double hungerDrainMultiplier, Map<String, Double> deflectChance, double weight) {}
 }

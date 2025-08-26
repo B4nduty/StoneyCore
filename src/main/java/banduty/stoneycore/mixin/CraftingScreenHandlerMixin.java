@@ -11,9 +11,11 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.registry.Registries;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
@@ -34,6 +36,8 @@ public abstract class CraftingScreenHandlerMixin {
             at = @At(value = "TAIL")
     )
     private static void onUpdateResult(ScreenHandler handler, World world, PlayerEntity player, RecipeInputInventory craftingInventory, CraftingResultInventory resultInventory, CallbackInfo ci) {
+        if (world.isClient) return;
+        if (!(player instanceof ServerPlayerEntity serverPlayerEntity)) return;
         ItemStack craftingRecipeItem = null;
         for (int i = 0; i < craftingInventory.size(); i++) {
             craftingRecipeItem = craftingInventory.getStack(i);
@@ -42,18 +46,30 @@ public abstract class CraftingScreenHandlerMixin {
 
         if (craftingRecipeItem == null || craftingRecipeItem.isEmpty()) return;
 
+        boolean shouldReturn = true;
+        for (int i = 0; i < craftingInventory.size(); i++) {
+            ItemStack ingredient = craftingInventory.getStack(i);
+            if (ingredient.getItem() instanceof BannerItem) {
+                shouldReturn = false;
+                break;
+            }
+        }
+        if (shouldReturn) return;
+
         if (craftingRecipeItem.getItem() instanceof SCAccessoryItem) {
             ItemStack modified = craftingRecipeItem.copy();
             applyPreviewModifiers(modified, craftingInventory);
             resultInventory.setStack(0, modified);
+            handler.setPreviousTrackedSlot(0, modified);
+            serverPlayerEntity.networkHandler.sendPacket(new ScreenHandlerSlotUpdateS2CPacket(handler.syncId, handler.nextRevision(), 0, modified));
         }
     }
 
     @Unique
-    private static void applyPreviewModifiers(ItemStack stack, RecipeInputInventory input) {
+    private static void applyPreviewModifiers(ItemStack stack, RecipeInputInventory craftingInventory) {
         ItemStack bannerStack = ItemStack.EMPTY;
-        for (int i = 0; i < input.size(); i++) {
-            ItemStack ingredient = input.getStack(i);
+        for (int i = 0; i < craftingInventory.size(); i++) {
+            ItemStack ingredient = craftingInventory.getStack(i);
             if (ingredient.getItem() instanceof BannerItem) {
                 bannerStack = ingredient;
                 break;
