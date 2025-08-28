@@ -7,6 +7,7 @@ import banduty.stoneycore.datagen.ModRecipeProvider;
 import banduty.stoneycore.entity.ModEntities;
 import banduty.stoneycore.event.*;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
+import banduty.stoneycore.event.custom.PlayerNameTagEvents;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
@@ -67,6 +68,7 @@ public class StoneyCore implements ModInitializer, DataGeneratorEntrypoint {
 		BetterCombatClientEvents.ATTACK_HIT.register(new PlayerAttackHitHandler());
 		AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
 		UseEntityCallback.EVENT.register(new UseEntityHandler());
+        PlayerNameTagEvents.EVENT.register(new PlayerNameTagHandler());
 		ModParticles.registerParticles();
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new WeaponDefinitionsLoader());

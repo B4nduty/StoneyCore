@@ -46,8 +46,8 @@ public class SCConfigs {
         public double sprintingStaminaConstant = 0.04d;
 
         @Sync(Option.SyncMode.OVERRIDE_CLIENT)
-        @Comment("Sprinting Stamina Constant")
-        public double jumpingStaminaConstant = 0.04d;
+        @Comment("Jumping Stamina Constant")
+        public double jumpingStaminaConstant = 0.01d;
 
         @Sync(Option.SyncMode.OVERRIDE_CLIENT)
         @Comment("Swimming Stamina Constant")

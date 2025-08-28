@@ -39,7 +39,7 @@
   "text.config.stoneycore.option.combatOptions.onBlockStaminaConstant": "On Block Stamina Constant",
   "text.config.stoneycore.option.combatOptions.onParryStaminaConstant": "On Parry Stamina Constant",
   "text.config.stoneycore.option.combatOptions.sprintingStaminaConstant": "Sprinting Stamina Constant",
-  "text.config.stoneycore.option.combatOptions.jumpingStaminaConstant": "Sprinting Stamina Constant",
+  "text.config.stoneycore.option.combatOptions.jumpingStaminaConstant": "Jumping Stamina Constant",
   "text.config.stoneycore.option.combatOptions.swimmingStaminaConstant": "Swimming Stamina Constant",
   "text.config.stoneycore.option.combatOptions.attackStaminaConstant": "Attack Stamina Constant",
 

@@ -31,14 +31,14 @@ public final class SCWeaponUtil {
         return damageValues.getOrDefault(key.name(), 0f);
     }
 
-    public static SCDamageCalculator.DamageType calculateDamageType(ItemStack stack, Item item, int comboCount) {
+    public static SCDamageCalculator.DamageType calculateDamageType(ItemStack stack, int comboCount) {
         boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING, stack.getItem()) == 0
                 && getDamageValues(SCDamageCalculator.DamageType.PIERCING, stack.getItem()) > 0
                 && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, stack.getItem()) > 0;
         boolean isBludgeoning = stack.getNbt() != null && stack.getNbt().getBoolean("sc_bludgeoning");
-        boolean isPiercing = isPiercingWeapon(item, comboCount);
+        boolean isPiercing = isPiercingWeapon(stack.getItem(), comboCount);
 
-        if (isBludgeoning || WeaponDefinitionsLoader.getData(item).melee().onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
+        if (isBludgeoning ^ bludgeoningToPiercing || WeaponDefinitionsLoader.getData(stack).melee().onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
             return SCDamageCalculator.DamageType.BLUDGEONING;
         }
         if (isPiercing || bludgeoningToPiercing) {

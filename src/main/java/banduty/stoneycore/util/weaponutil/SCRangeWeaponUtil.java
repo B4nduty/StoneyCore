@@ -41,10 +41,10 @@ public final class SCRangeWeaponUtil {
             Projectiles projectiles = Projectiles.fromNbt(nbt, arrowEntity);
 
             if (weaponState.isCharged()) {
-                setWeaponState(itemStack, new WeaponState(weaponState.isReloading(), false, true));
+                setWeaponState(itemStack, new WeaponState(false, false, true));
                 projectiles = projectiles.unloadProjectile();
                 projectiles.applyToNbt(nbt);
-                shootArrow(world, itemStack, user, scArrow.getDefaultStack(), 1f);
+                shootArrow(world, itemStack, user, arrowStackOpt.get(), 1f);
                 return TypedActionResult.consume(itemStack);
             } else if (projectiles.getArrowCount() < 1) {
                 setWeaponState(itemStack, new WeaponState(true, false, false));

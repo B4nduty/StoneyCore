@@ -21,7 +21,6 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -72,7 +71,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         }
 
         if (WeaponDefinitionsLoader.isMelee(stack.getItem())) {
-            amount = calculateWeaponDamage(attacker, target, stack.getItem(), stack, amount);
+            amount = calculateWeaponDamage(attacker, target, stack);
         }
 
         amount = applyStatusEffectModifiers(attacker, amount);
@@ -118,17 +117,16 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         );
     }
 
-    private float calculateWeaponDamage(LivingEntity attacker, LivingEntity target,
-                                        Item item, ItemStack stack, float originalDamage) {
+    private float calculateWeaponDamage(LivingEntity attacker, LivingEntity target, ItemStack stack) {
         int comboCount = attacker instanceof PlayerEntity player ? ((PlayerAttackProperties) player).getComboCount() : 0;
 
-        SCDamageCalculator.DamageType damageType = SCWeaponUtil.calculateDamageType(stack, item, comboCount);
+        SCDamageCalculator.DamageType damageType = SCWeaponUtil.calculateDamageType(stack, comboCount);
 
         double maxDistance = SCWeaponUtil.getMaxDistance(stack.getItem());
         double actualDistance = attacker.getPos().distanceTo(target.getPos());
 
         if (actualDistance > maxDistance + 1) {
-            return originalDamage;
+            return 0.0f;
         }
 
         float baseDamage = SCWeaponUtil.calculateDamage(stack.getItem(), actualDistance, damageType);
@@ -136,8 +134,10 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
         float enchantmentBonus = EnchantmentHelper.getAttackDamage(stack, target.getGroup());
         baseDamage += enchantmentBonus;
 
+        float baseAttackDamage = (float) attacker.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+
         if (stack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
-            return baseDamage * (float) attacker.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+            return baseDamage + baseAttackDamage;
         }
 
         float calculatedDamage = SCDamageCalculator.getSCDamage(target, baseDamage, damageType);
@@ -146,7 +146,7 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             calculatedDamage = SCWeaponUtil.adjustDamageForBackstab(target, attacker.getPos(), calculatedDamage);
         }
 
-        return calculatedDamage * (float) attacker.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        return calculatedDamage + baseAttackDamage - 1;
     }
 
     private float applyStatusEffectModifiers(LivingEntity attacker, float damage) {
