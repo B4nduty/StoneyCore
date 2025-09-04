@@ -3,12 +3,16 @@ package banduty.stoneycore.util.render;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.networking.ModMessages;
+import io.wispforest.accessories.api.AccessoriesCapability;
+import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -28,9 +32,14 @@ public class OutlineClaimRenderer {
         }
 
         Land land = optionalLand.get();
-        if (!player.getEquippedStack(EquipmentSlot.HEAD).isOf(land.getLandType().coreItem())) {
-            sendClearPacket(player);
-            return;
+        if (AccessoriesCapability.getOptionally(player).isPresent()) {
+            for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
+                ItemStack equippedStack = equipped.stack();
+                if (!player.getEquippedStack(EquipmentSlot.HEAD).isOf(land.getLandType().coreItem()) && !(equippedStack.getNbt() != null && equippedStack.getNbt().getBoolean(Registries.ITEM.getId(land.getLandType().coreItem()).getPath()))) {
+                    sendClearPacket(player);
+                    return;
+                }
+            }
         }
 
         Set<BlockPos> claimed = land.getClaimed();

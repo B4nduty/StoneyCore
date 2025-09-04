@@ -87,10 +87,6 @@ public enum SCTags {
 
     // Armor Tags
     /**
-     * Accessory Items that can be Wearable, also if there's not the full Under Armor
-     */
-    ALWAYS_WEARABLE("always_wearable"),
-    /**
      * Give the player reduced vision with an overlay that covers the top and bottom of the screen.
      */
     VISORED_HELMET("visored_helmet"),

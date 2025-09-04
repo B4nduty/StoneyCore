@@ -10,7 +10,6 @@ import io.wispforest.accessories.api.client.SimpleAccessoryRenderer;
 import io.wispforest.accessories.api.slot.SlotReference;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -32,8 +31,9 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
 
     @Override
     public <M extends LivingEntity> void render(ItemStack stack, SlotReference reference, MatrixStack matrices, EntityModel<M> model, VertexConsumerProvider multiBufferSource, int light, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        if (!(stack.getItem() instanceof SCAccessoryItem scAccessoryItem)) return;
+        if (!(stack.getItem() instanceof SCAccessoryItem scAccessoryItem) || reference.entity().isDead()) return;
         BipedEntityModel<LivingEntity> accessoryItemModel = scAccessoryItem.getModel(stack);
+        if (stack.getNbt() != null && stack.getNbt().getBoolean("visor_open")) accessoryItemModel = scAccessoryItem.openVisorModel(stack);
         if (model instanceof BipedEntityModel bipedEntityModel) bipedEntityModel.copyBipedStateTo(accessoryItemModel);
 
         if (scAccessoryItem.hasCustomAngles(stack)) accessoryItemModel.setAngles(reference.entity(), limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
@@ -51,10 +51,6 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
     private void renderOverlayAndAdditions(LivingEntity entity, ItemStack stack, MatrixStack matrices,
                                            VertexConsumerProvider vertexConsumers, int light,
                                            BipedEntityModel<LivingEntity> model) {
-        if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.shouldNotRenderOnHeadInFirstPerson() &&
-                entity == MinecraftClient.getInstance().player && MinecraftClient.getInstance().options.getPerspective().isFirstPerson()) {
-            return;
-        }
         RenderOverlayAndAdditionsEvents.EVENT.invoker().onRenderOverlayAndAdditionsEvents(entity, stack, matrices, vertexConsumers, light, model);
     }
 

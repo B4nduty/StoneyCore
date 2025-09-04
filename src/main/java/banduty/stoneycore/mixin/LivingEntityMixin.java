@@ -3,16 +3,18 @@ package banduty.stoneycore.mixin;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
 import banduty.stoneycore.util.WeightUtil;
+import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.SCAttributes;
 import banduty.stoneycore.util.playerdata.StaminaData;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
+import io.wispforest.accessories.api.AccessoriesCapability;
+import io.wispforest.accessories.api.slot.SlotEntryReference;
+import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
@@ -120,9 +122,47 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             argsOnly = true,
             index = 2
     )
-    private float modifyDamageAmount(float amount, DamageSource source) {
+    private float stoneycore$modifyDamageAmount(float amount, DamageSource source) {
         amount = LivingEntityDamageEvents.EVENT.invoker().onDamage((LivingEntity) (Object) this, source, amount);
         return amount;
+    }
+
+    @Inject(method = "applyArmorToDamage", at = @At("HEAD"), cancellable = true)
+    private void stoneycore$applyArmorToDamage(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+        amount = DamageUtil.getDamageLeft(amount, (float)livingEntity.getArmor(), (float)livingEntity.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS));
+
+        for (ItemStack armorStack : livingEntity.getArmorItems()) {
+            if (armorStack.isEmpty()) continue;
+
+            EquipmentSlot slot = LivingEntity.getPreferredEquipmentSlot(armorStack);
+            boolean slotProtected = false;
+
+            if (AccessoriesCapability.getOptionally(livingEntity).isPresent()) {
+                for (SlotEntryReference equipped : AccessoriesCapability.get(livingEntity).getAllEquipped()) {
+                    if (!equipped.stack().isEmpty() && AccessoriesDefinitionsLoader.containsItem(equipped.stack())) {
+                        String slotFromJson = AccessoriesDefinitionsLoader.getData(equipped.stack().getItem()).armorSlot();
+
+                        if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(slot.getName())) {
+                            slotProtected = true;
+                            equipped.stack().damage((int) amount, livingEntity, (entity) ->
+                                    entity.sendEquipmentBreakStatus(EquipmentSlot.MAINHAND)
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Damage the armor only if no accessory protects this slot
+            if (!slotProtected) {
+                armorStack.damage((int) amount, livingEntity, (entity) ->
+                        entity.sendEquipmentBreakStatus(slot)
+                );
+            }
+        }
+
+        cir.setReturnValue(amount);
+        cir.cancel();
     }
 
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)

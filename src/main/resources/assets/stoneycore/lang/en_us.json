@@ -28,8 +28,11 @@
   "text.tooltip.stoneycore.deflectChanceType": "%s Deflect chance: %s%%",
   "text.tooltip.stoneycore.coreItem": "Equip to see your claimed land",
   "text.tooltip.stoneycore.weight": "Weight: %s Kg",
+  "text.tooltip.stoneycore.openVisor": "Right-Click to Open/Close Visor",
+  "text.tooltip.stoneycore.openVisorDeflectChance": "Open Visor: -2% Deflect Chance",
 
   "text.config.stoneycore.title": "StoneyCore",
+  "text.config.stoneycore.section.combatOptions": "Combat Options",
   "text.config.stoneycore.category.combatOptions": "Combat Options",
   "text.config.stoneycore.option.combatOptions.getRealisticCombat": "Realistic Combat",
   "text.config.stoneycore.option.combatOptions.getParry": "Parry",
@@ -43,6 +46,7 @@
   "text.config.stoneycore.option.combatOptions.swimmingStaminaConstant": "Swimming Stamina Constant",
   "text.config.stoneycore.option.combatOptions.attackStaminaConstant": "Attack Stamina Constant",
 
+  "text.config.stoneycore.section.visualOptions": "Visual Options",
   "text.config.stoneycore.category.visualOptions": "Visual Options",
   "text.config.stoneycore.option.visualOptions.getDamageIndicator": "Damage Indicator",
   "text.config.stoneycore.option.visualOptions.getVisoredHelmet": "Visored Helmet Overlay",
@@ -57,17 +61,20 @@
   "text.config.stoneycore.option.visualOptions.armWave": "Wave arms if not participant in a siege",
   "text.config.stoneycore.option.visualOptions.claimOutlineColor": "Claim Outline Render Hex Color",
 
+  "text.config.stoneycore.section.technicalOptions": "Technical Options",
   "text.config.stoneycore.category.technicalOptions": "Technical Options",
   "text.config.stoneycore.option.technicalOptions.maxWorkPerTick": "Max Work for Claim Worker per tick",
   "text.config.stoneycore.option.technicalOptions.maxLandExpandRadius": "Max Land Expand Radius",
+  "text.config.stoneycore.option.technicalOptions.breakOrRemoveSiegeDestroy": "Break or Remove Blocks on destroy with siege engines",
 
+  "text.config.stoneycore.section.landOptions": "Land Options",
   "text.config.stoneycore.category.landOptions": "Land Options",
   "text.config.stoneycore.option.landOptions.removeClaimedSiege": "Remove radius claim on defender death",
   "text.config.stoneycore.option.landOptions.hungerSiege": "Hunger inside a Siege",
 
   "text.land.stoneycore.expansion.increased": "Radius increased: %d → %d",
 
-  "text.warning.stoneycore.full_armor_needed": "You need Full Under Armor to equip (Not for cosmetic slot)",
+  "text.warning.stoneycore.armor_needed_for_accessory": "%s requires %s to be equipped!",
 
   "attribute.name.generic.stoneycore.hunger_drain_multiplier": "Hunger Drain Multiplier"
 }

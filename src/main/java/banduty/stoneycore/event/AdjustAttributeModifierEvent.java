@@ -28,9 +28,15 @@ public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCall
 
     private static void updatePlayerAttributes(ItemStack stack, SlotReference reference, AccessoryAttributeBuilder builder) {
         var data = AccessoriesDefinitionsLoader.getData(stack);
+        var armor = data.armor();
+        var toughness = data.toughness();
+        if (stack.getNbt() != null && stack.getNbt().getBoolean("visor_open")) {
+            armor -= 1;
+            toughness -= 1;
+        }
 
-        handleAttribute(reference, EntityAttributes.GENERIC_ARMOR, "armor", data.armor(), builder);
-        handleAttribute(reference, EntityAttributes.GENERIC_ARMOR_TOUGHNESS, "armor_toughness", data.toughness(), builder);
+        handleAttribute(reference, EntityAttributes.GENERIC_ARMOR, "armor", armor, builder);
+        handleAttribute(reference, EntityAttributes.GENERIC_ARMOR_TOUGHNESS, "armor_toughness", toughness, builder);
         handleAttribute(reference, StoneyCore.HUNGER_DRAIN_MULTIPLIER.get(), "hunger_drain_multiplier", data.hungerDrainMultiplier(), builder);
     }
 }

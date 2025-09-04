@@ -45,7 +45,7 @@ import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
 public class ItemMixin {
 
     @Unique
-    private static final String NBT_BLUDGEONING_KEY = "sc_bludgeoning";
+    private static final String NBT_BLUDGEONING_KEY = "bludgeoning";
 
     @Inject(method = "getUseAction", at = @At("HEAD"), cancellable = true)
     public void stoneycore$getUseAction(ItemStack stack, CallbackInfoReturnable<UseAction> cir) {

@@ -15,6 +15,6 @@ public class VindicatorEntityMixin {
     private void initGoals(CallbackInfo ci) {
         VindicatorEntity vindicator = (VindicatorEntity) (Object) this;
         GoalSelector targetSelector = ((MobEntityAccessor) vindicator).getTargetSelector();
-        targetSelector.add(1, new ActiveTargetGoal<>(vindicator, AbstractSiegeEntity.class, true));
+        targetSelector.add(4, new ActiveTargetGoal<>(vindicator, AbstractSiegeEntity.class, true));
     }
 }

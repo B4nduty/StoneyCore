@@ -3,6 +3,9 @@ package banduty.stoneycore.util.servertick;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
+import net.bettercombat.api.AttackHand;
+import net.bettercombat.logic.PlayerAttackHelper;
+import net.bettercombat.logic.PlayerAttackProperties;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.item.ItemStack;
@@ -17,21 +20,27 @@ public class ModifiersUtil {
     public static void updatePlayerReachAttributes(ServerPlayerEntity player) {
         if (player == null) return;
 
-        ItemStack mainHandStack = player.getMainHandStack();
+        AttackHand hand = null;
+        if (player instanceof PlayerAttackProperties props) {
+            hand = PlayerAttackHelper.getCurrentAttack(player, props.getComboCount());
+        }
+
+        ItemStack itemStack = player.getMainHandStack();
+        if (hand != null) itemStack = hand.itemStack();
+
         var attackRangeAttribute = player.getAttributeInstance(ReachEntityAttributes.ATTACK_RANGE);
         var rangeAttribute = player.getAttributeInstance(ReachEntityAttributes.REACH);
 
-        boolean shouldHaveModifier = !mainHandStack.isEmpty() &&
-                WeaponDefinitionsLoader.isMelee(mainHandStack);
+        boolean shouldHaveModifier = !itemStack.isEmpty() &&
+                WeaponDefinitionsLoader.isMelee(itemStack);
 
         if (shouldHaveModifier) {
-            double extraReach = SCWeaponUtil.getMaxDistance(mainHandStack.getItem());
-            double reachModifier = extraReach - 4.5F;
+            double extraReach = SCWeaponUtil.getMaxDistance(itemStack.getItem());
 
             updateModifier(attackRangeAttribute, ATTACK_RANGE_MODIFIER_ID,
-                    "Stoneycore attack range", reachModifier);
+                    "Stoneycore attack range", extraReach);
             updateModifier(rangeAttribute, RANGE_MODIFIER_ID,
-                    "Stoneycore range", reachModifier);
+                    "Stoneycore range", extraReach);
         } else {
             removeModifierIfPresent(attackRangeAttribute, ATTACK_RANGE_MODIFIER_ID);
             removeModifierIfPresent(rangeAttribute, RANGE_MODIFIER_ID);

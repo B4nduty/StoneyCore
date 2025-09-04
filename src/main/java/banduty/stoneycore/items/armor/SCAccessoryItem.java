@@ -13,6 +13,9 @@ public interface SCAccessoryItem {
     BipedEntityModel<LivingEntity> getModel(ItemStack itemStack);
 
     @Environment(EnvType.CLIENT)
+    default BipedEntityModel<LivingEntity> openVisorModel(ItemStack itemStack){return null;}
+
+    @Environment(EnvType.CLIENT)
     default BipedEntityModel<LivingEntity> getFirstPersonModel(ItemStack itemStack) {
         return null;
     }
@@ -27,5 +30,5 @@ public interface SCAccessoryItem {
         return false;
     }
 
-    default boolean shouldNotRenderOnHeadInFirstPerson(){return false;};
+    default boolean shouldNotRenderOnHeadInFirstPerson(){return false;}
 }

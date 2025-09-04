@@ -5,6 +5,7 @@ import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -18,19 +19,23 @@ public class DeflectChanceHelper {
     public static boolean shouldDeflect(LivingEntity livingEntity, ItemStack itemStack) {
         double deflectProbability = calculateDeflectProbability(livingEntity, itemStack);
         double random2 = random.nextDouble();
-        return random2 < deflectProbability;
+        return random2 <= deflectProbability;
     }
 
     private static double calculateDeflectProbability(LivingEntity livingEntity, ItemStack itemStack) {
         Identifier itemId = Registries.ITEM.getId(itemStack.getItem());
         String itemKey = itemId.toString();
-        double deflectChance = 0f;
+        double deflectChance = 0d;
 
         if (AccessoriesCapability.getOptionally(livingEntity).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(livingEntity).getAllEquipped()) {
                 ItemStack equippedStack = equipped.stack();
                 if (AccessoriesDefinitionsLoader.containsItem(equippedStack)) {
                     deflectChance += AccessoriesDefinitionsLoader.getData(equippedStack).deflectChance().getOrDefault(itemKey, 0.0);
+                    if (AccessoriesDefinitionsLoader.getData(equippedStack).armorSlot().equals(EquipmentSlot.HEAD.getName()) &&
+                            equippedStack.getNbt() != null && equippedStack.getNbt().getBoolean("visor_open")) {
+                        deflectChance -= 0.02d;
+                    }
                 }
             }
         }

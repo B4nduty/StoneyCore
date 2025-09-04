@@ -215,16 +215,16 @@ public final class SCRangeWeaponUtil {
     public record WeaponState(boolean isReloading, boolean isCharged, boolean isShooting) {
         public static WeaponState fromNbt(NbtCompound nbt) {
             return new WeaponState(
-                    nbt.getBoolean("sc_reload"),
-                    nbt.getBoolean("sc_charged"),
-                    nbt.getBoolean("sc_shoot")
+                    nbt.getBoolean("reload"),
+                    nbt.getBoolean("charged"),
+                    nbt.getBoolean("shoot")
             );
         }
 
         public void applyToNbt(NbtCompound nbt) {
-            nbt.putBoolean("sc_reload", isReloading);
-            nbt.putBoolean("sc_charged", isCharged);
-            nbt.putBoolean("sc_shoot", isShooting);
+            nbt.putBoolean("reload", isReloading);
+            nbt.putBoolean("charged", isCharged);
+            nbt.putBoolean("shoot", isShooting);
         }
     }
 

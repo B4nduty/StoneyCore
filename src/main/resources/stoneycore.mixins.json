@@ -12,6 +12,7 @@
     "PersistentProjectileEntityAccessor",
     "PersistentProjectileEntityMixin",
     "PlayerEntityMixin",
+    "ScreenHandlerMixin",
     "SpawnHelperMixin",
     "StairsBlockMixin",
     "VindicatorEntityMixin"

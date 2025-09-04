@@ -1,5 +1,6 @@
 package banduty.stoneycore.util;
 
+import banduty.stoneycore.StoneyCore;
 import net.minecraft.network.packet.s2c.play.BlockBreakingProgressS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -21,7 +22,7 @@ public class BlockDamageTracker {
         float next = prev + damageFactor / hardness;
 
         if (next >= 1.0f) {
-            world.breakBlock(pos, true);
+            world.breakBlock(pos, !StoneyCore.getConfig().technicalOptions.breakOrRemoveSiegeDestroy());
             blockDamageMap.remove(pos);
             clearProgress(world, pos);
         } else {

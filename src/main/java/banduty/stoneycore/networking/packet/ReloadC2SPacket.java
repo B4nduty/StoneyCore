@@ -17,7 +17,7 @@ public class ReloadC2SPacket {
 
             if (WeaponDefinitionsLoader.isRanged(itemStack) && (player.isCreative() || SCRangeWeaponUtil.getAmmoRequirement(itemStack.getItem()) != null)) {
                 if (!SCRangeWeaponUtil.getWeaponState(itemStack).isCharged()) {
-                    itemStack.getOrCreateNbt().putBoolean("sc_recharge", true);
+                    itemStack.getOrCreateNbt().putBoolean("recharge", true);
                 }
             }
         });

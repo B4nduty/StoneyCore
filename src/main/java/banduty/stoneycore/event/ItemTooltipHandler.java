@@ -1,6 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.util.SCDamageCalculator;
@@ -33,7 +34,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
         if (WeaponDefinitionsLoader.containsItem(stack)) lines.removeIf(line -> line.contains(attackDamage));
 
         for (LandType landType : LandTypeRegistry.getAll()) {
-            if (stack.getItem() == landType.coreItem()) {
+            if (stack.getItem() == landType.coreItem() || (stack.getNbt() != null && stack.getNbt().contains("crown"))) {
                 lines.add(Text.translatable("text.tooltip.stoneycore.coreItem").formatted(Formatting.GOLD));
                 break;
             }
@@ -74,14 +75,14 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
         if (ArmorDefinitionsLoader.containsItem(stack)) {
             double weight = ArmorDefinitionsLoader.getData(stack).weight();
             if (weight != 0) {
-                lines.add(Text.translatable("text.tooltip.stoneycore.weight", (int) weight).formatted(Formatting.BLUE));
+                lines.add(Text.translatable("text.tooltip.stoneycore.weight", weight).formatted(Formatting.BLUE));
             }
         }
 
         if (AccessoriesDefinitionsLoader.containsItem(stack)) {
             double weight = AccessoriesDefinitionsLoader.getData(stack).weight();
             if (weight != 0) {
-                lines.add(Text.translatable("text.tooltip.stoneycore.weight", (int) weight).formatted(Formatting.BLUE));
+                lines.add(Text.translatable("text.tooltip.stoneycore.weight", weight).formatted(Formatting.BLUE));
             }
         }
 
@@ -149,6 +150,11 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
                     }
                 }
             }
+        }
+
+        if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.openVisorModel(stack) != null) {
+            if (stack.getNbt() != null && stack.getNbt().getBoolean("visor_open")) lines.add(Text.translatable("text.tooltip.stoneycore.openVisorDeflectChance").formatted(Formatting.AQUA));
+            lines.add(Text.translatable("text.tooltip.stoneycore.openVisor").formatted(Formatting.WHITE));
         }
     }
 }

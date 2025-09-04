@@ -4,6 +4,7 @@ import banduty.stoneycore.StoneyCore;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -14,7 +15,9 @@ import net.minecraft.util.profiler.Profiler;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -50,6 +53,35 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                         toughness = json.get("toughness").getAsDouble();
                     }
 
+                    String armorSlot = "";
+                    if (json.has("armorSlot")) {
+                        armorSlot = json.get("armorSlot").getAsString().toUpperCase();
+                        Set<EquipmentSlot> ARMOR_SLOTS = EnumSet.of(
+                                EquipmentSlot.HEAD,
+                                EquipmentSlot.CHEST,
+                                EquipmentSlot.LEGS,
+                                EquipmentSlot.FEET
+                        );
+
+                        boolean valid = false;
+                        for (EquipmentSlot slot : ARMOR_SLOTS) {
+                            if (slot.name().equals(armorSlot)) {
+                                valid = true;
+                                break;
+                            }
+                        }
+
+                        if (!valid && !armorSlot.isBlank()) {
+                            StoneyCore.LOGGER.error(
+                                    "Invalid armorSlot '{}' in {}. Expected one of {}. This item will not protect any armor slot.",
+                                    armorSlot,
+                                    id,
+                                    ARMOR_SLOTS
+                            );
+                            armorSlot = "";
+                        }
+                    }
+
                     double hungerDrainMultiplier = 0;
                     if (json.has("hungerDrainMultiplier")) {
                         hungerDrainMultiplier = json.get("hungerDrainMultiplier").getAsDouble();
@@ -71,7 +103,7 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                     }
 
                     Identifier attributeId = Identifier.of(id.getNamespace(), id.getPath().substring("definitions/accessories/".length(), id.getPath().length() - 5));
-                    DEFINITIONS.put(attributeId, new DefinitionData(armor, toughness, hungerDrainMultiplier, deflectChance, weight));
+                    DEFINITIONS.put(attributeId, new DefinitionData(armor, toughness, armorSlot, hungerDrainMultiplier, deflectChance, weight));
                 } catch (Exception e) {
                     StoneyCore.LOGGER.error("Failed to load definitions data from {}: {}", id, e.getMessage(), e);
                 }
@@ -88,7 +120,7 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
     public static DefinitionData getData(Item item) {
         Identifier itemId = Registries.ITEM.getId(item);
         Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
-        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(0, 0, 0, null, 0));
+        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(0, 0, "",0, null, 0));
     }
 
     public static boolean containsItem(ItemStack itemStack) {
@@ -102,5 +134,5 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
         return DEFINITIONS.containsKey(definitionId);
     }
 
-    public record DefinitionData(double armor, double toughness, double hungerDrainMultiplier, Map<String, Double> deflectChance, double weight) {}
+    public record DefinitionData(double armor, double toughness, String armorSlot, double hungerDrainMultiplier, Map<String, Double> deflectChance, double weight) {}
 }

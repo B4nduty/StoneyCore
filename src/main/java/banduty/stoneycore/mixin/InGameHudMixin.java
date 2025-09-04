@@ -69,7 +69,7 @@ public class InGameHudMixin {
     @Unique
     private SCDamageCalculator.DamageType determineDamageType(ItemStack mainHandStack, WeaponDefinitionsLoader.DefinitionData weaponData, PlayerAttackProperties player) {
         Item item = mainHandStack.getItem();
-        boolean isBludgeoning = mainHandStack.getNbt() != null && mainHandStack.getNbt().getBoolean("sc_bludgeoning");
+        boolean isBludgeoning = mainHandStack.getNbt() != null && mainHandStack.getNbt().getBoolean("bludgeoning");
         boolean isPiercing = isPiercing(player, item);
 
         boolean bludgeoningToPiercing =
@@ -311,7 +311,7 @@ public class InGameHudMixin {
         if (AccessoriesCapability.getOptionally(player).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                 ItemStack itemStack = equipped.stack();
-                if (itemStack.getItem() instanceof SCAccessoryItem && itemStack.isIn(SCTags.VISORED_HELMET.getTag()) && StoneyCore.getConfig().visualOptions.getVisoredHelmet()) {
+                if (itemStack.getItem() instanceof SCAccessoryItem && !(itemStack.getNbt() != null && itemStack.getNbt().getBoolean("visor_open")) && itemStack.isIn(SCTags.VISORED_HELMET.getTag()) && StoneyCore.getConfig().visualOptions.getVisoredHelmet()) {
                     RenderSystem.setShaderTexture(0, VISOR_HELMET);
                     context.drawTexture(VISOR_HELMET, 0, 0, 0, 0, width, height, width, height);
                 }

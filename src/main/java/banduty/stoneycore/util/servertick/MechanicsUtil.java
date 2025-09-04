@@ -51,7 +51,7 @@ public class MechanicsUtil {
         ItemStack lastItem = LAST_ITEMSTACK_MAP.get(player);
         if (currentItem != lastItem) {
             if (lastItem != null && lastItem.getNbt() != null && WeaponDefinitionsLoader.isRanged(lastItem)) {
-                lastItem.getNbt().putBoolean("sc_recharge", false);
+                lastItem.getNbt().putBoolean("recharge", false);
                 resetWeaponState(player, lastItem);
             }
             LAST_ITEMSTACK_MAP.put(player, currentItem);
@@ -75,7 +75,7 @@ public class MechanicsUtil {
         } else if (hasRequiredAmmo(player, currentItemType)) {
             startReload(player, currentItem);
         } else {
-            currentItem.getOrCreateNbt().putBoolean("sc_recharge", false);
+            currentItem.getOrCreateNbt().putBoolean("recharge", false);
         }
 
         int requiredTicks = WeaponDefinitionsLoader.getData(currentItemType).ranged().rechargeTime() * 20;
@@ -85,7 +85,7 @@ public class MechanicsUtil {
     }
 
     private static boolean isReloading(NbtCompound nbt) {
-        return nbt.getBoolean("sc_recharge");
+        return nbt.getBoolean("recharge");
     }
 
     private static boolean isValidRangeWeapon(Item item) {
@@ -128,7 +128,7 @@ public class MechanicsUtil {
 
         SCRangeWeaponUtil.setWeaponState(itemStack, new SCRangeWeaponUtil.WeaponState(false, true, false));
         setRechargeTime(player, 0);
-        itemStack.getOrCreateNbt().putBoolean("sc_recharge", false);
+        itemStack.getOrCreateNbt().putBoolean("recharge", false);
     }
 
     private static void resetWeaponState(ServerPlayerEntity player, ItemStack itemStack) {

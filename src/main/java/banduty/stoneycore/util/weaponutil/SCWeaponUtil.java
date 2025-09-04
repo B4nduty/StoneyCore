@@ -35,7 +35,7 @@ public final class SCWeaponUtil {
         boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING, stack.getItem()) == 0
                 && getDamageValues(SCDamageCalculator.DamageType.PIERCING, stack.getItem()) > 0
                 && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, stack.getItem()) > 0;
-        boolean isBludgeoning = stack.getNbt() != null && stack.getNbt().getBoolean("sc_bludgeoning");
+        boolean isBludgeoning = stack.getNbt() != null && stack.getNbt().getBoolean("bludgeoning");
         boolean isPiercing = isPiercingWeapon(stack.getItem(), comboCount);
 
         if (isBludgeoning ^ bludgeoningToPiercing || WeaponDefinitionsLoader.getData(stack).melee().onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {

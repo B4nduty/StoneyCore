@@ -10,55 +10,57 @@ import io.wispforest.owo.config.annotation.*;
 public class SCConfigs {
 
     @Nest
+    @SectionHeader("combatOptions")
     public CombatOptions combatOptions = new CombatOptions();
 
     public static class CombatOptions {
         @Comment("Realistic Combat")
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         public boolean getRealisticCombat = true;
 
         @Comment("Parry")
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         public boolean getParry = true;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Max Base Stamina (0 or less disables)")
         public float maxBaseStamina = 20f;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Stamina Recovery Formula")
         public String staminaRecoveryFormula = "10 - (foodLevel + health) / 5";
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Blocking Stamina Constant")
         public double blockingStaminaConstant = 0.01d;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("On Block Stamina Constant")
         public double onBlockStaminaConstant = 0.03d;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("On Parry Stamina Constant")
         public double onParryStaminaConstant = 0.025d;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Sprinting Stamina Constant")
         public double sprintingStaminaConstant = 0.04d;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Jumping Stamina Constant")
         public double jumpingStaminaConstant = 0.01d;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Swimming Stamina Constant")
         public double swimmingStaminaConstant = 0.02d;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Attack Stamina Constant")
         public double attackStaminaConstant = 0.02d;
     }
 
     @Nest
+    @SectionHeader("visualOptions")
     public VisualOptions visualOptions = new VisualOptions();
 
     public static class VisualOptions {
@@ -66,17 +68,17 @@ public class SCConfigs {
         public boolean getDamageIndicator = false;
 
         @Comment("Visored Helmet Overlay")
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         public boolean getVisoredHelmet = true;
 
         @Comment("Low Stamina Indicator")
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         public boolean getLowStaminaIndicator = true;
 
         @Comment("Noise Effect in Low Stamina Indicator")
         public boolean getNoiseEffect = true;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Muzzles Smoke Particles Time Active (In Seconds)")
         public int getMuzzlesSmokeParticlesTime = 60;
 
@@ -110,10 +112,11 @@ public class SCConfigs {
     }
 
     @Nest
+    @SectionHeader("technicalOptions")
     public TechnicalOptions technicalOptions = new TechnicalOptions();
-
+    
     public static class TechnicalOptions {
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("""
                 Max Work for Claim Worker per tick
                 Lower numbers will make the claim slower,
@@ -121,20 +124,29 @@ public class SCConfigs {
                 """)
         public int maxWorkPerTick = 5000;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Max Land Expand Radius")
         public int maxLandExpandRadius = -1;
+        
+        @Sync(Option.SyncMode.INFORM_SERVER)
+        @Comment("""
+            Break or Remove Blocks on destroy with siege engines
+            Break = False
+            Remove = True
+            """)
+        public boolean breakOrRemoveSiegeDestroy = false;
     }
 
     @Nest
+    @SectionHeader("landOptions")
     public LandOptions landOptions = new LandOptions();
 
     public static class LandOptions {
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Remove radius claim on defender death")
         public boolean removeClaimedSiege = true;
 
-        @Sync(Option.SyncMode.OVERRIDE_CLIENT)
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Hunger inside a Siege")
         public boolean hungerSiege = true;
     }

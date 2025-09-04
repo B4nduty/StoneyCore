@@ -13,6 +13,8 @@ import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
+import net.bettercombat.api.AttackHand;
+import net.bettercombat.logic.PlayerAttackHelper;
 import net.bettercombat.logic.PlayerAttackProperties;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
@@ -46,7 +48,17 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             return amount;
         }
 
-        if (DeflectChanceHelper.shouldDeflect(target, attacker.getMainHandStack())) {
+        AttackHand hand = null;
+        if (attacker instanceof PlayerEntity player) {
+            if (player instanceof PlayerAttackProperties props) {
+                hand = PlayerAttackHelper.getCurrentAttack(player, props.getComboCount());
+            }
+        }
+
+        ItemStack itemStack = attacker.getMainHandStack();
+        if (hand != null) itemStack = hand.itemStack();
+
+        if (DeflectChanceHelper.shouldDeflect(target, itemStack)) {
             return 0;
         }
 
@@ -61,7 +73,6 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             return 0.0F;
         }
 
-        ItemStack stack = attacker.getMainHandStack();
         if (target instanceof ServerPlayerEntity playerEntity && StaminaData.isStaminaBlocked((IEntityDataSaver) playerEntity) && StoneyCore.getConfig().combatOptions.getRealisticCombat()) {
             ItemStack handStack = playerEntity.getMainHandStack();
             if (!handStack.isEmpty()) {
@@ -70,8 +81,8 @@ public class EntityDamageHandler implements LivingEntityDamageEvents {
             }
         }
 
-        if (WeaponDefinitionsLoader.isMelee(stack.getItem())) {
-            amount = calculateWeaponDamage(attacker, target, stack);
+        if (WeaponDefinitionsLoader.isMelee(itemStack)) {
+            amount = calculateWeaponDamage(attacker, target, itemStack);
         }
 
         amount = applyStatusEffectModifiers(attacker, amount);
