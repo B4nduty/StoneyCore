@@ -18,6 +18,11 @@ public class SCConfigs {
         @Sync(Option.SyncMode.INFORM_SERVER)
         public boolean getRealisticCombat = true;
 
+        @Comment("Time (In Ticks) to Toggle Visor")
+        @RangeConstraint(min = 0, max = 99999)
+        @Sync(Option.SyncMode.INFORM_SERVER)
+        public int getToggleVisorTime = 10;
+
         @Comment("Parry")
         @Sync(Option.SyncMode.INFORM_SERVER)
         public boolean getParry = true;
@@ -57,6 +62,11 @@ public class SCConfigs {
         @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Attack Stamina Constant")
         public double attackStaminaConstant = 0.02d;
+
+        @Comment("Stamina Time to Replenish after Using")
+        @RangeConstraint(min = 0, max = 99999)
+        @Sync(Option.SyncMode.INFORM_SERVER)
+        public int getStaminaRecoverTime = 60;
     }
 
     @Nest

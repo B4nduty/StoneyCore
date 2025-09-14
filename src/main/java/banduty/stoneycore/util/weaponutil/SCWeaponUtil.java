@@ -24,7 +24,7 @@ public final class SCWeaponUtil {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
 
-    public static float getDamageValues(SCDamageCalculator.DamageType key, Item item) {
+    public static double getDamageValues(SCDamageCalculator.DamageType key, Item item) {
         WeaponDefinitionsLoader.DefinitionData attributeData = WeaponDefinitionsLoader.getData(item);
         Map<String, Float> damageValues = attributeData.melee().damage();
 
@@ -71,7 +71,7 @@ public final class SCWeaponUtil {
         return piercing;
     }
 
-    public static float adjustDamageForBackstab(LivingEntity target, Vec3d playerPos, float damage) {
+    public static double adjustDamageForBackstab(LivingEntity target, Vec3d playerPos, double damage) {
         Vec3d targetFacing = target.getRotationVec(1.0F).normalize();
         Vec3d attackDirection = playerPos.subtract(target.getPos()).normalize();
         boolean isBehind = targetFacing.dotProduct(attackDirection) < BACKSTAB_ANGLE_THRESHOLD;
@@ -99,11 +99,11 @@ public final class SCWeaponUtil {
         return radiusValues.getOrDefault(key, 0.0);
     }
 
-    public static float calculateDamage(Item item, double distance, SCDamageCalculator.DamageType key) {
+    public static double calculateDamage(Item item, double distance, SCDamageCalculator.DamageType key) {
         for (int i = 0; i <= 4; i++) {
             double radius = getRadius(item, i);
             if (distance < radius + RADIUS_TOLERANCE) {
-                float attackDamage = getDamageValues(key, item);
+                double attackDamage = getDamageValues(key, item);
                 float percentage = calculatePercentageForIndex(i);
                 return attackDamage * percentage;
             }

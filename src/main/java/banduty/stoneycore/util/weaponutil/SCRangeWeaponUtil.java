@@ -2,11 +2,11 @@ package banduty.stoneycore.util.weaponutil;
 
 import banduty.stoneycore.entity.custom.SCArrowEntity;
 import banduty.stoneycore.entity.custom.SCBulletEntity;
-import banduty.stoneycore.items.item.SCArrow;
 import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.item.ArrowItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -34,8 +34,8 @@ public final class SCRangeWeaponUtil {
         }
 
         Optional<ItemStack> arrowStackOpt = getArrowFromInventory(user);
-        if (arrowStackOpt.isPresent() && arrowStackOpt.get().getItem() instanceof SCArrow scArrow) {
-            SCArrowEntity arrowEntity = (SCArrowEntity) scArrow.createArrowEntity(user, world);
+        if (arrowStackOpt.isPresent() && arrowStackOpt.get().getItem() instanceof ArrowItem arrowItem) {
+            PersistentProjectileEntity arrowEntity = arrowItem.createArrow(world, arrowStackOpt.get(), user);
             WeaponState weaponState = getWeaponState(itemStack);
             NbtCompound nbt = itemStack.getOrCreateNbt();
             Projectiles projectiles = Projectiles.fromNbt(nbt, arrowEntity);
@@ -58,9 +58,10 @@ public final class SCRangeWeaponUtil {
     }
 
     public static void shootArrow(World world, ItemStack stack, PlayerEntity player, ItemStack arrowStack, float pullProgress) {
-        SCArrowEntity arrowEntity = (SCArrowEntity) ((SCArrow) arrowStack.getItem()).createArrowEntity(player, world);
-        arrowEntity.setDamageAmount(WeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
-        arrowEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
+        if (!(arrowStack.getItem() instanceof ArrowItem arrowItem)) return;
+        PersistentProjectileEntity arrowEntity = arrowItem.createArrow(world, arrowStack, player);
+        arrowEntity.setDamage(WeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
+        if (arrowEntity instanceof SCArrowEntity scArrowEntity) scArrowEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
         arrowEntity.setOwner(player);
         if (arrowStack.getNbt() != null && arrowStack.getNbt().getBoolean("ignited")) {
             arrowEntity.setOnFire(true);
@@ -143,8 +144,7 @@ public final class SCRangeWeaponUtil {
         return basePos.add(sideOffset).add(player.getRotationVec(1.0F).multiply(zOffset));
     }
 
-    public static void loadAndPlayCrossbowSound(World world, ItemStack stack, PlayerEntity player, ItemStack arrowStack) {
-        SCArrowEntity arrowEntity = (SCArrowEntity) ((SCArrow) arrowStack.getItem()).createArrowEntity(player, world);
+    public static void loadAndPlayCrossbowSound(World world, ItemStack stack, PlayerEntity player, PersistentProjectileEntity arrowEntity) {
         Projectiles.fromNbt(stack.getOrCreateNbt(), arrowEntity).loadProjectile();
         setWeaponState(stack, new WeaponState(false, true, getWeaponState(stack).isShooting()));
 
@@ -158,13 +158,13 @@ public final class SCRangeWeaponUtil {
 
     public static Optional<ItemStack> getArrowFromInventory(PlayerEntity player) {
         return player.getInventory().main.stream()
-                .filter(stack -> stack.getItem() instanceof SCArrow)
+                .filter(stack -> stack.getItem() instanceof ArrowItem)
                 .findFirst();
     }
 
     private static int getArrowSlot(PlayerEntity player) {
         return player.getInventory().main.stream()
-                .filter(stack -> stack.getItem() instanceof SCArrow)
+                .filter(stack -> stack.getItem() instanceof ArrowItem)
                 .map(player.getInventory().main::indexOf)
                 .findFirst().orElse(-1);
     }
@@ -188,23 +188,23 @@ public final class SCRangeWeaponUtil {
         state.applyToNbt(nbt);
     }
 
-    public record Projectiles(SCArrowEntity scArrowEntity, int arrowCount) {
+    public record Projectiles(PersistentProjectileEntity persistentProjectileEntity, int arrowCount) {
 
-        public static Projectiles fromNbt(NbtCompound nbt, SCArrowEntity scArrowEntity) {
-            int count = nbt.contains(scArrowEntity.getEntityName()) ? nbt.getInt(scArrowEntity.getEntityName()) : 0;
-            return new Projectiles(scArrowEntity, count);
+        public static Projectiles fromNbt(NbtCompound nbt, PersistentProjectileEntity persistentProjectileEntity) {
+            int count = nbt.contains(persistentProjectileEntity.getEntityName()) ? nbt.getInt(persistentProjectileEntity.getEntityName()) : 0;
+            return new Projectiles(persistentProjectileEntity, count);
         }
 
         public void loadProjectile() {
-            new Projectiles(scArrowEntity, arrowCount + 1);
+            new Projectiles(persistentProjectileEntity, arrowCount + 1);
         }
 
         public Projectiles unloadProjectile() {
-            return new Projectiles(scArrowEntity, Math.max(arrowCount - 1, 0));
+            return new Projectiles(persistentProjectileEntity, Math.max(arrowCount - 1, 0));
         }
 
         public void applyToNbt(NbtCompound nbt) {
-            nbt.putInt(scArrowEntity.getEntityName(), arrowCount);
+            nbt.putInt(persistentProjectileEntity.getEntityName(), arrowCount);
         }
 
         public int getArrowCount() {
@@ -235,8 +235,8 @@ public final class SCRangeWeaponUtil {
                 .toArray(Item[]::new);
     }
 
-    public static AmmoRequirement getAmmoRequirement(Item item) {
-        WeaponDefinitionsLoader.DefinitionData definitionData = WeaponDefinitionsLoader.getData(item);
+    public static AmmoRequirement getAmmoRequirement(ItemStack itemStack) {
+        WeaponDefinitionsLoader.DefinitionData definitionData = WeaponDefinitionsLoader.getData(itemStack);
         Map<String, WeaponDefinitionsLoader.AmmoRequirementData> ammoRequirementMap = definitionData.ranged().ammoRequirement();
 
         int amountFirstItem = 0;

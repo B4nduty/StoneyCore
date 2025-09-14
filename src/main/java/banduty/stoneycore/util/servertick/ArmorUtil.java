@@ -15,14 +15,6 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public class ArmorUtil {
-
-    private static final Set<EquipmentSlot> ARMOR_SLOTS = EnumSet.of(
-            EquipmentSlot.HEAD,
-            EquipmentSlot.CHEST,
-            EquipmentSlot.LEGS,
-            EquipmentSlot.FEET
-    );
-
     public static void startArmorCheck(ServerPlayerEntity player) {
         AccessoriesCapability.getOptionally(player).ifPresent(accessories -> {
             for (SlotEntryReference equipped : accessories.getAllEquipped()) {
@@ -43,11 +35,6 @@ public class ArmorUtil {
                     continue;
                 }
 
-                // Armor is missing → remove the accessory
-                player.giveItemStack(stack.copy());
-                stack.setCount(0);
-
-
                 player.sendMessage(
                         Text.translatable(
                                 "text.warning.stoneycore.armor_needed_for_accessory",
@@ -56,6 +43,10 @@ public class ArmorUtil {
                         ).formatted(Formatting.DARK_RED),
                         true
                 );
+
+                // Armor is missing → remove the accessory
+                player.giveItemStack(stack.copy());
+                stack.setCount(0);
             }
         });
     }

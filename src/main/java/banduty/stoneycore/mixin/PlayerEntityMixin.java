@@ -2,12 +2,17 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
+import banduty.stoneycore.util.EntityDamageUtil;
 import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -21,6 +26,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.UUID;
+
+import static banduty.stoneycore.util.EntityDamageUtil.getWeaponStack;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin {
@@ -91,6 +100,49 @@ public abstract class PlayerEntityMixin {
             playerEntity.clearActiveItem();
             world.sendEntityStatus(playerEntity, (byte) 30);
             ci.cancel();
+        }
+    }
+
+    @Unique
+    private UUID currentModifierId = null;
+
+    @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
+    private void stoneycore$attackLivingEntity(Entity target, CallbackInfo ci) {
+        if (!(target instanceof LivingEntity livingEntity) || livingEntity.getWorld().isClient()) return;
+        PlayerEntity playerEntity = (PlayerEntity) (Object) this;
+        ItemStack weaponStack = getWeaponStack(playerEntity);
+        if (!WeaponDefinitionsLoader.isMelee(weaponStack)) return;
+
+        EntityAttributeInstance attackDamage = playerEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+
+        if (attackDamage != null) {
+            double additionalDamage = EntityDamageUtil.onDamage(livingEntity, playerEntity, weaponStack, ci);
+
+            if (currentModifierId != null) {
+                attackDamage.removeModifier(currentModifierId);
+            }
+
+            currentModifierId = UUID.randomUUID();
+
+            EntityAttributeModifier modifier = new EntityAttributeModifier(
+                    currentModifierId,
+                    "stoneycore_damage_bonus",
+                    additionalDamage - attackDamage.getBaseValue(),
+                    EntityAttributeModifier.Operation.ADDITION
+            );
+
+            attackDamage.addTemporaryModifier(modifier);
+        }
+    }
+
+    @Inject(method = "attack", at = @At("TAIL"))
+    private void stoneycore$removeDamageModifier(Entity target, CallbackInfo ci) {
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+        EntityAttributeInstance attackDamage = livingEntity.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+
+        if (attackDamage != null && currentModifierId != null) {
+            attackDamage.removeModifier(currentModifierId);
+            currentModifierId = null;
         }
     }
 }

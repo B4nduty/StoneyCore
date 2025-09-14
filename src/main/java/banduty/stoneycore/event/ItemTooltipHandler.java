@@ -21,6 +21,7 @@ import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.Map;
@@ -48,17 +49,11 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             lines.add(Text.translatable("text.tooltip.stoneycore.baseDamage", baseDamage).formatted(Formatting.GREEN));
         }
 
-        if (stack.getItem() instanceof ArmorItem armorItem && ArmorDefinitionsLoader.containsItem(armorItem)) {
-            double slashing = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.SLASHING, armorItem) * 100;
-            double bludgeoning = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.BLUDGEONING, armorItem) * 100;
-            double piercing = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.PIERCING, armorItem) * 100;
-
-            if (slashing != 0) lines.add(Text.translatable("text.tooltip.stoneycore.slashingResistance", slashing).formatted(Formatting.BLUE));
-            if (bludgeoning != 0) lines.add(Text.translatable("text.tooltip.stoneycore.bludgeoningResistance", bludgeoning).formatted(Formatting.BLUE));
-            if (piercing != 0) lines.add(Text.translatable("text.tooltip.stoneycore.piercingResistance", (int) piercing).formatted(Formatting.BLUE));
-        }
-
         if (WeaponDefinitionsLoader.isMelee(stack)) {
+            double bonusKnockback = WeaponDefinitionsLoader.getData(stack).melee().bonusKnockback();
+            if (bonusKnockback != 0) {
+                lines.add(Text.translatable("text.tooltip.stoneycore.bonusKnockback", bonusKnockback).formatted(Formatting.AQUA));
+            }
             double deflectChance = WeaponDefinitionsLoader.getData(stack).melee().deflectChance();
             if (deflectChance > 0) {
                 lines.add(Text.translatable("text.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).formatted(Formatting.AQUA));
@@ -70,6 +65,16 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             if (deflectChance != 0) {
                 lines.add(Text.translatable("text.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).formatted(Formatting.AQUA));
             }
+        }
+
+        if (stack.getItem() instanceof ArmorItem armorItem && ArmorDefinitionsLoader.containsItem(armorItem)) {
+            double slashing = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.SLASHING, armorItem) * 100;
+            double bludgeoning = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.BLUDGEONING, armorItem) * 100;
+            double piercing = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.PIERCING, armorItem) * 100;
+
+            if (slashing != 0) lines.add(Text.translatable("text.tooltip.stoneycore.slashingResistance", slashing).formatted(Formatting.BLUE));
+            if (bludgeoning != 0) lines.add(Text.translatable("text.tooltip.stoneycore.bludgeoningResistance", bludgeoning).formatted(Formatting.BLUE));
+            if (piercing != 0) lines.add(Text.translatable("text.tooltip.stoneycore.piercingResistance", piercing).formatted(Formatting.BLUE));
         }
 
         if (ArmorDefinitionsLoader.containsItem(stack)) {
@@ -86,6 +91,55 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             }
         }
 
+        boolean shiftPressed = GLFW.glfwGetKey(MinecraftClient.getInstance().getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS ||
+                GLFW.glfwGetKey(MinecraftClient.getInstance().getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
+
+        if (!shiftPressed) {
+            boolean hasAdditionalInfo = hasAdditionalTooltipInfo(stack, context);
+            if (hasAdditionalInfo) {
+                lines.add(Text.translatable("text.tooltip.stoneycore.hold_shift_for_info"));
+            }
+            return;
+        }
+
+        addShiftTooltipInfo(stack, context, lines);
+    }
+
+    private boolean hasAdditionalTooltipInfo(ItemStack stack, TooltipContext context) {
+        if (ArmorDefinitionsLoader.containsItem(stack)) {
+            Map<String, Double> deflectMap = ArmorDefinitionsLoader.getData(stack).deflectChance();
+            if (!deflectMap.isEmpty()) {
+                double avg = deflectMap.values().stream()
+                        .mapToDouble(Double::doubleValue)
+                        .average()
+                        .orElse(0.0);
+                if (avg > 0) {
+                    return true;
+                }
+            }
+        }
+
+        if (AccessoriesDefinitionsLoader.containsItem(stack)) {
+            Map<String, Double> deflectMap = AccessoriesDefinitionsLoader.getData(stack).deflectChance();
+            if (!deflectMap.isEmpty()) {
+                double avg = deflectMap.values().stream()
+                        .mapToDouble(Double::doubleValue)
+                        .average()
+                        .orElse(0.0);
+                if (avg > 0) {
+                    return true;
+                }
+            }
+        }
+
+        if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.getModels(stack).visorOpen().isPresent()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private void addShiftTooltipInfo(ItemStack stack, TooltipContext context, List<Text> lines) {
         if (ArmorDefinitionsLoader.containsItem(stack)) {
             Map<String, Double> deflectMap = ArmorDefinitionsLoader.getData(stack).deflectChance();
             if (context.isAdvanced()) {
@@ -152,7 +206,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             }
         }
 
-        if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.openVisorModel(stack) != null) {
+        if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.getModels(stack).visorOpen().isPresent()) {
             if (stack.getNbt() != null && stack.getNbt().getBoolean("visor_open")) lines.add(Text.translatable("text.tooltip.stoneycore.openVisorDeflectChance").formatted(Formatting.AQUA));
             lines.add(Text.translatable("text.tooltip.stoneycore.openVisor").formatted(Formatting.WHITE));
         }

@@ -25,7 +25,7 @@ public abstract class PersistentProjectileEntityMixin {
         }
 
         if (projectileEntity != null) {
-            if (entityHitResult.getEntity() instanceof LivingEntity livingEntity2 && DeflectChanceHelper.shouldDeflect(livingEntity2, asItemStack())) {
+            if (entityHitResult.getEntity() instanceof LivingEntity livingEntity && DeflectChanceHelper.shouldDeflect(livingEntity, asItemStack())) {
                 projectileEntity.setVelocity(projectileEntity.getVelocity().multiply(0.5).multiply(-1));
                 projectileEntity.setDamage(projectileEntity.getDamage() * 0.5);
                 projectileEntity.setYaw(projectileEntity.getYaw() + 180);

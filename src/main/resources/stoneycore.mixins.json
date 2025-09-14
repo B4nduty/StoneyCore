@@ -7,12 +7,12 @@
     "CraftingScreenHandlerMixin",
     "HungerManagerMixin",
     "ItemMixin",
+    "LivingEntityAccessor",
     "LivingEntityMixin",
     "MobEntityAccessor",
     "PersistentProjectileEntityAccessor",
     "PersistentProjectileEntityMixin",
     "PlayerEntityMixin",
-    "ScreenHandlerMixin",
     "SpawnHelperMixin",
     "StairsBlockMixin",
     "VindicatorEntityMixin"

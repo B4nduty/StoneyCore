@@ -17,6 +17,7 @@ import net.minecraft.block.CropBlock;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.*;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -79,7 +80,7 @@ public class ItemMixin {
         if (world.isClient
                 || !(user instanceof PlayerEntity player)
                 || !(WeaponDefinitionsLoader.isRanged(stack))
-                || SCRangeWeaponUtil.getAmmoRequirement(stack.getItem()) != null) {
+                || SCRangeWeaponUtil.getAmmoRequirement(stack) != null) {
             return;
         }
 
@@ -95,9 +96,12 @@ public class ItemMixin {
         SCRangeWeaponUtil.WeaponState weaponState = SCRangeWeaponUtil.getWeaponState(stack);
 
         if (pullProgress >= 1.0F && !weaponState.isCharged()) {
-            SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack ->
-                    SCRangeWeaponUtil.loadAndPlayCrossbowSound(world, stack, player, arrowStack)
-            );
+            SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack -> {
+                if (arrowStack.getItem() instanceof ArrowItem arrowItem) {
+                    PersistentProjectileEntity arrowEntity = arrowItem.createArrow(world, arrowStack, player);
+                    SCRangeWeaponUtil.loadAndPlayCrossbowSound(world, stack, player, arrowEntity);
+                }
+            });
         }
     }
 
@@ -166,7 +170,7 @@ public class ItemMixin {
                                       CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         if (world.isClient) return;
 
-        if (SCRangeWeaponUtil.getAmmoRequirement(stack.getItem()) != null) {
+        if (SCRangeWeaponUtil.getAmmoRequirement(stack) != null) {
             handleAmmoBasedWeapon(world, user, hand, stack, cir);
         } else {
             handleProjectileWeapon(hand, user, stack, cir);
@@ -269,9 +273,9 @@ public class ItemMixin {
         if (world == null) return;
         Item item = stack.getItem();
         if (WeaponDefinitionsLoader.isMelee(stack)) {
-            float slashingDamage = getDamageValues(SCDamageCalculator.DamageType.SLASHING, item);
-            float piercingDamage = getDamageValues(SCDamageCalculator.DamageType.PIERCING, item);
-            float bludgeoningDamage = getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, item);
+            double slashingDamage = getDamageValues(SCDamageCalculator.DamageType.SLASHING, item);
+            double piercingDamage = getDamageValues(SCDamageCalculator.DamageType.PIERCING, item);
+            double bludgeoningDamage = getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, item);
 
             if (slashingDamage > 0 && bludgeoningDamage > 0) {
                 tooltip.add(Text.translatable("text.tooltip.stoneycore.shift-right_click-bludgeoning"));
@@ -285,13 +289,13 @@ public class ItemMixin {
                 tooltip.add(Text.translatable("text.tooltip.stoneycore.right_click-replant"));
             }
 
-            if (slashingDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.slashingDamage", (int) slashingDamage).formatted(Formatting.GREEN));
-            if (bludgeoningDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.bludgeoningDamage", (int) bludgeoningDamage).formatted(Formatting.GREEN));
-            if (piercingDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.piercingDamage", (int) piercingDamage).formatted(Formatting.GREEN));
+            if (slashingDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.slashingDamage", slashingDamage).formatted(Formatting.GREEN));
+            if (bludgeoningDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.bludgeoningDamage", bludgeoningDamage).formatted(Formatting.GREEN));
+            if (piercingDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.piercingDamage", piercingDamage).formatted(Formatting.GREEN));
         }
 
-        if (WeaponDefinitionsLoader.isRanged(item) && SCRangeWeaponUtil.getAmmoRequirement(stack.getItem()) != null && world.isClient()) {
-            TooltipClientSide.setTooltip(tooltip);
+        if (world.isClient()) {
+            TooltipClientSide.setTooltip(tooltip, stack);
         }
     }
 

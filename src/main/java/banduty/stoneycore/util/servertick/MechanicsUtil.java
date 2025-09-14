@@ -7,7 +7,6 @@ import banduty.stoneycore.util.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -38,7 +37,6 @@ public class MechanicsUtil {
 
     public static void handlePlayerReload(ServerPlayerEntity player) {
         ItemStack currentItem = player.getMainHandStack();
-        Item currentItemType = currentItem.getItem();
         NbtCompound nbt = currentItem.getNbt();
 
         var weaponState = SCRangeWeaponUtil.getWeaponState(currentItem);
@@ -58,7 +56,7 @@ public class MechanicsUtil {
             return;
         }
 
-        if (nbt == null || !isReloading(nbt) || !isValidRangeWeapon(currentItemType)) {
+        if (nbt == null || !isReloading(nbt) || !WeaponDefinitionsLoader.isRanged(currentItem)) {
             resetRechargeTime(player);
             return;
         }
@@ -68,17 +66,17 @@ public class MechanicsUtil {
             return;
         }
 
-        if (player.getItemCooldownManager().isCoolingDown(currentItemType) || weaponState.isCharged()) return;
+        if (player.getItemCooldownManager().isCoolingDown(currentItem.getItem()) || weaponState.isCharged()) return;
 
         if (weaponState.isReloading()) {
             incrementRechargeTime(player);
-        } else if (hasRequiredAmmo(player, currentItemType)) {
+        } else if (hasRequiredAmmo(player, currentItem)) {
             startReload(player, currentItem);
         } else {
             currentItem.getOrCreateNbt().putBoolean("recharge", false);
         }
 
-        int requiredTicks = WeaponDefinitionsLoader.getData(currentItemType).ranged().rechargeTime() * 20;
+        int requiredTicks = WeaponDefinitionsLoader.getData(currentItem).ranged().rechargeTime() * 20;
         if (getRechargeTime(player) >= requiredTicks) {
             completeReload(player, currentItem);
         }
@@ -88,12 +86,8 @@ public class MechanicsUtil {
         return nbt.getBoolean("recharge");
     }
 
-    private static boolean isValidRangeWeapon(Item item) {
-        return WeaponDefinitionsLoader.isRanged(item);
-    }
-
-    private static boolean hasRequiredAmmo(ServerPlayerEntity player, Item item) {
-        var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(item);
+    private static boolean hasRequiredAmmo(ServerPlayerEntity player, ItemStack itemStack) {
+        var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(itemStack);
         ItemStack[] foundItems = {
                 SCInventoryItemFinder.getItemFromInventory(player, ammoReq.firstItem(), ammoReq.firstItem2nOption()),
                 SCInventoryItemFinder.getItemFromInventory(player, ammoReq.secondItem(), ammoReq.secondItem2nOption()),
@@ -115,7 +109,7 @@ public class MechanicsUtil {
 
     private static void completeReload(ServerPlayerEntity player, ItemStack itemStack) {
         if (!player.isCreative()) {
-            var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(itemStack.getItem());
+            var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(itemStack);
             ItemStack[] ammoItems = {
                     SCInventoryItemFinder.getItemFromInventory(player, ammoReq.firstItem(), ammoReq.firstItem2nOption()),
                     SCInventoryItemFinder.getItemFromInventory(player, ammoReq.secondItem(), ammoReq.secondItem2nOption()),

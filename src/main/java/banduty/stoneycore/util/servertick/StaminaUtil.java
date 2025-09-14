@@ -17,7 +17,6 @@ import net.minecraft.item.ItemStack;
 import java.util.Map;
 
 public class StaminaUtil {
-
     public static void startStaminaTrack(LivingEntity entity) {
         double maxStamina = entity.getAttributeValue(StoneyCore.MAX_STAMINA.get());
         double currentStamina = StaminaData.getStamina(entity);
@@ -30,6 +29,7 @@ public class StaminaUtil {
             }
             removeStaminaEffects(entity);
             StaminaData.setStaminaBlocked((IEntityDataSaver) entity, false);
+            StaminaData.setLastStaminaUseTime((IEntityDataSaver) entity, 0);
             return;
         }
 
@@ -37,11 +37,20 @@ public class StaminaUtil {
             StaminaData.setStamina(entity, maxStamina);
         }
 
+        IEntityDataSaver dataSaver = (IEntityDataSaver) entity;
+        boolean wasUsingStamina = isUsingStamina(entity);
+
+        if (wasUsingStamina) {
+            StaminaData.setLastStaminaUseTime(dataSaver, entity.age);
+        }
+
+        boolean canRecoverStamina = (entity.age - StaminaData.getLastStaminaUseTime(dataSaver)) >= StoneyCore.getConfig().combatOptions.getStaminaRecoverTime();
+
         boolean skipDrain = !StoneyCore.getConfig().combatOptions.getRealisticCombat() ||
-                !isUsingStamina(entity) ||
+                !wasUsingStamina ||
                 entity.isOnGround() || entity.isClimbing();
 
-        if (skipDrain) {
+        if (skipDrain && canRecoverStamina) {
             handleStaminaRecovery(entity, currentStamina);
         }
 
@@ -72,7 +81,7 @@ public class StaminaUtil {
 
         if (currentStamina < level1 && currentStamina > level2) {
             applyStaminaEffects(entity, 0, 0);
-        } else if (currentStamina == 0) {
+        } else if (currentStamina <= 0) {
             StaminaData.setStaminaBlocked(dataSaver, true);
             applyStaminaEffects(entity, 3, 3);
         } else if (StaminaData.isStaminaBlocked(dataSaver) && currentStamina >= level2) {

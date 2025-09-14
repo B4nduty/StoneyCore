@@ -49,7 +49,7 @@ public abstract class ItemRendererMixin {
             return;
         }
 
-        if (renderMode == ModelTransformationMode.GUI || renderMode == ModelTransformationMode.GROUND || itemStack.isIn(SCTags.GEO_2D_ITEMS.getTag())) {
+        if (renderMode == ModelTransformationMode.GUI || renderMode == ModelTransformationMode.GROUND || renderMode == ModelTransformationMode.FIXED || itemStack.isIn(SCTags.GEO_2D_ITEMS.getTag())) {
             return;
         }
 

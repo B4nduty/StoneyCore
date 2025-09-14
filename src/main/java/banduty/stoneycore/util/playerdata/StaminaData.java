@@ -50,9 +50,32 @@ public class StaminaData {
         return livingEntity.stoneycore$getPersistentData().getBoolean(STAMINA_BLOCKED_KEY);
     }
 
+    public static void setLastStaminaUseTime(IEntityDataSaver player, int time) {
+        player.stoneycore$getPersistentData().putInt("lastStaminaUseTime", time);
+    }
+
+    public static int getLastStaminaUseTime(IEntityDataSaver player) {
+        return player.stoneycore$getPersistentData().getInt("lastStaminaUseTime");
+    }
+
     public static void syncStaminaBlocked(boolean blocked, ServerPlayerEntity player) {
         PacketByteBuf buffer = PacketByteBufs.create();
         buffer.writeBoolean(blocked);
         ServerPlayNetworking.send(player, ModMessages.STAMINA_BLOCKED_ID, buffer);
+    }
+
+    public static void saveStamina(IEntityDataSaver livingEntity, double stamina) {
+        NbtCompound nbt = livingEntity.stoneycore$getPersistentData();
+        nbt.putDouble("stamina_value", stamina);
+    }
+
+    public static double loadStamina(LivingEntity livingEntity) {
+        if (livingEntity instanceof IEntityDataSaver iEntityDataSaver) {
+            NbtCompound nbt = iEntityDataSaver.stoneycore$getPersistentData();
+            if (nbt.contains("stamina_value")) {
+                return nbt.getDouble("stamina_value");
+            }
+        }
+        return livingEntity.getAttributeValue(StoneyCore.MAX_STAMINA.get());
     }
 }

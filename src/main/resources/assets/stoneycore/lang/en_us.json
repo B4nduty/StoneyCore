@@ -6,7 +6,9 @@
 
   "key.category.stoneycore": "StoneyCore",
   "key.stoneycore.reload": "Reload",
+  "key.stoneycore.toggle_visor": "Toggle Visor",
 
+  "text.tooltip.stoneycore.hold_shift_for_info": "Hold [Shift] for more info",
   "text.tooltip.stoneycore.hungerDrain": "+%s%% Hunger Drain",
   "text.tooltip.stoneycore.armor": "+%s Armor",
   "text.tooltip.stoneycore.armor_toughness": "+%s Armor Toughness",
@@ -24,6 +26,7 @@
   "text.tooltip.stoneycore.shift-right_click-bludgeoning-piercing": "§4Shift + Right-Click §rto change between §lBludgeoning §r& §lPiercing §rDamage Type",
   "text.tooltip.stoneycore.right_click-replant": "§4Right-Click Crops §rto §lHarvest §r& §lReplant",
   "text.tooltip.stoneycore.need_to_hold": "§1Hold §r[ %s ] §1to Recharge",
+  "text.tooltip.stoneycore.bonusKnockback": "Bonus Knockback: %s",
   "text.tooltip.stoneycore.deflectChance": "Deflect chance: %s%%",
   "text.tooltip.stoneycore.deflectChanceType": "%s Deflect chance: %s%%",
   "text.tooltip.stoneycore.coreItem": "Equip to see your claimed land",
@@ -35,6 +38,7 @@
   "text.config.stoneycore.section.combatOptions": "Combat Options",
   "text.config.stoneycore.category.combatOptions": "Combat Options",
   "text.config.stoneycore.option.combatOptions.getRealisticCombat": "Realistic Combat",
+  "text.config.stoneycore.option.combatOptions.getToggleVisorTime": "Time (In Ticks) to Toggle Visor",
   "text.config.stoneycore.option.combatOptions.getParry": "Parry",
   "text.config.stoneycore.option.combatOptions.maxBaseStamina": "Max Base Stamina | Set to 0 or less to disable",
   "text.config.stoneycore.option.combatOptions.staminaRecoveryFormula": "Stamina Recovery Formula",
@@ -45,6 +49,7 @@
   "text.config.stoneycore.option.combatOptions.jumpingStaminaConstant": "Jumping Stamina Constant",
   "text.config.stoneycore.option.combatOptions.swimmingStaminaConstant": "Swimming Stamina Constant",
   "text.config.stoneycore.option.combatOptions.attackStaminaConstant": "Attack Stamina Constant",
+  "text.config.stoneycore.option.combatOptions.getStaminaRecoverTime": "Stamina Time to Replenish after Using",
 
   "text.config.stoneycore.section.visualOptions": "Visual Options",
   "text.config.stoneycore.category.visualOptions": "Visual Options",

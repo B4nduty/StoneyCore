@@ -15,11 +15,13 @@ public class ModMessages {
     public static final Identifier SIEGE_YAW_PITCH_C2S_ID = new Identifier(StoneyCore.MOD_ID, "siege_yaw_pitch_c2s");
     public static final Identifier SIEGE_YAW_PITCH_S2C_ID = new Identifier(StoneyCore.MOD_ID, "siege_yaw_pitch_s2c");
     public static final Identifier LAND_CLIENT_DATA_S2C_ID = new Identifier(StoneyCore.MOD_ID, "land_client_data_s2c");
+    public static final Identifier TOGGLE_VISOR_ID = new Identifier(StoneyCore.MOD_ID, "toggle_visor_c2s");
 
     public static void registerC2SPackets() {
         ServerPlayNetworking.registerGlobalReceiver(ATTACK_ID, AttackC2SPacket::receive);
         ServerPlayNetworking.registerGlobalReceiver(RELOAD_PACKET_ID, ReloadC2SPacket::receive);
         ServerPlayNetworking.registerGlobalReceiver(SIEGE_YAW_PITCH_C2S_ID, SiegeYawC2SPacket::receive);
+        ServerPlayNetworking.registerGlobalReceiver(TOGGLE_VISOR_ID, ToogleVisorC2SPacket::receive);
     }
 
     public static void registerS2CPackets() {

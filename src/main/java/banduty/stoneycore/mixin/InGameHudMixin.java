@@ -2,6 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.StoneyCoreClient;
+import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
@@ -331,7 +332,7 @@ public class InGameHudMixin {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;
 
-        if (player == null || player.isCreative() || player.isSpectator()) return;
+        if (player == null || player.isSpectator()) return;
 
         int width = context.getScaledWindowWidth();
         int height = context.getScaledWindowHeight();
@@ -339,7 +340,7 @@ public class InGameHudMixin {
         double stamina = StaminaData.getStamina(player);
         double secondLevel = player.getAttributeBaseValue(StoneyCore.MAX_STAMINA.get()) * 0.15d;
 
-        if (StaminaData.isStaminaBlocked((IEntityDataSaver) player) && StoneyCore.getConfig().visualOptions.getLowStaminaIndicator()) {
+        if (!player.isCreative() && StaminaData.isStaminaBlocked((IEntityDataSaver) player) && StoneyCore.getConfig().visualOptions.getLowStaminaIndicator()) {
             double staminaPercentage = stamina / secondLevel;
             if (StoneyCore.getConfig().combatOptions.getRealisticCombat()) {
                 if (noiseTextures == null) initNoiseTextures();
@@ -352,6 +353,8 @@ public class InGameHudMixin {
                 context.fillGradient(0, 0, width, height, 0x00FFFFFF, gradientColorEnd);
             }
         }
+
+        renderVisorToggleProgress(context, tickDelta);
     }
 
     @Unique
@@ -430,5 +433,59 @@ public class InGameHudMixin {
         int gradientColor2 = opacity2 << 24;
 
         context.fillGradient(0, 0, width, height, gradientColor, gradientColor2);
+    }
+
+    @Unique
+    private static final Identifier VISOR_PROGRESS_BACKGROUND = new Identifier(StoneyCore.MOD_ID, "textures/overlay/visor_progress_background.png");
+    @Unique
+    private static final Identifier VISOR_PROGRESS_BAR = new Identifier(StoneyCore.MOD_ID, "textures/overlay/visor_progress_bar.png");
+    @Unique
+    private float lastRenderedProgress = 0.0f;
+
+    // Add this method to render the progress bar
+    @Unique
+    private void renderVisorToggleProgress(DrawContext context, float tickDelta) {
+        if (StoneyCore.getConfig().combatOptions.getToggleVisorTime() == 0 || !KeyInputHandler.isTogglingVisor ||
+                KeyInputHandler.toggleVisorTicks <= 0.0f || KeyInputHandler.visorToggled) {
+            lastRenderedProgress = 0.0f;
+            return;
+        }
+
+        MinecraftClient client = MinecraftClient.getInstance();
+        int screenWidth = client.getWindow().getScaledWidth();
+        int screenHeight = client.getWindow().getScaledHeight();
+
+        // Center position for the progress bar
+        int centerX = screenWidth / 2;
+        int centerY = screenHeight / 2;
+
+        // Offset to position it nicely (adjust as needed)
+        int yOffset = 50; // Position below crosshair
+
+        int bgWidth = 128;
+        int bgHeight = 16;
+        int barWidth = 124;
+        int barHeight = 12;
+
+        float targetProgress = KeyInputHandler.toggleProgress;
+        float interpolationSpeed = 20.0f;
+
+        float smoothProgress = lastRenderedProgress + (targetProgress - lastRenderedProgress) * Math.min(1.0f, interpolationSpeed * tickDelta);
+        lastRenderedProgress = smoothProgress;
+
+        int progressWidth = (int) (barWidth * smoothProgress);
+
+        // Render background
+        int bgX = centerX - bgWidth / 2;
+        int bgY = centerY + yOffset - bgHeight / 2;
+
+        context.drawTexture(VISOR_PROGRESS_BACKGROUND, bgX, bgY, 0, 0, bgWidth, bgHeight, bgWidth, bgHeight);
+
+        // Render progress bar
+        if (progressWidth > 0) {
+            int barX = centerX - barWidth / 2;
+            int barY = centerY + yOffset - barHeight / 2;
+            context.drawTexture(VISOR_PROGRESS_BAR, barX, barY, 0, 0, progressWidth, barHeight, barWidth, barHeight);
+        }
     }
 }

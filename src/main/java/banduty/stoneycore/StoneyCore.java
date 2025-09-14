@@ -7,7 +7,6 @@ import banduty.stoneycore.datagen.ModRecipeProvider;
 import banduty.stoneycore.entity.ModEntities;
 import banduty.stoneycore.event.*;
 import banduty.stoneycore.event.custom.CraftingPreviewCallback;
-import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.networking.ModMessages;
@@ -61,7 +60,6 @@ public class StoneyCore implements ModInitializer, DataGeneratorEntrypoint {
 		ModEntities.registerEntities();
 		ModMessages.registerC2SPackets();
 		ModScreenHandlers.registerScreenHandlers();
-		LivingEntityDamageEvents.EVENT.register(new EntityDamageHandler());
 		ServerTickEvents.START_SERVER_TICK.register(new StartTickHandler());
 		PlayerBlockBreakEvents.AFTER.register(new PlayerBlockBreakAfterHandler());
 		PlayerBlockBreakEvents.BEFORE.register(new PlayerBlockBreakBeforeHandler());
@@ -78,21 +76,33 @@ public class StoneyCore implements ModInitializer, DataGeneratorEntrypoint {
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new AccessoriesDefinitionsLoader());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new LandDefinitionsLoader());
 
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            ServerPlayerEntity player = handler.getPlayer();
+            if (player != null) {
+                double currentStamina = StaminaData.getStamina(player);
+                StaminaData.saveStamina((IEntityDataSaver) player, currentStamina);
+            }
+        });
+
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			ServerPlayerEntity player = handler.getPlayer();
 			if (player != null) {
 				NbtCompound playerData = ((IEntityDataSaver) player).stoneycore$getPersistentData();
-				if (!playerData.getBoolean(FIRST_JOIN_TAG)) {
-					player.sendMessage(Text.literal("""
+				if (playerData.getBoolean(FIRST_JOIN_TAG)) {
+                    double savedStamina = StaminaData.loadStamina(player);
+                    StaminaData.setStamina(player, savedStamina);
+                    return;
+				}
+                
+                player.sendMessage(Text.literal("""
                        §4StoneyCore §radds an overlay that makes a noise effect.
                        If you have §4epilepsy §rit is §lhighly recommended §rto §4disable Noise Effect.
                        """),
-							false);
+                        false);
 
-					playerData.putBoolean(FIRST_JOIN_TAG, true);
+                playerData.putBoolean(FIRST_JOIN_TAG, true);
 
-					StaminaData.setStamina(player, player.getAttributeValue(StoneyCore.MAX_STAMINA.get()));
-				}
+                StaminaData.setStamina(player, player.getAttributeValue(StoneyCore.MAX_STAMINA.get()));
 			}
 		});
 	}

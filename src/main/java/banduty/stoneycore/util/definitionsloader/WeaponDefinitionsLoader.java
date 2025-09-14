@@ -92,7 +92,9 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
 
                         double deflectChance = meleeJson.has("deflectChance") ? meleeJson.get("deflectChance").getAsDouble() : 0;
 
-                        meleeData = new MeleeData(damage, radius, piercingAnimation, animation, onlyDamageType, deflectChance);
+                        double bonusKnockback = meleeJson.has("bonusKnockback") ? meleeJson.get("bonusKnockback").getAsDouble() : 0;
+
+                        meleeData = new MeleeData(damage, radius, piercingAnimation, animation, onlyDamageType, deflectChance, bonusKnockback);
                     }
 
                     // --- RANGED ---
@@ -223,7 +225,8 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
 
     public record DefinitionData(EnumSet<Usage> usage, MeleeData melee, RangedData ranged, AmmoData ammo) {}
     public record MeleeData(Map<String, Float> damage, Map<String, Double> radius, int[] piercingAnimation,
-                            int animation, SCDamageCalculator.DamageType onlyDamageType, double deflectChance) {}
+                            int animation, SCDamageCalculator.DamageType onlyDamageType, double deflectChance,
+                            double bonusKnockback) {}
     public record RangedData(float baseDamage, SCDamageCalculator.DamageType damageType, int maxUseTime, float speed,
                              float divergence, int rechargeTime, boolean needsFlintAndSteel, UseAction useAction,
                              Map<String, AmmoRequirementData> ammoRequirement, SoundEvent soundEvent) {}

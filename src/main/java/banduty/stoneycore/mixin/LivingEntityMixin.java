@@ -1,7 +1,12 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.event.custom.LivingEntityDamageEvents;
+import banduty.stoneycore.lands.util.Land;
+import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.siege.SiegeManager;
+import banduty.stoneycore.util.DeflectChanceHelper;
+import banduty.stoneycore.util.EntityDamageUtil;
+import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
@@ -12,6 +17,9 @@ import banduty.stoneycore.util.playerdata.SCAttributes;
 import banduty.stoneycore.util.playerdata.StaminaData;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
+import net.bettercombat.api.AttackHand;
+import net.bettercombat.logic.PlayerAttackHelper;
+import net.bettercombat.logic.PlayerAttackProperties;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -21,17 +29,23 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Optional;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements IEntityDataSaver {
@@ -116,15 +130,142 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         }
     }
 
-    @ModifyVariable(
-            method = "damage(Lnet/minecraft/entity/damage/DamageSource;F)Z",
-            at = @At("HEAD"),
-            argsOnly = true,
-            index = 2
-    )
-    private float stoneycore$modifyDamageAmount(float amount, DamageSource source) {
-        amount = LivingEntityDamageEvents.EVENT.invoker().onDamage((LivingEntity) (Object) this, source, amount);
-        return amount;
+    @Unique
+    private DamageSource stoneycore$currentDamageSource;
+    @Unique
+    private static final int PARRY_WINDOW_TICKS = 10;
+    @Unique
+    private static final float PARRY_KNOCKBACK_STRENGTH = 0.5F;
+
+    @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
+    private void stoneycore$captureDamageSource(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        this.stoneycore$currentDamageSource = source;
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+
+        if (!(livingEntity.getWorld() instanceof ServerWorld serverWorld)) return;
+        if (source.getAttacker() == null) return;
+
+        ItemStack weaponStack = getWeaponStack(source.getAttacker());
+
+        if (DeflectChanceHelper.shouldDeflect(livingEntity, weaponStack)) {
+            cir.cancel();
+        }
+
+        LandState stateManager = LandState.get(serverWorld);
+        Optional<Land> maybeLand = stateManager.getLandAt(source.getAttacker().getBlockPos());
+        if (maybeLand.isPresent() && source.getAttacker() instanceof PlayerEntity player &&
+                SiegeManager.isPlayerInLandUnderSiege(serverWorld, player) &&
+                !SiegeManager.getPlayerSiege(serverWorld, source.getAttacker().getUuid())
+                        .map(siege -> !siege.disabledPlayers.contains(source.getAttacker().getUuid()))
+                        .orElse(false)) {
+            cir.cancel();
+        }
+
+        if (source.getAttacker() instanceof LivingEntity attacker && handleParry(livingEntity, attacker)) {
+            cir.cancel();
+        }
+
+        if (livingEntity instanceof ServerPlayerEntity playerEntity && StaminaData.isStaminaBlocked((IEntityDataSaver) playerEntity) &&
+                StoneyCore.getConfig().combatOptions.getRealisticCombat()) {
+            ItemStack handStack = playerEntity.getMainHandStack();
+            if (!handStack.isEmpty()) {
+                playerEntity.dropItem(handStack, false, true);
+                playerEntity.setStackInHand(playerEntity.getActiveHand(), ItemStack.EMPTY);
+            }
+        }
+    }
+
+    @Unique
+    private static boolean handleParry(LivingEntity target, LivingEntity attacker) {
+        if (!StoneyCore.getConfig().combatOptions.getParry() || !(target instanceof PlayerEntity player)) {
+            return false;
+        }
+
+        if (!player.isBlocking()) {
+            return false;
+        }
+
+        NbtCompound persistentData = ((IEntityDataSaver) player).stoneycore$getPersistentData();
+        if (!persistentData.contains("BlockStartTick")) {
+            return false;
+        }
+
+        int blockStartTick = persistentData.getInt("BlockStartTick");
+        int currentTick = (int) player.getWorld().getTime();
+
+        if (currentTick - blockStartTick > PARRY_WINDOW_TICKS) {
+            return false;
+        }
+
+        performParryEffects(player, attacker);
+        StaminaData.removeStamina(player, StoneyCore.getConfig().combatOptions.onParryStaminaConstant() * WeightUtil.getCachedWeight(player));
+        return true;
+    }
+
+    @Unique
+    private static void performParryEffects(PlayerEntity player, LivingEntity attacker) {
+        Vec3d playerPos = player.getPos();
+        Vec3d attackerPos = attacker.getPos();
+        Vec3d knockbackDirection = playerPos.subtract(attackerPos).normalize();
+
+        attacker.takeKnockback(PARRY_KNOCKBACK_STRENGTH, knockbackDirection.x, knockbackDirection.z);
+
+        player.getWorld().playSound(
+                null, attacker.getX(), attacker.getY(), attacker.getZ(),
+                SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.PLAYERS, 1.0F, 1.5F
+        );
+    }
+
+    @Inject(method = "takeKnockback", at = @At("HEAD"), cancellable = true)
+    private void stoneycore$takeKnockback(double strength, double x, double z, CallbackInfo ci) {
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+        LivingEntityAccessor accessor = (LivingEntityAccessor) livingEntity;
+
+        if (stoneycore$currentDamageSource == null) return;
+
+        Entity attacker = stoneycore$currentDamageSource.getAttacker();
+        ItemStack weaponStack = getWeaponStack(attacker);
+
+        if (!(attacker instanceof LivingEntity && !weaponStack.isEmpty() && WeaponDefinitionsLoader.isMelee(weaponStack))) {
+            return;
+        }
+
+        float damageAmount = accessor.getLastDamageTaken();
+
+        strength *= (damageAmount / 15.0);
+
+        strength = Math.max(strength, 0.1);
+
+        if (EntityDamageUtil.damageType == SCDamageCalculator.DamageType.BLUDGEONING) {
+            strength += 0.3f;
+        }
+
+        strength += WeaponDefinitionsLoader.getData(weaponStack).melee().bonusKnockback();
+
+        strength *= (double)1.0F - livingEntity.getAttributeValue(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE);
+        if (!(strength <= (double)0.0F)) {
+            livingEntity.velocityDirty = true;
+            Vec3d vec3d = livingEntity.getVelocity();
+            Vec3d vec3d2 = (new Vec3d(x, 0.0F, z)).normalize().multiply(strength);
+            livingEntity.setVelocity(vec3d.x / (double)2.0F - vec3d2.x,
+                    livingEntity.isOnGround() ? vec3d.y / (double)2.0F + strength : vec3d.y,
+                    vec3d.z / (double)2.0F - vec3d2.z);
+        }
+
+        ci.cancel();
+    }
+
+    @Unique
+    private ItemStack getWeaponStack(Entity attacker) {
+        AttackHand hand = null;
+        if (attacker instanceof PlayerEntity player) {
+            if (player instanceof PlayerAttackProperties props) {
+                hand = PlayerAttackHelper.getCurrentAttack(player, props.getComboCount());
+            }
+        }
+        ItemStack itemStack = ItemStack.EMPTY;
+        if (hand != null) itemStack = hand.itemStack();
+        return itemStack;
     }
 
     @Inject(method = "applyArmorToDamage", at = @At("HEAD"), cancellable = true)

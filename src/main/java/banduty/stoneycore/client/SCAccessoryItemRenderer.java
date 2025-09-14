@@ -24,6 +24,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 
 import java.util.List;
+import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
 public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
@@ -32,20 +33,23 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
     @Override
     public <M extends LivingEntity> void render(ItemStack stack, SlotReference reference, MatrixStack matrices, EntityModel<M> model, VertexConsumerProvider multiBufferSource, int light, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!(stack.getItem() instanceof SCAccessoryItem scAccessoryItem) || reference.entity().isDead()) return;
-        BipedEntityModel<LivingEntity> accessoryItemModel = scAccessoryItem.getModel(stack);
-        if (stack.getNbt() != null && stack.getNbt().getBoolean("visor_open")) accessoryItemModel = scAccessoryItem.openVisorModel(stack);
-        if (model instanceof BipedEntityModel bipedEntityModel) bipedEntityModel.copyBipedStateTo(accessoryItemModel);
+        Optional<BipedEntityModel<LivingEntity>> optionalModel = scAccessoryItem.getModels(stack).base();
+        if (stack.getNbt() != null && stack.getNbt().getBoolean("visor_open")) optionalModel = scAccessoryItem.getModels(stack).visorOpen();
+        if (optionalModel.isEmpty()) return;
+        BipedEntityModel<LivingEntity> accessoryModel = optionalModel.get();
 
-        if (scAccessoryItem.hasCustomAngles(stack)) accessoryItemModel.setAngles(reference.entity(), limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+        if (model instanceof BipedEntityModel bipedEntityModel) bipedEntityModel.copyBipedStateTo(accessoryModel);
+
+        if (scAccessoryItem.getRenderSettings(stack).customAngles()) accessoryModel.setAngles(reference.entity(), limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 
         VertexConsumer baseConsumer = multiBufferSource.getBuffer(RenderLayer.getArmorCutoutNoCull(scAccessoryItem.getTexturePath(stack)));
         float[] color = DyeUtil.getFloatDyeColor(stack);
         if (stack.isIn(SCTags.BANNER_COMPATIBLE.getTag()))
             color = PatternHelper.getBannerDyeColor(stack);
 
-        accessoryItemModel.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
-        renderOverlayAndAdditions(reference.entity(), stack, matrices, multiBufferSource, light, accessoryItemModel);
-        if (stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) renderBannerPatterns(stack, matrices, multiBufferSource, light, accessoryItemModel);
+        accessoryModel.render(matrices, baseConsumer, light, OverlayTexture.DEFAULT_UV, color[0], color[1], color[2], 1.0F);
+        renderOverlayAndAdditions(reference.entity(), stack, matrices, multiBufferSource, light, accessoryModel);
+        if (stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) renderBannerPatterns(stack, matrices, multiBufferSource, light, accessoryModel);
     }
 
     private void renderOverlayAndAdditions(LivingEntity entity, ItemStack stack, MatrixStack matrices,

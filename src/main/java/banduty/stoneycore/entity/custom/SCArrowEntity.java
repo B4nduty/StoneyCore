@@ -17,7 +17,6 @@ import net.minecraft.world.World;
 
 public abstract class SCArrowEntity extends PersistentProjectileEntity {
     private SCDamageCalculator.DamageType damageType;
-    private float damage;
 
     public SCArrowEntity(EntityType<? extends PersistentProjectileEntity> type, World world) {
         super(type, world);
@@ -25,14 +24,6 @@ public abstract class SCArrowEntity extends PersistentProjectileEntity {
 
     public SCArrowEntity(EntityType<? extends SCArrowEntity> scArrow, LivingEntity shooter, World world) {
         super(scArrow, shooter, world);
-    }
-
-    public void setDamageAmount(float damage) {
-        this.damage = damage;
-    }
-
-    public float getDamageAmount() {
-        return this.damage;
     }
 
     public void setDamageType(SCDamageCalculator.DamageType damageType) {
@@ -59,9 +50,10 @@ public abstract class SCArrowEntity extends PersistentProjectileEntity {
                 return;
             }
             if (DeflectChanceHelper.shouldDeflect(livingEntity, this.asItemStack())) {
-                setVelocity(getVelocity().multiply(0.9));
-                setDamage(getDamage() * 0.9);
-                if (getDamage() <= 1) discard();
+                this.setVelocity(this.getVelocity().multiply(0.5).multiply(-1));
+                this.setDamage(this.getDamage() * 0.5);
+                this.setYaw(this.getYaw() + 180);
+                if (this.getDamage() <= 1) this.discard();
                 return;
             }
         }
@@ -105,12 +97,11 @@ public abstract class SCArrowEntity extends PersistentProjectileEntity {
         this.prevYaw += 180.0F;
     }
 
-    public boolean scHitEntity(LivingEntity target, ItemStack stack, float damage) {
+    public boolean scHitEntity(LivingEntity target, ItemStack stack, double damage) {
         if (this.getWorld().isClient()) return false;
-        if (!(this.getOwner() instanceof LivingEntity livingEntity)) return false;
 
         damage = SCDamageCalculator.getSCDamage(target, damage, getDamageType());
-        SCDamageCalculator.applyDamage(target, livingEntity, stack, damage);
+        SCDamageCalculator.applyDamage(target, this, stack, damage);
         if (this.isOnFire()) target.setOnFireFor(5);
         return true;
     }

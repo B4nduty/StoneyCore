@@ -19,7 +19,7 @@ public class DeflectChanceHelper {
     public static boolean shouldDeflect(LivingEntity livingEntity, ItemStack itemStack) {
         double deflectProbability = calculateDeflectProbability(livingEntity, itemStack);
         double random2 = random.nextDouble();
-        return random2 <= deflectProbability;
+        return deflectProbability > random2;
     }
 
     private static double calculateDeflectProbability(LivingEntity livingEntity, ItemStack itemStack) {

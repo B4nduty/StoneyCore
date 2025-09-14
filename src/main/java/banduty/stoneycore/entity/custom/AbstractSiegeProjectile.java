@@ -39,8 +39,8 @@ public abstract class AbstractSiegeProjectile extends PersistentProjectileEntity
         super.onEntityHit(entityHitResult);
         if (entityHitResult.getEntity().getWorld().isClient()) return;
         if (entityHitResult.getEntity() instanceof LivingEntity target) {
-            float damage = SCDamageCalculator.getSCDamage(target, (float) this.getDamage(), this.damageType);
-            if (this.getOwner() instanceof AbstractSiegeEntity abstractSiegeEntity) SCDamageCalculator.applyDamage(target, (LivingEntity) abstractSiegeEntity.getOwner(), ItemStack.EMPTY, damage);
+            double damage = SCDamageCalculator.getSCDamage(target, (float) this.getDamage(), this.damageType);
+            if (this.getOwner() instanceof AbstractSiegeEntity abstractSiegeEntity) SCDamageCalculator.applyDamage(target, abstractSiegeEntity.getOwner(), ItemStack.EMPTY, damage);
         }
         setVelocity(getVelocity().multiply(-0.9));
         setDamage(getDamage() * 0.9);

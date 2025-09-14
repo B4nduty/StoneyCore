@@ -24,7 +24,7 @@ import net.minecraft.world.event.GameEvent;
 
 public class SCBulletEntity extends PersistentProjectileEntity {
     private SCDamageCalculator.DamageType damageType;
-    private float damage;
+    private double damage;
 
     public SCBulletEntity(EntityType<? extends PersistentProjectileEntity> entityEntityType, World world) {
         super(entityEntityType, world);

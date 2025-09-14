@@ -4,16 +4,18 @@ import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class SCDamageCalculator {
-    public static float getSCDamage(LivingEntity livingEntity, float initialDamage, DamageType damageType) {
+    public static double getSCDamage(LivingEntity livingEntity, double initialDamage, DamageType damageType) {
         for (ItemStack armorStack : livingEntity.getArmorItems()) {
             if (ArmorDefinitionsLoader.containsItem(armorStack.getItem())) {
-                float resistance = (float) getResistance(armorStack.getItem(), damageType);
+                double resistance = getResistance(armorStack.getItem(), damageType);
                 initialDamage *= Math.max(1 - resistance, 0);
             }
         }
@@ -32,15 +34,16 @@ public class SCDamageCalculator {
         };
     }
 
-    public static void applyDamage(LivingEntity target, LivingEntity attacker, ItemStack stack, float damage) {
+    public static void applyDamage(LivingEntity target, Entity attacker, ItemStack stack, double damage) {
         if (attacker == null) return;
         float enchantmentBonusDamage = EnchantmentHelper.getAttackDamage(stack, target.getGroup());
         damage += enchantmentBonusDamage;
         if (stack.isIn(SCTags.WEAPONS_IGNORES_ARMOR.getTag()) && target.getHealth() - damage  > 0) {
-            target.setHealth(target.getHealth() - damage);
+            target.setHealth((float) (target.getHealth() - damage));
         } else {
-            if (attacker instanceof PlayerEntity player) target.damage(attacker.getWorld().getDamageSources().playerAttack(player), damage - 1);
-            else target.damage(attacker.getWorld().getDamageSources().mobAttack(attacker), damage - 1);
+            if (attacker instanceof PlayerEntity player) target.damage(attacker.getWorld().getDamageSources().playerAttack(player), (float) damage);
+            else if (attacker instanceof LivingEntity livingEntity) target.damage(attacker.getWorld().getDamageSources().mobAttack(livingEntity), (float) damage);
+            else if (attacker instanceof PersistentProjectileEntity persistentProjectileEntity) target.damage(attacker.getWorld().getDamageSources().arrow(persistentProjectileEntity, persistentProjectileEntity.getOwner()), (float) damage);
         }
     }
 
