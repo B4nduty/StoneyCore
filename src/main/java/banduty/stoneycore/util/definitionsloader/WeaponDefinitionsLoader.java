@@ -2,7 +2,10 @@ package banduty.stoneycore.util.definitionsloader;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.util.SCDamageCalculator;
-import com.google.gson.*;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -22,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListener {
-    private static final Gson GSON = new Gson();
     private static final Map<Identifier, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
     private static final Identifier RELOAD_LISTENER_ID = new Identifier(StoneyCore.MOD_ID, "weapon_definitions_loader");
 
@@ -42,130 +44,37 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
 
             resources.forEach((id, resource) -> {
                 try (InputStream stream = resource.getInputStream()) {
-                    JsonObject json = GSON.fromJson(new InputStreamReader(stream), JsonObject.class);
+                    com.google.gson.JsonElement element = com.google.gson.JsonParser.parseReader(new InputStreamReader(stream));
 
-                    boolean hasMelee = json.has("melee");
-                    boolean hasRanged = json.has("ranged");
-                    boolean hasAmmo = json.has("ammo");
+                    DataResult<WeaponDefinition> result = WeaponDefinition.CODEC.parse(JsonOps.INSTANCE, element);
 
-                    EnumSet<Usage> usage = EnumSet.noneOf(Usage.class);
-                    if (hasMelee) usage.add(Usage.MELEE);
-                    if (hasRanged) usage.add(Usage.RANGED);
-                    if (hasAmmo) usage.add(Usage.AMMO);
+                    result.resultOrPartial(StoneyCore.LOGGER::error)
+                            .ifPresent(weaponDef -> {
+                                Identifier weaponId = Identifier.of(
+                                        id.getNamespace(),
+                                        id.getPath().substring("definitions/weapon/".length(), id.getPath().length() - 5)
+                                );
 
-                    // --- MELEE ---
-                    MeleeData meleeData = null;
-                    if (hasMelee) {
-                        JsonObject meleeJson = json.getAsJsonObject("melee");
+                                EnumSet<Usage> usage = EnumSet.noneOf(Usage.class);
+                                MeleeData meleeData = null;
+                                RangedData rangedData = null;
+                                AmmoData ammoData = null;
 
-                        Map<String, Float> damage = new HashMap<>();
-                        if (meleeJson.has("damage")) {
-                            for (Map.Entry<String, JsonElement> e : meleeJson.getAsJsonObject("damage").entrySet()) {
-                                damage.put(e.getKey().toUpperCase(), e.getValue().getAsFloat());
-                            }
-                        }
-
-                        Map<String, Double> radius = new HashMap<>();
-                        if (meleeJson.has("radius")) {
-                            for (Map.Entry<String, JsonElement> e : meleeJson.getAsJsonObject("radius").entrySet()) {
-                                radius.put(e.getKey(), e.getValue().getAsDouble());
-                            }
-                        }
-
-                        int[] piercingAnimation = new int[0];
-                        if (meleeJson.has("piercingAnimation")) {
-                            JsonElement el = meleeJson.get("piercingAnimation");
-                            if (el.isJsonArray()) {
-                                JsonArray array = el.getAsJsonArray();
-                                piercingAnimation = new int[array.size()];
-                                for (int i = 0; i < array.size(); i++) piercingAnimation[i] = array.get(i).getAsInt();
-                            } else if (el.isJsonPrimitive()) {
-                                piercingAnimation = new int[]{el.getAsInt()};
-                            }
-                        }
-
-                        int animation = meleeJson.has("animation") ? meleeJson.get("animation").getAsInt() : 0;
-
-                        SCDamageCalculator.DamageType onlyDamageType = null;
-                        if (meleeJson.has("onlyDamageType"))
-                            onlyDamageType = SCDamageCalculator.DamageType.valueOf(meleeJson.get("onlyDamageType").getAsString().toUpperCase());
-
-                        double deflectChance = meleeJson.has("deflectChance") ? meleeJson.get("deflectChance").getAsDouble() : 0;
-
-                        double bonusKnockback = meleeJson.has("bonusKnockback") ? meleeJson.get("bonusKnockback").getAsDouble() : 0;
-
-                        meleeData = new MeleeData(damage, radius, piercingAnimation, animation, onlyDamageType, deflectChance, bonusKnockback);
-                    }
-
-                    // --- RANGED ---
-                    RangedData rangedData = null;
-                    if (hasRanged) {
-                        JsonObject rangedJson = json.getAsJsonObject("ranged");
-
-                        float baseDamage = rangedJson.has("baseDamage") ? rangedJson.get("baseDamage").getAsFloat() : 0f;
-                        SCDamageCalculator.DamageType damageType = rangedJson.has("damageType")
-                                ? SCDamageCalculator.DamageType.valueOf(rangedJson.get("damageType").getAsString().toUpperCase())
-                                : null;
-                        int maxUseTime = rangedJson.has("maxUseTime") ? rangedJson.get("maxUseTime").getAsInt() : 0;
-                        float speed = rangedJson.has("speed") ? rangedJson.get("speed").getAsFloat() : 0f;
-                        float divergence = rangedJson.has("divergence") ? rangedJson.get("divergence").getAsFloat() : 0f;
-                        int rechargeTime = rangedJson.has("rechargeTime") ? rangedJson.get("rechargeTime").getAsInt() : 0;
-                        boolean needsFlintAndSteel = rangedJson.has("needsFlintAndSteel") && rangedJson.get("needsFlintAndSteel").getAsBoolean();
-                        UseAction useAction = rangedJson.has("useAction")
-                                ? UseAction.valueOf(rangedJson.get("useAction").getAsString().toUpperCase())
-                                : UseAction.NONE;
-
-                        Map<String, AmmoRequirementData> ammoRequirement = new HashMap<>();
-                        if (rangedJson.has("ammoRequirement")) {
-                            JsonObject ammoJson = rangedJson.getAsJsonObject("ammoRequirement");
-                            for (Map.Entry<String, JsonElement> entry : ammoJson.entrySet()) {
-                                JsonArray arr = entry.getValue().getAsJsonArray();
-
-                                Set<String> itemIds = new HashSet<>();
-                                int amount = 1;
-
-                                for (int i = 0; i < arr.size(); i++) {
-                                    if (arr.get(i).isJsonPrimitive()) {
-                                        if (arr.get(i).getAsJsonPrimitive().isString()) {
-                                            itemIds.add(arr.get(i).getAsString());
-                                        } else if (arr.get(i).getAsJsonPrimitive().isNumber()) {
-                                            amount = arr.get(i).getAsInt();
-                                        }
-                                    }
+                                if (weaponDef.melee != null) {
+                                    usage.add(Usage.MELEE);
+                                    meleeData = weaponDef.melee;
+                                }
+                                if (weaponDef.ranged != null) {
+                                    usage.add(Usage.RANGED);
+                                    rangedData = weaponDef.ranged;
+                                }
+                                if (weaponDef.ammo != null) {
+                                    usage.add(Usage.AMMO);
+                                    ammoData = weaponDef.ammo;
                                 }
 
-                                ammoRequirement.put(entry.getKey(), new AmmoRequirementData(itemIds, amount));
-                            }
-                        }
-
-                        SoundEvent soundEvent = null;
-                        if (rangedJson.has("soundEvent")) {
-                            String soundEventId = rangedJson.get("soundEvent").getAsString();
-                            soundEvent = Registries.SOUND_EVENT.get(new Identifier(soundEventId));
-                        }
-
-                        rangedData = new RangedData(baseDamage, damageType, maxUseTime, speed, divergence, rechargeTime,
-                                needsFlintAndSteel, useAction, ammoRequirement, soundEvent);
-                    }
-
-                    // --- AMMO ---
-                    AmmoData ammoData = null;
-                    if (hasAmmo) {
-                        JsonObject ammoJson = json.getAsJsonObject("ammo");
-
-                        double deflectChance = ammoJson.has("deflectChance")
-                                ? ammoJson.get("deflectChance").getAsDouble()
-                                : 0.0;
-
-                        ammoData = new AmmoData(deflectChance);
-                    }
-
-                    // --- SAVE DEFINITION ---
-                    Identifier attributeId = Identifier.of(
-                            id.getNamespace(),
-                            id.getPath().substring("definitions/weapon/".length(), id.getPath().length() - 5)
-                    );
-                    DEFINITIONS.put(attributeId, new DefinitionData(usage, meleeData, rangedData, ammoData));
+                                DEFINITIONS.put(weaponId, new DefinitionData(usage, meleeData, rangedData, ammoData));
+                            });
 
                 } catch (Exception e) {
                     StoneyCore.LOGGER.error("Failed to load definitions data from {}: {}", id, e.getMessage(), e);
@@ -223,15 +132,99 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
         return data.ammo() != null && data.usage().contains(Usage.AMMO);
     }
 
+    public record WeaponDefinition(MeleeData melee, RangedData ranged, AmmoData ammo) {
+        public static final Codec<WeaponDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                MeleeData.CODEC.optionalFieldOf("melee").forGetter(wd -> Optional.ofNullable(wd.melee)),
+                RangedData.CODEC.optionalFieldOf("ranged").forGetter(wd -> Optional.ofNullable(wd.ranged)),
+                AmmoData.CODEC.optionalFieldOf("ammo").forGetter(wd -> Optional.ofNullable(wd.ammo))
+        ).apply(instance, (melee, ranged, ammo) -> new WeaponDefinition(melee.orElse(null), ranged.orElse(null), ammo.orElse(null))));
+    }
+
     public record DefinitionData(EnumSet<Usage> usage, MeleeData melee, RangedData ranged, AmmoData ammo) {}
-    public record MeleeData(Map<String, Float> damage, Map<String, Double> radius, int[] piercingAnimation,
-                            int animation, SCDamageCalculator.DamageType onlyDamageType, double deflectChance,
-                            double bonusKnockback) {}
-    public record RangedData(float baseDamage, SCDamageCalculator.DamageType damageType, int maxUseTime, float speed,
-                             float divergence, int rechargeTime, boolean needsFlintAndSteel, UseAction useAction,
-                             Map<String, AmmoRequirementData> ammoRequirement, SoundEvent soundEvent) {}
-    public record AmmoData(double deflectChance) {}
-    public record AmmoRequirementData(Set<String> itemIds, int amount) {}
+
+    public record MeleeData(
+            Map<String, Float> damage,
+            Map<String, Double> radius,
+            int[] piercingAnimation,
+            int animation,
+            SCDamageCalculator.DamageType onlyDamageType,
+            double deflectChance,
+            double bonusKnockback
+    ) {
+        public static final Codec<MeleeData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.unboundedMap(Codec.STRING, Codec.FLOAT).xmap(
+                        map -> {
+                            Map<String, Float> upperCaseMap = new HashMap<>();
+                            for (Map.Entry<String, Float> entry : map.entrySet()) {
+                                upperCaseMap.put(entry.getKey().toUpperCase(), entry.getValue());
+                            }
+                            return upperCaseMap;
+                        },
+                        map -> map
+                ).optionalFieldOf("damage", Map.of()).forGetter(MeleeData::damage),
+                Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("radius", Map.of()).forGetter(MeleeData::radius),
+                Codec.INT.listOf().xmap(
+                        list -> list.stream().mapToInt(i -> i).toArray(),
+                        array -> Arrays.stream(array).boxed().toList()
+                ).optionalFieldOf("piercingAnimation", new int[0]).forGetter(MeleeData::piercingAnimation),
+                Codec.INT.optionalFieldOf("animation", 0).forGetter(MeleeData::animation),
+                SCDamageCalculator.DamageType.CODEC.optionalFieldOf("onlyDamageType").forGetter(md -> Optional.ofNullable(md.onlyDamageType)),
+                Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(MeleeData::deflectChance),
+                Codec.DOUBLE.optionalFieldOf("bonusKnockback", 0.0).forGetter(MeleeData::bonusKnockback)
+        ).apply(instance, (damage, radius, piercingAnimation, animation, onlyDamageType, deflectChance, bonusKnockback) ->
+                new MeleeData(damage, radius, piercingAnimation, animation, onlyDamageType.orElse(null), deflectChance, bonusKnockback)));
+    }
+
+    public record RangedData(
+            float baseDamage,
+            SCDamageCalculator.DamageType damageType,
+            int maxUseTime,
+            float speed,
+            float divergence,
+            int rechargeTime,
+            boolean needsFlintAndSteel,
+            UseAction useAction,
+            Map<String, AmmoRequirementData> ammoRequirement,
+            SoundEvent soundEvent
+    ) {
+
+        private static final Codec<UseAction> USE_ACTION_CODEC = Codec.STRING.xmap(
+                str -> UseAction.valueOf(str.toUpperCase()),
+                UseAction::name
+        );
+
+        private static final Codec<SoundEvent> SOUND_EVENT_CODEC = Identifier.CODEC.xmap(
+                Registries.SOUND_EVENT::get,
+                Registries.SOUND_EVENT::getId
+        );
+
+        public static final Codec<RangedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.FLOAT.optionalFieldOf("baseDamage", 0f).forGetter(RangedData::baseDamage),
+                SCDamageCalculator.DamageType.CODEC.optionalFieldOf("damageType").forGetter(rd -> Optional.ofNullable(rd.damageType)),
+                Codec.INT.optionalFieldOf("maxUseTime", 0).forGetter(RangedData::maxUseTime),
+                Codec.FLOAT.optionalFieldOf("speed", 0f).forGetter(RangedData::speed),
+                Codec.FLOAT.optionalFieldOf("divergence", 0f).forGetter(RangedData::divergence),
+                Codec.INT.optionalFieldOf("rechargeTime", 0).forGetter(RangedData::rechargeTime),
+                Codec.BOOL.optionalFieldOf("needsFlintAndSteel", false).forGetter(RangedData::needsFlintAndSteel),
+                USE_ACTION_CODEC.optionalFieldOf("useAction", UseAction.NONE).forGetter(RangedData::useAction),
+                Codec.unboundedMap(Codec.STRING, AmmoRequirementData.CODEC).optionalFieldOf("ammoRequirement", Map.of()).forGetter(RangedData::ammoRequirement),
+                SOUND_EVENT_CODEC.optionalFieldOf("soundEvent").forGetter(rd -> Optional.ofNullable(rd.soundEvent))
+        ).apply(instance, (baseDamage, damageType, maxUseTime, speed, divergence, rechargeTime, needsFlintAndSteel, useAction, ammoRequirement, soundEvent) ->
+                new RangedData(baseDamage, damageType.orElse(null), maxUseTime, speed, divergence, rechargeTime, needsFlintAndSteel, useAction, ammoRequirement, soundEvent.orElse(null))));
+    }
+
+    public record AmmoData(double deflectChance) {
+        public static final Codec<AmmoData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(AmmoData::deflectChance)
+        ).apply(instance, AmmoData::new));
+    }
+
+    public record AmmoRequirementData(HashSet<String> itemIds, int amount) {
+        public static final Codec<AmmoRequirementData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.STRING.listOf().xmap(HashSet::new, ArrayList::new).fieldOf("items").forGetter(AmmoRequirementData::itemIds),
+                Codec.INT.fieldOf("amount").forGetter(AmmoRequirementData::amount)
+        ).apply(instance, AmmoRequirementData::new));
+    }
 
     public enum Usage {
         MELEE, RANGED, AMMO

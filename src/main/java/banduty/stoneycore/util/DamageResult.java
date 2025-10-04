@@ -1,6 +1,6 @@
 package banduty.stoneycore.util;
 
-import banduty.stoneycore.util.itemdata.SCTags;
+import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import net.bettercombat.logic.PlayerAttackProperties;
 import net.minecraft.enchantment.EnchantmentHelper;

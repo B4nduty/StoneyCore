@@ -8,18 +8,21 @@ import banduty.stoneycore.util.DeflectChanceHelper;
 import banduty.stoneycore.util.EntityDamageUtil;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.WeightUtil;
+import banduty.stoneycore.util.data.itemdata.SCTags;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
-import banduty.stoneycore.util.itemdata.SCTags;
-import banduty.stoneycore.util.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.playerdata.SCAttributes;
-import banduty.stoneycore.util.playerdata.StaminaData;
+import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.playerdata.PDKeys;
+import banduty.stoneycore.util.data.playerdata.SCAttributes;
+import banduty.stoneycore.util.data.playerdata.StaminaData;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.bettercombat.api.AttackHand;
 import net.bettercombat.logic.PlayerAttackHelper;
 import net.bettercombat.logic.PlayerAttackProperties;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -35,20 +38,25 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
 
 import java.util.Optional;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements IEntityDataSaver {
+    @Shadow
+    protected abstract void fall(double heightDifference, boolean onGround, BlockState state, BlockPos landedPosition);
+
     @Unique
     private NbtCompound persistentData;
 
@@ -123,10 +131,17 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
     @Inject(method = "damage", at = @At("HEAD"))
     private void stoneycore$injectDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (this.getWorld().isClient()) return;
         if (source.getAttacker() instanceof LivingEntity attacker) {
             if (attacker.getMainHandStack().isIn(SCTags.WEAPONS_BYPASS_BLOCK.getTag())) {
                 this.blockShield = false;
             }
+        }
+
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+
+        if (livingEntity.getActiveItem().isIn(SCTags.WEAPONS_SHIELD.getTag()) && source.getSource() instanceof PersistentProjectileEntity) {
+            this.blockShield = false;
         }
     }
 
@@ -145,6 +160,10 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         if (!(livingEntity.getWorld() instanceof ServerWorld serverWorld)) return;
         if (source.getAttacker() == null) return;
 
+        if (handleParry(livingEntity, source)) {
+            cir.cancel();
+        }
+
         ItemStack weaponStack = getWeaponStack(source.getAttacker());
 
         if (DeflectChanceHelper.shouldDeflect(livingEntity, weaponStack)) {
@@ -161,10 +180,6 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             cir.cancel();
         }
 
-        if (source.getAttacker() instanceof LivingEntity attacker && handleParry(livingEntity, attacker)) {
-            cir.cancel();
-        }
-
         if (livingEntity instanceof ServerPlayerEntity playerEntity && StaminaData.isStaminaBlocked((IEntityDataSaver) playerEntity) &&
                 StoneyCore.getConfig().combatOptions.getRealisticCombat()) {
             ItemStack handStack = playerEntity.getMainHandStack();
@@ -176,7 +191,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     }
 
     @Unique
-    private static boolean handleParry(LivingEntity target, LivingEntity attacker) {
+    private static boolean handleParry(LivingEntity target, DamageSource source) {
         if (!StoneyCore.getConfig().combatOptions.getParry() || !(target instanceof PlayerEntity player)) {
             return false;
         }
@@ -185,33 +200,34 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             return false;
         }
 
-        NbtCompound persistentData = ((IEntityDataSaver) player).stoneycore$getPersistentData();
-        if (!persistentData.contains("BlockStartTick")) {
-            return false;
-        }
+        if (source.getSource() instanceof PersistentProjectileEntity) return false;
 
-        int blockStartTick = persistentData.getInt("BlockStartTick");
-        int currentTick = (int) player.getWorld().getTime();
+        long blockStartTick = NBTDataHelper.get((IEntityDataSaver) player, PDKeys.BLOCK_START_TICK, 0L);
+        long currentTick = player.getWorld().getTime();
 
         if (currentTick - blockStartTick > PARRY_WINDOW_TICKS) {
             return false;
         }
 
-        performParryEffects(player, attacker);
+        if (source.getSource() == null) return false;
+
+        performParryEffects(player, source.getSource());
         StaminaData.removeStamina(player, StoneyCore.getConfig().combatOptions.onParryStaminaConstant() * WeightUtil.getCachedWeight(player));
         return true;
     }
 
     @Unique
-    private static void performParryEffects(PlayerEntity player, LivingEntity attacker) {
-        Vec3d playerPos = player.getPos();
-        Vec3d attackerPos = attacker.getPos();
-        Vec3d knockbackDirection = playerPos.subtract(attackerPos).normalize();
+    private static void performParryEffects(PlayerEntity player, Entity source) {
+        if (source instanceof LivingEntity livingEntity) {
+            Vec3d playerPos = player.getPos();
+            Vec3d attackerPos = source.getPos();
+            Vec3d knockbackDirection = playerPos.subtract(attackerPos).normalize();
 
-        attacker.takeKnockback(PARRY_KNOCKBACK_STRENGTH, knockbackDirection.x, knockbackDirection.z);
+            livingEntity.takeKnockback(PARRY_KNOCKBACK_STRENGTH, knockbackDirection.x, knockbackDirection.z);
+        }
 
         player.getWorld().playSound(
-                null, attacker.getX(), attacker.getY(), attacker.getZ(),
+                null, source.getX(), source.getY(), source.getZ(),
                 SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.PLAYERS, 1.0F, 1.5F
         );
     }
@@ -337,9 +353,13 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         }
     }
 
-    @Redirect(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;blockedByShield(Lnet/minecraft/entity/damage/DamageSource;)Z"))
-    private boolean stoneycore$redirectBlockedByShield(LivingEntity instance, DamageSource source) {
-        return blockShield && instance.blockedByShield(source);
+    @Inject(method = "blockedByShield", at = @At("HEAD"), cancellable = true)
+    private void stoneycore$blockedByShield(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
+        if (this.getWorld().isClient()) return;
+        if (!blockShield) {
+            cir.setReturnValue(false);
+            cir.cancel();
+        }
     }
 
     @Unique

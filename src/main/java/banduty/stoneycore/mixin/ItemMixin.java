@@ -1,16 +1,19 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.itemdata.SCTags;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
-import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.patterns.PatternHelper;
-import banduty.stoneycore.util.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.playerdata.StaminaData;
+import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.playerdata.StaminaData;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import banduty.stoneycore.util.weaponutil.TooltipClientSide;
+import io.wispforest.accessories.api.AccessoriesCapability;
+import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CropBlock;
@@ -31,6 +34,7 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -39,21 +43,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.IntFunction;
 
 import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
 
 @Mixin(Item.class)
-public class ItemMixin {
-
-    @Unique
-    private static final String NBT_BLUDGEONING_KEY = "bludgeoning";
+public abstract class ItemMixin {
+    @Shadow
+    public abstract UseAction getUseAction(ItemStack stack);
 
     @Inject(method = "getUseAction", at = @At("HEAD"), cancellable = true)
     public void stoneycore$getUseAction(ItemStack stack, CallbackInfoReturnable<UseAction> cir) {
         if (WeaponDefinitionsLoader.isMelee(stack)) {
-            cir.setReturnValue(stack.isIn(SCTags.WEAPONS_SHIELD.getTag()) ? UseAction.BLOCK : UseAction.NONE);
-        } else if (WeaponDefinitionsLoader.isRanged(stack)) {
-            cir.setReturnValue(WeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.BOW ? UseAction.BOW : UseAction.NONE);
+            boolean isShield = stack.isIn(SCTags.WEAPONS_SHIELD.getTag());
+            cir.setReturnValue(isShield ? UseAction.BLOCK : UseAction.NONE);
+            return;
+        }
+
+        if (WeaponDefinitionsLoader.isRanged(stack)) {
+            UseAction configured = WeaponDefinitionsLoader.getData(stack).ranged().useAction();
+            cir.setReturnValue(configured == UseAction.BOW ? UseAction.BOW : UseAction.NONE);
         }
     }
 
@@ -61,7 +71,10 @@ public class ItemMixin {
     public void stoneycore$getMaxUseTime(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
         if (WeaponDefinitionsLoader.isRanged(stack)) {
             cir.setReturnValue(WeaponDefinitionsLoader.getData(stack).ranged().maxUseTime());
-        } else if (WeaponDefinitionsLoader.isMelee(stack) && stack.isIn(SCTags.WEAPONS_SHIELD.getTag())) {
+            return;
+        }
+
+        if (WeaponDefinitionsLoader.isMelee(stack) && stack.isIn(SCTags.WEAPONS_SHIELD.getTag())) {
             cir.setReturnValue(72000);
         }
     }
@@ -70,22 +83,19 @@ public class ItemMixin {
     public void stoneycore$usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks, CallbackInfo ci) {
         if (user instanceof PlayerEntity playerEntity) {
             IEntityDataSaver dataSaver = (IEntityDataSaver) playerEntity;
-            boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
-
-            if (staminaBlocked) {
+            if (StaminaData.isStaminaBlocked(dataSaver)) {
                 playerEntity.clearActiveItem();
             }
         }
 
-        if (world.isClient
-                || !(user instanceof PlayerEntity player)
-                || !(WeaponDefinitionsLoader.isRanged(stack))
-                || SCRangeWeaponUtil.getAmmoRequirement(stack) != null) {
-            return;
-        }
+        if (world.isClient) return;
+        if (!(user instanceof PlayerEntity player)) return;
+        if (!WeaponDefinitionsLoader.isRanged(stack)) return;
+        if (SCRangeWeaponUtil.getAmmoRequirement(stack) != null) return;
 
         int useTime = WeaponDefinitionsLoader.getData(stack).ranged().maxUseTime() - remainingUseTicks;
-        if (WeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.CROSSBOW) {
+        UseAction useAction = WeaponDefinitionsLoader.getData(stack).ranged().useAction();
+        if (useAction == UseAction.CROSSBOW) {
             handleCrossbowCharging(world, stack, player, useTime);
         }
     }
@@ -106,14 +116,24 @@ public class ItemMixin {
     }
 
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
-    public void stoneycore$use(World world, PlayerEntity user, Hand hand,
-                                    CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
-
+    public void stoneycore$use(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         ItemStack stack = user.getStackInHand(hand);
 
-        if (hand == Hand.MAIN_HAND
-                && !user.getOffHandStack().isEmpty()
-                && WeaponDefinitionsLoader.isMelee(stack)) {
+        if ((getUseAction(stack) == UseAction.DRINK || getUseAction(stack) == UseAction.EAT)) {
+            Optional.ofNullable(AccessoriesCapability.getOptionally(user))
+                    .filter(Optional::isPresent)
+                    .ifPresent(o -> {
+                        for (SlotEntryReference equipped : AccessoriesCapability.get(user).getAllEquipped()) {
+                            ItemStack itemStack = equipped.stack();
+                            if (!NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false) && itemStack.isIn(SCTags.VISORED_HELMET.getTag())) {
+                                cir.setReturnValue(TypedActionResult.fail(stack));
+                                return;
+                            }
+                        }
+                    });
+        }
+
+        if (hand == Hand.MAIN_HAND && !user.getOffHandStack().isEmpty() && WeaponDefinitionsLoader.isMelee(stack)) {
             cir.setReturnValue(TypedActionResult.fail(stack));
             return;
         }
@@ -128,8 +148,8 @@ public class ItemMixin {
     }
 
     @Unique
-    private void handleWeaponUse(World world, PlayerEntity user, Hand hand, ItemStack stack,
-                                 CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
+    private void handleWeaponUse(World world, PlayerEntity user, Hand hand, ItemStack stack, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
+        // Toggle bludgeoning mode when sneaking and server-side
         if (!world.isClient && user.isSneaking() && isBludgeoningWeapon(stack.getItem())) {
             toggleBludgeoningMode(stack);
             cir.setReturnValue(TypedActionResult.success(stack));
@@ -137,9 +157,7 @@ public class ItemMixin {
         }
 
         IEntityDataSaver dataSaver = (IEntityDataSaver) user;
-        boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
-
-        if (staminaBlocked) {
+        if (StaminaData.isStaminaBlocked(dataSaver)) {
             user.clearActiveItem();
             cir.setReturnValue(TypedActionResult.fail(stack));
             return;
@@ -150,6 +168,7 @@ public class ItemMixin {
             cir.setReturnValue(TypedActionResult.consume(stack));
             return;
         }
+
         cir.setReturnValue(TypedActionResult.fail(stack));
     }
 
@@ -160,14 +179,12 @@ public class ItemMixin {
 
     @Unique
     private void toggleBludgeoningMode(ItemStack stack) {
-        if (stack.getNbt() == null) return;
-        stack.getNbt().putBoolean(NBT_BLUDGEONING_KEY,
-                !stack.getNbt().getBoolean(NBT_BLUDGEONING_KEY));
+        boolean current = NBTDataHelper.get(stack, INBTKeys.BLUDGEONING, false);
+        NBTDataHelper.set(stack, INBTKeys.BLUDGEONING, !current);
     }
 
     @Unique
-    private void handleRangeWeaponUse(World world, PlayerEntity user, Hand hand, ItemStack stack,
-                                      CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
+    private void handleRangeWeaponUse(World world, PlayerEntity user, Hand hand, ItemStack stack, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         if (world.isClient) return;
 
         if (SCRangeWeaponUtil.getAmmoRequirement(stack) != null) {
@@ -178,8 +195,7 @@ public class ItemMixin {
     }
 
     @Unique
-    private void handleAmmoBasedWeapon(World world, PlayerEntity user, Hand hand, ItemStack stack,
-                                       CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
+    private void handleAmmoBasedWeapon(World world, PlayerEntity user, Hand hand, ItemStack stack, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         SCRangeWeaponUtil.WeaponState weaponState = SCRangeWeaponUtil.getWeaponState(stack);
 
         if (!weaponState.isCharged()) {
@@ -188,7 +204,8 @@ public class ItemMixin {
         }
 
         ItemStack offHandStack = user.getOffHandStack();
-        if (WeaponDefinitionsLoader.getData(stack).ranged().needsFlintAndSteel() && offHandStack.getItem() != Items.FLINT_AND_STEEL && !user.isCreative()) {
+        boolean needsFAS = WeaponDefinitionsLoader.getData(stack).ranged().needsFlintAndSteel();
+        if (needsFAS && offHandStack.getItem() != Items.FLINT_AND_STEEL && !user.isCreative()) {
             cir.setReturnValue(TypedActionResult.fail(stack));
             return;
         }
@@ -198,7 +215,7 @@ public class ItemMixin {
         SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(
                 weaponState.isReloading(), false, true));
 
-        if (!user.getAbilities().creativeMode && WeaponDefinitionsLoader.getData(stack).ranged().needsFlintAndSteel() && user instanceof ServerPlayerEntity serverPlayer) {
+        if (!user.getAbilities().creativeMode && needsFAS && user instanceof ServerPlayerEntity serverPlayer) {
             offHandStack.damage(1, serverPlayer, p -> p.sendToolBreakStatus(hand));
         }
 
@@ -206,16 +223,15 @@ public class ItemMixin {
     }
 
     @Unique
-    private void handleProjectileWeapon(Hand hand, PlayerEntity user, ItemStack stack,
-                                        CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
+    private void handleProjectileWeapon(Hand hand, PlayerEntity user, ItemStack stack, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         boolean hasAmmo = SCRangeWeaponUtil.getArrowFromInventory(user).isPresent();
-
         if (!hasAmmo) {
             cir.setReturnValue(TypedActionResult.fail(stack));
             return;
         }
 
         user.setCurrentHand(hand);
+
         if (WeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.CROSSBOW) {
             cir.setReturnValue(SCRangeWeaponUtil.handleCrossbowUse(user.getWorld(), user, hand, stack));
         } else {
@@ -224,13 +240,10 @@ public class ItemMixin {
     }
 
     @Inject(method = "onStoppedUsing", at = @At("HEAD"))
-    public void stoneycore$onStoppedUsing(ItemStack stack, World world, LivingEntity user,
-                                               int remainingUseTicks, CallbackInfo ci) {
-        if (world.isClient
-                || !(user instanceof PlayerEntity player)
-                || !(WeaponDefinitionsLoader.isRanged(stack))) {
-            return;
-        }
+    public void stoneycore$onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
+        if (world.isClient) return;
+        if (!(user instanceof PlayerEntity player)) return;
+        if (!WeaponDefinitionsLoader.isRanged(stack)) return;
 
         int useTime = WeaponDefinitionsLoader.getData(stack).ranged().maxUseTime() - remainingUseTicks;
         SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack ->
@@ -239,18 +252,17 @@ public class ItemMixin {
     }
 
     @Unique
-    private void handleWeaponRelease(ItemStack stack, World world, PlayerEntity player,
-                                     int useTime, ItemStack arrowStack) {
-        if (WeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.BOW) {
+    private void handleWeaponRelease(ItemStack stack, World world, PlayerEntity player, int useTime, ItemStack arrowStack) {
+        UseAction useAction = WeaponDefinitionsLoader.getData(stack).ranged().useAction();
+        if (useAction == UseAction.BOW) {
             handleBowRelease(world, stack, player, arrowStack, useTime);
-        } else if (WeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.CROSSBOW) {
+        } else if (useAction == UseAction.CROSSBOW) {
             handleCrossbowRelease(stack, useTime);
         }
     }
 
     @Unique
-    private void handleBowRelease(World world, ItemStack stack,
-                                  PlayerEntity player, ItemStack arrowStack, int useTime) {
+    private void handleBowRelease(World world, ItemStack stack, PlayerEntity player, ItemStack arrowStack, int useTime) {
         float pullProgress = SCRangeWeaponUtil.getBowPullProgress(useTime);
         if (pullProgress > 0.1f) {
             SCRangeWeaponUtil.shootArrow(world, stack, player, arrowStack, pullProgress);
@@ -268,20 +280,20 @@ public class ItemMixin {
     }
 
     @Inject(method = "appendTooltip", at = @At("HEAD"))
-    public void stoneycore$appendTooltip(ItemStack stack, World world, List<Text> tooltip,
-                                              TooltipContext context, CallbackInfo ci) {
+    public void stoneycore$appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context, CallbackInfo ci) {
         if (world == null) return;
+
         Item item = stack.getItem();
         if (WeaponDefinitionsLoader.isMelee(stack)) {
-            double slashingDamage = getDamageValues(SCDamageCalculator.DamageType.SLASHING, item);
-            double piercingDamage = getDamageValues(SCDamageCalculator.DamageType.PIERCING, item);
-            double bludgeoningDamage = getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, item);
+            double slashing = getDamageValues(SCDamageCalculator.DamageType.SLASHING, item);
+            double piercing = getDamageValues(SCDamageCalculator.DamageType.PIERCING, item);
+            double bludgeoning = getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, item);
 
-            if (slashingDamage > 0 && bludgeoningDamage > 0) {
+            if (slashing > 0 && bludgeoning > 0) {
                 tooltip.add(Text.translatable("text.tooltip.stoneycore.shift-right_click-bludgeoning"));
             }
 
-            if (slashingDamage == 0 && bludgeoningDamage > 0 && piercingDamage > 0) {
+            if (slashing == 0 && bludgeoning > 0 && piercing > 0) {
                 tooltip.add(Text.translatable("text.tooltip.stoneycore.shift-right_click-bludgeoning-piercing"));
             }
 
@@ -289,9 +301,9 @@ public class ItemMixin {
                 tooltip.add(Text.translatable("text.tooltip.stoneycore.right_click-replant"));
             }
 
-            if (slashingDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.slashingDamage", slashingDamage).formatted(Formatting.GREEN));
-            if (bludgeoningDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.bludgeoningDamage", bludgeoningDamage).formatted(Formatting.GREEN));
-            if (piercingDamage != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.piercingDamage", piercingDamage).formatted(Formatting.GREEN));
+            if (slashing != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.slashingDamage", slashing).formatted(Formatting.GREEN));
+            if (bludgeoning != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.bludgeoningDamage", bludgeoning).formatted(Formatting.GREEN));
+            if (piercing != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.piercingDamage", piercing).formatted(Formatting.GREEN));
         }
 
         if (world.isClient()) {
@@ -302,9 +314,7 @@ public class ItemMixin {
     @Inject(method = "useOnBlock", at = @At("HEAD"), cancellable = true)
     public void stoneycore$useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
         ItemStack stack = context.getStack();
-        if (!(WeaponDefinitionsLoader.isMelee(stack)) || !stack.isIn(SCTags.WEAPONS_HARVEST.getTag())) {
-            return;
-        }
+        if (!WeaponDefinitionsLoader.isMelee(stack) || !stack.isIn(SCTags.WEAPONS_HARVEST.getTag())) return;
 
         World world = context.getWorld();
         BlockPos pos = context.getBlockPos();
@@ -317,8 +327,7 @@ public class ItemMixin {
     }
 
     @Unique
-    private void handleCropHarvest(World world, BlockPos pos, BlockState state, PlayerEntity player,
-                                   ItemStack stack, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    private void handleCropHarvest(World world, BlockPos pos, BlockState state, PlayerEntity player, ItemStack stack, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         Block block = state.getBlock();
         if (block instanceof CropBlock crop && crop.isMature(state) && world.breakBlock(pos, true, player)) {
             SCWeaponUtil.replantCrop(world, pos, crop, player, stack, hand);
@@ -338,7 +347,7 @@ public class ItemMixin {
     }
 
     @Unique
-    private void applyCraftingModifiers(ItemStack stack, int slotCount, java.util.function.IntFunction<Slot> slotSupplier) {
+    private void applyCraftingModifiers(ItemStack resultStack, int slotCount, IntFunction<Slot> slotSupplier) {
         ItemStack bannerStack = ItemStack.EMPTY;
 
         for (int i = 0; i < slotCount; i++) {
@@ -349,46 +358,41 @@ public class ItemMixin {
             }
         }
 
-        if (!bannerStack.isEmpty() && stack.getItem() instanceof SCAccessoryItem && stack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) {
-            List<Pair<Identifier, DyeColor>> bannerPatterns = getBannerPatterns(bannerStack, stack.getItem());
-            PatternHelper.setBannerPatterns(stack, bannerPatterns);
-            PatternHelper.setBannerDyeColor(stack, ((BannerItem) bannerStack.getItem()).getColor());
-        }
+        if (bannerStack.isEmpty() || !(resultStack.getItem() instanceof SCAccessoryItem) || !resultStack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) return;
+
+        List<Pair<Identifier, DyeColor>> bannerPatterns = getBannerPatterns(bannerStack, resultStack.getItem());
+        PatternHelper.setBannerPatterns(resultStack, bannerPatterns);
+        PatternHelper.setBannerDyeColor(resultStack, ((BannerItem) bannerStack.getItem()).getColor());
     }
 
     @Unique
-    private List<Pair<Identifier, DyeColor>> getBannerPatterns(ItemStack bannerStack, Item armor) {
+    private static List<Pair<Identifier, DyeColor>> getBannerPatterns(ItemStack bannerStack, Item armor) {
         List<Pair<Identifier, DyeColor>> patterns = new ArrayList<>();
 
-        if (!bannerStack.isEmpty() && bannerStack.getItem() instanceof BannerItem) {
-            NbtCompound nbt = bannerStack.getNbt();
-            if (nbt != null && nbt.contains("BlockEntityTag")) {
-                NbtCompound blockEntityTag = nbt.getCompound("BlockEntityTag");
-                if (blockEntityTag.contains("Patterns")) {
-                    NbtList patternList = blockEntityTag.getList("Patterns", NbtCompound.COMPOUND_TYPE);
-                    for (int i = 0; i < patternList.size(); i++) {
-                        NbtCompound patternTag = patternList.getCompound(i);
-                        int colorId = patternTag.getInt("Color");
-                        DyeColor color = DyeColor.byId(colorId);
+        if (bannerStack.isEmpty() || !(bannerStack.getItem() instanceof BannerItem)) return patterns;
 
-                        String patternStr = patternTag.getString("Pattern");
-                        Identifier patternKey = Identifier.tryParse(patternStr);
-                        if (patternKey == null) {
-                            StoneyCore.LOGGER.error("Invalid pattern identifier: {}", patternStr);
-                            continue;
-                        }
+        NbtCompound nbt = bannerStack.getNbt();
+        if (nbt == null || !nbt.contains(INBTKeys.BLOCK_ENTITY_TAG)) return patterns;
 
-                        Identifier itemId = Registries.ITEM.getId(armor);
-                        Identifier patternId = new Identifier(
-                                itemId.getNamespace(),
-                                "textures/banner_pattern/" + itemId.getPath() + "/" + patternStr + ".png"
-                        );
+        NbtCompound blockEntityTag = nbt.getCompound(INBTKeys.BLOCK_ENTITY_TAG);
+        if (!blockEntityTag.contains(INBTKeys.PATTERNS)) return patterns;
 
-                        patterns.add(new Pair<>(patternId, color));
-                        StoneyCore.LOGGER.info("Set Banner Pattern: {} Color: {}", patternId, color);
-                    }
-                }
-            }
+        NbtList patternList = blockEntityTag.getList(INBTKeys.PATTERNS, NbtCompound.COMPOUND_TYPE);
+        Identifier itemId = Registries.ITEM.getId(armor);
+
+        for (int i = 0; i < patternList.size(); i++) {
+            NbtCompound patternTag = patternList.getCompound(i);
+
+            String pattern = NBTDataHelper.get(patternTag, INBTKeys.PATTERN, "");
+            int colorId = NBTDataHelper.get(patternTag, INBTKeys.COLOR, 0);
+
+            DyeColor color = DyeColor.byId(colorId);
+            Identifier patternId = new Identifier(
+                    itemId.getNamespace(),
+                    "textures/banner_pattern/" + itemId.getPath() + "/" + pattern + ".png"
+            );
+
+            patterns.add(new Pair<>(patternId, color));
         }
         return patterns;
     }

@@ -55,7 +55,7 @@ public class ClaimWorker {
 
         for (BlockPos pos : candidates) {
             long key = pos.asLong();
-            if (land.columnInvalid(world, key)) {
+            if (ClaimUtils.isInvalidClaimColumn(world, BlockPos.fromLong(key), land.getLandType())) {
                 invalid.add(key);
             } else if (!land.isAlreadyClaimed(key)) {
                 queue.enqueue(key);
@@ -84,7 +84,7 @@ public class ClaimWorker {
 
             if (invalid.contains(key)) continue;
 
-            boolean blockedPath = land.pathBlocked(world, coreKey, key);
+            boolean blockedPath = ClaimUtils.pathContainsInvalidBlock(world, BlockPos.fromLong(coreKey), BlockPos.fromLong(key), land.getLandType());
             boolean hasNeighbor = totalAccepted == 0 || fastHasAcceptedNeighbor(key);
 
             if (blockedPath && !hasNeighbor) {

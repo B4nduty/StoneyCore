@@ -1,8 +1,9 @@
 package banduty.stoneycore.util;
 
+import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
-import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
+import com.mojang.serialization.Codec;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -48,6 +49,11 @@ public class SCDamageCalculator {
     }
 
     public enum DamageType {
-        SLASHING, PIERCING, BLUDGEONING
+        SLASHING, PIERCING, BLUDGEONING;
+
+        public static final Codec<DamageType> CODEC = Codec.STRING.xmap(
+                str -> DamageType.valueOf(str.toUpperCase()),
+                DamageType::name
+        );
     }
 }

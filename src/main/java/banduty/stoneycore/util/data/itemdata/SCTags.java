@@ -1,4 +1,4 @@
-package banduty.stoneycore.util.itemdata;
+package banduty.stoneycore.util.data.itemdata;
 
 import banduty.stoneycore.StoneyCore;
 import net.minecraft.client.render.model.ModelLoader;

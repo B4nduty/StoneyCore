@@ -1,11 +1,12 @@
 package banduty.stoneycore.networking.packet;
 
 import banduty.stoneycore.items.armor.SCAccessoryItem;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -20,9 +21,8 @@ public class ToogleVisorC2SPacket {
                     ItemStack stack = equipped.stack();
                     if (!stack.isEmpty() && stack.getItem() instanceof SCAccessoryItem scAccessoryItem &&
                             scAccessoryItem.hasOpenVisor(stack)) {
-                        NbtCompound nbt = stack.getOrCreateNbt();
-                        boolean current = nbt.getBoolean("visor_open");
-                        nbt.putBoolean("visor_open", !current);
+                        boolean current = NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false);
+                        NBTDataHelper.set(stack, INBTKeys.VISOR_OPEN, !current);
                     }
                 }
             }

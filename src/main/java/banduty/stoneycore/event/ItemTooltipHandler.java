@@ -5,10 +5,12 @@ import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.itemdata.SCTags;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
-import banduty.stoneycore.util.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.client.MinecraftClient;
@@ -35,7 +37,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
         if (WeaponDefinitionsLoader.containsItem(stack)) lines.removeIf(line -> line.contains(attackDamage));
 
         for (LandType landType : LandTypeRegistry.getAll()) {
-            if (stack.getItem() == landType.coreItem() || (stack.getNbt() != null && stack.getNbt().contains("crown"))) {
+            if (stack.getItem() == landType.coreItem() || (stack.getNbt() != null && stack.getNbt().contains(Registries.ITEM.getId(landType.coreItem()).getPath()))) {
                 lines.add(Text.translatable("text.tooltip.stoneycore.coreItem").formatted(Formatting.GOLD));
                 break;
             }
@@ -207,7 +209,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
         }
 
         if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.getModels(stack).visorOpen().isPresent()) {
-            if (stack.getNbt() != null && stack.getNbt().getBoolean("visor_open")) lines.add(Text.translatable("text.tooltip.stoneycore.openVisorDeflectChance").formatted(Formatting.AQUA));
+            if (NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false)) lines.add(Text.translatable("text.tooltip.stoneycore.openVisorDeflectChance").formatted(Formatting.AQUA));
             lines.add(Text.translatable("text.tooltip.stoneycore.openVisor").formatted(Formatting.WHITE));
         }
     }

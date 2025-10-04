@@ -5,7 +5,9 @@ import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.siege.SiegeManager;
-import banduty.stoneycore.util.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
+import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.playerdata.PDKeys;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -51,21 +53,23 @@ public class LandTracker {
         if (lastPos != null && lastPos.equals(currentPos)) return;
         lastPlayerPos.put(uuid, currentPos);
 
-        BlockPos newCore = optionalLand.map(Land::getCorePos).orElse(null);
+        if (optionalLand.isEmpty()) {
+            lastLandCore.put(uuid, null);
+            return;
+        }
+
+        BlockPos newCore = optionalLand.get().getCorePos();
         BlockPos prevCore = lastLandCore.get(uuid);
 
         if (!Objects.equals(prevCore, newCore)) {
             lastLandCore.put(uuid, newCore);
 
             if (newCore != null) {
-                IEntityDataSaver data = (IEntityDataSaver) player;
-                var nbt = data.stoneycore$getPersistentData();
-
-                if (!nbt.getBoolean("land_expanded")) {
+                if (!NBTDataHelper.get((IEntityDataSaver) player, PDKeys.LAND_EXPANDED, false)) {
                     Land land = optionalLand.get();
                     sendTitle(player, land.getLandTitle(world));
                 } else {
-                    data.stoneycore$getPersistentData().putBoolean("land_expanded", false);
+                    NBTDataHelper.set((IEntityDataSaver) player, PDKeys.LAND_EXPANDED, false);
                 }
             }
         }

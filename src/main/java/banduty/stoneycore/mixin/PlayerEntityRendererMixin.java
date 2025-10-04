@@ -1,6 +1,6 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.util.itemdata.SCTags;
+import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;

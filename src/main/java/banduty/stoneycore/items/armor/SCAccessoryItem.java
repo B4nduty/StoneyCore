@@ -21,6 +21,11 @@ public interface SCAccessoryItem {
     Identifier getTexturePath(ItemStack stack);
 
     @Environment(EnvType.CLIENT)
+    default Optional<Identifier> getEmissiveTexturePath(ItemStack stack) {
+        return Optional.empty();
+    }
+
+    @Environment(EnvType.CLIENT)
     default RenderSettings getRenderSettings(ItemStack stack) {
         return RenderSettings.DEFAULT;
     }

@@ -48,6 +48,18 @@ public class LandState extends PersistentState {
         return Optional.ofNullable(ownerMap.get(owner));
     }
 
+    public Optional<Land> getLandByPlayer(UUID playerUUID) {
+        Land land = ownerMap.get(playerUUID);
+        if (land != null) return Optional.of(land);
+
+        for (Land l : landMap.values()) {
+            if (l.isAlly(playerUUID)) return Optional.of(l);
+        }
+
+        return Optional.empty();
+    }
+
+
     public Collection<Land> getAllLands() {
         return Collections.unmodifiableCollection(landMap.values());
     }

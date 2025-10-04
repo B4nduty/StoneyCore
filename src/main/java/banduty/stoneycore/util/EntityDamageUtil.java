@@ -8,38 +8,34 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 public class EntityDamageUtil {
     public static SCDamageCalculator.DamageType damageType;
 
-    public static double onDamage(LivingEntity target, LivingEntity attacker, ItemStack weaponStack, CallbackInfo ci) {
-        double amount = 0;
-
+    public static double onDamage(LivingEntity target, LivingEntity attacker, ItemStack weaponStack) {
         if (!(target.getWorld() instanceof ServerWorld)) {
-            ci.cancel();
             return 0;
         }
 
+        double amount = 0;
         if (!weaponStack.isEmpty()) {
-            DamageResult damageResult = DamageResult.calculateWeaponDamage(attacker, target, weaponStack);
-
-            damageType = damageResult.damageType();
-            amount += damageResult.damage();
+            DamageResult result = DamageResult.calculateWeaponDamage(attacker, target, weaponStack);
+            damageType = result.damageType();
+            amount = result.damage();
         }
 
-        return Math.max(amount, 0.0F);
+        return Math.max(amount, 0.0);
     }
 
     public static ItemStack getWeaponStack(Entity attacker) {
-        AttackHand hand = null;
         if (attacker instanceof PlayerEntity player) {
             if (player instanceof PlayerAttackProperties props) {
-                hand = PlayerAttackHelper.getCurrentAttack(player, props.getComboCount());
+                AttackHand hand = PlayerAttackHelper.getCurrentAttack(player, props.getComboCount());
+                if (hand != null) {
+                    return hand.itemStack();
+                }
             }
         }
-        ItemStack itemStack = ItemStack.EMPTY;
-        if (hand != null) itemStack = hand.itemStack();
-        return itemStack;
+        return ItemStack.EMPTY;
     }
 }

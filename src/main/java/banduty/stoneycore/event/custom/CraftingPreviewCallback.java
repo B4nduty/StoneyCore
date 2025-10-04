@@ -12,7 +12,8 @@ public interface CraftingPreviewCallback {
             listeners -> (player, inventory, original) -> {
                 ItemStack result = original;
                 for (CraftingPreviewCallback listener : listeners) {
-                    result = listener.modifyResult(player, inventory, result);
+                    ItemStack newResult = listener.modifyResult(player, inventory, result);
+                    if (newResult != null) result = newResult;
                 }
                 return result;
             }

@@ -90,8 +90,8 @@ public class UseBlockHandler implements UseBlockCallback {
 
         if (landTypeOpt.isPresent()) {
             if (player.getStackInHand(hand).getItem() instanceof NameTagItem) {
-                land.setCustomName(player.getStackInHand(hand).getName().getString());
-                player.sendMessage(Text.literal(land.getCustomName()), true);
+                land.setName(player.getStackInHand(hand).getName().getString());
+                player.sendMessage(Text.literal(land.getName()), true);
                 player.getStackInHand(hand).decrement(1);
                 return ActionResult.PASS;
             }

@@ -1,6 +1,8 @@
 package banduty.stoneycore.util.servertick;
 
-import banduty.stoneycore.util.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
+import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.playerdata.PDKeys;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 
@@ -12,7 +14,7 @@ public class SwallowTailArrowUtil {
     private static final Map<LivingEntity, Integer> DAMAGE_TICK_MAP = Collections.synchronizedMap(new WeakHashMap<>());
 
     public static void startSwallowTailTickTrack(PlayerEntity playerEntity) {
-        int swallowTailArrowCount = ((IEntityDataSaver) playerEntity).stoneycore$getPersistentData().getInt("swallowtail_arrow_count");
+        int swallowTailArrowCount = NBTDataHelper.get((IEntityDataSaver) playerEntity, PDKeys.SWALLOWTAIL_ARROW_COUNT, 0);
 
         if (swallowTailArrowCount >= 1 && !playerEntity.isCreative()) {
             int damageTick = DAMAGE_TICK_MAP.getOrDefault(playerEntity, 0);

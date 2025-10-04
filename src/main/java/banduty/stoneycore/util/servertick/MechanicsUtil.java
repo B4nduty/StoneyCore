@@ -1,9 +1,12 @@
 package banduty.stoneycore.util.servertick;
 
 import banduty.stoneycore.util.SCInventoryItemFinder;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
-import banduty.stoneycore.util.itemdata.SCTags;
-import banduty.stoneycore.util.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.itemdata.SCTags;
+import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.playerdata.PDKeys;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -20,18 +23,15 @@ public class MechanicsUtil {
             Collections.synchronizedMap(new WeakHashMap<>());
 
     public static void handleParry(ServerPlayerEntity player) {
+        if (NBTDataHelper.get((IEntityDataSaver) player, PDKeys.BLOCK_START_TICK, 0L) > 0) return;
         ItemStack activeItem = player.getActiveItem();
         boolean isBlocking = player.isBlocking();
         boolean usingCustomShield = activeItem.isIn(SCTags.WEAPONS_SHIELD.getTag());
 
-        NbtCompound persistentData = ((IEntityDataSaver) player).stoneycore$getPersistentData();
-
         if (isBlocking && usingCustomShield) {
-            if (!persistentData.contains("BlockStartTick")) {
-                persistentData.putInt("BlockStartTick", (int) player.getWorld().getTime());
-            }
+            NBTDataHelper.set((IEntityDataSaver) player, PDKeys.BLOCK_START_TICK, player.getWorld().getTime());
         } else {
-            persistentData.remove("BlockStartTick");
+            NBTDataHelper.set((IEntityDataSaver) player, PDKeys.BLOCK_START_TICK, 0L);
         }
     }
 
@@ -49,14 +49,14 @@ public class MechanicsUtil {
         ItemStack lastItem = LAST_ITEMSTACK_MAP.get(player);
         if (currentItem != lastItem) {
             if (lastItem != null && lastItem.getNbt() != null && WeaponDefinitionsLoader.isRanged(lastItem)) {
-                lastItem.getNbt().putBoolean("recharge", false);
+                NBTDataHelper.set(lastItem, INBTKeys.RECHARGE, false);
                 resetWeaponState(player, lastItem);
             }
             LAST_ITEMSTACK_MAP.put(player, currentItem);
             return;
         }
 
-        if (nbt == null || !isReloading(nbt) || !WeaponDefinitionsLoader.isRanged(currentItem)) {
+        if (nbt == null || !isReloading(currentItem) || !WeaponDefinitionsLoader.isRanged(currentItem)) {
             resetRechargeTime(player);
             return;
         }
@@ -73,7 +73,7 @@ public class MechanicsUtil {
         } else if (hasRequiredAmmo(player, currentItem)) {
             startReload(player, currentItem);
         } else {
-            currentItem.getOrCreateNbt().putBoolean("recharge", false);
+            NBTDataHelper.set(currentItem, INBTKeys.RECHARGE, false);
         }
 
         int requiredTicks = WeaponDefinitionsLoader.getData(currentItem).ranged().rechargeTime() * 20;
@@ -82,8 +82,8 @@ public class MechanicsUtil {
         }
     }
 
-    private static boolean isReloading(NbtCompound nbt) {
-        return nbt.getBoolean("recharge");
+    private static boolean isReloading(ItemStack itemStack) {
+        return NBTDataHelper.get(itemStack, INBTKeys.RECHARGE, false);
     }
 
     private static boolean hasRequiredAmmo(ServerPlayerEntity player, ItemStack itemStack) {
@@ -122,7 +122,7 @@ public class MechanicsUtil {
 
         SCRangeWeaponUtil.setWeaponState(itemStack, new SCRangeWeaponUtil.WeaponState(false, true, false));
         setRechargeTime(player, 0);
-        itemStack.getOrCreateNbt().putBoolean("recharge", false);
+        NBTDataHelper.get(itemStack, INBTKeys.RECHARGE, false);
     }
 
     private static void resetWeaponState(ServerPlayerEntity player, ItemStack itemStack) {
@@ -140,10 +140,10 @@ public class MechanicsUtil {
     }
 
     private static int getRechargeTime(PlayerEntity player) {
-        return ((IEntityDataSaver) player).stoneycore$getPersistentData().getInt("rechargeTime");
+        return NBTDataHelper.get((IEntityDataSaver) player, PDKeys.RECHARGE_TIME, 0);
     }
 
     private static void setRechargeTime(PlayerEntity player, int time) {
-        ((IEntityDataSaver) player).stoneycore$getPersistentData().putInt("rechargeTime", time);
+        NBTDataHelper.set((IEntityDataSaver) player, PDKeys.RECHARGE_TIME, time);
     }
 }

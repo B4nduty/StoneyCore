@@ -1,6 +1,6 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.util.itemdata.SCTags;
+import banduty.stoneycore.util.data.itemdata.SCTags;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

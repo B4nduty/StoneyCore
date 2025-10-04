@@ -9,7 +9,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
 
 public class ClaimUtils {
-
     /**
      * A column is considered invalid for claiming if the topmost motion-blocking block
      * (or the first non-air, opaque, water, or lava block found by scanning downward)
@@ -38,16 +37,16 @@ public class ClaimUtils {
         LandType.TerrainType terrain = landType.terrainType();
         if (terrain == LandType.TerrainType.GWL) return false;
 
-        BlockPos checkPos = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING, pos);
+        BlockPos.Mutable checkPos = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING, pos).mutableCopy();
         BlockState state = world.getBlockState(checkPos);
 
         while ((state.isOf(Blocks.AIR) || (!state.isOpaque() && !state.isOf(Blocks.WATER) && !state.isOf(Blocks.LAVA)))
                 && checkPos.getY() > world.getBottomY()) {
-            checkPos = checkPos.down();
+            checkPos.move(0, -1, 0);
             state = world.getBlockState(checkPos);
         }
 
-        boolean isWater = state.isOf(Blocks.WATER) || state.getFluidState().isIn(FluidTags.WATER);
+        boolean isWater = state.getFluidState().isIn(FluidTags.WATER);
         boolean isLava = state.isOf(Blocks.LAVA);
         boolean isGround = !isWater && !isLava;
 
@@ -67,23 +66,28 @@ public class ClaimUtils {
      * If *any* sampled column is invalid, path is blocked.
      */
     public static boolean pathContainsInvalidBlock(ServerWorld world, BlockPos start, BlockPos end, LandType landType) {
-        int dx    = end.getX() - start.getX();
-        int dz    = end.getZ() - start.getZ();
-        int steps = Math.max(Math.abs(dx), Math.abs(dz));
-        if (steps == 0) return false;
+        int x0 = start.getX(), z0 = start.getZ();
+        int x1 = end.getX(),   z1 = end.getZ();
 
-        double stepX = dx / (double) steps;
-        double stepZ = dz / (double) steps;
+        int dx = Math.abs(x1 - x0);
+        int dz = Math.abs(z1 - z0);
 
-        for (int i = 0; i <= steps; i++) {
-            int x = start.getX() + (int) Math.round(stepX * i);
-            int z = start.getZ() + (int) Math.round(stepZ * i);
-            // always test at y = 0 (your column logic will scan vertical)
-            if (isInvalidClaimColumn(world, new BlockPos(x, 0, z), landType)) {
-                return true;
-            }
+        int sx = Integer.compare(x1, x0);
+        int sz = Integer.compare(z1, z0);
+
+        int err = dx - dz;
+        BlockPos.Mutable pos = new BlockPos.Mutable();
+
+        while (true) {
+            pos.set(x0, 0, z0);
+            if (isInvalidClaimColumn(world, pos, landType)) return true;
+
+            if (x0 == x1 && z0 == z1) break;
+
+            int e2 = err << 1;
+            if (e2 > -dz) { err -= dz; x0 += sx; }
+            if (e2 < dx)  { err += dx; z0 += sz; }
         }
-
         return false;
     }
 }

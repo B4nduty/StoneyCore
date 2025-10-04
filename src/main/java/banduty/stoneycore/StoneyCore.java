@@ -1,5 +1,6 @@
 package banduty.stoneycore;
 
+import banduty.stoneycore.commands.SCCommandsHandler;
 import banduty.stoneycore.config.StoneyCoreConfig;
 import banduty.stoneycore.datagen.ModItemTagProvider;
 import banduty.stoneycore.datagen.ModModelProvider;
@@ -13,15 +14,18 @@ import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.sounds.ModSounds;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.*;
-import banduty.stoneycore.util.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.playerdata.SCAttributes;
-import banduty.stoneycore.util.playerdata.StaminaData;
+import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.playerdata.PDKeys;
+import banduty.stoneycore.util.data.playerdata.SCAttributes;
+import banduty.stoneycore.util.data.playerdata.StaminaData;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrySupplier;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -31,7 +35,6 @@ import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -43,7 +46,6 @@ public class StoneyCore implements ModInitializer, DataGeneratorEntrypoint {
 	public static final String MOD_ID = "stoneycore";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	private static final StoneyCoreConfig CONFIG = StoneyCoreConfig.createAndLoad();
-	private static final String FIRST_JOIN_TAG = MOD_ID + ":first_join";
 
 	public static final DeferredRegister<EntityAttribute> ATTRIBUTES = DeferredRegister.create(MOD_ID, RegistryKeys.ATTRIBUTE);
 
@@ -70,11 +72,13 @@ public class StoneyCore implements ModInitializer, DataGeneratorEntrypoint {
         PlayerNameTagEvents.EVENT.register(new PlayerNameTagHandler());
         CraftingPreviewCallback.EVENT.register(new CraftingPreviewHandler());
 		ModParticles.registerParticles();
+        CommandRegistrationCallback.EVENT.register(new SCCommandsHandler());
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new WeaponDefinitionsLoader());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new ArmorDefinitionsLoader());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new AccessoriesDefinitionsLoader());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new LandDefinitionsLoader());
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SiegeEngineDefinitionsLoader());
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
@@ -87,10 +91,8 @@ public class StoneyCore implements ModInitializer, DataGeneratorEntrypoint {
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			ServerPlayerEntity player = handler.getPlayer();
 			if (player != null) {
-				NbtCompound playerData = ((IEntityDataSaver) player).stoneycore$getPersistentData();
-				if (playerData.getBoolean(FIRST_JOIN_TAG)) {
-                    double savedStamina = StaminaData.loadStamina(player);
-                    StaminaData.setStamina(player, savedStamina);
+				if (NBTDataHelper.get((IEntityDataSaver) player, PDKeys.FIRST_JOIN, false)) {
+                    StaminaData.loadStamina(player);
                     return;
 				}
                 
@@ -100,7 +102,7 @@ public class StoneyCore implements ModInitializer, DataGeneratorEntrypoint {
                        """),
                         false);
 
-                playerData.putBoolean(FIRST_JOIN_TAG, true);
+                NBTDataHelper.set((IEntityDataSaver) player, PDKeys.FIRST_JOIN, true);
 
                 StaminaData.setStamina(player, player.getAttributeValue(StoneyCore.MAX_STAMINA.get()));
 			}

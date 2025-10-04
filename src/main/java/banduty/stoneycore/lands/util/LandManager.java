@@ -22,8 +22,8 @@ public class LandManager {
             return ActionResult.PASS;
         }
 
-        Land land = new Land(player.getUuid(), blockPos, landType.baseRadius(), landType, "");
-        land.initializeClaim(world, 0, StartTickHandler.CLAIM_TASKS);
+        Land land = new Land(player.getUuid(), blockPos, landType.baseRadius(), landType, "", landType.maxAllies());
+        land.initializeClaim(world, landType.baseRadius(), StartTickHandler.CLAIM_TASKS);
         state.addLand(land);
         giveCoreItem(player, landType);
 

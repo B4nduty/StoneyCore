@@ -1,5 +1,7 @@
 package banduty.stoneycore.networking.packet;
 
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
@@ -17,7 +19,7 @@ public class ReloadC2SPacket {
 
             if (WeaponDefinitionsLoader.isRanged(itemStack) && (player.isCreative() || SCRangeWeaponUtil.getAmmoRequirement(itemStack) != null)) {
                 if (!SCRangeWeaponUtil.getWeaponState(itemStack).isCharged()) {
-                    itemStack.getOrCreateNbt().putBoolean("recharge", true);
+                    NBTDataHelper.get(itemStack, INBTKeys.RECHARGE, true);
                 }
             }
         });

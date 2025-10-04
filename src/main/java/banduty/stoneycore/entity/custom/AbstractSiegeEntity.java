@@ -7,6 +7,7 @@ import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.siege.SiegeManager;
+import banduty.stoneycore.util.definitionsloader.SiegeEngineDefinitionsLoader;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
@@ -16,6 +17,7 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.VindicatorEntity;
+import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.AxeItem;
@@ -373,7 +375,12 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
 
     public abstract Vec3d getPassengerOffset(Entity entity);
 
-    public abstract double getVelocity(Entity entity);
+    public double getVelocity(Entity entity) {
+        if (entity instanceof HorseEntity) {
+            return SiegeEngineDefinitionsLoader.getData(this.getType()).horseSpeed();
+        }
+        return SiegeEngineDefinitionsLoader.getData(this.getType()).playerSpeed();
+    }
 
     public abstract Vec3d getPlayerPOV();
 
@@ -381,5 +388,25 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     public @Nullable ItemStack getPickBlockStack() {
         SiegeSpawnerItem siegeSpawnerItem = SiegeSpawnerItem.forEntity(this.getType());
         return siegeSpawnerItem == null ? null : new ItemStack(siegeSpawnerItem);
+    }
+
+    public double getKnockback() {
+        return SiegeEngineDefinitionsLoader.getData(this.getType()).knockback();
+    }
+
+    public double getBaseDamage() {
+        return SiegeEngineDefinitionsLoader.getData(this.getType()).baseDamage();
+    }
+
+    public int getBaseReload() {
+        return SiegeEngineDefinitionsLoader.getData(this.getType()).baseReload();
+    }
+
+    public float getProjectileSpeed() {
+        return SiegeEngineDefinitionsLoader.getData(this.getType()).projectileSpeed();
+    }
+
+    public float getAccuracyMultiplier() {
+        return SiegeEngineDefinitionsLoader.getData(this.getType()).accuracyMultiplier();
     }
 }

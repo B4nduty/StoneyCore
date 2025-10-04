@@ -3,6 +3,8 @@ package banduty.stoneycore.util.weaponutil;
 import banduty.stoneycore.entity.custom.SCArrowEntity;
 import banduty.stoneycore.entity.custom.SCBulletEntity;
 import banduty.stoneycore.particle.ModParticles;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
@@ -63,7 +65,7 @@ public final class SCRangeWeaponUtil {
         arrowEntity.setDamage(WeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
         if (arrowEntity instanceof SCArrowEntity scArrowEntity) scArrowEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
         arrowEntity.setOwner(player);
-        if (arrowStack.getNbt() != null && arrowStack.getNbt().getBoolean("ignited")) {
+        if (NBTDataHelper.get(arrowStack, INBTKeys.IGNITED, false)) {
             arrowEntity.setOnFire(true);
             arrowEntity.setFireTicks(1000);
         }

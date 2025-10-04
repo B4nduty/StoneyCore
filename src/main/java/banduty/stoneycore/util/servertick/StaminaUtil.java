@@ -5,8 +5,8 @@ import banduty.stoneycore.config.StoneyCoreConfig;
 import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
-import banduty.stoneycore.util.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.playerdata.StaminaData;
+import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.playerdata.StaminaData;
 import banduty.streq.StrEq;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -29,7 +29,7 @@ public class StaminaUtil {
             }
             removeStaminaEffects(entity);
             StaminaData.setStaminaBlocked((IEntityDataSaver) entity, false);
-            StaminaData.setLastStaminaUseTime((IEntityDataSaver) entity, 0);
+            StaminaData.setStaminaUseTime((IEntityDataSaver) entity, 0);
             return;
         }
 
@@ -41,10 +41,12 @@ public class StaminaUtil {
         boolean wasUsingStamina = isUsingStamina(entity);
 
         if (wasUsingStamina) {
-            StaminaData.setLastStaminaUseTime(dataSaver, entity.age);
+            StaminaData.setStaminaUseTime(dataSaver, StoneyCore.getConfig().combatOptions.getStaminaRecoverTime());
         }
 
-        boolean canRecoverStamina = (entity.age - StaminaData.getLastStaminaUseTime(dataSaver)) >= StoneyCore.getConfig().combatOptions.getStaminaRecoverTime();
+        boolean canRecoverStamina = StaminaData.getStaminaUseTime(dataSaver) <= 0;
+
+        if (StaminaData.getStaminaUseTime(dataSaver) > 0) StaminaData.setStaminaUseTime(dataSaver, StaminaData.getStaminaUseTime(dataSaver) - 1);
 
         boolean skipDrain = !StoneyCore.getConfig().combatOptions.getRealisticCombat() ||
                 !wasUsingStamina ||

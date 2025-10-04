@@ -1,13 +1,13 @@
-package banduty.stoneycore.util.playerdata;
+package banduty.stoneycore.util.data.playerdata;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.util.ModifiersHelper;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 
@@ -15,7 +15,6 @@ import java.util.UUID;
 
 public class StaminaData {
     private static final UUID GENERIC_STAMINA_MODIFIER_ID = UUID.randomUUID();
-    private static final String STAMINA_BLOCKED_KEY = "stamina_blocked";
 
     public static void setStamina(LivingEntity livingEntity, double stamina) {
         ModifiersHelper.updateModifier(livingEntity.getAttributeInstance(StoneyCore.STAMINA.get()),
@@ -41,21 +40,20 @@ public class StaminaData {
     }
 
     public static void setStaminaBlocked(IEntityDataSaver livingEntity, boolean blocked) {
-        NbtCompound nbt = livingEntity.stoneycore$getPersistentData();
-        nbt.putBoolean(STAMINA_BLOCKED_KEY, blocked);
+        NBTDataHelper.set(livingEntity, PDKeys.STAMINA_BLOCKED, blocked);
         syncStaminaBlocked(blocked, (ServerPlayerEntity) livingEntity);
     }
 
     public static boolean isStaminaBlocked(IEntityDataSaver livingEntity) {
-        return livingEntity.stoneycore$getPersistentData().getBoolean(STAMINA_BLOCKED_KEY);
+        return NBTDataHelper.get(livingEntity, PDKeys.STAMINA_BLOCKED, false);
     }
 
-    public static void setLastStaminaUseTime(IEntityDataSaver player, int time) {
-        player.stoneycore$getPersistentData().putInt("lastStaminaUseTime", time);
+    public static void setStaminaUseTime(IEntityDataSaver livingEntity, int time) {
+        NBTDataHelper.set(livingEntity, PDKeys.STAMINA_USE_TIME, time);
     }
 
-    public static int getLastStaminaUseTime(IEntityDataSaver player) {
-        return player.stoneycore$getPersistentData().getInt("lastStaminaUseTime");
+    public static int getStaminaUseTime(IEntityDataSaver player) {
+        return NBTDataHelper.get(player, PDKeys.STAMINA_USE_TIME, 0);
     }
 
     public static void syncStaminaBlocked(boolean blocked, ServerPlayerEntity player) {
@@ -65,17 +63,11 @@ public class StaminaData {
     }
 
     public static void saveStamina(IEntityDataSaver livingEntity, double stamina) {
-        NbtCompound nbt = livingEntity.stoneycore$getPersistentData();
-        nbt.putDouble("stamina_value", stamina);
+        NBTDataHelper.set(livingEntity, PDKeys.STAMINA_VALUE_SAVED, stamina);
     }
 
-    public static double loadStamina(LivingEntity livingEntity) {
-        if (livingEntity instanceof IEntityDataSaver iEntityDataSaver) {
-            NbtCompound nbt = iEntityDataSaver.stoneycore$getPersistentData();
-            if (nbt.contains("stamina_value")) {
-                return nbt.getDouble("stamina_value");
-            }
-        }
-        return livingEntity.getAttributeValue(StoneyCore.MAX_STAMINA.get());
+    public static void loadStamina(LivingEntity livingEntity) {
+        if (!(livingEntity instanceof IEntityDataSaver iEntityDataSaver)) return;
+        NBTDataHelper.set(iEntityDataSaver, PDKeys.STAMINA_VALUE_SAVED, NBTDataHelper.get(iEntityDataSaver, PDKeys.STAMINA_VALUE_SAVED, livingEntity.getAttributeValue(StoneyCore.MAX_STAMINA.get())));
     }
 }

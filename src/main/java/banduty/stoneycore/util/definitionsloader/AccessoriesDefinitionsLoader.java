@@ -1,8 +1,12 @@
 package banduty.stoneycore.util.definitionsloader;
 
 import banduty.stoneycore.StoneyCore;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Item;
@@ -23,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadListener {
-    private static final Gson GSON = new Gson();
     private static final Map<Identifier, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
     private static final Identifier RELOAD_LISTENER_ID = new Identifier(StoneyCore.MOD_ID, "accessories_definitions_loader");
 
@@ -33,83 +36,70 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
     }
 
     @Override
-    public CompletableFuture<Void> reload(Synchronizer synchronizer, ResourceManager resourceManager, Profiler prepareProfiler, Profiler applyProfiler, Executor prepareExecutor, Executor applyExecutor) {
+    public CompletableFuture<Void> reload(Synchronizer synchronizer,
+                                          ResourceManager resourceManager,
+                                          Profiler prepareProfiler,
+                                          Profiler applyProfiler,
+                                          Executor prepareExecutor,
+                                          Executor applyExecutor) {
         return CompletableFuture.runAsync(() -> {
             DEFINITIONS.clear();
 
-            Map<Identifier, Resource> resources = resourceManager.findResources("definitions/accessories", id -> id.getPath().endsWith(".json"));
+            Map<Identifier, Resource> resources = resourceManager.findResources("definitions/accessories",
+                    id -> id.getPath().endsWith(".json"));
 
             resources.forEach((id, resource) -> {
                 try (InputStream stream = resource.getInputStream()) {
-                    JsonObject json = GSON.fromJson(new InputStreamReader(stream), JsonObject.class);
+                    JsonElement element = JsonParser.parseReader(new InputStreamReader(stream));
 
-                    double armor = 0;
-                    if (json.has("armor")) {
-                        armor = json.get("armor").getAsDouble();
-                    }
+                    DataResult<DefinitionData> result = DefinitionData.CODEC.parse(JsonOps.INSTANCE, element);
+                    result.resultOrPartial(StoneyCore.LOGGER::error)
+                            .ifPresent(def -> {
+                                // Validate armorSlot manually since Codec can’t enforce enum membership
+                                String armorSlot = def.armorSlot().toUpperCase();
+                                if (!armorSlot.isEmpty() && !isValidArmorSlot(armorSlot)) {
+                                    StoneyCore.LOGGER.error(
+                                            "Invalid armorSlot '{}' in {}. Expected one of {}. This item will not protect any armor slot.",
+                                            armorSlot, id, EnumSet.of(
+                                                    EquipmentSlot.HEAD,
+                                                    EquipmentSlot.CHEST,
+                                                    EquipmentSlot.LEGS,
+                                                    EquipmentSlot.FEET
+                                            )
+                                    );
+                                    def = new DefinitionData(
+                                            def.armor(),
+                                            def.toughness(),
+                                            "",
+                                            def.hungerDrainMultiplier(),
+                                            def.deflectChance(),
+                                            def.weight()
+                                    );
+                                }
 
-                    double toughness = 0;
-                    if (json.has("toughness")) {
-                        toughness = json.get("toughness").getAsDouble();
-                    }
+                                Identifier attributeId = Identifier.of(
+                                        id.getNamespace(),
+                                        id.getPath().substring("definitions/accessories/".length(), id.getPath().length() - 5)
+                                );
+                                DEFINITIONS.put(attributeId, def);
+                            });
 
-                    String armorSlot = "";
-                    if (json.has("armorSlot")) {
-                        armorSlot = json.get("armorSlot").getAsString().toUpperCase();
-                        Set<EquipmentSlot> ARMOR_SLOTS = EnumSet.of(
-                                EquipmentSlot.HEAD,
-                                EquipmentSlot.CHEST,
-                                EquipmentSlot.LEGS,
-                                EquipmentSlot.FEET
-                        );
-
-                        boolean valid = false;
-                        for (EquipmentSlot slot : ARMOR_SLOTS) {
-                            if (slot.name().equals(armorSlot)) {
-                                valid = true;
-                                break;
-                            }
-                        }
-
-                        if (!valid && !armorSlot.isBlank()) {
-                            StoneyCore.LOGGER.error(
-                                    "Invalid armorSlot '{}' in {}. Expected one of {}. This item will not protect any armor slot.",
-                                    armorSlot,
-                                    id,
-                                    ARMOR_SLOTS
-                            );
-                            armorSlot = "";
-                        }
-                    }
-
-                    double hungerDrainMultiplier = 0;
-                    if (json.has("hungerDrainMultiplier")) {
-                        hungerDrainMultiplier = json.get("hungerDrainMultiplier").getAsDouble();
-                    }
-
-                    Map<String, Double> deflectChance = new ConcurrentHashMap<>();
-                    if (json.has("deflectChance") && json.get("deflectChance").isJsonObject()) {
-                        JsonObject deflectJson = json.getAsJsonObject("deflectChance");
-                        for (Map.Entry<String, com.google.gson.JsonElement> entry : deflectJson.entrySet()) {
-                            String key = entry.getKey();
-                            double value = entry.getValue().getAsDouble();
-                            deflectChance.put(key, value);
-                        }
-                    }
-
-                    double weight = 0;
-                    if (json.has("weight")) {
-                        weight = json.get("weight").getAsDouble();
-                    }
-
-                    Identifier attributeId = Identifier.of(id.getNamespace(), id.getPath().substring("definitions/accessories/".length(), id.getPath().length() - 5));
-                    DEFINITIONS.put(attributeId, new DefinitionData(armor, toughness, armorSlot, hungerDrainMultiplier, deflectChance, weight));
                 } catch (Exception e) {
                     StoneyCore.LOGGER.error("Failed to load definitions data from {}: {}", id, e.getMessage(), e);
                 }
             });
         }, prepareExecutor).thenCompose(synchronizer::whenPrepared).thenRunAsync(() -> {
         }, applyExecutor);
+    }
+
+    private boolean isValidArmorSlot(String slot) {
+        Set<EquipmentSlot> valid = EnumSet.of(
+                EquipmentSlot.HEAD,
+                EquipmentSlot.CHEST,
+                EquipmentSlot.LEGS,
+                EquipmentSlot.FEET
+        );
+        return valid.stream().anyMatch(s -> s.name().equals(slot));
     }
 
     public static DefinitionData getData(ItemStack itemStack) {
@@ -120,7 +110,8 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
     public static DefinitionData getData(Item item) {
         Identifier itemId = Registries.ITEM.getId(item);
         Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
-        return DEFINITIONS.getOrDefault(definitionId, new DefinitionData(0, 0, "",0, null, 0));
+        return DEFINITIONS.getOrDefault(definitionId,
+                new DefinitionData(0, 0, "", 0, Map.of(), 0));
     }
 
     public static boolean containsItem(ItemStack itemStack) {
@@ -134,5 +125,21 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
         return DEFINITIONS.containsKey(definitionId);
     }
 
-    public record DefinitionData(double armor, double toughness, String armorSlot, double hungerDrainMultiplier, Map<String, Double> deflectChance, double weight) {}
+    public record DefinitionData(
+            double armor,
+            double toughness,
+            String armorSlot,
+            double hungerDrainMultiplier,
+            Map<String, Double> deflectChance,
+            double weight
+    ) {
+        public static final Codec<DefinitionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.DOUBLE.optionalFieldOf("armor", 0.0).forGetter(DefinitionData::armor),
+                Codec.DOUBLE.optionalFieldOf("toughness", 0.0).forGetter(DefinitionData::toughness),
+                Codec.STRING.optionalFieldOf("armorSlot", "").forGetter(DefinitionData::armorSlot),
+                Codec.DOUBLE.optionalFieldOf("hungerDrainMultiplier", 0.0).forGetter(DefinitionData::hungerDrainMultiplier),
+                Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("deflectChance", Map.of()).forGetter(DefinitionData::deflectChance),
+                Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(DefinitionData::weight)
+        ).apply(instance, DefinitionData::new));
+    }
 }

@@ -1,5 +1,7 @@
 package banduty.stoneycore.util;
 
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
@@ -33,7 +35,7 @@ public class DeflectChanceHelper {
                 if (AccessoriesDefinitionsLoader.containsItem(equippedStack)) {
                     deflectChance += AccessoriesDefinitionsLoader.getData(equippedStack).deflectChance().getOrDefault(itemKey, 0.0);
                     if (AccessoriesDefinitionsLoader.getData(equippedStack).armorSlot().equals(EquipmentSlot.HEAD.getName()) &&
-                            equippedStack.getNbt() != null && equippedStack.getNbt().getBoolean("visor_open")) {
+                            NBTDataHelper.get(equippedStack, INBTKeys.VISOR_OPEN, false)) {
                         deflectChance -= 0.02d;
                     }
                 }

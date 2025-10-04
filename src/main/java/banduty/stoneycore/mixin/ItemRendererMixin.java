@@ -1,6 +1,8 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.util.itemdata.SCTags;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.itemdata.SCTags;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.patterns.PatternHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
@@ -43,7 +45,7 @@ public abstract class ItemRendererMixin {
     public void stoneycore$onRenderItem(LivingEntity entity, ItemStack itemStack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, World world, int light, int overlay, int seed, CallbackInfo ci) {
         boolean isValid = itemStack.isIn(SCTags.WEAPONS_3D.getTag())
                 || !PatternHelper.getBannerPatterns(itemStack).isEmpty()
-                || itemStack.getNbt() != null && itemStack.getNbt().contains("dyeColorR");
+                || NBTDataHelper.get(itemStack, INBTKeys.DYE_COLOR_R, null) != null;
 
         if (itemStack.isEmpty() || !isValid) {
             return;
@@ -74,7 +76,7 @@ public abstract class ItemRendererMixin {
             } else return;
         }
 
-        if (!PatternHelper.getBannerPatterns(itemStack).isEmpty() || (itemStack.getNbt() != null && itemStack.getNbt().contains("dyeColorR"))) {
+        if (!PatternHelper.getBannerPatterns(itemStack).isEmpty() || NBTDataHelper.get(itemStack, INBTKeys.DYE_COLOR_R, null) != null) {
             model.getTransformation().getTransformation(renderMode).apply(leftHanded, matrices);
             matrices.translate(-0.5F, -0.5F, -0.5F);
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getCutout());

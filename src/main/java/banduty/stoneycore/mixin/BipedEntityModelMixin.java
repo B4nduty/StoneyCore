@@ -1,6 +1,5 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.entity.custom.AbstractSiegeEntity;
 import banduty.stoneycore.event.custom.BipedEntityModelAnglesEvents;
 import banduty.stoneycore.lands.util.LandClientState;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
@@ -15,11 +14,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BipedEntityModel.class)
 public abstract class BipedEntityModelMixin<T extends LivingEntity> {
     @Inject(method = "setAngles(Lnet/minecraft/entity/LivingEntity;FFFFF)V", at = @At("TAIL"), cancellable = true)
-    private void kingdomsieges$setAnglesHead(T entity, float limbAngle, float limbDistance, float age, float headYaw, float headPitch, CallbackInfo ci) {
+    private void kingdomsieges$setAfterAngles(T entity, float limbAngle, float limbDistance, float age, float headYaw, float headPitch, CallbackInfo ci) {
         BipedEntityModel<?> model = (BipedEntityModel<?>) (Object) this;
-        if (entity.getVehicle() instanceof AbstractSiegeEntity abstractSiegeEntity) {
-            BipedEntityModelAnglesEvents.BEFORE.invoker().beforeSetAngles(model, entity, abstractSiegeEntity, limbAngle, limbDistance, age, headYaw, headPitch, ci);
-        }
+
+        BipedEntityModelAnglesEvents.AFTER.invoker().afterSetAngles(model, entity, limbAngle, limbDistance, age, headYaw, headPitch, ci);
 
         if (entity instanceof PlayerEntity) {
             LandClientState state = LandClientState.get(entity.getUuid());
@@ -36,5 +34,11 @@ public abstract class BipedEntityModelMixin<T extends LivingEntity> {
                 model.leftArm.yaw = -0.1F;
             }
         }
+    }
+    @Inject(method = "setAngles(Lnet/minecraft/entity/LivingEntity;FFFFF)V", at = @At("HEAD"), cancellable = true)
+    private void kingdomsieges$setBeforeAngles(T entity, float limbAngle, float limbDistance, float age, float headYaw, float headPitch, CallbackInfo ci) {
+        BipedEntityModel<?> model = (BipedEntityModel<?>) (Object) this;
+
+        BipedEntityModelAnglesEvents.BEFORE.invoker().beforeSetAngles(model, entity, limbAngle, limbDistance, age, headYaw, headPitch, ci);
     }
 }

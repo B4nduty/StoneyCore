@@ -303,4 +303,8 @@ public class SiegeManager {
         buffer.writeText(mainTitle);
         ServerPlayNetworking.send(player, ModMessages.LAND_TITLE_PACKET_ID, buffer);
     }
+
+    public static List<Siege> getSiegesForWorld(ServerWorld world) {
+        return sieges.computeIfAbsent(world, k -> new ArrayList<>());
+    }
 }

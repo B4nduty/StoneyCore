@@ -1,7 +1,9 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.event.custom.CraftingPreviewCallback;
-import banduty.stoneycore.util.itemdata.SCTags;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.itemdata.SCTags;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.patterns.PatternHelper;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.BannerItem;
@@ -22,45 +24,40 @@ public class CraftingPreviewHandler implements CraftingPreviewCallback {
     @Override
     public ItemStack modifyResult(ServerPlayerEntity player, RecipeInputInventory inventory, ItemStack original) {
         if (!original.isIn(SCTags.BANNER_COMPATIBLE.getTag())) return original;
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack ingredient = inventory.getStack(i);
-            if (ingredient.getItem() instanceof BannerItem) {
-                List<Pair<Identifier, DyeColor>> bannerPatterns = getBannerPatterns(ingredient, original.getItem());
-                PatternHelper.setBannerPatterns(original, bannerPatterns);
-                break;
-            }
-        }
+
+        inventory.getInputStacks().stream()
+                .filter(stack -> stack.getItem() instanceof BannerItem)
+                .findFirst()
+                .ifPresent(banner -> {
+                    List<Pair<Identifier, DyeColor>> patterns = getBannerPatterns(banner, original.getItem());
+                    PatternHelper.setBannerPatterns(original, patterns);
+                });
+
         return original;
     }
 
+    public static List<Pair<Identifier, DyeColor>> getBannerPatterns(ItemStack banner, Item armor) {
+        NbtCompound nbt = banner.getNbt();
+        if (banner.isEmpty() || !(banner.getItem() instanceof BannerItem) || nbt == null) return List.of();
 
-    private static List<Pair<Identifier, DyeColor>> getBannerPatterns(ItemStack bannerStack, Item armor) {
+        NbtCompound blockEntityTag = nbt.getCompound(INBTKeys.BLOCK_ENTITY_TAG);
+        if (!blockEntityTag.contains(INBTKeys.PATTERNS)) return List.of();
+
+        Identifier armorId = Registries.ITEM.getId(armor);
+        NbtList patternList = blockEntityTag.getList(INBTKeys.PATTERNS, NbtCompound.COMPOUND_TYPE);
+
         List<Pair<Identifier, DyeColor>> patterns = new ArrayList<>();
+        for (int i = 0; i < patternList.size(); i++) {
+            NbtCompound patternTag = patternList.getCompound(i);
+            String pattern = NBTDataHelper.get(patternTag, INBTKeys.PATTERN, "");
+            int colorId = NBTDataHelper.get(patternTag, INBTKeys.COLOR, 0);
 
-        if (!bannerStack.isEmpty() && bannerStack.getItem() instanceof BannerItem) {
-            NbtCompound nbt = bannerStack.getNbt();
-            if (nbt != null && nbt.contains("BlockEntityTag")) {
-                NbtCompound blockEntityTag = nbt.getCompound("BlockEntityTag");
-                if (blockEntityTag.contains("Patterns")) {
-                    NbtList patternList = blockEntityTag.getList("Patterns", NbtCompound.COMPOUND_TYPE);
-                    for (int i = 0; i < patternList.size(); i++) {
-                        NbtCompound patternTag = patternList.getCompound(i);
-                        String pattern = patternTag.getString("Pattern");
-                        int colorId = patternTag.getInt("Color");
-                        DyeColor color = DyeColor.byId(colorId);
-
-                        Identifier itemId = Registries.ITEM.getId(armor);
-                        Identifier patternId = new Identifier(
-                                itemId.getNamespace(),
-                                "textures/banner_pattern/" + itemId.getPath() + "/" + pattern + ".png"
-                        );
-
-                        patterns.add(new Pair<>(patternId, color));
-                    }
-                }
-            }
+            Identifier patternId = new Identifier(
+                    armorId.getNamespace(),
+                    "textures/banner_pattern/" + armorId.getPath() + "/" + pattern + ".png"
+            );
+            patterns.add(new Pair<>(patternId, DyeColor.byId(colorId)));
         }
         return patterns;
     }
-
 }

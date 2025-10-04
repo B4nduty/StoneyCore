@@ -74,7 +74,6 @@ public class SCBulletEntity extends PersistentProjectileEntity {
         Vec3d vec3d2 = vec3d.normalize().multiply(0.05F);
         this.setPos(this.getX() - vec3d2.x, this.getY() - vec3d2.y, this.getZ() - vec3d2.z);
 
-
         for (PlayerEntity player : serverWorld.getPlayers()) {
             if (player != null) {
                 Vec3d playerPos = player.getPos();

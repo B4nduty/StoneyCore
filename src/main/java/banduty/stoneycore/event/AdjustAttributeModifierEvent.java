@@ -1,6 +1,8 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import io.wispforest.accessories.api.attributes.AccessoryAttributeBuilder;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
@@ -30,7 +32,7 @@ public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCall
         var data = AccessoriesDefinitionsLoader.getData(stack);
         var armor = data.armor();
         var toughness = data.toughness();
-        if (stack.getNbt() != null && stack.getNbt().getBoolean("visor_open")) {
+        if (NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false)) {
             armor -= 1;
             toughness -= 1;
         }

@@ -81,6 +81,10 @@ public class SCConfigs {
         @Sync(Option.SyncMode.INFORM_SERVER)
         public boolean getVisoredHelmet = true;
 
+        @Comment("Visored Helmet Overlay Alpha in Creative")
+        @RangeConstraint(min = 0f, max = 1f)
+        public float getVisoredHelmetAlpha = 0.4f;
+
         @Comment("Low Stamina Indicator")
         @Sync(Option.SyncMode.INFORM_SERVER)
         public boolean getLowStaminaIndicator = true;

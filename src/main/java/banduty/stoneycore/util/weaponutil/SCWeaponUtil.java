@@ -1,6 +1,8 @@
 package banduty.stoneycore.util.weaponutil;
 
 import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import net.minecraft.block.Block;
 import net.minecraft.block.CropBlock;
@@ -35,7 +37,7 @@ public final class SCWeaponUtil {
         boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING, stack.getItem()) == 0
                 && getDamageValues(SCDamageCalculator.DamageType.PIERCING, stack.getItem()) > 0
                 && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, stack.getItem()) > 0;
-        boolean isBludgeoning = stack.getNbt() != null && stack.getNbt().getBoolean("bludgeoning");
+        boolean isBludgeoning = NBTDataHelper.get(stack, INBTKeys.BLUDGEONING, false);
         boolean isPiercing = isPiercingWeapon(stack.getItem(), comboCount);
 
         if (isBludgeoning ^ bludgeoningToPiercing || WeaponDefinitionsLoader.getData(stack).melee().onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {

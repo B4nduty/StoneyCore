@@ -31,7 +31,7 @@
   "text.tooltip.stoneycore.deflectChanceType": "%s Deflect chance: %s%%",
   "text.tooltip.stoneycore.coreItem": "Equip to see your claimed land",
   "text.tooltip.stoneycore.weight": "Weight: %s Kg",
-  "text.tooltip.stoneycore.openVisor": "Right-Click to Open/Close Visor",
+  "text.tooltip.stoneycore.openVisor": "Alt to Open/Close Visor",
   "text.tooltip.stoneycore.openVisorDeflectChance": "Open Visor: -2% Deflect Chance",
 
   "text.config.stoneycore.title": "StoneyCore",
@@ -55,6 +55,7 @@
   "text.config.stoneycore.category.visualOptions": "Visual Options",
   "text.config.stoneycore.option.visualOptions.getDamageIndicator": "Damage Indicator",
   "text.config.stoneycore.option.visualOptions.getVisoredHelmet": "Visored Helmet Overlay",
+  "text.config.stoneycore.option.visualOptions.getVisoredHelmetAlpha": "Visored Helmet Overlay Alpha in Creative",
   "text.config.stoneycore.option.visualOptions.getLowStaminaIndicator": "Low Stamina Indicator",
   "text.config.stoneycore.option.visualOptions.getNoiseEffect": "Noise Effect in Low Stamina Indicator",
   "text.config.stoneycore.option.visualOptions.getMuzzlesSmokeParticlesTime": "Muzzles Smoke Particles Time Active",

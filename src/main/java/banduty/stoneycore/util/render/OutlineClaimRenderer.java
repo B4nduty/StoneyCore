@@ -31,15 +31,24 @@ public class OutlineClaimRenderer {
             return;
         }
 
+        boolean shouldRender = false;
         Land land = optionalLand.get();
+        if (player.getEquippedStack(EquipmentSlot.HEAD).isOf(land.getLandType().coreItem())) {
+            shouldRender = true;
+        }
+
         if (AccessoriesCapability.getOptionally(player).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                 ItemStack equippedStack = equipped.stack();
-                if (!player.getEquippedStack(EquipmentSlot.HEAD).isOf(land.getLandType().coreItem()) && !(equippedStack.getNbt() != null && equippedStack.getNbt().getBoolean(Registries.ITEM.getId(land.getLandType().coreItem()).getPath()))) {
-                    sendClearPacket(player);
-                    return;
+                if (equippedStack.getNbt() != null && equippedStack.getNbt().getBoolean(Registries.ITEM.getId(land.getLandType().coreItem()).getPath())) {
+                    shouldRender = true;
                 }
             }
+        }
+
+        if (!shouldRender) {
+            sendClearPacket(player);
+            return;
         }
 
         Set<BlockPos> claimed = land.getClaimed();

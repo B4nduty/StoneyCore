@@ -1,4 +1,4 @@
-package banduty.stoneycore.util.playerdata;
+package banduty.stoneycore.util.data.playerdata;
 
 import net.minecraft.nbt.NbtCompound;
 

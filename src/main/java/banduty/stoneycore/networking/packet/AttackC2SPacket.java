@@ -2,7 +2,7 @@ package banduty.stoneycore.networking.packet;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.util.WeightUtil;
-import banduty.stoneycore.util.playerdata.StaminaData;
+import banduty.stoneycore.util.data.playerdata.StaminaData;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;

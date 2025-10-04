@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 
 public record LandType(Identifier id, Block coreBlock, Item coreItem, int baseRadius,
-                       Map<Item, Integer> itemsToExpand, String expandFormula, TerrainType terrainType) {
+                       Map<Item, Integer> itemsToExpand, String expandFormula, TerrainType terrainType, int maxAllies) {
     @Override
     public @NotNull String toString() {
         return "LandType{id=" + id + ", block=" + coreBlock + ", item=" + coreItem + ", baseRadius=" + baseRadius + ", itemsToExpand=" + itemsToExpand + ", expandFormula=" + expandFormula + ", terrainType=" + terrainType + "}";

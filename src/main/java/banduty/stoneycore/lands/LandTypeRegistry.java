@@ -12,7 +12,7 @@ public class LandTypeRegistry {
     private static final Map<Identifier, LandDefinitionsLoader.LandValues> OVERRIDES = new HashMap<>();
 
     public static LandType register(Identifier id, Block coreBlock, Item coreItem, int baseRadius,
-                                    Map<Item, Integer> itemsToExpand, String expandFormula, LandType.TerrainType terrainType) {
+                                    Map<Item, Integer> itemsToExpand, String expandFormula, LandType.TerrainType terrainType, int maxAllies) {
         if (TYPES.containsKey(id)) {
             throw new IllegalArgumentException("LandType with id " + id + " is already registered!");
         }
@@ -22,7 +22,7 @@ public class LandTypeRegistry {
             throw new IllegalArgumentException("A LandType with core block " + coreBlock + " is already registered!");
         }
 
-        LandType type = new LandType(id, coreBlock, coreItem, baseRadius, itemsToExpand, expandFormula, terrainType);
+        LandType type = new LandType(id, coreBlock, coreItem, baseRadius, itemsToExpand, expandFormula, terrainType, maxAllies);
         TYPES.put(id, type);
         return type;
     }
@@ -45,10 +45,11 @@ public class LandTypeRegistry {
                     type.id(),
                     type.coreBlock(),
                     type.coreItem(),
-                    override.baseRadius() > 0 ? override.baseRadius() : type.baseRadius(),
+                    override.baseRadius() <= 0 ? type.baseRadius() : override.baseRadius(),
                     override.itemsToExpand().isEmpty() ? type.itemsToExpand() : override.itemsToExpand(),
-                    !override.expandFormula().isEmpty() ? override.expandFormula() : type.expandFormula(),
-                    type.terrainType()
+                    override.expandFormula().isEmpty() ? type.expandFormula() : override.expandFormula(),
+                    type.terrainType(),
+                    override.maxAllies()
             ));
         }
         return Optional.of(type);
@@ -58,7 +59,7 @@ public class LandTypeRegistry {
         return TYPES.values().stream()
                 .filter(type -> type.coreBlock() == block)
                 .findFirst()
-                .flatMap(type -> getById(type.id())); // include overrides
+                .flatMap(type -> getById(type.id()));
     }
 
     public static Collection<LandType> getAll() {

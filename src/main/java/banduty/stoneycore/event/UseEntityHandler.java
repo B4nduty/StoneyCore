@@ -52,7 +52,7 @@ public class UseEntityHandler implements UseEntityCallback {
                     player.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".owner.remove_ally", player.getName()).formatted(Formatting.DARK_RED), true);
                     playerEntity.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".ally.remove_ally", land.getLandTitle(serverWorld).getString()).formatted(Formatting.DARK_RED), true);
                     cooldowns.put(playerId, now);
-                } else {
+                } else if (land.getAllies().size() >= land.getMaxAllies() || land.getMaxAllies() < 0) {
                     land.addAlly(playerEntity.getUuid());
                     player.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".owner.add_ally", player.getName()).formatted(Formatting.DARK_GREEN), true);
                     playerEntity.sendMessage(Text.translatable("text.land." + land.getLandType().id().getNamespace() + ".ally.add_ally", land.getLandTitle(serverWorld).getString()).formatted(Formatting.DARK_GREEN), true);

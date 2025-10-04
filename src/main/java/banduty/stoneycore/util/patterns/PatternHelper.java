@@ -1,5 +1,7 @@
 package banduty.stoneycore.util.patterns;
 
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -76,20 +78,17 @@ public class PatternHelper {
     }
 
     public static void setBannerDyeColor(ItemStack stack, DyeColor dyeColor) {
-        NbtCompound nbt = stack.getOrCreateNbt();
         float[] components = dyeColor.getColorComponents();
-        nbt.putFloat("dyeColorR", components[0]);
-        nbt.putFloat("dyeColorG", components[1]);
-        nbt.putFloat("dyeColorB", components[2]);
+        NBTDataHelper.set(stack, INBTKeys.DYE_COLOR_R, components[0]);
+        NBTDataHelper.set(stack, INBTKeys.DYE_COLOR_G, components[1]);
+        NBTDataHelper.set(stack, INBTKeys.DYE_COLOR_B, components[2]);
     }
 
     public static float[] getBannerDyeColor(ItemStack stack) {
-        NbtCompound nbt = stack.getNbt();
-        if (nbt == null || !nbt.contains("dyeColorR")) return new float[]{1, 1, 1};
         return new float[] {
-                nbt.getFloat("dyeColorR"),
-                nbt.getFloat("dyeColorG"),
-                nbt.getFloat("dyeColorB")
+                NBTDataHelper.get(stack, INBTKeys.DYE_COLOR_R, 1.0f),
+                NBTDataHelper.get(stack, INBTKeys.DYE_COLOR_G, 1.0f),
+                NBTDataHelper.get(stack, INBTKeys.DYE_COLOR_B, 1.0f)
         };
     }
 }

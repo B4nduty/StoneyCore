@@ -1,4 +1,4 @@
-package banduty.stoneycore.util.playerdata;
+package banduty.stoneycore.util.data.playerdata;
 
 import banduty.stoneycore.StoneyCore;
 import net.minecraft.entity.attribute.ClampedEntityAttribute;
