@@ -1,5 +1,6 @@
 package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
@@ -20,7 +21,6 @@ import net.minecraft.block.CropBlock;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.*;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -91,28 +91,10 @@ public abstract class ItemMixin {
         if (world.isClient) return;
         if (!(user instanceof PlayerEntity player)) return;
         if (!WeaponDefinitionsLoader.isRanged(stack)) return;
-        if (SCRangeWeaponUtil.getAmmoRequirement(stack) != null) return;
 
         int useTime = WeaponDefinitionsLoader.getData(stack).ranged().maxUseTime() - remainingUseTicks;
-        UseAction useAction = WeaponDefinitionsLoader.getData(stack).ranged().useAction();
-        if (useAction == UseAction.CROSSBOW) {
-            handleCrossbowCharging(world, stack, player, useTime);
-        }
-    }
-
-    @Unique
-    private void handleCrossbowCharging(World world, ItemStack stack, PlayerEntity player, int useTime) {
-        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack.getItem());
-        SCRangeWeaponUtil.WeaponState weaponState = SCRangeWeaponUtil.getWeaponState(stack);
-
-        if (pullProgress >= 1.0F && !weaponState.isCharged()) {
-            SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack -> {
-                if (arrowStack.getItem() instanceof ArrowItem arrowItem) {
-                    PersistentProjectileEntity arrowEntity = arrowItem.createArrow(world, arrowStack, player);
-                    SCRangeWeaponUtil.loadAndPlayCrossbowSound(world, stack, player, arrowEntity);
-                }
-            });
-        }
+        if (RangedWeaponHandlers.get(WeaponDefinitionsLoader.getData(stack).ranged().id()).isPresent())
+            RangedWeaponHandlers.get(WeaponDefinitionsLoader.getData(stack).ranged().id()).get().handleUsageTick(world, stack, player, useTime);
     }
 
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
@@ -211,7 +193,7 @@ public abstract class ItemMixin {
         }
 
         user.setCurrentHand(hand);
-        SCRangeWeaponUtil.shootBullet(world, stack, user);
+        SCRangeWeaponUtil.handleShoot(world, user, stack);
         SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(
                 weaponState.isReloading(), false, true));
 
@@ -271,7 +253,7 @@ public abstract class ItemMixin {
 
     @Unique
     private void handleCrossbowRelease(ItemStack stack, int useTime) {
-        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack.getItem());
+        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack);
         if (pullProgress < 1.0F) {
             SCRangeWeaponUtil.WeaponState currentState = SCRangeWeaponUtil.getWeaponState(stack);
             SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(

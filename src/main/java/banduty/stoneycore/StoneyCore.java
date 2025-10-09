@@ -1,5 +1,9 @@
 package banduty.stoneycore;
 
+import banduty.stoneycore.combat.range.BowHandler;
+import banduty.stoneycore.combat.range.CrossbowHandler;
+import banduty.stoneycore.combat.range.MusketHandler;
+import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.commands.SCCommandsHandler;
 import banduty.stoneycore.config.StoneyCoreConfig;
 import banduty.stoneycore.datagen.ModItemTagProvider;
@@ -73,6 +77,10 @@ public class StoneyCore implements ModInitializer, DataGeneratorEntrypoint {
         CraftingPreviewCallback.EVENT.register(new CraftingPreviewHandler());
 		ModParticles.registerParticles();
         CommandRegistrationCallback.EVENT.register(new SCCommandsHandler());
+
+        RangedWeaponHandlers.register(new BowHandler());
+        RangedWeaponHandlers.register(new CrossbowHandler());
+        RangedWeaponHandlers.register(new MusketHandler());
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new WeaponDefinitionsLoader());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new ArmorDefinitionsLoader());

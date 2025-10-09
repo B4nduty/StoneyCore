@@ -1,5 +1,6 @@
 package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.util.DyeUtil;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
@@ -51,7 +52,7 @@ public abstract class ItemRendererMixin {
             return;
         }
 
-        if (renderMode == ModelTransformationMode.GUI || renderMode == ModelTransformationMode.GROUND || renderMode == ModelTransformationMode.FIXED || itemStack.isIn(SCTags.GEO_2D_ITEMS.getTag())) {
+        if (renderMode == ModelTransformationMode.GUI || renderMode == ModelTransformationMode.GROUND || itemStack.isIn(SCTags.GEO_2D_ITEMS.getTag())) {
             return;
         }
 
@@ -80,7 +81,7 @@ public abstract class ItemRendererMixin {
             model.getTransformation().getTransformation(renderMode).apply(leftHanded, matrices);
             matrices.translate(-0.5F, -0.5F, -0.5F);
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getCutout());
-            renderBakedItemModel(guiBakedModel, light, overlay, matrices, vertexConsumer, PatternHelper.getBannerDyeColor(itemStack));
+            renderBakedItemModel(guiBakedModel, light, overlay, matrices, vertexConsumer, DyeUtil.getFloatDyeColor(itemStack));
 
             List<Pair<Identifier, DyeColor>> bannerPatterns = PatternHelper.getBannerPatterns(itemStack);
             if (!bannerPatterns.isEmpty()) {

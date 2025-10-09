@@ -1,13 +1,14 @@
 package banduty.stoneycore.util.weaponutil;
 
+import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.entity.custom.SCArrowEntity;
 import banduty.stoneycore.entity.custom.SCBulletEntity;
 import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ArrowItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -26,57 +27,64 @@ import net.minecraft.world.World;
 import java.util.*;
 
 public final class SCRangeWeaponUtil {
-    private SCRangeWeaponUtil() {
-        throw new UnsupportedOperationException("Utility class should not be instantiated");
+    private SCRangeWeaponUtil() { throw new UnsupportedOperationException("Utility class"); }
+
+    private static final String KEY_RELOAD = "reload";
+    private static final String KEY_CHARGED = "charged";
+    private static final String KEY_SHOOT = "shoot";
+
+    public static WeaponState getWeaponState(ItemStack stack) {
+        NbtCompound nbt = stack.getNbt();
+        return nbt != null ? WeaponState.fromNbt(nbt) : new WeaponState(false, false, false);
     }
 
-    public static TypedActionResult<ItemStack> handleCrossbowUse(World world, PlayerEntity user, Hand hand, ItemStack itemStack) {
-        if (world == null || user == null || itemStack == null) {
-            return TypedActionResult.fail(ItemStack.EMPTY);
-        }
+    public static void setWeaponState(ItemStack stack, WeaponState state) {
+        NbtCompound nbt = stack.getOrCreateNbt();
+        state.applyToNbt(nbt);
+    }
 
-        Optional<ItemStack> arrowStackOpt = getArrowFromInventory(user);
-        if (arrowStackOpt.isPresent() && arrowStackOpt.get().getItem() instanceof ArrowItem arrowItem) {
-            PersistentProjectileEntity arrowEntity = arrowItem.createArrow(world, arrowStackOpt.get(), user);
-            WeaponState weaponState = getWeaponState(itemStack);
-            NbtCompound nbt = itemStack.getOrCreateNbt();
-            Projectiles projectiles = Projectiles.fromNbt(nbt, arrowEntity);
+    public static void handleShoot(World world, PlayerEntity player, ItemStack weapon) {
+        var def = WeaponDefinitionsLoader.getData(weapon);
+        if (def == null || def.ranged() == null) return;
+        String type = def.ranged().id();
+        RangedWeaponHandlers.get(type).ifPresentOrElse(
+                handler -> {
+                    if (handler.canShoot(weapon)) handler.shoot(world, player, weapon);
+                },
+                () -> shootBullet(world, weapon, player)
+        );
+    }
 
-            if (weaponState.isCharged()) {
-                setWeaponState(itemStack, new WeaponState(false, false, true));
-                projectiles = projectiles.unloadProjectile();
-                projectiles.applyToNbt(nbt);
-                shootArrow(world, itemStack, user, arrowStackOpt.get(), 1f);
-                return TypedActionResult.consume(itemStack);
-            } else if (projectiles.getArrowCount() < 1) {
-                setWeaponState(itemStack, new WeaponState(true, false, false));
-                user.setCurrentHand(hand);
-                return TypedActionResult.consume(itemStack);
-            } else {
-                return TypedActionResult.fail(itemStack);
-            }
-        }
-        return TypedActionResult.fail(itemStack);
+    public static void handleReload(World world, PlayerEntity player, ItemStack weapon) {
+        var def = WeaponDefinitionsLoader.getData(weapon);
+        if (def == null || def.ranged() == null) return;
+        String type = def.ranged().id();
+        RangedWeaponHandlers.get(type).ifPresent(h -> h.reload(world, player, weapon));
     }
 
     public static void shootArrow(World world, ItemStack stack, PlayerEntity player, ItemStack arrowStack, float pullProgress) {
+        if (world == null || player == null || arrowStack == null || arrowStack.isEmpty()) return;
         if (!(arrowStack.getItem() instanceof ArrowItem arrowItem)) return;
+
         PersistentProjectileEntity arrowEntity = arrowItem.createArrow(world, arrowStack, player);
         arrowEntity.setDamage(WeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
-        if (arrowEntity instanceof SCArrowEntity scArrowEntity) scArrowEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
+        if (arrowEntity instanceof SCArrowEntity scArrowEntity)
+            scArrowEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
         arrowEntity.setOwner(player);
+
         if (NBTDataHelper.get(arrowStack, INBTKeys.IGNITED, false)) {
             arrowEntity.setOnFire(true);
             arrowEntity.setFireTicks(1000);
         }
 
-        arrowEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, pullProgress * WeaponDefinitionsLoader.getData(stack).ranged().speed(), WeaponDefinitionsLoader.getData(stack).ranged().divergence());
+        arrowEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F,
+                pullProgress * WeaponDefinitionsLoader.getData(stack).ranged().speed(),
+                WeaponDefinitionsLoader.getData(stack).ranged().divergence());
 
         if (player.isCreative()) {
             arrowEntity.pickupType = PersistentProjectileEntity.PickupPermission.CREATIVE_ONLY;
         } else {
             stack.damage(1, player, p -> p.sendToolBreakStatus(player.getActiveHand()));
-            player.getInventory().removeStack(getArrowSlot(player), 1);
         }
 
         world.spawnEntity(arrowEntity);
@@ -89,7 +97,9 @@ public final class SCRangeWeaponUtil {
         bulletEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
         bulletEntity.setOwner(player);
 
-        bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, WeaponDefinitionsLoader.getData(stack).ranged().speed(), WeaponDefinitionsLoader.getData(stack).ranged().divergence());
+        bulletEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F,
+                WeaponDefinitionsLoader.getData(stack).ranged().speed(),
+                WeaponDefinitionsLoader.getData(stack).ranged().divergence());
 
         world.spawnEntity(bulletEntity);
         playSoundForPlayers(world, stack, player);
@@ -105,17 +115,17 @@ public final class SCRangeWeaponUtil {
     }
 
     private static void playSoundForPlayers(World world, ItemStack stack, PlayerEntity player) {
+        if (world == null) return;
+        var definitionData = WeaponDefinitionsLoader.getData(stack);
+        if (definitionData == null || definitionData.ranged() == null || definitionData.ranged().soundEvent() == null)
+            return;
+
         for (PlayerEntity playerEntity : world.getPlayers()) {
-            if (playerEntity != null) {
-                Vec3d playerPos = player.getPos();
-                Vec3d hearPos = playerEntity.getPos();
-                double distance = playerPos.distanceTo(hearPos);
-                float volume = (float) Math.max(0, 1 - (distance * 0.01));
-                if (volume != 0) {
-                    WeaponDefinitionsLoader.DefinitionData definitionData = WeaponDefinitionsLoader.getData(stack);
-                    if (definitionData.ranged().soundEvent() != null) player.playSound(definitionData.ranged().soundEvent(), SoundCategory.BLOCKS, volume, 1.0F);
-                }
-            }
+            if (playerEntity == null) continue;
+            Vec3d hearPos = playerEntity.getPos();
+            double distance = player.getPos().distanceTo(hearPos);
+            float volume = (float) Math.max(0, 1 - (distance * 0.01));
+            if (volume > 0) playerEntity.playSound(definitionData.ranged().soundEvent(), SoundCategory.BLOCKS, volume, 1.0F);
         }
     }
 
@@ -123,12 +133,8 @@ public final class SCRangeWeaponUtil {
         Vec3d handPos = getHandPosition(player, hand);
         Vec3d lookDir = player.getRotationVec(1.0F);
 
-        List<Vec3d> trailPositions = new ArrayList<>();
         for (int i = 0; i < distance; i++) {
-            trailPositions.add(handPos.add(lookDir.multiply(i)));
-        }
-
-        for (Vec3d pos : trailPositions) {
+            Vec3d pos = handPos.add(lookDir.multiply(i));
             world.spawnParticles(particle, pos.x, pos.y, pos.z, count, delta, delta, delta, spread);
         }
     }
@@ -146,99 +152,76 @@ public final class SCRangeWeaponUtil {
         return basePos.add(sideOffset).add(player.getRotationVec(1.0F).multiply(zOffset));
     }
 
-    public static void loadAndPlayCrossbowSound(World world, ItemStack stack, PlayerEntity player, PersistentProjectileEntity arrowEntity) {
-        Projectiles.fromNbt(stack.getOrCreateNbt(), arrowEntity).loadProjectile();
-        setWeaponState(stack, new WeaponState(false, true, getWeaponState(stack).isShooting()));
-
-        SoundCategory soundCategory = player instanceof PlayerEntity ? SoundCategory.PLAYERS : SoundCategory.HOSTILE;
-        world.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ITEM_CROSSBOW_LOADING_END, soundCategory, 1.0F, 1.0F / (world.getRandom().nextFloat() * 0.5F + 1.0F) + 0.2F);
-        if (!player.getAbilities().creativeMode) {
-            stack.damage(1, player, p -> p.sendToolBreakStatus(player.getActiveHand()));
-        }
-    }
-
     public static Optional<ItemStack> getArrowFromInventory(PlayerEntity player) {
         return player.getInventory().main.stream()
-                .filter(stack -> stack.getItem() instanceof ArrowItem)
+                .filter(stack -> !stack.isEmpty() && stack.getItem() instanceof ArrowItem)
                 .findFirst();
     }
 
-    private static int getArrowSlot(PlayerEntity player) {
-        return player.getInventory().main.stream()
-                .filter(stack -> stack.getItem() instanceof ArrowItem)
-                .map(player.getInventory().main::indexOf)
-                .findFirst().orElse(-1);
+    public static int getArrowSlot(PlayerEntity player) {
+        var main = player.getInventory().main;
+        for (int i = 0; i < main.size(); i++) {
+            ItemStack s = main.get(i);
+            if (!s.isEmpty() && s.getItem() instanceof ArrowItem) return i;
+        }
+        return -1;
     }
 
     public static float getBowPullProgress(int useTicks) {
-        float progress = useTicks / 20.0F;
-        return Math.min((progress * progress + progress * 2.0F) / 3.0F, 1.0F);
+        float pull = (float) useTicks / 20.0F;
+        pull = (pull * pull + pull * 2.0F) / 3.0F;
+        return Math.min(pull, 1.0F);
     }
 
-    public static float getCrossbowPullProgress(int useTicks, Item item) {
-        return Math.min((float) useTicks / (WeaponDefinitionsLoader.getData(item).ranged().rechargeTime() * 20), 1.0F);
+    public static float getCrossbowPullProgress(int useTicks, ItemStack itemStack) {
+        if (WeaponDefinitionsLoader.getData(itemStack).ranged() == null) return 0;
+        int chargeTime = WeaponDefinitionsLoader.getData(itemStack).ranged().rechargeTime() * 20;
+        float progress = (float) useTicks / (float) chargeTime;
+        return Math.min(progress, 1.0F);
     }
 
-    public static WeaponState getWeaponState(ItemStack stack) {
-        NbtCompound nbt = stack.getNbt();
-        return nbt != null ? WeaponState.fromNbt(nbt) : new WeaponState(false, false, false);
+    public static void loadAndPlayCrossbowSound(World world, ItemStack stack, PlayerEntity player) {
+        if (world.isClient) return;
+
+        world.playSound(
+                null,
+                player.getBlockPos(),
+                SoundEvents.ITEM_CROSSBOW_LOADING_END,
+                SoundCategory.PLAYERS,
+                1.0F,
+                1.0F / (world.getRandom().nextFloat() * 0.5F + 1.0F)
+        );
+
+        setWeaponState(stack, new WeaponState(false, true, false));
     }
 
-    public static void setWeaponState(ItemStack stack, WeaponState state) {
-        NbtCompound nbt = stack.getOrCreateNbt();
-        state.applyToNbt(nbt);
-    }
+    public static TypedActionResult<ItemStack> handleCrossbowUse(World world, PlayerEntity player, Hand hand, ItemStack stack) {
+        WeaponState state = getWeaponState(stack);
 
-    public record Projectiles(PersistentProjectileEntity persistentProjectileEntity, int arrowCount) {
-
-        public static Projectiles fromNbt(NbtCompound nbt, PersistentProjectileEntity persistentProjectileEntity) {
-            int count = nbt.contains(persistentProjectileEntity.getEntityName()) ? nbt.getInt(persistentProjectileEntity.getEntityName()) : 0;
-            return new Projectiles(persistentProjectileEntity, count);
-        }
-
-        public void loadProjectile() {
-            new Projectiles(persistentProjectileEntity, arrowCount + 1);
-        }
-
-        public Projectiles unloadProjectile() {
-            return new Projectiles(persistentProjectileEntity, Math.max(arrowCount - 1, 0));
-        }
-
-        public void applyToNbt(NbtCompound nbt) {
-            nbt.putInt(persistentProjectileEntity.getEntityName(), arrowCount);
-        }
-
-        public int getArrowCount() {
-            return arrowCount;
-        }
-    }
-
-    public record WeaponState(boolean isReloading, boolean isCharged, boolean isShooting) {
-        public static WeaponState fromNbt(NbtCompound nbt) {
-            return new WeaponState(
-                    nbt.getBoolean("reload"),
-                    nbt.getBoolean("charged"),
-                    nbt.getBoolean("shoot")
-            );
-        }
-
-        public void applyToNbt(NbtCompound nbt) {
-            nbt.putBoolean("reload", isReloading);
-            nbt.putBoolean("charged", isCharged);
-            nbt.putBoolean("shoot", isShooting);
+        if (state.isCharged()) {
+            Optional<ItemStack> arrowOpt = getArrowFromInventory(player);
+            if (arrowOpt.isPresent()) {
+                shootArrow(world, stack, player, arrowOpt.get(), 1.0F);
+                setWeaponState(stack, new WeaponState(false, false, true));
+                return TypedActionResult.consume(stack);
+            } else {
+                return TypedActionResult.fail(stack);
+            }
+        } else {
+            player.setCurrentHand(hand);
+            return TypedActionResult.consume(stack);
         }
     }
 
-    private static Item[] getItemsFromIds(Set<String> itemIds) {
-        return itemIds.stream()
-                .map(Identifier::new)
-                .map(Registries.ITEM::get)
-                .toArray(Item[]::new);
-    }
+    public record AmmoRequirement(
+            int amountFirstItem, Item firstItem, Item firstItem2nOption,
+            int amountSecondItem, Item secondItem, Item secondItem2nOption,
+            int amountThirdItem, Item thirdItem, Item thirdItem2nOption
+    ) {}
 
     public static AmmoRequirement getAmmoRequirement(ItemStack itemStack) {
         WeaponDefinitionsLoader.DefinitionData definitionData = WeaponDefinitionsLoader.getData(itemStack);
+        if (definitionData.ranged() == null) return null;
         Map<String, WeaponDefinitionsLoader.AmmoRequirementData> ammoRequirementMap = definitionData.ranged().ammoRequirement();
 
         int amountFirstItem = 0;
@@ -277,9 +260,25 @@ public final class SCRangeWeaponUtil {
                 : null;
     }
 
-    public record AmmoRequirement(
-            int amountFirstItem, Item firstItem, Item firstItem2nOption,
-            int amountSecondItem, Item secondItem, Item secondItem2nOption,
-            int amountThirdItem, Item thirdItem, Item thirdItem2nOption
-    ) {}
+    private static Item[] getItemsFromIds(Set<String> itemIds) {
+        return itemIds.stream()
+                .map(Identifier::new)
+                .map(Registries.ITEM::get)
+                .toArray(Item[]::new);
+    }
+
+    public record WeaponState(boolean isReloading, boolean isCharged, boolean isShooting) {
+
+        public static WeaponState fromNbt(NbtCompound nbt) {
+                if (nbt == null) return new WeaponState(false, false, false);
+                return new WeaponState(nbt.getBoolean(KEY_RELOAD), nbt.getBoolean(KEY_CHARGED), nbt.getBoolean(KEY_SHOOT));
+            }
+
+            public void applyToNbt(NbtCompound nbt) {
+                if (nbt == null) return;
+                nbt.putBoolean(KEY_RELOAD, isReloading);
+                nbt.putBoolean(KEY_CHARGED, isCharged);
+                nbt.putBoolean(KEY_SHOOT, isShooting);
+            }
+        }
 }

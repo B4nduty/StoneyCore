@@ -142,15 +142,8 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
 
     public record DefinitionData(EnumSet<Usage> usage, MeleeData melee, RangedData ranged, AmmoData ammo) {}
 
-    public record MeleeData(
-            Map<String, Float> damage,
-            Map<String, Double> radius,
-            int[] piercingAnimation,
-            int animation,
-            SCDamageCalculator.DamageType onlyDamageType,
-            double deflectChance,
-            double bonusKnockback
-    ) {
+    public record MeleeData(Map<String, Float> damage, Map<String, Double> radius, int[] piercingAnimation,
+            int animation, SCDamageCalculator.DamageType onlyDamageType, double deflectChance, double bonusKnockback) {
         public static final Codec<MeleeData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.unboundedMap(Codec.STRING, Codec.FLOAT).xmap(
                         map -> {
@@ -175,30 +168,18 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
                 new MeleeData(damage, radius, piercingAnimation, animation, onlyDamageType.orElse(null), deflectChance, bonusKnockback)));
     }
 
-    public record RangedData(
-            float baseDamage,
-            SCDamageCalculator.DamageType damageType,
-            int maxUseTime,
-            float speed,
-            float divergence,
-            int rechargeTime,
-            boolean needsFlintAndSteel,
-            UseAction useAction,
-            Map<String, AmmoRequirementData> ammoRequirement,
-            SoundEvent soundEvent
-    ) {
+    public record RangedData(String id, float baseDamage, SCDamageCalculator.DamageType damageType, int maxUseTime,
+            float speed, float divergence, int rechargeTime, boolean needsFlintAndSteel, UseAction useAction,
+            Map<String, AmmoRequirementData> ammoRequirement, SoundEvent soundEvent) {
 
-        private static final Codec<UseAction> USE_ACTION_CODEC = Codec.STRING.xmap(
-                str -> UseAction.valueOf(str.toUpperCase()),
-                UseAction::name
-        );
+        private static final Codec<UseAction> USE_ACTION_CODEC =
+                Codec.STRING.xmap(str -> UseAction.valueOf(str.toUpperCase()), UseAction::name);
 
-        private static final Codec<SoundEvent> SOUND_EVENT_CODEC = Identifier.CODEC.xmap(
-                Registries.SOUND_EVENT::get,
-                Registries.SOUND_EVENT::getId
-        );
+        private static final Codec<SoundEvent> SOUND_EVENT_CODEC =
+                Identifier.CODEC.xmap(Registries.SOUND_EVENT::get, Registries.SOUND_EVENT::getId);
 
         public static final Codec<RangedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.STRING.optionalFieldOf("id", "bow").forGetter(RangedData::id),
                 Codec.FLOAT.optionalFieldOf("baseDamage", 0f).forGetter(RangedData::baseDamage),
                 SCDamageCalculator.DamageType.CODEC.optionalFieldOf("damageType").forGetter(rd -> Optional.ofNullable(rd.damageType)),
                 Codec.INT.optionalFieldOf("maxUseTime", 0).forGetter(RangedData::maxUseTime),
@@ -209,8 +190,8 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
                 USE_ACTION_CODEC.optionalFieldOf("useAction", UseAction.NONE).forGetter(RangedData::useAction),
                 Codec.unboundedMap(Codec.STRING, AmmoRequirementData.CODEC).optionalFieldOf("ammoRequirement", Map.of()).forGetter(RangedData::ammoRequirement),
                 SOUND_EVENT_CODEC.optionalFieldOf("soundEvent").forGetter(rd -> Optional.ofNullable(rd.soundEvent))
-        ).apply(instance, (baseDamage, damageType, maxUseTime, speed, divergence, rechargeTime, needsFlintAndSteel, useAction, ammoRequirement, soundEvent) ->
-                new RangedData(baseDamage, damageType.orElse(null), maxUseTime, speed, divergence, rechargeTime, needsFlintAndSteel, useAction, ammoRequirement, soundEvent.orElse(null))));
+        ).apply(instance, (id, baseDamage, damageType, maxUseTime, speed, divergence, rechargeTime, needsFlintAndSteel, useAction, ammoRequirement, soundEvent) ->
+                new RangedData(id, baseDamage, damageType.orElse(null), maxUseTime, speed, divergence, rechargeTime, needsFlintAndSteel, useAction, ammoRequirement, soundEvent.orElse(null))));
     }
 
     public record AmmoData(double deflectChance) {

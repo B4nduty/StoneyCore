@@ -5,7 +5,6 @@ import banduty.stoneycore.util.data.keys.SCKey;
 public class INBTKeys {
     // Weapon
     public static final SCKey<Boolean> BLUDGEONING = SCKey.bool("bludgeoning");
-    public static final SCKey<Boolean> RECHARGE = SCKey.bool("recharge");
     public static final SCKey<Boolean> IGNITED = SCKey.bool("ignited");
 
     // Armor

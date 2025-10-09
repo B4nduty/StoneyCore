@@ -1,7 +1,6 @@
 package banduty.stoneycore.util.servertick;
 
 import banduty.stoneycore.util.SCInventoryItemFinder;
-import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.data.itemdata.SCTags;
@@ -39,6 +38,8 @@ public class MechanicsUtil {
         ItemStack currentItem = player.getMainHandStack();
         NbtCompound nbt = currentItem.getNbt();
 
+        if (SCRangeWeaponUtil.getAmmoRequirement(currentItem) == null) return;
+
         var weaponState = SCRangeWeaponUtil.getWeaponState(currentItem);
 
         if (weaponState.isReloading()) {
@@ -49,14 +50,14 @@ public class MechanicsUtil {
         ItemStack lastItem = LAST_ITEMSTACK_MAP.get(player);
         if (currentItem != lastItem) {
             if (lastItem != null && lastItem.getNbt() != null && WeaponDefinitionsLoader.isRanged(lastItem)) {
-                NBTDataHelper.set(lastItem, INBTKeys.RECHARGE, false);
+                SCRangeWeaponUtil.setWeaponState(currentItem, new SCRangeWeaponUtil.WeaponState(false, weaponState.isCharged(), false));
                 resetWeaponState(player, lastItem);
             }
             LAST_ITEMSTACK_MAP.put(player, currentItem);
             return;
         }
 
-        if (nbt == null || !isReloading(currentItem) || !WeaponDefinitionsLoader.isRanged(currentItem)) {
+        if (nbt == null || !SCRangeWeaponUtil.getWeaponState(currentItem).isReloading() || !WeaponDefinitionsLoader.isRanged(currentItem)) {
             resetRechargeTime(player);
             return;
         }
@@ -73,17 +74,13 @@ public class MechanicsUtil {
         } else if (hasRequiredAmmo(player, currentItem)) {
             startReload(player, currentItem);
         } else {
-            NBTDataHelper.set(currentItem, INBTKeys.RECHARGE, false);
+            SCRangeWeaponUtil.setWeaponState(currentItem, new SCRangeWeaponUtil.WeaponState(false, false, false));
         }
 
         int requiredTicks = WeaponDefinitionsLoader.getData(currentItem).ranged().rechargeTime() * 20;
         if (getRechargeTime(player) >= requiredTicks) {
             completeReload(player, currentItem);
         }
-    }
-
-    private static boolean isReloading(ItemStack itemStack) {
-        return NBTDataHelper.get(itemStack, INBTKeys.RECHARGE, false);
     }
 
     private static boolean hasRequiredAmmo(ServerPlayerEntity player, ItemStack itemStack) {
@@ -122,7 +119,6 @@ public class MechanicsUtil {
 
         SCRangeWeaponUtil.setWeaponState(itemStack, new SCRangeWeaponUtil.WeaponState(false, true, false));
         setRechargeTime(player, 0);
-        NBTDataHelper.get(itemStack, INBTKeys.RECHARGE, false);
     }
 
     private static void resetWeaponState(ServerPlayerEntity player, ItemStack itemStack) {

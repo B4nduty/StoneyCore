@@ -33,6 +33,7 @@
   "text.tooltip.stoneycore.weight": "Weight: %s Kg",
   "text.tooltip.stoneycore.openVisor": "Alt to Open/Close Visor",
   "text.tooltip.stoneycore.openVisorDeflectChance": "Open Visor: -2% Deflect Chance",
+  "text.tooltip.stoneycore.openVisorEatDrink": "You can't §l§4eat/drink §rwith the §l§4Visor Closed",
 
   "text.config.stoneycore.title": "StoneyCore",
   "text.config.stoneycore.section.combatOptions": "Combat Options",
