@@ -21,6 +21,11 @@ public class MusketHandler implements IRangedWeaponHandler {
     }
 
     @Override
+    public void handleRelease(ItemStack stack, World world, PlayerEntity player, int useTime, ItemStack arrowStack) {
+
+    }
+
+    @Override
     public boolean canShoot(ItemStack weapon) {
         return !SCRangeWeaponUtil.getWeaponState(weapon).isReloading();
     }

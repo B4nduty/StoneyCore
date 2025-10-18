@@ -112,6 +112,8 @@ public abstract class SCArrowEntity extends PersistentProjectileEntity {
     public boolean scHitEntity(LivingEntity target, ItemStack stack, double damage) {
         if (this.getWorld().isClient()) return false;
 
+        damage *= getVelocity().length();
+
         damage = SCDamageCalculator.getSCDamage(target, damage, getDamageType());
         SCDamageCalculator.applyDamage(target, this, stack, damage);
         if (this.isOnFire()) target.setOnFireFor(5);

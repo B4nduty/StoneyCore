@@ -107,7 +107,9 @@ public abstract class ItemMixin {
                     .ifPresent(o -> {
                         for (SlotEntryReference equipped : AccessoriesCapability.get(user).getAllEquipped()) {
                             ItemStack itemStack = equipped.stack();
+                            if (user.isCreative()) break;
                             if (!NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false) && itemStack.isIn(SCTags.VISORED_HELMET.getTag())) {
+                                user.sendMessage(Text.translatable("text.tooltip.stoneycore.openVisorEatDrink"), true);
                                 cir.setReturnValue(TypedActionResult.fail(stack));
                                 return;
                             }
@@ -131,7 +133,6 @@ public abstract class ItemMixin {
 
     @Unique
     private void handleWeaponUse(World world, PlayerEntity user, Hand hand, ItemStack stack, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
-        // Toggle bludgeoning mode when sneaking and server-side
         if (!world.isClient && user.isSneaking() && isBludgeoningWeapon(stack.getItem())) {
             toggleBludgeoningMode(stack);
             cir.setReturnValue(TypedActionResult.success(stack));
@@ -226,39 +227,14 @@ public abstract class ItemMixin {
         if (world.isClient) return;
         if (!(user instanceof PlayerEntity player)) return;
         if (!WeaponDefinitionsLoader.isRanged(stack)) return;
+        var def = WeaponDefinitionsLoader.getData(stack);
+        if (def == null || def.ranged() == null) return;
+        String type = def.ranged().id();
 
         int useTime = WeaponDefinitionsLoader.getData(stack).ranged().maxUseTime() - remainingUseTicks;
         SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack ->
-                handleWeaponRelease(stack, world, player, useTime, arrowStack)
-        );
-    }
-
-    @Unique
-    private void handleWeaponRelease(ItemStack stack, World world, PlayerEntity player, int useTime, ItemStack arrowStack) {
-        UseAction useAction = WeaponDefinitionsLoader.getData(stack).ranged().useAction();
-        if (useAction == UseAction.BOW) {
-            handleBowRelease(world, stack, player, arrowStack, useTime);
-        } else if (useAction == UseAction.CROSSBOW) {
-            handleCrossbowRelease(stack, useTime);
-        }
-    }
-
-    @Unique
-    private void handleBowRelease(World world, ItemStack stack, PlayerEntity player, ItemStack arrowStack, int useTime) {
-        float pullProgress = SCRangeWeaponUtil.getBowPullProgress(useTime);
-        if (pullProgress > 0.1f) {
-            SCRangeWeaponUtil.shootArrow(world, stack, player, arrowStack, pullProgress);
-        }
-    }
-
-    @Unique
-    private void handleCrossbowRelease(ItemStack stack, int useTime) {
-        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack);
-        if (pullProgress < 1.0F) {
-            SCRangeWeaponUtil.WeaponState currentState = SCRangeWeaponUtil.getWeaponState(stack);
-            SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(
-                    false, currentState.isCharged(), currentState.isShooting()));
-        }
+                RangedWeaponHandlers.get(type).ifPresent(h -> h.handleRelease(stack, world, player, useTime, arrowStack)
+        ));
     }
 
     @Inject(method = "appendTooltip", at = @At("HEAD"))

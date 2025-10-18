@@ -41,6 +41,16 @@ public class CrossbowHandler implements IRangedWeaponHandler {
     }
 
     @Override
+    public void handleRelease(ItemStack stack, World world, PlayerEntity player, int useTime, ItemStack arrowStack) {
+        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack);
+        if (pullProgress < 1.0F) {
+            SCRangeWeaponUtil.WeaponState currentState = SCRangeWeaponUtil.getWeaponState(stack);
+            SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(
+                    false, currentState.isCharged(), currentState.isShooting()));
+        }
+    }
+
+    @Override
     public boolean canShoot(ItemStack weapon) {
         var s = SCRangeWeaponUtil.getWeaponState(weapon);
         return s.isCharged() && !s.isReloading();

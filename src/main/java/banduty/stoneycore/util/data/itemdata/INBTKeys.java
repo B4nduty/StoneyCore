@@ -6,6 +6,7 @@ public class INBTKeys {
     // Weapon
     public static final SCKey<Boolean> BLUDGEONING = SCKey.bool("bludgeoning");
     public static final SCKey<Boolean> IGNITED = SCKey.bool("ignited");
+    public static final SCKey<Boolean> FROM_RANGED_WEAPON = SCKey.bool("from_ranged_weapon");
 
     // Armor
     public static final SCKey<Boolean> VISOR_OPEN = SCKey.bool("visorOpen");

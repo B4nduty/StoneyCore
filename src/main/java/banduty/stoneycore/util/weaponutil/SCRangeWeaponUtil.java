@@ -65,9 +65,10 @@ public final class SCRangeWeaponUtil {
     public static void shootArrow(World world, ItemStack stack, PlayerEntity player, ItemStack arrowStack, float pullProgress) {
         if (world == null || player == null || arrowStack == null || arrowStack.isEmpty()) return;
         if (!(arrowStack.getItem() instanceof ArrowItem arrowItem)) return;
+        NBTDataHelper.set(arrowStack, INBTKeys.FROM_RANGED_WEAPON, true);
 
         PersistentProjectileEntity arrowEntity = arrowItem.createArrow(world, arrowStack, player);
-        arrowEntity.setDamage(WeaponDefinitionsLoader.getData(stack).ranged().baseDamage());
+        arrowEntity.setDamage(WeaponDefinitionsLoader.getData(stack).ranged().baseDamage() / WeaponDefinitionsLoader.getData(stack).ranged().speed());
         if (arrowEntity instanceof SCArrowEntity scArrowEntity)
             scArrowEntity.setDamageType(WeaponDefinitionsLoader.getData(stack).ranged().damageType());
         arrowEntity.setOwner(player);
