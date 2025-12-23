@@ -2,9 +2,9 @@ package banduty.stoneycore.event.custom;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.inventory.RecipeInputInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
 
 public interface CraftingPreviewCallback {
     Event<CraftingPreviewCallback> EVENT = EventFactory.createArrayBacked(
@@ -25,5 +25,5 @@ public interface CraftingPreviewCallback {
      * @param original  the current recipe output
      * @return a possibly modified stack (can be same as original)
      */
-    ItemStack modifyResult(ServerPlayerEntity player, RecipeInputInventory inventory, ItemStack original);
+    ItemStack modifyResult(ServerPlayer player, CraftingContainer inventory, ItemStack original);
 }

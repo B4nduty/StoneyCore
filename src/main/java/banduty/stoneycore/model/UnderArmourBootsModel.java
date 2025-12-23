@@ -1,51 +1,53 @@
 package banduty.stoneycore.model;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.*;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.world.entity.LivingEntity;
 
 @Environment(EnvType.CLIENT)
-public class UnderArmourBootsModel extends BipedEntityModel<LivingEntity> {
+public class UnderArmourBootsModel extends HumanoidModel<LivingEntity> {
 	private final ModelPart armorRightBoot;
 	private final ModelPart armorLeftBoot;
 
 	public UnderArmourBootsModel(ModelPart root) {
 		super(root);
-		this.setVisible(false);
+		this.setAllVisible(false);
 		this.armorRightBoot = root.getChild("armorRightBoot");
 		this.armorLeftBoot = root.getChild("armorLeftBoot");
 	}
 
-	@Override
-	protected Iterable<ModelPart> getHeadParts() {
-		return ImmutableList.of(this.head);
-	}
+    @Override
+    protected Iterable<ModelPart> headParts() {
+        return ImmutableList.of(this.head);
+    }
 
-	@Override
-	protected Iterable<ModelPart> getBodyParts() {
+    @Override
+    protected Iterable<ModelPart> bodyParts() {
 		return ImmutableList.of(this.armorRightBoot, this.armorLeftBoot);
 	}
 
-	public static TexturedModelData getTexturedModelData() {
-		ModelData modelData = BipedEntityModel.getModelData(Dilation.NONE, 0f);
-		ModelPartData modelPartData = modelData.getRoot();
-		modelPartData.addChild("armorRightBoot", ModelPartBuilder.create().uv(16, 111).cuboid(-2.0F, 6.0F, -2.0F, 4.0F, 6.0F, 4.0F, new Dilation(0.35F)), ModelTransform.pivot(-2.0F, 12.0F, 0.0F));
+	public static LayerDefinition getTexturedModelData() {
+        MeshDefinition modelData = HumanoidModel.createMesh(CubeDeformation.NONE, 0f);
+        PartDefinition modelPartData = modelData.getRoot();
+		modelPartData.addOrReplaceChild("armorRightBoot", CubeListBuilder.create().texOffs(16, 111).addBox(-2.0F, 6.0F, -2.0F, 4.0F, 6.0F, 4.0F, new CubeDeformation(0.35F)), PartPose.offset(-2.0F, 12.0F, 0.0F));
 
-		modelPartData.addChild("armorLeftBoot", ModelPartBuilder.create().uv(16, 111).mirrored().cuboid(-2.0F, 6.0F, -2.0F, 4.0F, 6.0F, 4.0F, new Dilation(0.35F)).mirrored(false), ModelTransform.pivot(2.0F, 12.0F, 0.0F));
-		return TexturedModelData.of(modelData, 128, 128);
+		modelPartData.addOrReplaceChild("armorLeftBoot", CubeListBuilder.create().texOffs(16, 111).mirror().addBox(-2.0F, 6.0F, -2.0F, 4.0F, 6.0F, 4.0F, new CubeDeformation(0.35F)).mirror(false), PartPose.offset(2.0F, 12.0F, 0.0F));
+		return LayerDefinition.create(modelData, 128, 128);
 	}
 
 	@Override
-	public void render(MatrixStack matrices, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
-		this.armorRightBoot.copyTransform(this.rightLeg);
-		this.armorRightBoot.render(matrices, vertexConsumer, light, overlay, red, green, blue, alpha);
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
+		this.armorRightBoot.copyFrom(this.rightLeg);
+		this.armorRightBoot.render(poseStack, vertexConsumer, light, overlay, red, green, blue, alpha);
 
-		this.armorLeftBoot.copyTransform(this.leftLeg);
-		this.armorLeftBoot.render(matrices, vertexConsumer, light, overlay, red, green, blue, alpha);
+		this.armorLeftBoot.copyFrom(this.leftLeg);
+		this.armorLeftBoot.render(poseStack, vertexConsumer, light, overlay, red, green, blue, alpha);
 	}
 }

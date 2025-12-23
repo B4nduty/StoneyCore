@@ -14,16 +14,16 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -48,38 +48,53 @@ public class Land {
         this.maxAllies = maxAllies;
     }
 
-    public void initializeClaim(ServerWorld world, int radius, Queue<ClaimWorker> taskQueue) {
+    public void initializeClaim(ServerLevel serverLevel, int radius, Queue<ClaimWorker> taskQueue) {
         long coreX = corePos.getX();
         long coreZ = corePos.getZ();
-        long limit2 = (long) radius * radius;
-        LandState state = LandState.get(world);
+        long radiusSquared = (long) radius * radius;
 
-        List<BlockPos> candidates = new ArrayList<>((int) (Math.PI * radius * radius));
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                if ((long) dx * dx + (long) dz * dz <= limit2) {
-                    BlockPos pos = new BlockPos((int)(coreX + dx), 0, (int)(coreZ + dz));
-                    if (state.getLandAt(pos).map(l -> l.owner.equals(owner)).orElse(true)) {
-                        candidates.add(pos);
+        LandState state = LandState.get(serverLevel);
+
+        // Use more efficient candidate generation
+        List<BlockPos> candidates = generateCandidatesInCircle(coreX, coreZ, radius, state);
+
+        ClaimWorker worker = getClaimWorker(serverLevel, candidates, radius);
+        // DON'T set the radius here - wait until the worker completes
+        taskQueue.add(worker);
+    }
+
+    private List<BlockPos> generateCandidatesInCircle(long coreX, long coreZ, int radius, LandState state) {
+        List<BlockPos> candidates = new ArrayList<>();
+        int diameter = radius * 2;
+
+        // Process in chunks for better memory usage
+        for (int chunkX = -radius; chunkX <= radius; chunkX += 16) {
+            for (int chunkZ = -radius; chunkZ <= radius; chunkZ += 16) {
+                for (int dx = chunkX; dx < Math.min(chunkX + 16, radius + 1); dx++) {
+                    for (int dz = chunkZ; dz < Math.min(chunkZ + 16, radius + 1); dz++) {
+                        if ((long) dx * dx + (long) dz * dz <= (long) radius * radius) {
+                            BlockPos pos = new BlockPos((int)(coreX + dx), 0, (int)(coreZ + dz));
+                            if (state.getLandAt(pos).map(l -> l.owner.equals(owner)).orElse(true)) {
+                                candidates.add(pos);
+                            }
+                        }
                     }
                 }
             }
         }
 
-        ClaimWorker worker = getClaimWorker(world, candidates, radius);
-        this.radius = radius;
-        taskQueue.add(worker);
+        return candidates;
     }
 
 
-    private @NotNull ClaimWorker getClaimWorker(ServerWorld world, List<BlockPos> candidates, int radius) {
-        return new ClaimWorker(world, this, candidates, radius, success -> {});
+    private @NotNull ClaimWorker getClaimWorker(ServerLevel serverLevel, List<BlockPos> candidates, int radius) {
+        return new ClaimWorker(serverLevel, this, candidates, radius, success -> {});
     }
 
-    public void depositExpandItem(PlayerEntity player, ServerWorld world, int amount) {
-        if (!(player instanceof ServerPlayerEntity serverPlayerEntity)) return;
+    public void depositExpandItem(Player player, ServerLevel serverLevel, int amount) {
+        if (!(player instanceof ServerPlayer serverPlayerEntity)) return;
 
-        LandState state = LandState.get(world);
+        LandState state = LandState.get(serverLevel);
         expandItemStored += amount;
 
         int radiusToIncrease = 0;
@@ -104,21 +119,24 @@ public class Land {
         }
 
         if (radiusToIncrease <= 0) {
-            player.sendMessage(Text.translatable(
-                    "text.land." + landType.id().getNamespace() + ".stored", expandItemStored
+            player.displayClientMessage(Component.translatable(
+                    "component.land." + landType.id().getNamespace() + ".stored", expandItemStored
             ), true);
             return;
         }
 
         expandItemStored -= totalCost;
+
+        // Create a new land with the CURRENT radius (not the target radius)
         Land newLand = this.copy();
-        newLand.initializeClaim(world, radius + radiusToIncrease, StartTickHandler.CLAIM_TASKS);
+        // The initializeClaim method will handle the radius increase
+        newLand.initializeClaim(serverLevel, radius + radiusToIncrease, StartTickHandler.CLAIM_TASKS);
 
         state.removeLand(this);
         state.addLand(newLand);
 
-        sendTitle(serverPlayerEntity, Text.translatable(
-                "text.land.stoneycore.expansion.increased", radius, radius + radiusToIncrease
+        sendTitle(serverPlayerEntity, Component.translatable(
+                "component.land.stoneycore.expansion.increased", radius, radius + radiusToIncrease
         ));
         NBTDataHelper.set((IEntityDataSaver) player, PDKeys.LAND_EXPANDED, true);
     }
@@ -132,9 +150,9 @@ public class Land {
         return copy;
     }
 
-    private static void sendTitle(ServerPlayerEntity player, Text mainTitle) {
-        PacketByteBuf buffer = PacketByteBufs.create();
-        buffer.writeText(mainTitle);
+    private static void sendTitle(ServerPlayer player, Component mainTitle) {
+        FriendlyByteBuf buffer = PacketByteBufs.create();
+        buffer.writeComponent(mainTitle);
         ServerPlayNetworking.send(player, ModMessages.LAND_TITLE_PACKET_ID, buffer);
     }
 
@@ -153,13 +171,13 @@ public class Land {
         return radius;
     }
 
-    public void setRadius(int radius, ServerWorld world) {
+    public void setRadius(int radius, ServerLevel serverLevel) {
         int actualRadius = this.radius;
         this.radius = radius;
-        if (actualRadius > radius) removeClaimsOutsideRadius(world);
+        if (actualRadius > radius) removeClaimsOutsideRadius(serverLevel);
     }
 
-    public void removeClaimsOutsideRadius(ServerWorld world) {
+    public void removeClaimsOutsideRadius(ServerLevel serverLevel) {
         if (claimed.isEmpty()) return;
 
         long coreX = corePos.getX();
@@ -169,7 +187,7 @@ public class Land {
         List<Long> toRemove = new ArrayList<>();
 
         for (long posKey : claimed) {
-            BlockPos pos = BlockPos.fromLong(posKey);
+            BlockPos pos = BlockPos.of(posKey);
             long dx = pos.getX() - coreX;
             long dz = pos.getZ() - coreZ;
 
@@ -182,7 +200,7 @@ public class Land {
             for (long key : toRemove) {
                 claimed.remove(key);
             }
-            LandState.get(world).unmarkClaimed(toRemove);
+            LandState.get(serverLevel).unmarkClaimed(toRemove);
         }
     }
 
@@ -194,15 +212,15 @@ public class Land {
         this.owner = owner;
     }
 
-    public static String getOwnerName(ServerWorld world, UUID uuid) {
-        ServerPlayerEntity player = world.getServer().getPlayerManager().getPlayer(uuid);
+    public static String getOwnerName(ServerLevel serverLevel, UUID uuid) {
+        ServerPlayer player = serverLevel.getServer().getPlayerList().getPlayer(uuid);
         if (player != null) {
             return player.getGameProfile().getName();
         }
 
-        if (world.getServer().getUserCache() == null) return "Unknown";
+        if (serverLevel.getServer().getProfileCache() == null) return "Unknown";
 
-        GameProfile profile = world.getServer().getUserCache().getByUuid(uuid).orElse(null);
+        GameProfile profile = serverLevel.getServer().getProfileCache().get(uuid).orElse(null);
         return profile != null ? profile.getName() : "Unknown";
     }
 
@@ -220,7 +238,7 @@ public class Land {
 
     public Set<BlockPos> getClaimed() {
         Set<BlockPos> set = new HashSet<>(claimed.size());
-        claimed.forEach(posKey -> set.add(BlockPos.fromLong(posKey)));
+        claimed.forEach(posKey -> set.add(BlockPos.of(posKey)));
         return Collections.unmodifiableSet(set);
     }
 
@@ -244,9 +262,9 @@ public class Land {
         return landType;
     }
 
-    public Text getLandTitle(ServerWorld serverWorld) {
-        if (!getName().isBlank()) return Text.literal(getName());
-        return Text.translatable("text.land." + getLandType().id().getNamespace() + ".land_name", getOwnerName(serverWorld, getOwnerUUID()));
+    public Component getLandTitle(ServerLevel ServerLevel) {
+        if (!getName().isBlank()) return Component.literal(getName());
+        return Component.translatable("component.land." + getLandType().id().getNamespace() + ".land_name", getOwnerName(ServerLevel, getOwnerUUID()));
     }
 
     public String getName() {
@@ -257,9 +275,9 @@ public class Land {
         this.name = !name.isBlank() ? name : this.name;
     }
 
-    public MutableText getLandTag(ServerWorld serverWorld) {
-        return Text.literal("[")
-                .append(getLandTitle(serverWorld))
+    public MutableComponent getLandTag(ServerLevel ServerLevel) {
+        return Component.literal("[")
+                .append(getLandTitle(ServerLevel))
                 .append("]")
                 .setStyle(Style.EMPTY.withColor(LandColors.getColorForLand(this)));
     }
@@ -268,24 +286,24 @@ public class Land {
         return maxAllies;
     }
 
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
-        nbt.putUuid("Owner", owner);
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
+        nbt.putUUID("Owner", owner);
         nbt.putInt("Radius", radius);
         nbt.putString("CustomName", name);
         nbt.putLong("CorePos", corePos.asLong());
         nbt.putLong("ExpandItemStored", expandItemStored);
         nbt.putInt("MaxAllies", maxAllies);
 
-        NbtList claims = new NbtList();
+        ListTag claims = new ListTag();
         for (long posKey : claimed) {
-            claims.add(NbtLong.of(posKey));
+            claims.add(LongTag.valueOf(posKey));
         }
         nbt.put("Claims", claims);
 
-        NbtList alliesList = new NbtList();
+        ListTag alliesList = new ListTag();
         for (UUID ally : allies) {
-            alliesList.add(NbtString.of(ally.toString()));
+            alliesList.add(StringTag.valueOf(ally.toString()));
         }
         nbt.put("Allies", alliesList);
 
@@ -294,29 +312,29 @@ public class Land {
         return nbt;
     }
 
-    public static Land fromNbt(NbtCompound nbt) {
-        UUID owner   = nbt.getUuid("Owner");
+    public static Land fromNbt(CompoundTag nbt) {
+        UUID owner   = nbt.getUUID("Owner");
         int radius   = nbt.getInt("Radius");
         String name   = nbt.getString("CustomName");
-        BlockPos corePos = BlockPos.fromLong(nbt.getLong("CorePos"));
-        Identifier landTypeId = new Identifier(nbt.getString("LandType"));
+        BlockPos corePos = BlockPos.of(nbt.getLong("CorePos"));
+        ResourceLocation landTypeId = new ResourceLocation(nbt.getString("LandType"));
         int maxAllies   = nbt.getInt("MaxAllies");
         LandType landType = LandTypeRegistry.getById(landTypeId)
                 .orElseThrow(() -> new IllegalStateException("Unknown LandType: " + landTypeId));
 
         Land k = new Land(owner, corePos, radius, landType, name, maxAllies);
         k.expandItemStored = nbt.getLong("ExpandItemStored");
-        NbtList claims = nbt.getList("Claims", NbtElement.LONG_TYPE);
-        for (NbtElement claim : claims) {
-            long posKey = ((NbtLong) claim).longValue();
+        ListTag claims = nbt.getList("Claims", Tag.TAG_LONG);
+        for (Tag claim : claims) {
+            long posKey = ((LongTag) claim).getAsLong();
             k.claimed.add(posKey);
         }
 
-        if (nbt.contains("Allies", NbtElement.LIST_TYPE)) {
-            NbtList alliesList = nbt.getList("Allies", NbtElement.STRING_TYPE);
-            for (NbtElement element : alliesList) {
+        if (nbt.contains("Allies", Tag.TAG_LIST)) {
+            ListTag alliesList = nbt.getList("Allies", Tag.TAG_STRING);
+            for (Tag element : alliesList) {
                 try {
-                    UUID allyUuid = UUID.fromString(element.asString());
+                    UUID allyUuid = UUID.fromString(element.getAsString());
                     k.allies.add(allyUuid);
                 } catch (IllegalArgumentException ignored) {
                     // skip invalid UUID strings

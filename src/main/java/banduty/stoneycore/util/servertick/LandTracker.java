@@ -10,13 +10,13 @@ import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.data.playerdata.PDKeys;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 
 import java.util.*;
 
@@ -24,30 +24,30 @@ public class LandTracker {
     private static final Map<UUID, BlockPos> lastLandCore = new HashMap<>();
     private static final Map<UUID, BlockPos> lastPlayerPos = new HashMap<>();
 
-    public static void trackPlayerLandMovement(ServerPlayerEntity player) {
-        BlockPos currentPos = player.getBlockPos();
-        ServerWorld world = player.getServerWorld();
-        LandState landState = LandState.get(world);
+    public static void trackPlayerLandMovement(ServerPlayer player) {
+        BlockPos currentPos = player.getOnPos();
+        ServerLevel serverLevel = player.serverLevel();
+        LandState landState = LandState.get(serverLevel);
         Optional<Land> optionalLand = landState.getLandAt(currentPos);
 
-        player.getServerWorld().getPlayers().forEach(otherPlayer -> {
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeUuid(player.getUuid());
+        player.serverLevel().players().forEach(otherPlayer -> {
+            FriendlyByteBuf buf = PacketByteBufs.create();
+            buf.writeUUID(player.getUUID());
             buf.writeBoolean(optionalLand.isPresent());
             optionalLand.ifPresent(land -> buf.writeBlockPos(land.getCorePos()));
-            buf.writeBoolean(SiegeManager.isPlayerInLandUnderSiege(player.getServerWorld(), player));
-            buf.writeBoolean(SiegeManager.getPlayerSiege(player.getServerWorld(), player.getUuid())
-                    .map(siege -> !siege.disabledPlayers.contains(player.getUuid()))
+            buf.writeBoolean(SiegeManager.isPlayerInLandUnderSiege(player.serverLevel(), player));
+            buf.writeBoolean(SiegeManager.getPlayerSiege(player.serverLevel(), player.getUUID())
+                    .map(siege -> !siege.disabledPlayers.contains(player.getUUID()))
                     .orElse(false));
 
             ServerPlayNetworking.send(otherPlayer, ModMessages.LAND_CLIENT_DATA_S2C_ID, buf);
         });
 
-        if (StoneyCore.getConfig().landOptions.hungerSiege() && SiegeManager.isPlayerInLandUnderSiege(player.getServerWorld(), player)) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.HUNGER, 80, 0, false, false, true));
+        if (StoneyCore.getConfig().landOptions.hungerSiege() && SiegeManager.isPlayerInLandUnderSiege(player.serverLevel(), player)) {
+            player.addEffect(new MobEffectInstance(MobEffects.HUNGER, 80, 0, false, false, true));
         }
 
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
 
         BlockPos lastPos = lastPlayerPos.get(uuid);
         if (lastPos != null && lastPos.equals(currentPos)) return;
@@ -67,7 +67,7 @@ public class LandTracker {
             if (newCore != null) {
                 if (!NBTDataHelper.get((IEntityDataSaver) player, PDKeys.LAND_EXPANDED, false)) {
                     Land land = optionalLand.get();
-                    sendTitle(player, land.getLandTitle(world));
+                    sendTitle(player, land.getLandTitle(serverLevel));
                 } else {
                     NBTDataHelper.set((IEntityDataSaver) player, PDKeys.LAND_EXPANDED, false);
                 }
@@ -75,9 +75,9 @@ public class LandTracker {
         }
     }
 
-    private static void sendTitle(ServerPlayerEntity player, Text mainTitle) {
-        PacketByteBuf buffer = PacketByteBufs.create();
-        buffer.writeText(mainTitle);
+    private static void sendTitle(ServerPlayer player, Component mainTitle) {
+        FriendlyByteBuf buffer = PacketByteBufs.create();
+        buffer.writeComponent(mainTitle);
         ServerPlayNetworking.send(player, ModMessages.LAND_TITLE_PACKET_ID, buffer);
     }
 }

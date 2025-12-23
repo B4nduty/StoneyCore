@@ -4,12 +4,10 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.SCItems;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
-import net.minecraft.data.server.recipe.RecipeJsonProvider;
-import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder;
-import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder;
-import net.minecraft.item.Items;
-import net.minecraft.recipe.book.RecipeCategory;
-import net.minecraft.util.Identifier;
+import net.minecraft.data.recipes.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 
 import java.util.function.Consumer;
 
@@ -19,26 +17,45 @@ public class ModRecipeProvider extends FabricRecipeProvider {
     }
 
     @Override
-    public void generate(Consumer<RecipeJsonProvider> exporter) {
-        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SCItems.SMITHING_HAMMER.get(), 1)
+    public void buildRecipes(Consumer<FinishedRecipe> consumer) {
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SCItems.TONGS.get(), 1)
+                .pattern("N N")
+                .pattern(" N ")
+                .pattern("I I")
+                .define('I', Items.IRON_INGOT)
+                .define('N', Items.IRON_NUGGET)
+                .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                .unlockedBy(getHasName(Items.IRON_NUGGET), has(Items.IRON_NUGGET))
+                .save(consumer, new ResourceLocation(StoneyCore.MOD_ID, getSimpleRecipeName(SCItems.TONGS.get())));
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SCItems.SMITHING_HAMMER.get(), 1)
                 .pattern("IIN")
                 .pattern(" S ")
                 .pattern(" S ")
-                .input('S', Items.STICK)
-                .input('I', Items.IRON_INGOT)
-                .input('N', Items.IRON_NUGGET)
-                .criterion(hasItem(Items.STICK), conditionsFromItem(Items.STICK))
-                .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                .criterion(hasItem(Items.IRON_NUGGET), conditionsFromItem(Items.IRON_NUGGET))
-                .offerTo(exporter, new Identifier(StoneyCore.MOD_ID, getRecipeName(SCItems.SMITHING_HAMMER.get())));
+                .define('S', Items.STICK)
+                .define('I', Items.IRON_INGOT)
+                .define('N', Items.IRON_NUGGET)
+                .unlockedBy(getHasName(Items.STICK), has(Items.STICK))
+                .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                .unlockedBy(getHasName(Items.IRON_NUGGET), has(Items.IRON_NUGGET))
+                .save(consumer, new ResourceLocation(StoneyCore.MOD_ID, getSimpleRecipeName(SCItems.SMITHING_HAMMER.get())));
 
-        ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SCItems.BLACK_POWDER.get(), 4)
-                .input(Items.CHARCOAL)
-                .input(Items.BONE_MEAL)
-                .input(Items.MAGMA_BLOCK)
-                .criterion(hasItem(Items.CHARCOAL), conditionsFromItem(Items.CHARCOAL))
-                .criterion(hasItem(Items.BONE_MEAL), conditionsFromItem(Items.BONE_MEAL))
-                .criterion(hasItem(Items.MAGMA_BLOCK), conditionsFromItem(Items.MAGMA_BLOCK))
-                .offerTo(exporter, new Identifier(StoneyCore.MOD_ID, getRecipeName(SCItems.BLACK_POWDER.get())));
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SCItems.BLACK_POWDER.get(), 4)
+                .requires(Items.CHARCOAL)
+                .requires(Items.BONE_MEAL)
+                .requires(Items.MAGMA_BLOCK)
+                .unlockedBy(getHasName(Items.CHARCOAL), has(Items.CHARCOAL))
+                .unlockedBy(getHasName(Items.BONE_MEAL), has(Items.BONE_MEAL))
+                .unlockedBy(getHasName(Items.MAGMA_BLOCK), has(Items.MAGMA_BLOCK))
+                .save(consumer, new ResourceLocation(StoneyCore.MOD_ID, getSimpleRecipeName(SCItems.BLACK_POWDER.get())));
+
+        SimpleCookingRecipeBuilder.campfireCooking(
+                        Ingredient.of(Items.IRON_INGOT),
+                        RecipeCategory.MISC,
+                        SCItems.HOT_IRON.get(),
+                        0.7f,
+                        900
+                ).unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                .save(consumer, new ResourceLocation(StoneyCore.MOD_ID, "iron_ingot_from_campfire"));
     }
 }

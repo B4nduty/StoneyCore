@@ -1,21 +1,21 @@
 package banduty.stoneycore.util;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class SCInventoryItemFinder {
-    public static ItemStack getItemFromInventory(ServerPlayerEntity player, Item... items) {
-        return player.getInventory().main.stream()
+    public static ItemStack getItemFromInventory(ServerPlayer player, Item... items) {
+        return player.getInventory().items.stream()
                 .filter(stack -> java.util.Arrays.stream(items).anyMatch(item -> stack.getItem() == item))
                 .findFirst()
                 .orElse(null);
     }
 
-    public static int getItemSlot(ServerPlayerEntity player, ItemStack itemStack) {
-        return player.getInventory().main.stream()
+    public static int getItemSlot(ServerPlayer player, ItemStack itemStack) {
+        return player.getInventory().items.stream()
                 .filter(stack -> stack == itemStack)
-                .map(player.getInventory().main::indexOf)
+                .map(player.getInventory().items::indexOf)
                 .findFirst()
                 .orElse(-1);
     }

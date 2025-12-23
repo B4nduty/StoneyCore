@@ -1,21 +1,21 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.util.patterns.StructureHelper;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(AbstractBlock.class)
+@Mixin(BlockBehaviour.class)
 public class AbstractBlockMixin {
-    @Inject(method = "onBlockAdded", at = @At("HEAD"))
-    private void stoneycore$onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify, CallbackInfo ci) {
-        if (!oldState.isOf(state.getBlock())) {
-            StructureHelper.trySpawnEntity(world, pos, state);
+    @Inject(method = "onPlace", at = @At("HEAD"))
+    private void stoneycore$onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean notify, CallbackInfo ci) {
+        if (!oldState.is(state.getBlock())) {
+            StructureHelper.trySpawnEntity(level, pos, state);
         }
     }
 }

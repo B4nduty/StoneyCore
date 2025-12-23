@@ -7,26 +7,26 @@ import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.passive.HorseEntity;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.animal.horse.Horse;
 
 public class ClientTickHandler implements ClientTickEvents.EndTick {
     @Override
-    public void onEndTick(MinecraftClient minecraftClient) {
+    public void onEndTick(Minecraft minecraft) {
         StoneyCoreClient.LAND_TITLE_RENDERER.tick();
 
-        ClientPlayerEntity clientPlayerEntity = minecraftClient.player;
-        if (clientPlayerEntity == null) return;
-        if (SCRangeWeaponUtil.getWeaponState(clientPlayerEntity.getMainHandStack()).isReloading()) {
-            clientPlayerEntity.setVelocity(0, clientPlayerEntity.getVelocity().y, 0);
-            clientPlayerEntity.velocityDirty = true;
+        LocalPlayer localPlayer = minecraft.player;
+        if (localPlayer == null) return;
+        if (SCRangeWeaponUtil.getWeaponState(localPlayer.getMainHandItem()).isReloading()) {
+            localPlayer.setDeltaMovement(0, localPlayer.getDeltaMovement().y, 0);
+            localPlayer.hasImpulse = true;
         }
-        if (clientPlayerEntity.hasVehicle() && (clientPlayerEntity.getVehicle() instanceof AbstractSiegeEntity || clientPlayerEntity.getVehicle() instanceof HorseEntity)) {
-            float yaw = clientPlayerEntity.getYaw();
-            float pitch = clientPlayerEntity.getPitch();
-            PacketByteBuf buf = PacketByteBufs.create();
+        if (localPlayer.isPassenger() && (localPlayer.getVehicle() instanceof AbstractSiegeEntity || localPlayer.getVehicle() instanceof Horse)) {
+            float yaw = localPlayer.getYRot();
+            float pitch = localPlayer.getXRot();
+            FriendlyByteBuf buf = PacketByteBufs.create();
             buf.writeFloat(yaw);
             buf.writeFloat(pitch);
             ClientPlayNetworking.send(ModMessages.SIEGE_YAW_PITCH_C2S_ID, buf);

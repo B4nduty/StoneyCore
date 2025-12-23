@@ -1,15 +1,14 @@
 package banduty.stoneycore.util.servertick;
 
+import banduty.stoneycore.util.bettercombatlogic.SCBetterCombat;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
-import net.bettercombat.api.AttackHand;
-import net.bettercombat.logic.PlayerAttackHelper;
-import net.bettercombat.logic.PlayerAttackProperties;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.UUID;
 
@@ -17,19 +16,14 @@ public class ModifiersUtil {
     private static final UUID ATTACK_RANGE_MODIFIER_ID = UUID.randomUUID();
     private static final UUID RANGE_MODIFIER_ID = UUID.randomUUID();
 
-    public static void updatePlayerReachAttributes(ServerPlayerEntity player) {
+    public static void updatePlayerReachAttributes(ServerPlayer player) {
         if (player == null) return;
 
-        AttackHand hand = null;
-        if (player instanceof PlayerAttackProperties props) {
-            hand = PlayerAttackHelper.getCurrentAttack(player, props.getComboCount());
-        }
+        ItemStack itemStack = player.getMainHandItem();
+        if (FabricLoader.getInstance().isModLoaded("bettercombat")) SCBetterCombat.getWeaponStack(player, player.getMainHandItem());
 
-        ItemStack itemStack = player.getMainHandStack();
-        if (hand != null) itemStack = hand.itemStack();
-
-        var attackRangeAttribute = player.getAttributeInstance(ReachEntityAttributes.ATTACK_RANGE);
-        var rangeAttribute = player.getAttributeInstance(ReachEntityAttributes.REACH);
+        var attackRangeAttribute = player.getAttribute(ReachEntityAttributes.ATTACK_RANGE);
+        var rangeAttribute = player.getAttribute(ReachEntityAttributes.REACH);
 
         boolean shouldHaveModifier = !itemStack.isEmpty() &&
                 WeaponDefinitionsLoader.isMelee(itemStack);
@@ -47,20 +41,20 @@ public class ModifiersUtil {
         }
     }
 
-    private static void updateModifier(EntityAttributeInstance attribute, UUID uuid,
+    private static void updateModifier(AttributeInstance attribute, UUID uuid,
                                        String name, double value) {
         if (attribute == null) return;
 
-        EntityAttributeModifier existingModifier = attribute.getModifier(uuid);
-        if (existingModifier == null || existingModifier.getValue() != value) {
+        AttributeModifier existingModifier = attribute.getModifier(uuid);
+        if (existingModifier == null || existingModifier.getAmount() != value) {
             attribute.removeModifier(uuid);
-            attribute.addTemporaryModifier(
-                    new EntityAttributeModifier(uuid, name, value,
-                            EntityAttributeModifier.Operation.ADDITION));
+            attribute.addTransientModifier(
+                    new AttributeModifier(uuid, name, value,
+                            AttributeModifier.Operation.ADDITION));
         }
     }
 
-    private static void removeModifierIfPresent(EntityAttributeInstance attribute, UUID uuid) {
+    private static void removeModifierIfPresent(AttributeInstance attribute, UUID uuid) {
         if (attribute != null && attribute.getModifier(uuid) != null) {
             attribute.removeModifier(uuid);
         }

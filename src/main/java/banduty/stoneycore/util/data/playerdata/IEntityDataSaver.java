@@ -1,7 +1,7 @@
 package banduty.stoneycore.util.data.playerdata;
 
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 
 public interface IEntityDataSaver {
-    NbtCompound stoneycore$getPersistentData();
+    CompoundTag stoneycore$getPersistentData();
 }

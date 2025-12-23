@@ -5,27 +5,27 @@ import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
+import static net.minecraft.commands.Commands.argument;
 
 public class TransferOwnership {
 
-    public static LiteralArgumentBuilder<ServerCommandSource> registerTransferOwnership() {
+    public static LiteralArgumentBuilder<CommandSourceStack> registerTransferOwnership() {
         return literal("transferownership")
                 .then(argument("owner", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            ServerWorld world = ctx.getSource().getWorld();
-                            for (ServerPlayerEntity player : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
-                                var uuid = player.getUuid();
-                                if (LandState.get(world).getLandByOwner(uuid).isPresent()) {
+                            ServerLevel serverLevel = ctx.getSource().getLevel();
+                            for (ServerPlayer player : ctx.getSource().getServer().getPlayerList().getPlayers()) {
+                                var uuid = player.getUUID();
+                                if (LandState.get(serverLevel).getLandByOwner(uuid).isPresent()) {
                                     builder.suggest(player.getGameProfile().getName());
                                 }
                             }
@@ -33,9 +33,9 @@ public class TransferOwnership {
                         })
                         .then(argument("newOwner", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
-                                    ServerWorld world = ctx.getSource().getWorld();
-                                    for (ServerPlayerEntity player : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
-                                        var uuid = player.getUuid();
+                                    ServerLevel world = ctx.getSource().getLevel();
+                                    for (ServerPlayer player : ctx.getSource().getServer().getPlayerList().getPlayers()) {
+                                        var uuid = player.getUUID();
                                         if (LandState.get(world).getLandByOwner(uuid).isEmpty()) {
                                             builder.suggest(player.getGameProfile().getName());
                                         }
@@ -43,7 +43,7 @@ public class TransferOwnership {
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> {
-                                    ServerCommandSource src = ctx.getSource();
+                                    CommandSourceStack src = ctx.getSource();
                                     String ownerName = StringArgumentType.getString(ctx, "owner");
                                     String newOwnerName = StringArgumentType.getString(ctx, "newOwner");
 
@@ -53,7 +53,7 @@ public class TransferOwnership {
                                     UUID newOwnerUUID = SCCommandsHandler.getUUID(src, newOwnerName);
                                     if (newOwnerUUID == null) return SCCommandsHandler.error(src, "Unknown new owner " + newOwnerName);
 
-                                    LandState state = LandState.get(src.getWorld());
+                                    LandState state = LandState.get(src.getLevel());
 
                                     Optional<Land> ownerLandOpt = state.getLandByOwner(ownerUUID);
                                     if (ownerLandOpt.isEmpty())
@@ -66,7 +66,7 @@ public class TransferOwnership {
 
                                     land.setOwnerUUID(newOwnerUUID);
 
-                                    src.sendFeedback(() -> Text.literal("Land ownership transferred from " + ownerName + " to " + newOwnerName), true);
+                                    src.sendSuccess(() -> Component.literal("Land ownership transferred from " + ownerName + " to " + newOwnerName), true);
                                     return 1;
                                 })
                         )

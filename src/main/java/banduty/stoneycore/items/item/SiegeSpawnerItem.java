@@ -2,14 +2,15 @@ package banduty.stoneycore.items.item;
 
 import banduty.stoneycore.lands.util.LandState;
 import com.google.common.collect.Maps;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -19,39 +20,39 @@ public class SiegeSpawnerItem extends Item {
     public static final Map<Supplier<? extends EntityType<?>>, SiegeSpawnerItem> SIEGE_SPAWNERS = Maps.newIdentityHashMap();
     private final Supplier<? extends EntityType<?>> type;
 
-    public SiegeSpawnerItem(Supplier<? extends EntityType<?>> type, Settings settings) {
-        super(settings);
+    public SiegeSpawnerItem(Supplier<? extends EntityType<?>> type, Item.Properties properties) {
+        super(properties);
         this.type = type;
         SIEGE_SPAWNERS.put(type, this);
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        World world = context.getWorld();
-        if (world instanceof ServerWorld serverWorld) {
-            BlockPos pos = context.getBlockPos().up();
-            Entity entity = type.get().create(world);
+    public @NotNull InteractionResult useOn(UseOnContext context) {
+        Level level = context.getLevel();
+        if (level instanceof ServerLevel serverLevel) {
+            BlockPos pos = context.getClickedPos().above();
+            Entity entity = type.get().create(level);
 
             if (entity != null) {
-                LandState landState = LandState.get(serverWorld);
+                LandState landState = LandState.get(serverLevel);
 
                 boolean isClaimed = landState.isClaimed(pos);
                 boolean isOwnerOrAllie = context.getPlayer() != null && (
-                        landState.isOwner(pos, context.getPlayer().getUuid()) ||
-                                landState.isAllay(pos, context.getPlayer().getUuid())
+                        landState.isOwner(pos, context.getPlayer().getUUID()) ||
+                                landState.isAllay(pos, context.getPlayer().getUUID())
                 );
 
                 if (!isClaimed || isOwnerOrAllie) {
-                    entity.setPosition(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-                    world.spawnEntity(entity);
-                    context.getStack().decrement(1);
-                    return ActionResult.SUCCESS;
+                    entity.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+                    level.addFreshEntity(entity);
+                    context.getItemInHand().shrink(1);
+                    return InteractionResult.SUCCESS;
                 } else {
-                    return ActionResult.FAIL;
+                    return InteractionResult.FAIL;
                 }
             }
         }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 
 

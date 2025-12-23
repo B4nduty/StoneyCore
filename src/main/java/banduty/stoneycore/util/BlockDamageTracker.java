@@ -1,10 +1,10 @@
 package banduty.stoneycore.util;
 
 import banduty.stoneycore.StoneyCore;
-import net.minecraft.network.packet.s2c.play.BlockBreakingProgressS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,47 +15,47 @@ public class BlockDamageTracker {
 
     private BlockDamageTracker() {}
 
-    public static void damageBlock(ServerWorld world, BlockPos pos, float damageFactor, float hardness) {
-        if (hardness < 0 || world.getBlockState(pos).isAir()) return;
+    public static void damageBlock(ServerLevel serverLevel, BlockPos pos, float damageFactor, float hardness) {
+        if (hardness < 0 || serverLevel.getBlockState(pos).isAir()) return;
 
         float prev = blockDamageMap.getOrDefault(pos, 0.0f);
         float next = prev + damageFactor / hardness;
 
         if (next >= 1.0f) {
-            world.breakBlock(pos, !StoneyCore.getConfig().technicalOptions.breakOrRemoveSiegeDestroy());
+            serverLevel.destroyBlock(pos, !StoneyCore.getConfig().technicalOptions.breakOrRemoveSiegeDestroy());
             blockDamageMap.remove(pos);
-            clearProgress(world, pos);
+            clearProgress(serverLevel, pos);
         } else {
             blockDamageMap.put(pos, next);
-            sendProgress(world, pos, next);
+            sendProgress(serverLevel, pos, next);
         }
     }
 
-    public static void clean(ServerWorld world) {
+    public static void clean(ServerLevel serverLevel) {
         Iterator<Map.Entry<BlockPos, Float>> it = blockDamageMap.entrySet().iterator();
         while (it.hasNext()) {
             BlockPos pos = it.next().getKey();
-            if (world.getBlockState(pos).isAir()) {
-                clearProgress(world, pos);
+            if (serverLevel.getBlockState(pos).isAir()) {
+                clearProgress(serverLevel, pos);
                 it.remove();
             }
         }
     }
 
-    private static void sendProgress(ServerWorld world, BlockPos pos, float progress) {
+    private static void sendProgress(ServerLevel serverLevel, BlockPos pos, float progress) {
         int stage = Math.min(9, (int)(progress * 10));
         int visualId = getVisualId(pos);
 
-        for (ServerPlayerEntity player : world.getPlayers()) {
-            player.networkHandler.sendPacket(new BlockBreakingProgressS2CPacket(visualId, pos, stage));
+        for (ServerPlayer player : serverLevel.players()) {
+            player.connection.send(new ClientboundBlockDestructionPacket(visualId, pos, stage));
         }
     }
 
-    private static void clearProgress(ServerWorld world, BlockPos pos) {
+    private static void clearProgress(ServerLevel serverLevel, BlockPos pos) {
         int visualId = getVisualId(pos);
 
-        for (ServerPlayerEntity player : world.getPlayers()) {
-            player.networkHandler.sendPacket(new BlockBreakingProgressS2CPacket(visualId, pos, -1));
+        for (ServerPlayer player : serverLevel.players()) {
+            player.connection.send(new ClientboundBlockDestructionPacket(visualId, pos, -1));
         }
     }
 

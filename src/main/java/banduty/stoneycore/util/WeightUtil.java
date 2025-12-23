@@ -4,8 +4,8 @@ import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class WeightUtil {
             }
         }
 
-        for (ItemStack armorStack : livingEntity.getArmorItems()) {
+        for (ItemStack armorStack : livingEntity.getArmorSlots()) {
             if (ArmorDefinitionsLoader.containsItem(armorStack)) {
                 weight += ArmorDefinitionsLoader.getData(armorStack).weight();
             }

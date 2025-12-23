@@ -2,23 +2,23 @@ package banduty.stoneycore.lands.util;
 
 import banduty.stoneycore.StoneyCore;
 import it.unimi.dsi.fastutil.longs.*;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.function.Consumer;
 
 public class ClaimWorker {
-    private final ServerWorld world;
+    private final ServerLevel serverLevel;
     private final Land land;
     private final Consumer<Boolean> onComplete;
 
-    // Two queues: high priority (likely claimable) and normal queue
     private final LongArrayFIFOQueue priorityQueue = new LongArrayFIFOQueue();
     private final LongArrayFIFOQueue queue = new LongArrayFIFOQueue();
+    private final LongSet processed = new LongOpenHashSet();
     private final LongSet invalid = new LongOpenHashSet();
 
     private final LongArrayList acceptedKeys = new LongArrayList();
-    private final Long2ByteOpenHashMap neighborMask = new Long2ByteOpenHashMap();
+    private final LongSet acceptedSet = new LongOpenHashSet();
 
     private int totalAccepted = 0;
     private final long startTime;
@@ -26,146 +26,235 @@ public class ClaimWorker {
     private int claimsThisPeriod = 0;
     private int logTick = 0;
 
-    private long lastZeroCpsCheckTime;
-    private long lastLogTime;
-    private int claimsSinceLastZeroCheck = 0;
+    private long lastProgressCheckTime;
     private final int requiredTicksForZeroCpsStop;
-    private int tickCPS = 0;
+    private int consecutiveZeroTicks = 0;
 
-    private final int maxWorkPerTick = StoneyCore.getConfig().technicalOptions.maxWorkPerTick();
+    private final int maxWorkPerTick;
+    private final BlockPos corePos;
+    private final int targetRadius;
+    private final long radiusSquared;
 
     private static final int[][] NEIGHBOR_OFFSETS = {
-            {-1, -1}, {-1, 0}, {-1, 1},
-            {0, -1},           {0, 1},
-            {1, -1},  {1, 0},  {1, 1}
+            {-1, 0}, {1, 0}, {0, -1}, {0, 1}
     };
 
-    public ClaimWorker(ServerWorld world, Land land, Iterable<BlockPos> candidates, int radius, Consumer<Boolean> onComplete) {
-        this.world = world;
+    public ClaimWorker(ServerLevel serverLevel, Land land, Iterable<BlockPos> candidates, int radius, Consumer<Boolean> onComplete) {
+        this.serverLevel = serverLevel;
         this.land = land;
         this.onComplete = onComplete;
+        this.maxWorkPerTick = StoneyCore.getConfig().technicalOptions.maxWorkPerTick();
+        this.corePos = land.getCorePos();
+        this.targetRadius = radius;
+        this.radiusSquared = (long) radius * radius;
 
-        neighborMask.defaultReturnValue((byte) 0);
+        long coreKey = corePos.asLong();
+        if (!land.isAlreadyClaimed(coreKey) && isWithinRadius(corePos)) {
+            acceptedKeys.add(coreKey);
+            acceptedSet.add(coreKey);
+            totalAccepted++;
+            addNeighborsToQueue(coreKey);
+        }
 
         for (BlockPos claimedPos : land.getClaimed()) {
             long key = claimedPos.asLong();
-            priorityQueue.enqueue(key);
-            updateNeighborMask(key);
+            if (!processed.contains(key) && !acceptedSet.contains(key) && isWithinRadius(claimedPos)) {
+                priorityQueue.enqueue(key);
+                processed.add(key);
+                acceptedSet.add(key);
+                totalAccepted++;
+            }
+        }
+
+        if (!acceptedKeys.isEmpty()) {
+            commitAcceptedClaims();
         }
 
         for (BlockPos pos : candidates) {
             long key = pos.asLong();
-            if (ClaimUtils.isInvalidClaimColumn(world, BlockPos.fromLong(key), land.getLandType())) {
-                invalid.add(key);
-            } else if (!land.isAlreadyClaimed(key)) {
-                queue.enqueue(key);
+            if (!land.isAlreadyClaimed(key) && !processed.contains(key) && !acceptedSet.contains(key) && isWithinRadius(pos)) {
+                if (ClaimUtils.isInvalidClaimColumn(serverLevel, pos, land.getLandType())) {
+                    invalid.add(key);
+                } else {
+                    queue.enqueue(key);
+                    processed.add(key);
+                }
             }
         }
 
-        this.requiredTicksForZeroCpsStop = Math.max(1, radius / 100);
-        long currentTickTime = world.getServer().getTicks();
-        this.startTime = currentTickTime;
-        this.lastZeroCpsCheckTime = currentTickTime;
-        this.lastLogTime = currentTickTime;
+        this.requiredTicksForZeroCpsStop = Math.max(5, radius / 50);
+        long currentTime = System.currentTimeMillis();
+        this.startTime = currentTime;
+        this.lastProgressCheckTime = currentTime;
+    }
+
+    private boolean isWithinRadius(BlockPos pos) {
+        long dx = pos.getX() - corePos.getX();
+        long dz = pos.getZ() - corePos.getZ();
+        return (dx * dx + dz * dz) <= radiusSquared;
     }
 
     public boolean tick() {
-        acceptedKeys.clear();
-        if (priorityQueue.isEmpty() && queue.isEmpty()) return true;
+        if (priorityQueue.isEmpty() && queue.isEmpty()) {
+            finish();
+            return true;
+        }
 
-        final long coreKey = land.getCorePos().asLong();
         int workDone = 0;
-        int initialQueueSize = queue.size() + priorityQueue.size();
+        int timesProcessed = 0;
+        int initialTotalSize = priorityQueue.size() + queue.size();
 
-        while (workDone < maxWorkPerTick && (!priorityQueue.isEmpty() || !queue.isEmpty())) {
-            long key = !priorityQueue.isEmpty() ? priorityQueue.dequeueLong() : queue.dequeueLong();
-
-            workDone++;
-
-            if (invalid.contains(key)) continue;
-
-            boolean blockedPath = ClaimUtils.pathContainsInvalidBlock(world, BlockPos.fromLong(coreKey), BlockPos.fromLong(key), land.getLandType());
-            boolean hasNeighbor = totalAccepted == 0 || fastHasAcceptedNeighbor(key);
-
-            if (blockedPath && !hasNeighbor) {
-                queue.enqueue(key); // push back for later
-                continue;
+        // Process priority queue first (connected claims)
+        while (workDone < maxWorkPerTick && timesProcessed <= maxWorkPerTick && !priorityQueue.isEmpty()) {
+            long key = priorityQueue.dequeueLong();
+            if (processClaim(key)) {
+                workDone++;
             }
+            timesProcessed++;
+        }
 
-            acceptedKeys.add(key);
-            updateNeighborMask(key);
-            totalAccepted++;
-            claimsThisPeriod++;
+        timesProcessed = 0;
+
+        // Then process regular queue
+        while (workDone < maxWorkPerTick && timesProcessed <= maxWorkPerTick && !queue.isEmpty()) {
+            long key = queue.dequeueLong();
+            if (processClaim(key)) {
+                workDone++;
+            }
+            timesProcessed++;
         }
 
         if (!acceptedKeys.isEmpty()) {
-            land.addClaims(acceptedKeys);
-            claimsSinceLastZeroCheck += acceptedKeys.size();
-            LandState.get(world).markClaimed(acceptedKeys, land);
+            commitAcceptedClaims();
         }
 
-        logProgress();
+        return logProgress(workDone, initialTotalSize);
+    }
 
-        if ((priorityQueue.isEmpty() && queue.isEmpty()) || (workDone == 0 && queue.size() + priorityQueue.size() == initialQueueSize)) {
+    private void commitAcceptedClaims() {
+        land.addClaims(acceptedKeys);
+        LandState.get(serverLevel).markClaimed(acceptedKeys, land);
+        acceptedKeys.clear();
+    }
+
+    private boolean processClaim(long key) {
+        if (invalid.contains(key) || acceptedSet.contains(key)) {
+            return false;
+        }
+
+        BlockPos claimPos = BlockPos.of(key);
+
+        if (!isWithinRadius(claimPos)) {
+            invalid.add(key);
+            return false;
+        }
+
+        boolean hasAcceptedNeighbor = hasAcceptedNeighbor(key);
+
+        boolean blockedPath = ClaimUtils.pathContainsInvalidBlock(serverLevel, corePos, claimPos, land.getLandType());
+
+        boolean canClaim = !blockedPath || hasAcceptedNeighbor;
+
+        if (!canClaim) {
+            queue.enqueue(key);
+            return false;
+        }
+
+        acceptedKeys.add(key);
+        acceptedSet.add(key);
+        totalAccepted++;
+        claimsThisPeriod++;
+
+        addNeighborsToQueue(key);
+
+        return true;
+    }
+
+    private boolean hasAcceptedNeighbor(long key) {
+        int x = BlockPos.getX(key);
+        int z = BlockPos.getZ(key);
+
+        for (int[] offset : NEIGHBOR_OFFSETS) {
+            long neighborKey = BlockPos.asLong(x + offset[0], 0, z + offset[1]);
+            if (acceptedSet.contains(neighborKey)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void addNeighborsToQueue(long key) {
+        int x = BlockPos.getX(key);
+        int z = BlockPos.getZ(key);
+
+        for (int[] offset : NEIGHBOR_OFFSETS) {
+            long neighborKey = BlockPos.asLong(x + offset[0], 0, z + offset[1]);
+            BlockPos neighborPos = BlockPos.of(neighborKey);
+
+            if (isWithinRadius(neighborPos) &&
+                    !processed.contains(neighborKey) &&
+                    !invalid.contains(neighborKey) &&
+                    !acceptedSet.contains(neighborKey)) {
+
+                // Validate the neighbor before adding to queue
+                if (!ClaimUtils.isInvalidClaimColumn(serverLevel, neighborPos, land.getLandType())) {
+                    priorityQueue.enqueue(neighborKey);
+                    processed.add(neighborKey);
+                } else {
+                    invalid.add(neighborKey);
+                }
+            }
+        }
+    }
+
+    private boolean logProgress(int workDone, int initialTotalSize) {
+        logTick++;
+        long now = System.currentTimeMillis();
+        double secondsSinceLastCheck = (now - lastProgressCheckTime) / 1000.0;
+
+        if (workDone == 0) {
+            consecutiveZeroTicks++;
+        } else {
+            consecutiveZeroTicks = 0;
+        }
+
+        boolean shouldFinish = (priorityQueue.isEmpty() && queue.isEmpty()) ||
+                (consecutiveZeroTicks >= requiredTicksForZeroCpsStop);
+
+        if (shouldFinish) {
+            StoneyCore.LOGGER.info("[ClaimWorker] Stopping early after {} zero-progress ticks", consecutiveZeroTicks);
             finish();
             return true;
+        }
+
+        if (logTick >= 20 && secondsSinceLastCheck > 1.0) {
+            double cps = claimsThisPeriod / secondsSinceLastCheck;
+            int remaining = priorityQueue.size() + queue.size();
+            double progress = totalAccepted / (double) (totalAccepted + remaining) * 100;
+
+            StoneyCore.LOGGER.info("[ClaimWorker] Progress: {}%, ~{} blocks/s, target radius: {}",
+                    String.format("%.1f", progress),
+                    String.format("%.1f", cps),
+                    targetRadius);
+
+            claimsThisPeriod = 0;
+            logTick = 0;
+            lastProgressCheckTime = now;
         }
 
         return false;
     }
 
-    private void logProgress() {
-        logTick++;
-        long now = world.getServer().getTicks();
-        double seconds = (now - lastZeroCpsCheckTime) / 20.0;
-        if (seconds > 0) {
-            double cps = claimsSinceLastZeroCheck / seconds;
-            if (cps != 0) tickCPS = 0;
-            if (cps == 0.0) {
-                if (tickCPS >= requiredTicksForZeroCpsStop * 5000 / StoneyCore.getConfig().technicalOptions.maxWorkPerTick()) {
-                    StoneyCore.LOGGER.info("[ClaimWorker] Stopping early due to 0 CPS check.");
-                    queue.clear();
-                    priorityQueue.clear();
-                } else tickCPS++;
-            } else if (logTick >= 10) {
-                seconds = (now - lastLogTime) / 20.0;
-                if (seconds > 0) {
-                    cps = claimsThisPeriod / seconds;
-                    StoneyCore.LOGGER.info("[ClaimWorker] Progress: {} claims so far (~{} CPS avg)",
-                            totalAccepted, cps);
-                }
-                claimsThisPeriod = 0;
-                lastLogTime = now;
-                logTick = 0;
-            }
-        }
-        claimsSinceLastZeroCheck = 0;
-        lastZeroCpsCheckTime = now;
-    }
-
     private void finish() {
-        long elapsed = (world.getServer().getTicks() - startTime);
-        double totalCps = totalAccepted / (elapsed / 20.0);
-        StoneyCore.LOGGER.info("[ClaimWorker] Finished claiming {} blocks in {} ticks (~{} CPS) for land '{}'.",
-                totalAccepted, elapsed, totalCps, land.getLandTitle(world).getString());
+        long elapsedMs = System.currentTimeMillis() - startTime;
+        double totalCps = elapsedMs > 0 ? totalAccepted / (elapsedMs / 1000.0) : 0;
+
+        land.setRadius(targetRadius, serverLevel);
+
+        StoneyCore.LOGGER.info("[ClaimWorker] Finished claiming {} blocks in {}ms (~{}/s) for land '{}' with radius {}",
+                totalAccepted, elapsedMs, String.format("%.1f", totalCps),
+                land.getLandTitle(serverLevel).getString(), targetRadius);
+
         onComplete.accept(totalAccepted > 0);
     }
-
-    private boolean fastHasAcceptedNeighbor(long key) {
-        long xyNormalizedKey = BlockPos.asLong(BlockPos.unpackLongX(key), 0, BlockPos.unpackLongZ(key));
-        return neighborMask.get(xyNormalizedKey) != 0;
-    }
-
-    private void updateNeighborMask(long key) {
-        int x = BlockPos.unpackLongX(key);
-        int z = BlockPos.unpackLongZ(key);
-
-        for (int i = 0; i < NEIGHBOR_OFFSETS.length; i++) {
-            int nx = x + NEIGHBOR_OFFSETS[i][0];
-            int nz = z + NEIGHBOR_OFFSETS[i][1];
-            long neighborKey = BlockPos.asLong(nx, 0, nz);
-            neighborMask.addTo(neighborKey, (byte) (1 << i));
-        }
-    }
-
 }

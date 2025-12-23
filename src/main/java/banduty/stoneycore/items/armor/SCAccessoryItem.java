@@ -2,10 +2,10 @@ package banduty.stoneycore.items.armor;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Optional;
 
@@ -18,10 +18,10 @@ public interface SCAccessoryItem {
     }
 
     @Environment(EnvType.CLIENT)
-    Identifier getTexturePath(ItemStack stack);
+    ResourceLocation getTexturePath(ItemStack stack);
 
     @Environment(EnvType.CLIENT)
-    default Optional<Identifier> getEmissiveTexturePath(ItemStack stack) {
+    default Optional<ResourceLocation> getEmissiveTexturePath(ItemStack stack) {
         return Optional.empty();
     }
 
@@ -37,21 +37,21 @@ public interface SCAccessoryItem {
 
     // ---- SUPPORTING TYPES ----
     record ModelBundle(
-            Optional<BipedEntityModel<LivingEntity>> base,
-            Optional<BipedEntityModel<LivingEntity>> visorOpen,
-            Optional<BipedEntityModel<LivingEntity>> firstPerson
+            Optional<HumanoidModel<LivingEntity>> base,
+            Optional<HumanoidModel<LivingEntity>> visorOpen,
+            Optional<HumanoidModel<LivingEntity>> firstPerson
     ) {
         public static final ModelBundle EMPTY = new ModelBundle(Optional.empty(), Optional.empty(), Optional.empty());
 
-        public static ModelBundle ofBase(BipedEntityModel<LivingEntity> base) {
+        public static ModelBundle ofBase(HumanoidModel<LivingEntity> base) {
             return new ModelBundle(Optional.of(base), Optional.empty(), Optional.empty());
         }
 
-        public static ModelBundle ofBaseAndVisor(BipedEntityModel<LivingEntity> base, BipedEntityModel<LivingEntity> visor) {
+        public static ModelBundle ofBaseAndVisor(HumanoidModel<LivingEntity> base, HumanoidModel<LivingEntity> visor) {
             return new ModelBundle(Optional.of(base), Optional.of(visor), Optional.empty());
         }
 
-        public static ModelBundle ofBaseAndFirstPerson(BipedEntityModel<LivingEntity> base, BipedEntityModel<LivingEntity> firstPerson) {
+        public static ModelBundle ofBaseAndFirstPerson(HumanoidModel<LivingEntity> base, HumanoidModel<LivingEntity> firstPerson) {
             return new ModelBundle(Optional.of(base), Optional.empty(), Optional.of(firstPerson));
         }
     }

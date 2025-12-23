@@ -1,55 +1,51 @@
 package banduty.stoneycore.particle;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.particle.DefaultParticleType;
+import net.minecraft.core.particles.SimpleParticleType;
+import org.jetbrains.annotations.NotNull;
 
-public class MuzzlesFlashParticle extends SpriteBillboardParticle {
-    private final SpriteProvider spriteProvider;
+public class MuzzlesFlashParticle extends TextureSheetParticle {
+    private final SpriteSet spriteSet;
 
-    public MuzzlesFlashParticle(ClientWorld world, double xCoord, double yCoord, double zCoord,
-                                SpriteProvider spriteSet, double xd, double yd, double zd) {
-        super(world, xCoord, yCoord, zCoord, xd, yd, zd);
+    public MuzzlesFlashParticle(ClientLevel clientLevel, double xCoord, double yCoord, double zCoord,
+                                SpriteSet spriteSet, double xd, double yd, double zd) {
+        super(clientLevel, xCoord, yCoord, zCoord, xd, yd, zd);
 
-        this.velocityMultiplier = 0f;
-        this.velocityX = xd;
-        this.velocityY = yd;
-        this.velocityZ = zd;
+        this.friction = 0f;
+        this.xd = xd;
+        this.yd = yd;
+        this.zd = zd;
 
-        this.scale *= 2f;
-        this.maxAge = 10;
-        this.spriteProvider = spriteSet;
-        this.setSpriteForAge(spriteSet);
+        this.scale(2);
+        this.lifetime = 10;
+        this.spriteSet = spriteSet;
+        this.setSpriteFromAge(spriteSet);
 
-        this.red = 1f;
-        this.green = 1f;
-        this.blue = 1f;
+        this.rCol = 1f;
+        this.gCol = 1f;
+        this.bCol = 1f;
     }
 
     @Override
     public void tick() {
         super.tick();
 
-        if (!this.dead) {
-            this.setSpriteForAge(this.spriteProvider);
+        if (!this.removed) {
+            this.setSpriteFromAge(this.spriteSet);
         }
     }
 
     @Override
-    public ParticleTextureSheet getType() {
-        return ParticleTextureSheet.PARTICLE_SHEET_TRANSLUCENT;
+    public @NotNull ParticleRenderType getRenderType() {
+        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
     }
 
-    public static class Factory implements ParticleFactory<DefaultParticleType> {
-        private final SpriteProvider sprites;
+    public record Factory(SpriteSet sprites) implements ParticleProvider<SimpleParticleType> {
 
-        public Factory(SpriteProvider spriteProvider) {
-            this.sprites = spriteProvider;
-        }
-
-        public Particle createParticle(DefaultParticleType particleType, ClientWorld clientWorld,
+        public Particle createParticle(@NotNull SimpleParticleType particleType, @NotNull ClientLevel clientLevel,
                                        double x, double y, double z, double xd, double yd, double zd) {
-            return new MuzzlesFlashParticle(clientWorld, x, y, z, this.sprites, xd, yd, zd);
+                return new MuzzlesFlashParticle(clientLevel, x, y, z, this.sprites, xd, yd, zd);
+            }
         }
-    }
 }

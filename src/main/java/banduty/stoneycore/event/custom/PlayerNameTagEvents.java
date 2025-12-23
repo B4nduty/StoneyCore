@@ -2,8 +2,8 @@ package banduty.stoneycore.event.custom;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Comparator;
 import java.util.List;
@@ -21,7 +21,7 @@ public interface PlayerNameTagEvents {
             }
     );
 
-    List<TagEntry> collectTags(ServerPlayerEntity player);
+    List<TagEntry> collectTags(ServerPlayer player);
 
-    record TagEntry(Text text, int priority) {}
+    record TagEntry(Component component, int priority) {}
 }

@@ -10,32 +10,33 @@ import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.definitionsloader.SiegeEngineDefinitionsLoader;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.*;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.VindicatorEntity;
-import net.minecraft.entity.passive.HorseEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.AxeItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Arm;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.Vindicator;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -45,12 +46,12 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     private Entity owner;
 
     // DataTracker fields
-    protected static final TrackedData<Float> TRACKED_YAW =
-            DataTracker.registerData(AbstractSiegeEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    protected static final TrackedData<Float> TRACKED_PITCH =
-            DataTracker.registerData(AbstractSiegeEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    protected static final TrackedData<Integer> COOLDOWN =
-            DataTracker.registerData(AbstractSiegeEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    protected static final EntityDataAccessor<Float> TRACKED_YAW =
+            SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.FLOAT);
+    protected static final EntityDataAccessor<Float> TRACKED_PITCH =
+            SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.FLOAT);
+    protected static final EntityDataAccessor<Integer> COOLDOWN =
+            SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.INT);
 
     // State fields
     public float lastRiderYaw;
@@ -58,45 +59,45 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     public float wheelRotation;
     protected final Set<UUID> playersNotified = new HashSet<>();
 
-    public AbstractSiegeEntity(EntityType<? extends LivingEntity> type, World world) {
-        super(type, world);
+    public AbstractSiegeEntity(EntityType<? extends LivingEntity> type, Level level) {
+        super(type, level);
         setNoGravity(false);
-        setStepHeight(1.0F);
+        setMaxUpStep(1.0F);
     }
 
     @Override
-    protected void initDataTracker() {
-        super.initDataTracker();
-        this.dataTracker.startTracking(TRACKED_YAW, 0.0f);
-        this.dataTracker.startTracking(TRACKED_PITCH, 0.0f);
-        this.dataTracker.startTracking(COOLDOWN, 0);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(TRACKED_YAW, 0.0f);
+        this.entityData.define(TRACKED_PITCH, 0.0f);
+        this.entityData.define(COOLDOWN, 0);
     }
 
     // Tracked yaw
     public void setTrackedYaw(float yaw) {
-        this.dataTracker.set(TRACKED_YAW, normalizeYaw(yaw));
+        this.entityData.set(TRACKED_YAW, normalizeYaw(yaw));
     }
 
     public float getTrackedYaw() {
-        return this.dataTracker.get(TRACKED_YAW);
+        return this.entityData.get(TRACKED_YAW);
     }
 
     // Tracked pitch
     public void setTrackedPitch(float pitch) {
-        this.dataTracker.set(TRACKED_PITCH, Math.min(10, Math.max(pitch, -20)));
+        this.entityData.set(TRACKED_PITCH, Math.min(10, Math.max(pitch, -20)));
     }
 
     public float getTrackedPitch() {
-        return this.dataTracker.get(TRACKED_PITCH);
+        return this.entityData.get(TRACKED_PITCH);
     }
 
     // Cooldown
     public void setCooldown(int cooldown) {
-        this.dataTracker.set(COOLDOWN, Math.max(0, cooldown));
+        this.entityData.set(COOLDOWN, Math.max(0, cooldown));
     }
 
     public int getCooldown() {
-        return this.dataTracker.get(COOLDOWN);
+        return this.entityData.get(COOLDOWN);
     }
 
     public float getWheelRotation() {
@@ -116,31 +117,31 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         super.tick();
         RotationAndMovementUtil.updateWheelRotation(this);
 
-        if (!(this.getWorld() instanceof ServerWorld serverWorld)) return;
+        if (!(this.level() instanceof ServerLevel serverLevel)) return;
 
         Entity entity = this.getFirstPassenger();
         if (entity instanceof Saddleable saddleable && !saddleable.isSaddled()) {
-            entity.dismountVehicle();
+            entity.removeVehicle();
         }
 
-        if (this.getFirstPassenger() != null && SiegeManager.getPlayerSiege(serverWorld, this.getOwnerUUID()).isEmpty()) {
-            Optional<Land> currentLand = LandState.get(serverWorld).getLandAt(this.getBlockPos());
+        if (this.getFirstPassenger() != null && SiegeManager.getPlayerSiege(serverLevel, this.getOwnerUUID()).isEmpty()) {
+            Optional<Land> currentLand = LandState.get(serverLevel).getLandAt(this.getOnPos());
             if (currentLand.isPresent() && !currentLand.get().getOwnerUUID().equals(this.getOwnerUUID())) {
-                SiegeManager.startSiege(serverWorld, this.getOwnerUUID(), currentLand.get().getOwnerUUID());
+                SiegeManager.startSiege(serverLevel, this.getOwnerUUID(), currentLand.get().getOwnerUUID());
             }
         }
 
         RotationAndMovementUtil.updateSiegeVelocity(this);
 
-        this.setHeadYaw(this.getTrackedYaw());
+        this.setYHeadRot(this.getTrackedYaw());
 
-        List<ServerPlayerEntity> players = serverWorld.getPlayers();
-        for (ServerPlayerEntity player : players) {
-            UUID playerId = player.getUuid();
+        List<ServerPlayer> players = serverLevel.players();
+        for (ServerPlayer player : players) {
+            UUID playerId = player.getUUID();
             if (!playersNotified.contains(playerId)) {
-                PacketByteBuf buffer = PacketByteBufs.create();
-                buffer.writeFloat(this.getYaw());
-                buffer.writeFloat(this.getPitch());
+                FriendlyByteBuf buffer = PacketByteBufs.create();
+                buffer.writeFloat(this.getYRot());
+                buffer.writeFloat(this.getXRot());
                 buffer.writeFloat(this.getWheelRotation());
                 ServerPlayNetworking.send(player, ModMessages.SIEGE_YAW_PITCH_S2C_ID, buffer);
                 playersNotified.add(playerId);
@@ -148,78 +149,79 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         }
 
         Set<UUID> onlinePlayerIds = players.stream()
-                .map(ServerPlayerEntity::getUuid)
+                .map(ServerPlayer::getUUID)
                 .collect(Collectors.toSet());
         playersNotified.removeIf(uuid -> !onlinePlayerIds.contains(uuid));
 
-        this.setTrackedYaw(this.getYaw());
-        this.setYaw(this.getYaw());
-        this.setHeadYaw(this.getYaw());
-        this.setBodyYaw(this.getYaw());
-        this.lastRiderYaw = this.getYaw();
+        this.setTrackedYaw(this.getYRot());
+        this.setYRot(this.getYRot());
+        this.setYHeadRot(this.getYRot());
+        this.setYBodyRot(this.getYRot());
+        this.lastRiderYaw = this.getYRot();
 
-        this.setTrackedPitch(this.getPitch());
-        this.setPitch(this.getPitch());
-        this.lastRiderPitch = this.getPitch();
+        this.setTrackedPitch(this.getXRot());
+        this.setXRot(this.getXRot());
+        this.lastRiderPitch = this.getXRot();
 
         this.wheelRotation = this.getWheelRotation();
 
-        this.move(MovementType.SELF, this.getVelocity());
+        this.move(MoverType.SELF, this.getDeltaMovement());
     }
 
     private UUID getOwnerUUID() {
-        if (this.getFirstPassenger() instanceof PlayerEntity playerEntity) return playerEntity.getUuid();
-        if (this.getFirstPassenger() instanceof TameableEntity tameableEntity &&
-                tameableEntity.getFirstPassenger() instanceof PlayerEntity playerEntity) return playerEntity.getUuid();
+        if (this.getFirstPassenger() instanceof Player playerEntity) return playerEntity.getUUID();
+        if (this.getFirstPassenger() instanceof TamableAnimal tameableEntity &&
+                tameableEntity.getFirstPassenger() instanceof Player playerEntity) return playerEntity.getUUID();
         return null;
     }
 
     @Override
     protected void removePassenger(Entity passenger) {
-        if (passenger.getWorld() instanceof ServerWorld) {
+        if (passenger.level() instanceof ServerLevel) {
             float yaw = getTrackedYaw();
-            this.setYaw(yaw);
-            this.setHeadYaw(yaw);
-            this.setBodyYaw(yaw);
+            this.setYRot(yaw);
+            this.setYHeadRot(yaw);
+            this.setYBodyRot(yaw);
             this.lastRiderYaw = yaw;
 
             float pitch = getTrackedPitch();
-            this.setPitch(pitch);
+            this.setXRot(pitch);
             this.lastRiderPitch = pitch;
         }
         super.removePassenger(passenger);
     }
 
     @Override
-    protected void updatePassengerPosition(Entity passenger, PositionUpdater positionUpdater) {
-        RotationAndMovementUtil.updatePassengerPosition(this, passenger, positionUpdater);
+    protected void positionRider(Entity entity, MoveFunction moveFunction) {
+        RotationAndMovementUtil.updatePassengerPosition(this, entity, moveFunction);
     }
 
     @Override
-    public boolean damage(DamageSource source, float amount) {
-        Entity attacker = source.getAttacker();
+    public boolean hurt(DamageSource source, float amount) {
+        Entity attacker = source.getEntity();
+        SiegeEngineDefinitionsLoader.DamageSourceConfig damageConfig = SiegeEngineDefinitionsLoader.getData(this.getType()).damageConfig();
 
-        if (attacker instanceof PlayerEntity player) {
-            if (player.getWorld() instanceof ServerWorld serverWorld) {
-                UUID playerId = player.getUuid();
-                Optional<SiegeManager.Siege> siegeOpt = SiegeManager.getPlayerSiege(serverWorld, playerId);
-                if (siegeOpt.isPresent() && siegeOpt.get().isDisabled(playerId)) return false;
-            }
+        if (attacker == null || !(attacker.level() instanceof ServerLevel serverLevel)) {
+            return super.hurt(source, amount);
+        }
 
-            if (player.getMainHandStack().getItem() instanceof AxeItem) {
-                return super.damage(source, amount);
-            }
+        // Smithing hammer repair
+        if (attacker instanceof Player player) {
+            UUID playerId = player.getUUID();
+            Optional<SiegeManager.Siege> siegeOpt = SiegeManager.getPlayerSiege(serverLevel, playerId);
+            if (siegeOpt.isPresent() && siegeOpt.get().isDisabled(playerId)) return false;
 
-            if (player.getMainHandStack().isOf(SCItems.SMITHING_HAMMER.get()) && getCooldown() == 0 &&
-                    this.getHealth() < this.getMaxHealth() && player.getWorld() instanceof ServerWorld serverWorld) {
+            if (player.getMainHandItem().is(SCItems.SMITHING_HAMMER.get()) &&
+                    getCooldown() == 0 &&
+                    this.getHealth() < this.getMaxHealth()) {
                 this.setHealth(player.isCreative() ? this.getMaxHealth() : Math.min(this.getMaxHealth(), this.getHealth() + 1F));
                 if (!player.isCreative()) {
-                    player.getMainHandStack().damage(1, player.getRandom(), (ServerPlayerEntity) player);
-                    if (player.getMainHandStack().getDamage() >= player.getMainHandStack().getMaxDamage()) {
-                        player.getMainHandStack().setCount(0);
+                    player.getMainHandItem().hurt(1, player.getRandom(), (ServerPlayer) player);
+                    if (player.getMainHandItem().getDamageValue() >= player.getMainHandItem().getMaxDamage()) {
+                        player.getMainHandItem().setCount(0);
                     }
                 }
-                serverWorld.spawnParticles(
+                serverLevel.sendParticles(
                         ParticleTypes.ELECTRIC_SPARK,
                         this.getX(), this.getY() + 1.0, this.getZ(),
                         5,
@@ -230,37 +232,58 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
             }
         }
 
-        if (attacker instanceof VindicatorEntity) {
-            return super.damage(source, amount);
+        String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(attacker.getType()).toString();
+
+        // Check if entity can damage
+        boolean canEntityDamage = damageConfig.canEntityDamage(entityId);
+
+        if (canEntityDamage) return super.hurt(source, amount);
+
+        // Check damage type
+        boolean canDamageType = false;
+        if (attacker instanceof AbstractArrow) {
+            canDamageType = damageConfig.canDamageTypeDamage("projectile");
+        } else if (source.is(DamageTypes.EXPLOSION) ||
+                source.is(DamageTypes.PLAYER_EXPLOSION)) {
+            canDamageType = damageConfig.canDamageTypeDamage("explosion");
         }
 
-        if (attacker instanceof AbstractSiegeEntity) {
-            return super.damage(source, amount);
+        if (canDamageType) return super.hurt(source, amount);
+
+        // Check held item if attacker is LivingEntity
+        boolean canItemDamage = false;
+        if (attacker instanceof LivingEntity livingAttacker) {
+            ItemStack heldItem = livingAttacker.getMainHandItem();
+            if (!heldItem.isEmpty()) {
+                String itemId = BuiltInRegistries.ITEM.getKey(heldItem.getItem()).toString();
+                canItemDamage = damageConfig.canItemDamage(itemId);
+            }
         }
+
+        if (canItemDamage) return super.hurt(source, amount);
 
         return false;
     }
 
     // Equipment handling
-    @Override public Iterable<ItemStack> getArmorItems() { return List.of(); }
-    @Override public ItemStack getEquippedStack(EquipmentSlot slot) { return ItemStack.EMPTY; }
-    @Override public void equipStack(EquipmentSlot slot, ItemStack stack) {}
-    @Override public Arm getMainArm() {return null;
-    }
+    @Override public @NotNull Iterable<ItemStack> getArmorSlots() { return List.of(); }
+    @Override public @NotNull ItemStack getItemBySlot(EquipmentSlot slot) { return ItemStack.EMPTY; }
+    @Override public void setItemSlot(EquipmentSlot slot, ItemStack stack) {}
+    @Override public @NotNull HumanoidArm getMainArm() {return HumanoidArm.RIGHT;}
 
     // Mounting logic
-    @Override public double getMountedHeightOffset() { return 1.0D; }
-    @Override public boolean shouldDismountUnderwater() { return true; }
+    @Override public double getPassengersRidingOffset() { return 1.0D; }
+    @Override public boolean dismountsUnderwater() { return true; }
     @Override public abstract boolean canAddPassenger(Entity passenger);
 
     // Movement logic
     @Override public boolean isPushable() { return false; }
-    @Override public boolean canMoveVoluntarily() { return false; }
+    @Override public boolean isEffectiveAi() { return false; }
 
     @Override
-    public Vec3d updatePassengerForDismount(LivingEntity passenger) {
-        float yawRadians = (float) Math.toRadians(getBodyYaw());
-        Vec3d offset = getPassengerOffset(passenger);
+    public @NotNull Vec3 getDismountLocationForPassenger(@NotNull LivingEntity passenger) {
+        float yawRadians = (float) Math.toRadians(getVisualRotationYInDegrees());
+        Vec3 offset = getPassengerOffset(passenger);
         double leftOffset = offset.x;
         double backOffset = offset.z;
 
@@ -277,86 +300,86 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         double y = getY() + offset.y;
         double z = getZ() + offsetZ;
 
-        return new Vec3d(x, y, z);
+        return new Vec3(x, y, z);
     }
 
     @Override
-    public ActionResult interact(PlayerEntity player, Hand hand) {
-        if (!(this.getWorld() instanceof ServerWorld serverWorld) || hand != Hand.MAIN_HAND || this.submergedInWater) return super.interact(player, hand);
+    public @NotNull InteractionResult interact(Player player, InteractionHand hand) {
+        if (!(this.level() instanceof ServerLevel serverLevel) || hand != InteractionHand.MAIN_HAND || this.wasEyeInWater) return super.interact(player, hand);
 
-        UUID playerId = player.getUuid();
-        Optional<SiegeManager.Siege> siegeOpt = SiegeManager.getPlayerSiege(serverWorld, playerId);
-        if (siegeOpt.isPresent() && siegeOpt.get().isDisabled(playerId)) return ActionResult.FAIL;
+        UUID playerId = player.getUUID();
+        Optional<SiegeManager.Siege> siegeOpt = SiegeManager.getPlayerSiege(serverLevel, playerId);
+        if (siegeOpt.isPresent() && siegeOpt.get().isDisabled(playerId)) return InteractionResult.FAIL;
 
-        LandState stateManager = LandState.get(serverWorld);
-        Optional<Land> maybeLand = stateManager.getLandAt(this.getBlockPos());
-        if (maybeLand.isPresent() && !(maybeLand.get().getOwnerUUID().equals(player.getUuid()) || maybeLand.get().isAlly(player.getUuid()) || player.isCreative())) {
-            return ActionResult.FAIL;
+        LandState stateManager = LandState.get(serverLevel);
+        Optional<Land> maybeLand = stateManager.getLandAt(this.getOnPos());
+        if (maybeLand.isPresent() && !(maybeLand.get().getOwnerUUID().equals(player.getUUID()) || maybeLand.get().isAlly(player.getUUID()) || player.isCreative())) {
+            return InteractionResult.FAIL;
         }
 
-        ItemStack heldItem = player.getStackInHand(hand);
+        ItemStack heldItem = player.getItemInHand(hand);
 
         // Dismount horse
-        if (this.getFirstPassenger() instanceof MobEntity mobEntity) {
-            if (heldItem.isOf(Items.SHEARS)) {
-                mobEntity.stopRiding();
+        if (this.getFirstPassenger() instanceof Mob mob) {
+            if (heldItem.is(Items.SHEARS)) {
+                mob.stopRiding();
 
-                double[] offset = calculateHorseDismountOffset(mobEntity);
+                double[] offset = calculateHorseDismountOffset(mob);
                 double dX = this.getX() + offset[0];
                 double dY = this.getY() + 0.5;
                 double dZ = this.getZ() + offset[1];
-                mobEntity.setPos(dX, dY, dZ);
+                mob.setPos(dX, dY, dZ);
 
-                ItemEntity leadEntity = new ItemEntity(this.getWorld(), dX, dY, dZ, new ItemStack(Items.LEAD));
-                this.getWorld().spawnEntity(leadEntity);
+                ItemEntity leadEntity = new ItemEntity(this.level(), dX, dY, dZ, new ItemStack(Items.LEAD));
+                this.level().addFreshEntity(leadEntity);
 
-                player.playSound(SoundEvents.ENTITY_SHEEP_SHEAR, SoundCategory.NEUTRAL, 1.0f, 1.0f);
-                return ActionResult.SUCCESS;
+                player.playNotifySound(SoundEvents.SHEEP_SHEAR, SoundSource.NEUTRAL, 1.0f, 1.0f);
+                return InteractionResult.SUCCESS;
             }
-            player.startRiding(mobEntity);
-            return ActionResult.SUCCESS;
+            player.startRiding(mob);
+            return InteractionResult.SUCCESS;
         }
 
         // Attach horse to siege
-        if (this.getPassengerList().isEmpty()) {
-            List<Entity> nearby = this.getWorld().getOtherEntities(player, this.getBoundingBox().expand(4.0),
-                    entity -> entity instanceof MobEntity);
+        if (this.getPassengers().isEmpty()) {
+            List<Entity> nearby = this.level().getEntities(player, this.getBoundingBox().inflate(4.0),
+                    entity -> entity instanceof Mob);
 
             for (Entity entity : nearby) {
-                if (canAddPassenger(entity) && entity instanceof MobEntity mobEntity && mobEntity.getHoldingEntity() == player &&
-                        !(mobEntity instanceof TameableEntity tameableEntity && !tameableEntity.isTamed()) &&
+                if (canAddPassenger(entity) && entity instanceof Mob mob && mob.getLeashHolder() == player &&
+                        !(mob instanceof TamableAnimal tameableEntity && !tameableEntity.isTame()) &&
                         (!(entity instanceof Saddleable saddleable) || saddleable.isSaddled())) {
-                    mobEntity.detachLeash(true, false);
-                    mobEntity.stopRiding();
-                    mobEntity.startRiding(this);
-                    return ActionResult.SUCCESS;
+                    mob.dropLeash(true, false);
+                    mob.stopRiding();
+                    mob.startRiding(this);
+                    return InteractionResult.SUCCESS;
                 }
             }
         }
 
-        if (this.getFirstPassenger() != null) return ActionResult.SUCCESS;
+        if (this.getFirstPassenger() != null) return InteractionResult.SUCCESS;
 
-        if (canAddPassenger(player) && heldItem.isEmpty() && getCooldown() == 0 && !player.isSneaking()) {
+        if (canAddPassenger(player) && heldItem.isEmpty() && getCooldown() == 0 && !player.isShiftKeyDown()) {
             player.startRiding(this);
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
         if (getCooldown() > 0) {
-            player.sendMessage(Text.translatable("text.siege_engine." + Registries.ENTITY_TYPE.getId(this.getType()).getNamespace()
+            player.displayClientMessage(Component.translatable("component.siege_engine." + BuiltInRegistries.ENTITY_TYPE.getKey(this.getType()).getNamespace()
                     + ".cooling_down", this.getName().getString()), true);
         }
 
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     protected double[] calculateHorseDismountOffset(Entity passenger) {
-        float yawRadians = (float) Math.toRadians(this.getBodyYaw());
+        float yawRadians = (float) Math.toRadians(this.getVisualRotationYInDegrees());
         double forwardX = -Math.sin(yawRadians);
         double forwardZ = Math.cos(yawRadians);
         double rightX = Math.cos(yawRadians);
         double rightZ = Math.sin(yawRadians);
 
-        Vec3d offset = this.getPassengerOffset(passenger);
+        Vec3 offset = this.getPassengerOffset(passenger);
         double leftOffset = offset.x;
         double backOffset = offset.z;
 
@@ -373,19 +396,19 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         return yaw;
     }
 
-    public abstract Vec3d getPassengerOffset(Entity entity);
+    public abstract Vec3 getPassengerOffset(Entity entity);
 
     public double getVelocity(Entity entity) {
-        if (entity instanceof HorseEntity) {
+        if (entity instanceof Horse) {
             return SiegeEngineDefinitionsLoader.getData(this.getType()).horseSpeed();
         }
         return SiegeEngineDefinitionsLoader.getData(this.getType()).playerSpeed();
     }
 
-    public abstract Vec3d getPlayerPOV();
+    public abstract Vec3 getPlayerPOV();
 
     @Override
-    public @Nullable ItemStack getPickBlockStack() {
+    public @Nullable ItemStack getPickResult() {
         SiegeSpawnerItem siegeSpawnerItem = SiegeSpawnerItem.forEntity(this.getType());
         return siegeSpawnerItem == null ? null : new ItemStack(siegeSpawnerItem);
     }

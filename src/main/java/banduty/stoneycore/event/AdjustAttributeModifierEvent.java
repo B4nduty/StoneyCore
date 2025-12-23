@@ -7,12 +7,12 @@ import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import io.wispforest.accessories.api.attributes.AccessoryAttributeBuilder;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import io.wispforest.accessories.api.slot.SlotReference;
-import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
 
 public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCallback {
     @Override
@@ -21,11 +21,11 @@ public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCall
         updatePlayerAttributes(stack, reference, builder);
     }
 
-    private static void handleAttribute(SlotReference reference, EntityAttribute attribute, String name, double value, AccessoryAttributeBuilder builder) {
-        EntityAttributeInstance instance = reference.entity().getAttributeInstance(attribute);
+    private static void handleAttribute(SlotReference reference, Attribute attribute, String name, double value, AccessoryAttributeBuilder builder) {
+        AttributeInstance instance = reference.entity().getAttribute(attribute);
         if (instance == null) return;
 
-        builder.addStackable(attribute, new Identifier(StoneyCore.MOD_ID, name), value, EntityAttributeModifier.Operation.ADDITION);
+        builder.addStackable(attribute, new ResourceLocation(StoneyCore.MOD_ID, name), value, AttributeModifier.Operation.ADDITION);
     }
 
     private static void updatePlayerAttributes(ItemStack stack, SlotReference reference, AccessoryAttributeBuilder builder) {
@@ -37,8 +37,8 @@ public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCall
             toughness -= 1;
         }
 
-        handleAttribute(reference, EntityAttributes.GENERIC_ARMOR, "armor", armor, builder);
-        handleAttribute(reference, EntityAttributes.GENERIC_ARMOR_TOUGHNESS, "armor_toughness", toughness, builder);
+        handleAttribute(reference, Attributes.ARMOR, "armor", armor, builder);
+        handleAttribute(reference, Attributes.ARMOR_TOUGHNESS, "armor_toughness", toughness, builder);
         handleAttribute(reference, StoneyCore.HUNGER_DRAIN_MULTIPLIER.get(), "hunger_drain_multiplier", data.hungerDrainMultiplier(), builder);
     }
 }

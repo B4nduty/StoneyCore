@@ -1,15 +1,15 @@
 package banduty.stoneycore.util.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 public class LandTitleRenderer {
 
-    private Text currentTitle = null;
+    private Component currentTitle = null;
     private int titleTicksRemaining = 0;
 
     private final int fadeInTicks = 20;
@@ -22,28 +22,28 @@ public class LandTitleRenderer {
         }
     }
 
-    public void showTitle(Text title) {
+    public void showTitle(Component title) {
         this.currentTitle = title;
         this.titleTicksRemaining = fadeInTicks + displayTicks + fadeOutTicks;
     }
 
-    public void render(DrawContext context) {
+    public void render(GuiGraphics guiGraphics) {
         if (currentTitle == null || titleTicksRemaining <= 0) return;
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        TextRenderer font = client.textRenderer;
+        Minecraft client = Minecraft.getInstance();
+        Font font = client.font;
 
-        int screenWidth = context.getScaledWindowWidth();
-        int screenHeight = context.getScaledWindowHeight();
+        int screenWidth = guiGraphics.guiWidth();
+        int screenHeight = guiGraphics.guiHeight();
 
         int color = getColor();
 
-        int textWidth = font.getWidth(currentTitle);
+        int textWidth = font.width(currentTitle);
         int x = (screenWidth - textWidth) / 2;
         int y = screenHeight / 4;
 
         RenderSystem.enableBlend();
-        if (currentTitle != null) context.drawText(font, currentTitle, x, y, color, true);
+        if (currentTitle != null) guiGraphics.drawString(font, currentTitle, x, y, color, true);
         RenderSystem.disableBlend();
     }
 
@@ -66,7 +66,7 @@ public class LandTitleRenderer {
             alpha = 0.0f;
         }
 
-        alpha = MathHelper.clamp(alpha, 0f, 1.0f);
+        alpha = Mth.clamp(alpha, 0f, 1.0f);
         return ((int) (alpha * 255) << 24) | 0xFFFFFF;
     }
 }

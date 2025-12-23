@@ -4,23 +4,24 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.StoneyCoreClient;
 import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
-import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.data.playerdata.StaminaData;
+import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
+import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.systems.VertexSorter;
+import com.mojang.blaze3d.vertex.*;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import io.wispforest.owo.shader.BlurProgram;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.Window;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderBuffers;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -30,57 +31,55 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
-    @Unique
-    private static final Identifier VISOR_HELMET = new Identifier(StoneyCore.MOD_ID, "textures/overlay/visor_helmet.png");
 
     // Surely there's a better way to do this, but it works, so I don't care
     @Inject(
             method = "render",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/DiffuseLighting;enableGuiDepthLighting()V",
+                    target = "Lcom/mojang/blaze3d/platform/Lighting;setupFor3DItems()V",
                     shift = At.Shift.AFTER
             )
     )
     private void renderSCThings(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         GameRenderer gameRenderer = (GameRenderer) (Object) this;
 
-        if (!tick || gameRenderer.getClient().world == null) return;
+        if (!tick || gameRenderer.getMinecraft().level == null) return;
 
-        BufferBuilderStorage buffers = ((GameRendererAccessor) gameRenderer).getBuffers();
-        DrawContext context = new DrawContext(gameRenderer.getClient(), buffers.getEntityVertexConsumers());
+        RenderBuffers buffers = ((GameRendererAccessor) gameRenderer).getBuffers();
+        GuiGraphics guiGraphics = new GuiGraphics(gameRenderer.getMinecraft(), buffers.bufferSource());
 
-        Window window = gameRenderer.getClient().getWindow();
-        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
-        Matrix4f matrix4f = (new Matrix4f()).setOrtho(0.0F, (float)((double)window.getFramebufferWidth() / window.getScaleFactor()), (float)((double)window.getFramebufferHeight() / window.getScaleFactor()), 0.0F, 1000.0F, 21000.0F);
-        RenderSystem.setProjectionMatrix(matrix4f, VertexSorter.BY_Z);
-        MatrixStack matrixStack = RenderSystem.getModelViewStack();
-        matrixStack.push();
-        matrixStack.loadIdentity();
-        matrixStack.translate(0.0F, 0.0F, -11000.0F);
+        Window window = gameRenderer.getMinecraft().getWindow();
+        RenderSystem.clear(256, Minecraft.ON_OSX);
+        Matrix4f matrix4f = (new Matrix4f()).setOrtho(0.0F, (float)((double)window.getWidth() / window.getGuiScale()), (float)((double)window.getHeight() / window.getGuiScale()), 0.0F, 1000.0F, 21000.0F);
+        RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.ORTHOGRAPHIC_Z);
+        PoseStack poseStack = RenderSystem.getModelViewStack();
+        poseStack.pushPose();
+        poseStack.setIdentity();
+        poseStack.translate(0.0F, 0.0F, -11000.0F);
         RenderSystem.applyModelViewMatrix();
-        DiffuseLighting.enableGuiDepthLighting();
+        Lighting.setupFor3DItems();
 
         // Just move outside the code, because I know I will somehow make this thing crash the NASA
-        dontMessItNow(context, tickDelta);
+        dontMessItNow(guiGraphics, tickDelta);
 
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
         RenderSystem.disableBlend();
-        context.draw();
-        matrixStack.pop();
+        guiGraphics.flush();
+        poseStack.popPose();
         RenderSystem.applyModelViewMatrix();
     }
 
     @Unique
-    private void dontMessItNow(DrawContext context, float tickDelta) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        ClientPlayerEntity player = client.player;
+    private void dontMessItNow(GuiGraphics guiGraphics, float tickDelta) {
+        Minecraft client = Minecraft.getInstance();
+        LocalPlayer player = client.player;
 
         if (player == null || player.isSpectator()) return;
 
-        int width = context.getScaledWindowWidth();
-        int height = context.getScaledWindowHeight();
+        int width = guiGraphics.guiWidth();
+        int height = guiGraphics.guiHeight();
 
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
@@ -90,15 +89,23 @@ public class GameRendererMixin {
         if (AccessoriesCapability.getOptionally(player).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                 ItemStack itemStack = equipped.stack();
-                if (!(NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false)) && itemStack.isIn(SCTags.VISORED_HELMET.getTag()) && StoneyCore.getConfig().visualOptions.getVisoredHelmet()) {
-                    RenderSystem.setShaderTexture(0, VISOR_HELMET);
-                    context.setShaderColor(1f, 1f, 1f, player.isCreative() ? StoneyCore.getConfig().visualOptions.getVisoredHelmetAlpha() : 1f);
-                    context.drawTexture(VISOR_HELMET, 0, 0, 0, 0, width, height, width, height);
+                ResourceLocation visorId = AccessoriesDefinitionsLoader.getData(itemStack).visoredHelmet();
+
+                if (!NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false) && !(visorId.getPath().isEmpty() || visorId.getPath().equals("empty")) && StoneyCore.getConfig().visualOptions.getVisoredHelmet()) {
+
+                    String namespace = visorId.getNamespace();
+                    if (visorId.getNamespace().isEmpty()) namespace = "stoneycore";
+
+                    ResourceLocation visorTexture = new ResourceLocation(namespace, "textures/overlay/visor/" + visorId.getPath() + ".png");
+
+                    RenderSystem.setShaderTexture(0, visorTexture);
+                    guiGraphics.setColor(1f, 1f, 1f, player.isCreative() ? StoneyCore.getConfig().visualOptions.getVisoredHelmetAlpha() : 1f);
+                    guiGraphics.blit(visorTexture, 0, 0, 0, 0, width, height, width, height);
                     break;
                 }
             }
         }
-        context.setShaderColor(1f, 1f, 1f, 1f);
+        guiGraphics.setColor(1f, 1f, 1f, 1f);
 
         double stamina = StaminaData.getStamina(player);
         double secondLevel = player.getAttributeBaseValue(StoneyCore.MAX_STAMINA.get()) * 0.15d;
@@ -107,26 +114,26 @@ public class GameRendererMixin {
             double staminaPercentage = stamina / secondLevel;
             if (StoneyCore.getConfig().combatOptions.getRealisticCombat()) {
                 if (noiseTextures == null) initNoiseTextures();
-                renderBlurEffect(context, width, height, staminaPercentage);
+                renderBlurEffect(guiGraphics, width, height, staminaPercentage);
             } else {
                 int opacity = (int)((Math.max(0, 0.4f - staminaPercentage) * 255));
                 int green = StaminaData.isStaminaBlocked((IEntityDataSaver) player) ? 0 : (int) (stamina / secondLevel);
                 int gradientColorEnd = opacity << 24 | green | 0x00FF0000;
 
-                context.fillGradient(0, 0, width, height, 0x00FFFFFF, gradientColorEnd);
+                guiGraphics.fillGradient(0, 0, width, height, 0x00FFFFFF, gradientColorEnd);
             }
         }
 
-        renderVisorToggleProgress(context, tickDelta);
+        renderVisorToggleProgress(guiGraphics, tickDelta);
 
-        StoneyCoreClient.LAND_TITLE_RENDERER.render(context);
+        StoneyCoreClient.LAND_TITLE_RENDERER.render(guiGraphics);
     }
 
     @Unique
     private static final BlurProgram BLUR = new BlurProgram();
 
     @Unique
-    private Identifier[] noiseTextures;
+    private ResourceLocation[] noiseTextures;
     @Unique
     private int currentNoiseTexture = 0;
     @Unique
@@ -134,42 +141,42 @@ public class GameRendererMixin {
 
     @Unique
     private void initNoiseTextures() {
-        noiseTextures = new Identifier[12];
+        noiseTextures = new ResourceLocation[12];
         for (int i = 0; i < noiseTextures.length; i++) {
-            noiseTextures[i] = new Identifier(StoneyCore.MOD_ID, "textures/overlay/noise/noise_" + i + ".png");
+            noiseTextures[i] = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/noise/noise_" + i + ".png");
         }
     }
 
     @Unique
-    private void renderBlurEffect(DrawContext context, int width, int height, double staminaPercentage) {
-        renderBlur(context, width, height, staminaPercentage);
-        renderTunnelVision(context, width, height, staminaPercentage);
-        if (StoneyCore.getConfig().visualOptions.getNoiseEffect()) renderNoise(context, width, height, staminaPercentage);
+    private void renderBlurEffect(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
+        renderBlur(guiGraphics, width, height, staminaPercentage);
+        renderTunnelVision(guiGraphics, width, height, staminaPercentage);
+        if (StoneyCore.getConfig().visualOptions.getNoiseEffect()) renderNoise(guiGraphics, width, height, staminaPercentage);
     }
 
     @Unique
-    private void renderBlur(DrawContext context, int width, int height, double staminaPercentage) {
+    private void renderBlur(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.getBuilder();
+        Matrix4f matrix = guiGraphics.pose().last().pose();
 
-        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
-        buffer.vertex(matrix, 0, 0, 0).next();
-        buffer.vertex(matrix, 0, height, 0).next();
-        buffer.vertex(matrix, width, height, 0).next();
-        buffer.vertex(matrix, width, 0, 0).next();
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+        buffer.vertex(matrix, 0, 0, 0).endVertex();
+        buffer.vertex(matrix, 0, height, 0).endVertex();
+        buffer.vertex(matrix, width, height, 0).endVertex();
+        buffer.vertex(matrix, width, 0, 0).endVertex();
 
         float blur = (float) (Math.max(0.1f, 1.0f - staminaPercentage) * 12.0f);
 
         BLUR.setParameters(16, 12, blur);
         BLUR.use();
 
-        tessellator.draw();
+        tesselator.end();
 
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
@@ -177,41 +184,41 @@ public class GameRendererMixin {
     }
 
     @Unique
-    private void renderNoise(DrawContext context, int width, int height, double staminaPercentage) {
-        Identifier noiseTexture = noiseTextures[currentNoiseTexture];
+    private void renderNoise(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
+        ResourceLocation noiseTexture = noiseTextures[currentNoiseTexture];
         float alpha = (float) (-0.001f * currentNoiseTextureTime * (currentNoiseTextureTime - 10) + Math.max(0, 1.0f - staminaPercentage) * 0.2f);
-        if (currentNoiseTextureTime-- <= 0 && !MinecraftClient.getInstance().isPaused()) {
+        if (currentNoiseTextureTime-- <= 0 && !Minecraft.getInstance().isPaused()) {
             currentNoiseTexture = (currentNoiseTexture + 1) % noiseTextures.length;
             currentNoiseTextureTime = 10;
         }
 
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0f, 0.5f, 0.5f, alpha);
-        context.drawTexture(noiseTexture, 0, 0, 0, 0, width, height, width, height);
+        guiGraphics.blit(noiseTexture, 0, 0, 0, 0, width, height, width, height);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderSystem.disableBlend();
     }
 
     @Unique
-    private void renderTunnelVision(DrawContext context, int width, int height, double staminaPercentage) {
+    private void renderTunnelVision(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
         int opacity = (int)((Math.max(0, 0.2f - staminaPercentage) * 255));
         int gradientColor = opacity << 24;
 
         int opacity2 = (int)((Math.max(0, 0.6f - staminaPercentage) * 255));
         int gradientColor2 = opacity2 << 24;
 
-        context.fillGradient(0, 0, width, height, gradientColor, gradientColor2);
+        guiGraphics.fillGradient(0, 0, width, height, gradientColor, gradientColor2);
     }
 
     @Unique
-    private static final Identifier VISOR_PROGRESS_BACKGROUND = new Identifier(StoneyCore.MOD_ID, "textures/overlay/visor_progress_background.png");
+    private static final ResourceLocation VISOR_PROGRESS_BACKGROUND = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/visor_progress_background.png");
     @Unique
-    private static final Identifier VISOR_PROGRESS_BAR = new Identifier(StoneyCore.MOD_ID, "textures/overlay/visor_progress_bar.png");
+    private static final ResourceLocation VISOR_PROGRESS_BAR = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/visor_progress_bar.png");
     @Unique
     private float lastRenderedProgress = 0.0f;
 
     @Unique
-    private void renderVisorToggleProgress(DrawContext context, float tickDelta) {
+    private void renderVisorToggleProgress(GuiGraphics guiGraphics, float tickDelta) {
         if (StoneyCore.getConfig().combatOptions.getToggleVisorTime() == 0
                 || !KeyInputHandler.isTogglingVisor
                 || KeyInputHandler.visorToggled
@@ -220,9 +227,9 @@ public class GameRendererMixin {
             return;
         }
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        int screenWidth = client.getWindow().getScaledWidth();
-        int screenHeight = client.getWindow().getScaledHeight();
+        Minecraft minecraft = Minecraft.getInstance();
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
 
         int centerX = screenWidth / 2;
         int centerY = screenHeight / 2;
@@ -245,12 +252,12 @@ public class GameRendererMixin {
         int bgX = centerX - bgWidth / 2;
         int bgY = centerY + yOffset - bgHeight / 2;
 
-        context.drawTexture(VISOR_PROGRESS_BACKGROUND, bgX, bgY, 0, 0, bgWidth, bgHeight, bgWidth, bgHeight);
+        guiGraphics.blit(VISOR_PROGRESS_BACKGROUND, bgX, bgY, 0, 0, bgWidth, bgHeight, bgWidth, bgHeight);
 
         if (progressWidth > 0) {
             int barX = centerX - barWidth / 2;
             int barY = centerY + yOffset - barHeight / 2;
-            context.drawTexture(VISOR_PROGRESS_BAR, barX, barY, 0, 0, progressWidth, barHeight, barWidth, barHeight);
+            guiGraphics.blit(VISOR_PROGRESS_BAR, barX, barY, 0, 0, progressWidth, barHeight, barWidth, barHeight);
         }
     }
 }

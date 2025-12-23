@@ -7,11 +7,11 @@ import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.data.playerdata.PDKeys;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Collections;
 import java.util.Map;
@@ -21,35 +21,35 @@ public class MechanicsUtil {
     private static final Map<LivingEntity, ItemStack> LAST_ITEMSTACK_MAP =
             Collections.synchronizedMap(new WeakHashMap<>());
 
-    public static void handleParry(ServerPlayerEntity player) {
+    public static void handleParry(ServerPlayer player) {
         if (NBTDataHelper.get((IEntityDataSaver) player, PDKeys.BLOCK_START_TICK, 0L) > 0) return;
-        ItemStack activeItem = player.getActiveItem();
+        ItemStack activeItem = player.getUseItem();
         boolean isBlocking = player.isBlocking();
-        boolean usingCustomShield = activeItem.isIn(SCTags.WEAPONS_SHIELD.getTag());
+        boolean usingCustomShield = activeItem.is(SCTags.WEAPONS_SHIELD.getTag());
 
         if (isBlocking && usingCustomShield) {
-            NBTDataHelper.set((IEntityDataSaver) player, PDKeys.BLOCK_START_TICK, player.getWorld().getTime());
+            NBTDataHelper.set((IEntityDataSaver) player, PDKeys.BLOCK_START_TICK, player.level().getGameTime());
         } else {
             NBTDataHelper.set((IEntityDataSaver) player, PDKeys.BLOCK_START_TICK, 0L);
         }
     }
 
-    public static void handlePlayerReload(ServerPlayerEntity player) {
-        ItemStack currentItem = player.getMainHandStack();
-        NbtCompound nbt = currentItem.getNbt();
+    public static void handlePlayerReload(ServerPlayer player) {
+        ItemStack currentItem = player.getMainHandItem();
+        CompoundTag tag = currentItem.getTag();
 
-        if (SCRangeWeaponUtil.getAmmoRequirement(currentItem) == null) return;
+        if (SCRangeWeaponUtil.getAmmoRequirement(currentItem) == SCRangeWeaponUtil.AmmoRequirement.EMPTY) return;
 
         var weaponState = SCRangeWeaponUtil.getWeaponState(currentItem);
 
         if (weaponState.isReloading()) {
-            player.setVelocity(0, player.getVelocity().y, 0);
-            player.velocityDirty = true;
+            player.setDeltaMovement(0, player.getDeltaMovement().y, 0);
+            player.hurtMarked = true;
         }
 
         ItemStack lastItem = LAST_ITEMSTACK_MAP.get(player);
         if (currentItem != lastItem) {
-            if (lastItem != null && lastItem.getNbt() != null && WeaponDefinitionsLoader.isRanged(lastItem)) {
+            if (lastItem != null && lastItem.getTag() != null && WeaponDefinitionsLoader.isRanged(lastItem)) {
                 SCRangeWeaponUtil.setWeaponState(currentItem, new SCRangeWeaponUtil.WeaponState(false, weaponState.isCharged(), false));
                 resetWeaponState(player, lastItem);
             }
@@ -57,7 +57,7 @@ public class MechanicsUtil {
             return;
         }
 
-        if (nbt == null || !SCRangeWeaponUtil.getWeaponState(currentItem).isReloading() || !WeaponDefinitionsLoader.isRanged(currentItem)) {
+        if (tag == null || !SCRangeWeaponUtil.getWeaponState(currentItem).isReloading() || !WeaponDefinitionsLoader.isRanged(currentItem)) {
             resetRechargeTime(player);
             return;
         }
@@ -67,14 +67,10 @@ public class MechanicsUtil {
             return;
         }
 
-        if (player.getItemCooldownManager().isCoolingDown(currentItem.getItem()) || weaponState.isCharged()) return;
+        if (player.getCooldowns().isOnCooldown(currentItem.getItem()) || weaponState.isCharged()) return;
 
         if (weaponState.isReloading()) {
             incrementRechargeTime(player);
-        } else if (hasRequiredAmmo(player, currentItem)) {
-            startReload(player, currentItem);
-        } else {
-            SCRangeWeaponUtil.setWeaponState(currentItem, new SCRangeWeaponUtil.WeaponState(false, false, false));
         }
 
         int requiredTicks = WeaponDefinitionsLoader.getData(currentItem).ranged().rechargeTime() * 20;
@@ -83,28 +79,7 @@ public class MechanicsUtil {
         }
     }
 
-    private static boolean hasRequiredAmmo(ServerPlayerEntity player, ItemStack itemStack) {
-        var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(itemStack);
-        ItemStack[] foundItems = {
-                SCInventoryItemFinder.getItemFromInventory(player, ammoReq.firstItem(), ammoReq.firstItem2nOption()),
-                SCInventoryItemFinder.getItemFromInventory(player, ammoReq.secondItem(), ammoReq.secondItem2nOption()),
-                SCInventoryItemFinder.getItemFromInventory(player, ammoReq.thirdItem(), ammoReq.thirdItem2nOption())
-        };
-        int[] requiredAmounts = {
-                ammoReq.amountFirstItem(),
-                ammoReq.amountSecondItem(),
-                ammoReq.amountThirdItem()
-        };
-        return SCInventoryItemFinder.areItemsInInventory(foundItems, requiredAmounts);
-    }
-
-    private static void startReload(ServerPlayerEntity player, ItemStack itemStack) {
-        var state = SCRangeWeaponUtil.getWeaponState(itemStack);
-        SCRangeWeaponUtil.setWeaponState(itemStack, new SCRangeWeaponUtil.WeaponState(true, state.isCharged(), false));
-        incrementRechargeTime(player);
-    }
-
-    private static void completeReload(ServerPlayerEntity player, ItemStack itemStack) {
+    private static void completeReload(ServerPlayer player, ItemStack itemStack) {
         if (!player.isCreative()) {
             var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(itemStack);
             ItemStack[] ammoItems = {
@@ -112,8 +87,14 @@ public class MechanicsUtil {
                     SCInventoryItemFinder.getItemFromInventory(player, ammoReq.secondItem(), ammoReq.secondItem2nOption()),
                     SCInventoryItemFinder.getItemFromInventory(player, ammoReq.thirdItem(), ammoReq.thirdItem2nOption())
             };
+
             for (ItemStack ammoItem : ammoItems) {
-                player.getInventory().removeStack(SCInventoryItemFinder.getItemSlot(player, ammoItem), 1);
+                if (ammoItem != null && !ammoItem.isEmpty()) {
+                    int slot = SCInventoryItemFinder.getItemSlot(player, ammoItem);
+                    if (slot >= 0 && slot < player.getInventory().getContainerSize()) {
+                        player.getInventory().removeItem(slot, 1);
+                    }
+                }
             }
         }
 
@@ -121,25 +102,25 @@ public class MechanicsUtil {
         setRechargeTime(player, 0);
     }
 
-    private static void resetWeaponState(ServerPlayerEntity player, ItemStack itemStack) {
+    private static void resetWeaponState(ServerPlayer player, ItemStack itemStack) {
         var state = SCRangeWeaponUtil.getWeaponState(itemStack);
         SCRangeWeaponUtil.setWeaponState(itemStack, new SCRangeWeaponUtil.WeaponState(false, state.isCharged(), false));
         setRechargeTime(player, 0);
     }
 
-    private static void resetRechargeTime(PlayerEntity player) {
+    private static void resetRechargeTime(Player player) {
         setRechargeTime(player, 0);
     }
 
-    private static void incrementRechargeTime(PlayerEntity player) {
+    public static void incrementRechargeTime(Player player) {
         setRechargeTime(player, getRechargeTime(player) + 1);
     }
 
-    private static int getRechargeTime(PlayerEntity player) {
+    private static int getRechargeTime(Player player) {
         return NBTDataHelper.get((IEntityDataSaver) player, PDKeys.RECHARGE_TIME, 0);
     }
 
-    private static void setRechargeTime(PlayerEntity player, int time) {
+    private static void setRechargeTime(Player player, int time) {
         NBTDataHelper.set((IEntityDataSaver) player, PDKeys.RECHARGE_TIME, time);
     }
 }

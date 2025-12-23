@@ -11,13 +11,14 @@ import banduty.stoneycore.util.servertick.*;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
 
@@ -31,13 +32,13 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
 
         WeightUtil.clearCache();
 
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (!player.isSpectator()) {
                 updatePlayerTick(player);
             }
         }
 
-        for (ServerWorld world : server.getWorlds()) {
+        for (ServerLevel world : server.getAllLevels()) {
             checkAndRemoveBrokenLands(world);
             SiegeManager.tick(world);
         }
@@ -50,7 +51,7 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         }
     }
 
-    private void updatePlayerTick(ServerPlayerEntity player) {
+    private void updatePlayerTick(ServerPlayer player) {
         boolean isDead = player.getHealth() <= 0;
 
         WeightUtil.setCachedWeight(player);
@@ -62,9 +63,9 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
             if (AccessoriesCapability.getOptionally(player).isPresent()) {
                 for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                     ItemStack equippedStack = equipped.stack();
-                    if (equippedStack.isIn(ItemTags.FREEZE_IMMUNE_WEARABLES)) {
-                        player.setFrozenTicks(0);
-                        EntityAttributeInstance entityAttributeInstance = player.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+                    if (equippedStack.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) {
+                        player.setTicksFrozen(0);
+                        AttributeInstance entityAttributeInstance = player.getAttribute(Attributes.MOVEMENT_SPEED);
                         if (entityAttributeInstance != null) {
                             if (entityAttributeInstance.getModifier(POWDER_SNOW_SLOW_ID) != null) {
                                 entityAttributeInstance.removeModifier(POWDER_SNOW_SLOW_ID);
@@ -86,20 +87,20 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
 
             LandTracker.trackPlayerLandMovement(player);
         } else {
-            UUID playerId = player.getUuid();
-            SiegeManager.getPlayerSiege(player.getServerWorld(), playerId)
-                    .ifPresent(siege -> siege.disablePlayer(playerId, player.getServerWorld()));
+            UUID playerId = player.getUUID();
+            SiegeManager.getPlayerSiege(player.serverLevel(), playerId)
+                    .ifPresent(siege -> siege.disablePlayer(playerId, player.serverLevel()));
         }
 
         OutlineClaimRenderer.renderOutlineClaim(player);
     }
 
-    private void checkAndRemoveBrokenLands(ServerWorld world) {
-        var state = LandState.get(world);
+    private void checkAndRemoveBrokenLands(ServerLevel serverLevel) {
+        var state = LandState.get(serverLevel);
         List<Land> toRemove = new ArrayList<>();
 
         for (Land land : state.getAllLands()) {
-            if (world.getBlockState(land.getCorePos()).getBlock() != land.getLandType().coreBlock()) {
+            if (serverLevel.getBlockState(land.getCorePos()).getBlock() != land.getLandType().coreBlock()) {
                 toRemove.add(land);
             }
         }
@@ -107,12 +108,12 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         for (Land land : toRemove) {
             state.removeLand(land);
 
-            for (ServerPlayerEntity player : world.getPlayers()) {
+            for (ServerPlayer player : serverLevel.players()) {
                 if (!player.isSpectator()) {
-                    player.sendMessage(
-                            net.minecraft.text.Text.translatable(
-                                    "text.land." + land.getLandType().id().getNamespace() + ".fall",
-                                    land.getLandTitle(world).getString()
+                    player.displayClientMessage(
+                            Component.translatable(
+                                    "component.land." + land.getLandType().id().getNamespace() + ".fall",
+                                    land.getLandTitle(serverLevel).getString()
                             ), true
                     );
                 }

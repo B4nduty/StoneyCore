@@ -1,5 +1,7 @@
 package banduty.stoneycore;
 
+import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
+import banduty.stoneycore.block.ModBlockEntities;
 import banduty.stoneycore.client.CrownRenderer;
 import banduty.stoneycore.client.SCAccessoryItemRenderer;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
@@ -9,6 +11,8 @@ import banduty.stoneycore.event.*;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.armor.ISCUnderArmor;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
+import banduty.stoneycore.items.item.HotIron;
+import banduty.stoneycore.items.item.Tongs;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.networking.packet.OutlineClaimS2CPacket;
 import banduty.stoneycore.particle.ModParticles;
@@ -16,6 +20,7 @@ import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.ModScreenHandlers;
+import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.render.LandTitleRenderer;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.platform.Platform;
@@ -28,10 +33,13 @@ import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
-import net.minecraft.client.gui.screen.ingame.HandledScreens;
-import net.minecraft.item.DyeableItem;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.DyeableLeatherItem;
+import net.minecraft.world.item.Item;
 
 public class StoneyCoreClient implements ClientModInitializer {
 	public static final LandTitleRenderer LAND_TITLE_RENDERER = new LandTitleRenderer();
@@ -55,8 +63,8 @@ public class StoneyCoreClient implements ClientModInitializer {
 
 	private void registerClient() {
 		EntityRendererRegistry.register(ModEntities.SC_BULLET.get(), SCBulletEntityRenderer::new);
-		for (Item item : Registries.ITEM) {
-			if (((item instanceof SCAccessoryItem || item instanceof ISCUnderArmor) && item instanceof DyeableItem dyeableItem)) {
+		for (Item item : BuiltInRegistries.ITEM) {
+			if (((item instanceof SCAccessoryItem || item instanceof ISCUnderArmor) && item instanceof DyeableLeatherItem dyeableItem)) {
 				ColorProviderRegistry.ITEM.register((stack, tintIndex) ->
 						tintIndex > 0 ? -1 : dyeableItem.getColor(stack), item);
 			}
@@ -66,13 +74,34 @@ public class StoneyCoreClient implements ClientModInitializer {
 			if (item instanceof ISCUnderArmor) {
 				ArmorRenderer.register(new SCUnderArmourRenderer(), item);
 			}
+
+            ItemProperties.register(item, new ResourceLocation("broken"),
+                    (stack, world, entity, seed) ->
+                            stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f ? 1.0F : 0.0F);
+
+            if (item instanceof HotIron hotIron) {
+                ItemProperties.register(item, new ResourceLocation("finished"),
+                        (stack, world, entity, seed) ->
+                                hotIron.isFinished(stack) ? 1.0F : 0.0F);
+            }
+
+            if (item instanceof Tongs) {
+                ItemProperties.register(item, new ResourceLocation("hotiron"),
+                        (stack, world, entity, seed) ->
+                            Tongs.getTargetStack(stack).getItem() instanceof HotIron ? 1.0F : 0.0F);
+                ItemProperties.register(item, new ResourceLocation("finished"),
+                        (stack, world, entity, seed) ->
+                                !(HotIron.getTargetStack(Tongs.getTargetStack(stack)).isEmpty()) ? 1.0F : 0.0F);
+            }
 		}
 		ArmorRenderer.register(new CrownRenderer(), SCItems.CROWN.get());
 
 		ParticleFactoryRegistry.getInstance().register(ModParticles.MUZZLES_SMOKE_PARTICLE.get(), MuzzlesSmokeParticle.Factory::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.MUZZLES_FLASH_PARTICLE.get(), MuzzlesFlashParticle.Factory::new);
 
-		HandledScreens.register(ModScreenHandlers.BLUEPRINT_SCREEN_HANDLER, BlueprintScreen::new);
+        BlockEntityRenderers.register(ModBlockEntities.CRAFTMAN_ANVIL_BLOCK_ENTITY, CraftmanAnvilBlockRenderer::new);
+
+        MenuScreens.register(ModScreenHandlers.BLUEPRINT_SCREEN_HANDLER, BlueprintScreen::new);
 
 		OutlineClaimS2CPacket.registerRenderer();
 	}

@@ -1,19 +1,14 @@
 package banduty.stoneycore.util;
 
-import net.bettercombat.api.AttackHand;
-import net.bettercombat.logic.PlayerAttackHelper;
-import net.bettercombat.logic.PlayerAttackProperties;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 
 public class EntityDamageUtil {
     public static SCDamageCalculator.DamageType damageType;
 
     public static double onDamage(LivingEntity target, LivingEntity attacker, ItemStack weaponStack) {
-        if (!(target.getWorld() instanceof ServerWorld)) {
+        if (!(target.level() instanceof ServerLevel)) {
             return 0;
         }
 
@@ -25,17 +20,5 @@ public class EntityDamageUtil {
         }
 
         return Math.max(amount, 0.0);
-    }
-
-    public static ItemStack getWeaponStack(Entity attacker) {
-        if (attacker instanceof PlayerEntity player) {
-            if (player instanceof PlayerAttackProperties props) {
-                AttackHand hand = PlayerAttackHelper.getCurrentAttack(player, props.getComboCount());
-                if (hand != null) {
-                    return hand.itemStack();
-                }
-            }
-        }
-        return ItemStack.EMPTY;
     }
 }

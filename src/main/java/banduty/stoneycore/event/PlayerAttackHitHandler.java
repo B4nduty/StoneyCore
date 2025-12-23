@@ -9,16 +9,16 @@ import net.bettercombat.api.AttackHand;
 import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public class PlayerAttackHitHandler implements BetterCombatClientEvents.PlayerAttackHit {
     @Override
-    public void onPlayerAttackStart(ClientPlayerEntity player, AttackHand attackHand, List<Entity> list, @Nullable Entity entity) {
-        if (WeaponDefinitionsLoader.isMelee(player.getMainHandStack())) {
+    public void onPlayerAttackStart(LocalPlayer player, AttackHand attackHand, List<Entity> list, @Nullable Entity entity) {
+        if (WeaponDefinitionsLoader.isMelee(player.getMainHandItem())) {
             IEntityDataSaver dataSaver = (IEntityDataSaver) player;
 
             if (player.isCreative()) return;

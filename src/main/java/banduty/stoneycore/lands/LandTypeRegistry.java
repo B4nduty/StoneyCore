@@ -1,17 +1,17 @@
 package banduty.stoneycore.lands;
 
 import banduty.stoneycore.util.definitionsloader.LandDefinitionsLoader;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 
 import java.util.*;
 
 public class LandTypeRegistry {
-    private static final Map<Identifier, LandType> TYPES = new LinkedHashMap<>();
-    private static final Map<Identifier, LandDefinitionsLoader.LandValues> OVERRIDES = new HashMap<>();
+    private static final Map<ResourceLocation, LandType> TYPES = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, LandDefinitionsLoader.LandValues> OVERRIDES = new HashMap<>();
 
-    public static LandType register(Identifier id, Block coreBlock, Item coreItem, int baseRadius,
+    public static LandType register(ResourceLocation id, Block coreBlock, Item coreItem, int baseRadius,
                                     Map<Item, Integer> itemsToExpand, String expandFormula, LandType.TerrainType terrainType, int maxAllies) {
         if (TYPES.containsKey(id)) {
             throw new IllegalArgumentException("LandType with id " + id + " is already registered!");
@@ -27,7 +27,7 @@ public class LandTypeRegistry {
         return type;
     }
 
-    public static void applyOverride(Identifier id, LandDefinitionsLoader.LandValues values) {
+    public static void applyOverride(ResourceLocation id, LandDefinitionsLoader.LandValues values) {
         OVERRIDES.put(id, values);
     }
 
@@ -35,7 +35,7 @@ public class LandTypeRegistry {
         OVERRIDES.clear();
     }
 
-    public static Optional<LandType> getById(Identifier id) {
+    public static Optional<LandType> getById(ResourceLocation id) {
         LandType type = TYPES.get(id);
         if (type == null) return Optional.empty();
 

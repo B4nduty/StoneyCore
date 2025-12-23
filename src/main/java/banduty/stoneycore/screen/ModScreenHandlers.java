@@ -2,14 +2,14 @@ package banduty.stoneycore.screen;
 
 import banduty.stoneycore.StoneyCore;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.MenuType;
 
 public class ModScreenHandlers {
-    public static final ScreenHandlerType<BlueprintScreenHandler> BLUEPRINT_SCREEN_HANDLER =
-            Registry.register(Registries.SCREEN_HANDLER, new Identifier(StoneyCore.MOD_ID, "blueprint_gui"),
+    public static final MenuType<BlueprintScreenHandler> BLUEPRINT_SCREEN_HANDLER =
+            Registry.register(BuiltInRegistries.MENU, new ResourceLocation(StoneyCore.MOD_ID, "blueprint_gui"),
                     new ExtendedScreenHandlerType<>(BlueprintScreenHandler::new));
 
     public static void registerScreenHandlers() {

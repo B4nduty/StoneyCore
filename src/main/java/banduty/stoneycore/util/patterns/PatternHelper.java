@@ -2,56 +2,59 @@ package banduty.stoneycore.util.patterns;
 
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Tuple;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PatternHelper {
-    public static void setBannerPatterns(ItemStack stack, List<Pair<Identifier, DyeColor>> patterns) {
-        NbtCompound nbt = stack.getOrCreateNbt();
+    public static void setBannerPatterns(ItemStack stack, List<Tuple<ResourceLocation, DyeColor>> patterns) {
+        CompoundTag tag = stack.getOrCreateTag();
 
-        NbtList patternList = new NbtList();
-        for (Pair<Identifier, DyeColor> pattern : patterns) {
-            patternList.add(NbtString.of(pattern.getLeft().toString()));
+        ListTag patternList = new ListTag();
+        for (Tuple<ResourceLocation, DyeColor> pattern : patterns) {
+            patternList.add(StringTag.valueOf(pattern.getA().toString()));
         }
-        nbt.put("BannerPatterns", patternList);
+        tag.put("BannerPatterns", patternList);
 
-        NbtList colorList = new NbtList();
-        for (Pair<Identifier, DyeColor> pattern : patterns) {
-            float[] components = pattern.getRight().getColorComponents();
-            NbtCompound colorTag = new NbtCompound();
+        ListTag colorList = new ListTag();
+        for (Tuple<ResourceLocation, DyeColor> pattern : patterns) {
+            float[] components = pattern.getB().getTextureDiffuseColors();
+            CompoundTag colorTag = new CompoundTag();
             colorTag.putFloat("R", components[0]);
             colorTag.putFloat("G", components[1]);
             colorTag.putFloat("B", components[2]);
             colorList.add(colorTag);
         }
-        nbt.put("BannerColors", colorList);
+        tag.put("BannerColors", colorList);
     }
 
-    public static List<Pair<Identifier, DyeColor>> getBannerPatterns(ItemStack stack) {
-        List<Pair<Identifier, DyeColor>> patterns = new ArrayList<>();
-        if (stack.getNbt() != null && stack.getNbt().contains("BannerPatterns")) {
-            NbtList patternList = stack.getNbt().getList("BannerPatterns", NbtString.STRING_TYPE);
-            NbtList colorList = stack.getNbt().getList("BannerColors", NbtCompound.COMPOUND_TYPE);
+    public static List<Tuple<ResourceLocation, DyeColor>> getBannerPatterns(ItemStack stack) {
+        List<Tuple<ResourceLocation, DyeColor>> patterns = new ArrayList<>();
+        if (stack.getTag() != null && stack.getTag().contains("BannerPatterns")) {
+            ListTag patternList = stack.getTag().getList("BannerPatterns", Tag.TAG_STRING);
+            ListTag colorList = stack.getTag().getList("BannerColors", Tag.TAG_COMPOUND);
 
             for (int i = 0; i < patternList.size(); i++) {
-                Identifier patternId = Identifier.tryParse(patternList.getString(i));
+                ResourceLocation patternId = ResourceLocation.tryParse(patternList.getString(i));
 
-                NbtCompound colorTag = colorList.getCompound(i);
+                CompoundTag colorTag = colorList.getCompound(i);
                 float r = colorTag.getFloat("R");
                 float g = colorTag.getFloat("G");
                 float b = colorTag.getFloat("B");
 
                 DyeColor dyeColor = findClosestDyeColor(r, g, b);
 
-                patterns.add(new Pair<>(patternId, dyeColor));
+                if (patternId == null) continue;
+
+                patterns.add(new Tuple<>(patternId, dyeColor));
             }
         }
         return patterns;
@@ -62,7 +65,7 @@ public class PatternHelper {
         float minDistance = Float.MAX_VALUE;
 
         for (DyeColor color : DyeColor.values()) {
-            float[] components = color.getColorComponents();
+            float[] components = color.getTextureDiffuseColors();
             float distance = colorDistance(r, g, b, components[0], components[1], components[2]);
             if (distance < minDistance) {
                 minDistance = distance;
@@ -78,7 +81,7 @@ public class PatternHelper {
     }
 
     public static void setBannerDyeColor(ItemStack stack, DyeColor dyeColor) {
-        float[] components = dyeColor.getColorComponents();
+        float[] components = dyeColor.getTextureDiffuseColors();
         NBTDataHelper.set(stack, INBTKeys.DYE_COLOR_R, components[0]);
         NBTDataHelper.set(stack, INBTKeys.DYE_COLOR_G, components[1]);
         NBTDataHelper.set(stack, INBTKeys.DYE_COLOR_B, components[2]);

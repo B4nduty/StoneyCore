@@ -1,33 +1,34 @@
 package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.items.item.Manuscript;
 import banduty.stoneycore.util.DyeUtil;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.patterns.PatternHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderLayers;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.render.model.BakedModel;
-import net.minecraft.client.render.model.BakedModelManager;
-import net.minecraft.client.render.model.BakedQuad;
-import net.minecraft.client.render.model.json.ModelTransformationMode;
-import net.minecraft.client.util.ModelIdentifier;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MatrixUtil;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.World;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.MatrixUtil;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelManager;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.Tuple;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,15 +37,29 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-import static net.minecraft.client.render.item.ItemRenderer.getDirectItemGlintConsumer;
+import static net.minecraft.client.renderer.entity.ItemRenderer.getFoilBufferDirect;
 
 @Mixin(ItemRenderer.class)
 public abstract class ItemRendererMixin {
-    @Inject(method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/world/World;III)V",
+
+    @Inject(method = "renderStatic(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/level/Level;III)V",
             at = @At("HEAD"),
             cancellable = true)
-    public void stoneycore$onRenderItem(LivingEntity entity, ItemStack itemStack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, World world, int light, int overlay, int seed, CallbackInfo ci) {
-        boolean isValid = itemStack.isIn(SCTags.WEAPONS_3D.getTag())
+    public void stoneycore$onRenderItem(LivingEntity entity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, boolean leftHanded, PoseStack poseStack, MultiBufferSource multiBufferSource, Level level, int light, int overlay, int seed, CallbackInfo ci) {
+        BakedModel bakedModel = getCustomBakedModel(itemStack, entity, seed, null);
+        if (itemStack.getItem() instanceof Manuscript && Manuscript.hasTargetStack(itemStack)) {
+            String modelPath = "manuscript_" + Manuscript.getTargetItemPath(itemStack);
+            bakedModel = getCustomBakedModel(itemStack, entity, seed,
+                    new ModelResourceLocation(Manuscript.getTargetItemNamespace(itemStack), modelPath, "inventory"));
+            if (bakedModel != null) {
+                ItemRenderer itemRenderer = (ItemRenderer) (Object) this;
+                itemRenderer.render(itemStack, itemDisplayContext, leftHanded, poseStack, multiBufferSource, light, overlay, bakedModel);
+                ci.cancel();
+                return;
+            }
+        }
+
+        boolean isValid = itemStack.is(SCTags.WEAPONS_3D.getTag())
                 || !PatternHelper.getBannerPatterns(itemStack).isEmpty()
                 || NBTDataHelper.get(itemStack, INBTKeys.DYE_COLOR_R, null) != null;
 
@@ -52,45 +67,60 @@ public abstract class ItemRendererMixin {
             return;
         }
 
-        if (renderMode == ModelTransformationMode.GUI || renderMode == ModelTransformationMode.GROUND || itemStack.isIn(SCTags.GEO_2D_ITEMS.getTag())) {
+        if (itemDisplayContext == ItemDisplayContext.GUI || itemDisplayContext == ItemDisplayContext.FIXED || itemDisplayContext == ItemDisplayContext.GROUND || itemStack.is(SCTags.GEO_2D_ITEMS.getTag())) {
             return;
         }
 
-        BakedModel bakedModel = getCustomBakedModel(itemStack, entity, seed);
         if (bakedModel != null) {
             ItemRenderer itemRenderer = (ItemRenderer) (Object) this;
-            itemRenderer.renderItem(itemStack, renderMode, leftHanded, matrices, vertexConsumers, light, overlay, bakedModel);
+            itemRenderer.render(itemStack, itemDisplayContext, leftHanded, poseStack, multiBufferSource, light, overlay, bakedModel);
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderItem(Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/client/render/model/BakedModel;)V",
+    @Inject(method = "render",
             at = @At("HEAD"), cancellable = true)
-    public void stoneycore$renderGUIItem(ItemStack itemStack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BakedModel model, CallbackInfo ci) {
-        BakedModel guiBakedModel = getCustomBakedModel(itemStack, MinecraftClient.getInstance().player, 0);
-        if (itemStack.isIn(SCTags.GEO_2D_ITEMS.getTag())) {
-            if ((renderMode == ModelTransformationMode.GUI || renderMode == ModelTransformationMode.GROUND) && model != null) {
-                matrices.translate(-0.5F, -0.5F, -0.5F);
-                VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getCutout());
-                renderBakedItemModel(guiBakedModel, light, overlay, matrices, vertexConsumer, new float[]{1, 1, 1});
+    public void stoneycore$renderGUIItem(ItemStack itemStack, ItemDisplayContext renderMode, boolean leftHanded, PoseStack poseStack, MultiBufferSource multiBufferSource, int light, int overlay, BakedModel model, CallbackInfo ci) {
+        BakedModel guiBakedModel = getCustomBakedModel(itemStack, Minecraft.getInstance().player, 0, null);
+
+        if (itemStack.getItem() instanceof Manuscript && Manuscript.hasTargetStack(itemStack)) {
+            String modelPath = "manuscript_" + Manuscript.getTargetItemPath(itemStack);
+            guiBakedModel = getCustomBakedModel(itemStack, Minecraft.getInstance().player, 0,
+                    new ModelResourceLocation(Manuscript.getTargetItemNamespace(itemStack), modelPath, "inventory"));
+            if (guiBakedModel == null) return;
+            guiBakedModel.getTransforms().getTransform(renderMode).apply(leftHanded, poseStack);
+
+            poseStack.translate(-0.5F, -0.5F, -0.5F);
+
+            VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.cutout());
+            renderBakedItemModel(guiBakedModel, light, overlay, poseStack, vertexConsumer, new float[]{1, 1, 1});
+            ci.cancel();
+            return;
+        }
+
+        if (itemStack.is(SCTags.GEO_2D_ITEMS.getTag())) {
+            if ((renderMode == ItemDisplayContext.GUI || renderMode == ItemDisplayContext.GROUND) && model != null) {
+                poseStack.translate(-0.5F, -0.5F, -0.5F);
+                VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.cutout());
+                renderBakedItemModel(guiBakedModel, light, overlay, poseStack, vertexConsumer, new float[]{1, 1, 1});
                 ci.cancel();
             } else return;
         }
 
         if (!PatternHelper.getBannerPatterns(itemStack).isEmpty() || NBTDataHelper.get(itemStack, INBTKeys.DYE_COLOR_R, null) != null) {
-            model.getTransformation().getTransformation(renderMode).apply(leftHanded, matrices);
-            matrices.translate(-0.5F, -0.5F, -0.5F);
-            VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getCutout());
-            renderBakedItemModel(guiBakedModel, light, overlay, matrices, vertexConsumer, DyeUtil.getFloatDyeColor(itemStack));
+            model.getTransforms().getTransform(renderMode).apply(leftHanded, poseStack);
+            poseStack.translate(-0.5F, -0.5F, -0.5F);
+            VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.cutout());
+            renderBakedItemModel(guiBakedModel, light, overlay, poseStack, vertexConsumer, DyeUtil.getFloatDyeColor(itemStack));
 
-            List<Pair<Identifier, DyeColor>> bannerPatterns = PatternHelper.getBannerPatterns(itemStack);
+            List<Tuple<ResourceLocation, DyeColor>> bannerPatterns = PatternHelper.getBannerPatterns(itemStack);
             if (!bannerPatterns.isEmpty()) {
-                MinecraftClient client = MinecraftClient.getInstance();
-                BakedModelManager modelManager = client.getItemRenderer().getModels().getModelManager();
+                Minecraft client = Minecraft.getInstance();
+                ModelManager modelManager = client.getItemRenderer().getItemModelShaper().getModelManager();
 
-                for (Pair<Identifier, DyeColor> patternPair : bannerPatterns) {
-                    Identifier patternId = patternPair.getLeft();
-                    DyeColor dyeColor = patternPair.getRight();
+                for (Tuple<ResourceLocation, DyeColor> patternPair : bannerPatterns) {
+                    ResourceLocation patternId = patternPair.getA();
+                    DyeColor dyeColor = patternPair.getB();
 
                     String[] pathParts = patternId.getPath().split("/");
                     String patternName = pathParts[pathParts.length - 1];
@@ -100,42 +130,40 @@ public abstract class ItemRendererMixin {
 
                     String modelPath = itemStack.getItem() + "/" + patternName;
 
-                    float[] rgb = dyeColor.getColorComponents();
-                    ModelIdentifier modelId = new ModelIdentifier(
-                            patternId.getNamespace(),
-                            modelPath,
-                            "inventory"
-                    );
+                    float[] rgb = dyeColor.getTextureDiffuseColors();
+                    ModelResourceLocation modelId = new ModelResourceLocation(patternId.getNamespace(), modelPath, "inventory");
 
-                    RenderLayer renderLayer = RenderLayers.getItemLayer(itemStack, true);
-                    vertexConsumer = getDirectItemGlintConsumer(vertexConsumers, renderLayer, true, itemStack.hasGlint());
-                    renderBakedItemModel(modelManager.getModel(modelId), light, overlay, matrices, vertexConsumer, rgb);
+                    RenderType renderLayer = ItemBlockRenderTypes.getRenderType(itemStack, true);
+                    vertexConsumer = getFoilBufferDirect(multiBufferSource, renderLayer, true, itemStack.hasFoil());
+                    renderBakedItemModel(modelManager.getModel(modelId), light, overlay, poseStack, vertexConsumer, rgb);
                 }
             }
-            MatrixStack.Entry entry = matrices.peek();
-            if (renderMode == ModelTransformationMode.GUI) {
-                MatrixUtil.scale(entry.getPositionMatrix(), 0.5F);
-            } else if (renderMode.isFirstPerson()) {
-                MatrixUtil.scale(entry.getPositionMatrix(), 0.75F);
+            PoseStack.Pose pose = poseStack.last();
+            if (renderMode == ItemDisplayContext.GUI) {
+                MatrixUtil.mulComponentWise(pose.pose(), 0.5F);
+            } else if (renderMode.firstPerson()) {
+                MatrixUtil.mulComponentWise(pose.pose(), 0.75F);
             }
             ci.cancel();
         }
     }
 
     @Unique
-    private BakedModel getCustomBakedModel(ItemStack itemStack, LivingEntity entity, int seed) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        BakedModelManager modelManager = client.getItemRenderer().getModels().getModelManager();
+    private BakedModel getCustomBakedModel(ItemStack itemStack, LivingEntity entity, int seed, ModelResourceLocation newModelPath) {
+        Minecraft minecraft = Minecraft.getInstance();
+        ModelManager modelManager = minecraft.getItemRenderer().getItemModelShaper().getModelManager();
         BakedModel bakedModel = modelManager.getMissingModel();
 
         String modelPath = determineModelPath(itemStack);
+        ResourceLocation iModelPath = new ModelResourceLocation(BuiltInRegistries.ITEM.getKey(itemStack.getItem()).getNamespace(), modelPath, "inventory");
+        if (newModelPath != null) iModelPath = newModelPath;
         if (!modelPath.isEmpty()) {
-            bakedModel = modelManager.getModel(new ModelIdentifier(Registries.ITEM.getId(itemStack.getItem()).getNamespace(), modelPath, "inventory"));
+            bakedModel = modelManager.getModel(iModelPath);
         }
 
-        if (entity != null) {
-            ClientWorld clientWorld = entity.getWorld() instanceof ClientWorld ? (ClientWorld) entity.getWorld() : null;
-            BakedModel overrideModel = bakedModel.getOverrides().apply(bakedModel, itemStack, clientWorld, entity, seed);
+        if (entity != null && bakedModel != null) {
+            ClientLevel clientLevel = entity.level() instanceof ClientLevel ? (ClientLevel) entity.level() : null;
+            BakedModel overrideModel = bakedModel.getOverrides().resolve(bakedModel, itemStack, clientLevel, entity, seed);
             if (overrideModel != null) {
                 bakedModel = overrideModel;
             }
@@ -146,14 +174,14 @@ public abstract class ItemRendererMixin {
 
     @Unique
     private String determineModelPath(ItemStack stack) {
-        if (stack.isIn(SCTags.GEO_2D_ITEMS.getTag())) return stack.getItem() + "_icon";
-        if (stack.isIn(SCTags.WEAPONS_3D.getTag())) return stack.getItem() + "_3d";
+        if (stack.is(SCTags.GEO_2D_ITEMS.getTag())) return stack.getItem() + "_icon";
+        if (stack.is(SCTags.WEAPONS_3D.getTag())) return stack.getItem() + "_3d";
         return stack.getItem().toString();
     }
 
     @Unique
-    private void renderBakedItemModel(BakedModel model, int light, int overlay, MatrixStack matrices, VertexConsumer vertices, float[] color) {
-        Random random = Random.create();
+    private void renderBakedItemModel(BakedModel model, int light, int overlay, PoseStack matrices, VertexConsumer vertices, float[] color) {
+        RandomSource random = RandomSource.create();
         for (Direction direction : Direction.values()) {
             random.setSeed(42L);
             renderBakedItemQuads(matrices, vertices, model.getQuads(null, direction, random), light, overlay, color);
@@ -164,13 +192,13 @@ public abstract class ItemRendererMixin {
     }
 
     @Unique
-    private void renderBakedItemQuads(MatrixStack matrices, VertexConsumer vertices, List<BakedQuad> quads, int light, int overlay, float[] color) {
-        MatrixStack.Entry entry = matrices.peek();
+    private void renderBakedItemQuads(PoseStack poseStack, VertexConsumer vertices, List<BakedQuad> quads, int light, int overlay, float[] color) {
+        PoseStack.Pose pose = poseStack.last();
         for (BakedQuad bakedQuad : quads) {
             float r = color[0];
             float g = color[1];
             float b = color[2];
-            vertices.quad(entry, bakedQuad, r, g, b, light, overlay);
+            vertices.putBulkData(pose, bakedQuad, r, g, b, light, overlay);
         }
     }
 }

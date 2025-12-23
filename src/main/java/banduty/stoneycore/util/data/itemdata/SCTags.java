@@ -1,11 +1,11 @@
 package banduty.stoneycore.util.data.itemdata;
 
 import banduty.stoneycore.StoneyCore;
-import net.minecraft.client.render.model.ModelLoader;
-import net.minecraft.item.Item;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.resources.model.ModelBakery;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 
 public enum SCTags {
 
@@ -15,7 +15,7 @@ public enum SCTags {
      * <p>
      * You will need to make another model file with the name "your_item_3d.json",
      * <p>
-     * Mixin {@link ModelLoader} and Inject in method ModelLoader#addModel:
+     * Mixin {@link ModelBakery} and Inject in method ModelBakery#init:
      *  <pre>
      *   {@code
      *   @Inject(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/model/ModelLoader;addModel(Lnet/minecraft/client/util/ModelIdentifier;)V", ordinal = 3, shift = At.Shift.AFTER))
@@ -67,7 +67,7 @@ public enum SCTags {
      * <p>
      * You will need to make another model file with the name "your_item_icon.json"
      * <p>
-     * Mixin {@link ModelLoader} and Inject in method ModelLoader#addModel:
+     * Mixin {@link ModelBakery} and Inject in method ModelBakery#init:
      * <pre>
      * {@code
      * @Inject(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/model/ModelLoader;addModel(Lnet/minecraft/client/util/ModelIdentifier;)V", ordinal = 3, shift = At.Shift.AFTER))
@@ -84,12 +84,9 @@ public enum SCTags {
      *</pre>
      */
     GEO_2D_ITEMS("geo_2d_items"),
+    BROKEN_WEAPONS("broken_weapons"),
 
     // Armor Tags
-    /**
-     * Give the player reduced vision with an overlay that covers the top and bottom of the screen.
-     */
-    VISORED_HELMET("visored_helmet"),
     /**
      * Armor that can Hide Name Tag
      */
@@ -102,7 +99,7 @@ public enum SCTags {
     private final TagKey<Item> tag;
 
     SCTags(String name) {
-        this.tag = TagKey.of(RegistryKeys.ITEM, new Identifier(StoneyCore.MOD_ID, name));
+        this.tag = TagKey.create(Registries.ITEM, new ResourceLocation(StoneyCore.MOD_ID, name));
     }
 
     public TagKey<Item> getTag() {

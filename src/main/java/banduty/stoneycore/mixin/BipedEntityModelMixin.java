@@ -1,44 +1,44 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.event.custom.BipedEntityModelAnglesEvents;
+import banduty.stoneycore.event.custom.HumanoidModelSetupAnimEvents;
 import banduty.stoneycore.lands.util.LandClientState;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(BipedEntityModel.class)
+@Mixin(HumanoidModel.class)
 public abstract class BipedEntityModelMixin<T extends LivingEntity> {
-    @Inject(method = "setAngles(Lnet/minecraft/entity/LivingEntity;FFFFF)V", at = @At("TAIL"), cancellable = true)
-    private void kingdomsieges$setAfterAngles(T entity, float limbAngle, float limbDistance, float age, float headYaw, float headPitch, CallbackInfo ci) {
-        BipedEntityModel<?> model = (BipedEntityModel<?>) (Object) this;
+    @Inject(method = "setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V", at = @At("TAIL"), cancellable = true)
+    private void stoneycore$setAfterAngles(T entity, float limbAngle, float limbDistance, float age, float headYaw, float headPitch, CallbackInfo ci) {
+        HumanoidModel<?> model = (HumanoidModel<?>) (Object) this;
 
-        BipedEntityModelAnglesEvents.AFTER.invoker().afterSetAngles(model, entity, limbAngle, limbDistance, age, headYaw, headPitch, ci);
+        HumanoidModelSetupAnimEvents.AFTER.invoker().afterSetAngles(model, entity, limbAngle, limbDistance, age, headYaw, headPitch, ci);
 
-        if (entity instanceof PlayerEntity) {
-            LandClientState state = LandClientState.get(entity.getUuid());
+        if (entity instanceof Player) {
+            LandClientState state = LandClientState.get(entity.getUUID());
             if (state.isUnderSiege() && !state.isParticipant()) {
                 float shakeSpeed = 0.5F;
                 float shakeAmount = 0.4F;
                 float time = age * shakeSpeed;
 
-                model.rightArm.pitch = MathHelper.cos(time) * shakeAmount;
-                model.leftArm.pitch = MathHelper.cos(time) * shakeAmount;
-                model.rightArm.roll = 2.3561945F;
-                model.leftArm.roll = -2.3561945F;
-                model.rightArm.yaw = 0.1F;
-                model.leftArm.yaw = -0.1F;
+                model.rightArm.xRot = Mth.cos(time) * shakeAmount;
+                model.leftArm.xRot = Mth.cos(time) * shakeAmount;
+                model.rightArm.z = 2.3561945F;
+                model.leftArm.z = -2.3561945F;
+                model.rightArm.yRot = 0.1F;
+                model.leftArm.yRot = -0.1F;
             }
         }
     }
-    @Inject(method = "setAngles(Lnet/minecraft/entity/LivingEntity;FFFFF)V", at = @At("HEAD"), cancellable = true)
-    private void kingdomsieges$setBeforeAngles(T entity, float limbAngle, float limbDistance, float age, float headYaw, float headPitch, CallbackInfo ci) {
-        BipedEntityModel<?> model = (BipedEntityModel<?>) (Object) this;
+    @Inject(method = "setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V", at = @At("HEAD"), cancellable = true)
+    private void stoneycore$setBeforeAngles(T entity, float limbAngle, float limbDistance, float age, float headYaw, float headPitch, CallbackInfo ci) {
+        HumanoidModel<?> model = (HumanoidModel<?>) (Object) this;
 
-        BipedEntityModelAnglesEvents.BEFORE.invoker().beforeSetAngles(model, entity, limbAngle, limbDistance, age, headYaw, headPitch, ci);
+        HumanoidModelSetupAnimEvents.BEFORE.invoker().beforeSetAngles(model, entity, limbAngle, limbDistance, age, headYaw, headPitch, ci);
     }
 }

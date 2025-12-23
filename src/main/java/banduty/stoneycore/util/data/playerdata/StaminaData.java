@@ -6,10 +6,10 @@ import banduty.stoneycore.util.ModifiersHelper;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 import java.util.UUID;
 
@@ -17,9 +17,9 @@ public class StaminaData {
     private static final UUID GENERIC_STAMINA_MODIFIER_ID = UUID.randomUUID();
 
     public static void setStamina(LivingEntity livingEntity, double stamina) {
-        ModifiersHelper.updateModifier(livingEntity.getAttributeInstance(StoneyCore.STAMINA.get()),
-                new EntityAttributeModifier(GENERIC_STAMINA_MODIFIER_ID,
-                        StoneyCore.MOD_ID + ":stamina", clampStamina(livingEntity, stamina), EntityAttributeModifier.Operation.ADDITION)
+        ModifiersHelper.updateModifier(livingEntity.getAttribute(StoneyCore.STAMINA.get()),
+                new AttributeModifier(GENERIC_STAMINA_MODIFIER_ID,
+                        StoneyCore.MOD_ID + ":stamina", clampStamina(livingEntity, stamina), AttributeModifier.Operation.ADDITION)
         );
     }
 
@@ -41,7 +41,7 @@ public class StaminaData {
 
     public static void setStaminaBlocked(IEntityDataSaver livingEntity, boolean blocked) {
         NBTDataHelper.set(livingEntity, PDKeys.STAMINA_BLOCKED, blocked);
-        syncStaminaBlocked(blocked, (ServerPlayerEntity) livingEntity);
+        syncStaminaBlocked(blocked, (ServerPlayer) livingEntity);
     }
 
     public static boolean isStaminaBlocked(IEntityDataSaver livingEntity) {
@@ -56,8 +56,8 @@ public class StaminaData {
         return NBTDataHelper.get(player, PDKeys.STAMINA_USE_TIME, 0);
     }
 
-    public static void syncStaminaBlocked(boolean blocked, ServerPlayerEntity player) {
-        PacketByteBuf buffer = PacketByteBufs.create();
+    public static void syncStaminaBlocked(boolean blocked, ServerPlayer player) {
+        FriendlyByteBuf buffer = PacketByteBufs.create();
         buffer.writeBoolean(blocked);
         ServerPlayNetworking.send(player, ModMessages.STAMINA_BLOCKED_ID, buffer);
     }

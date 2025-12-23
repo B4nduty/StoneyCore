@@ -1,19 +1,19 @@
 package banduty.stoneycore.util;
 
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 public class ModifiersHelper {
-    public static void updateModifier(EntityAttributeInstance attribute, EntityAttributeModifier modifier) {
+    public static void updateModifier(AttributeInstance attribute, AttributeModifier modifier) {
         if (attribute == null) return;
 
-        EntityAttributeModifier existingModifier = attribute.getModifier(modifier.getId());
-        if (existingModifier == null || existingModifier.getValue() != modifier.getValue()) {
+        AttributeModifier existingModifier = attribute.getModifier(modifier.getId());
+        if (existingModifier == null || existingModifier.getAmount() != modifier.getAmount()) {
             attribute.removeModifier(modifier.getId());
-            attribute.addTemporaryModifier(new EntityAttributeModifier(
+            attribute.addTransientModifier(new AttributeModifier(
                     modifier.getId(),
                     modifier.getName(),
-                    modifier.getValue(),
+                    modifier.getAmount(),
                     modifier.getOperation()
             ));
         }

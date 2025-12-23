@@ -1,14 +1,14 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.util.DeflectChanceHelper;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,34 +17,34 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Random;
 
-@Mixin(PersistentProjectileEntity.class)
+@Mixin(AbstractArrow.class)
 public abstract class PersistentProjectileEntityMixin {
-    @Shadow protected abstract ItemStack asItemStack();
+    @Shadow protected abstract ItemStack getPickupItem();
 
-    @Inject(method = "onEntityHit", at = @At("HEAD"), cancellable = true)
-    private void onEntityHit(EntityHitResult entityHitResult, CallbackInfo ci) {
-        if (!(entityHitResult.getEntity().getWorld() instanceof ServerWorld serverWorld)) return;
-        PersistentProjectileEntity projectileEntity = (PersistentProjectileEntity) (Object) this;
+    @Inject(method = "onHitEntity", at = @At("HEAD"), cancellable = true)
+    private void onHitEntity(EntityHitResult entityHitResult, CallbackInfo ci) {
+        if (!(entityHitResult.getEntity().level() instanceof ServerLevel serverLevel)) return;
+        AbstractArrow projectileEntity = (AbstractArrow) (Object) this;
 
-        if (asItemStack() == null || asItemStack().isEmpty()) {
+        if (getPickupItem() == null || getPickupItem().isEmpty()) {
             return;
         }
 
         if (projectileEntity != null) {
-            if (entityHitResult.getEntity() instanceof LivingEntity livingEntity && DeflectChanceHelper.shouldDeflect(livingEntity, asItemStack())) {
-                projectileEntity.setVelocity(projectileEntity.getVelocity().multiply(0.5).multiply(-1));
-                projectileEntity.setDamage(projectileEntity.getDamage() * 0.5);
-                projectileEntity.setYaw(projectileEntity.getYaw() + 180);
-                if (projectileEntity.getDamage() <= 1) projectileEntity.discard();
-                for (PlayerEntity player : serverWorld.getPlayers()) {
+            if (entityHitResult.getEntity() instanceof LivingEntity livingEntity && DeflectChanceHelper.shouldDeflect(livingEntity, getPickupItem())) {
+                projectileEntity.setDeltaMovement(projectileEntity.getDeltaMovement().scale(0.5).scale(-1));
+                projectileEntity.setBaseDamage(projectileEntity.getBaseDamage() * 0.5);
+                projectileEntity.setYRot(projectileEntity.getYRot() + 180);
+                if (projectileEntity.getBaseDamage() <= 1) projectileEntity.discard();
+                for (Player player : serverLevel.players()) {
                     if (player != null) {
-                        Vec3d playerPos = player.getPos();
-                        Vec3d impactPos = entityHitResult.getPos();
+                        Vec3 playerPos = player.position();
+                        Vec3 impactPos = entityHitResult.getLocation();
                         double distance = playerPos.distanceTo(impactPos);
 
                         float volume = (float) Math.max(0, 1 - (distance * 0.1));
 
-                        projectileEntity.playSound(SoundEvents.BLOCK_ANVIL_PLACE, volume, 2.5F / (new Random().nextFloat() + 0.5F));
+                        projectileEntity.playSound(SoundEvents.ANVIL_PLACE, volume, 2.5F / (new Random().nextFloat() + 0.5F));
                     }
                 }
                 ci.cancel();

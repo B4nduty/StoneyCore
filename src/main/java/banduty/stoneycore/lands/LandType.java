@@ -1,13 +1,13 @@
 package banduty.stoneycore.lands;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public record LandType(Identifier id, Block coreBlock, Item coreItem, int baseRadius,
+public record LandType(ResourceLocation id, Block coreBlock, Item coreItem, int baseRadius,
                        Map<Item, Integer> itemsToExpand, String expandFormula, TerrainType terrainType, int maxAllies) {
     @Override
     public @NotNull String toString() {

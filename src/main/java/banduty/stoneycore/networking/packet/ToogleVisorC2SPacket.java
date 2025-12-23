@@ -6,15 +6,15 @@ import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.world.item.ItemStack;
 
 public class ToogleVisorC2SPacket {
-    public static void receive(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler,
-                               PacketByteBuf buf, PacketSender responseSender) {
+    public static void receive(MinecraftServer server, ServerPlayer player, ServerGamePacketListenerImpl handler,
+                               FriendlyByteBuf buf, PacketSender responseSender) {
         server.execute(() -> {
             if (AccessoriesCapability.getOptionally(player).isPresent()) {
                 for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {

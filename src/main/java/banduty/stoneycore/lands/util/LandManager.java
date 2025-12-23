@@ -2,65 +2,65 @@ package banduty.stoneycore.lands.util;
 
 import banduty.stoneycore.event.StartTickHandler;
 import banduty.stoneycore.lands.LandType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Optional;
 import java.util.UUID;
 
 public class LandManager {
-    public static ActionResult createLand(ServerPlayerEntity player, BlockPos blockPos, LandType landType) {
-        ServerWorld world = (ServerWorld) player.getWorld();
+    public static InteractionResult createLand(ServerPlayer serverPlayer, BlockPos blockPos, LandType landType) {
+        ServerLevel world = (ServerLevel) serverPlayer.level();
         LandState state = LandState.get(world);
 
-        if (state.getLandByOwner(player.getUuid()).isPresent()) {
-            player.sendMessage(Text.translatable("text.land." + landType.id().getNamespace() + ".already_ruling"), true);
-            return ActionResult.PASS;
+        if (state.getLandByOwner(serverPlayer.getUUID()).isPresent()) {
+            serverPlayer.displayClientMessage(Component.translatable("component.land." + landType.id().getNamespace() + ".already_ruling"), true);
+            return InteractionResult.PASS;
         }
 
-        Land land = new Land(player.getUuid(), blockPos, landType.baseRadius(), landType, "", landType.maxAllies());
+        Land land = new Land(serverPlayer.getUUID(), blockPos, landType.baseRadius(), landType, "", landType.maxAllies());
         land.initializeClaim(world, landType.baseRadius(), StartTickHandler.CLAIM_TASKS);
         state.addLand(land);
-        giveCoreItem(player, landType);
+        giveCoreItem(serverPlayer, landType);
 
-        player.sendMessage(Text.translatable("text.land." + landType.id().getNamespace() + ".created"), true);
-        return ActionResult.SUCCESS;
+        serverPlayer.displayClientMessage(Component.translatable("component.land." + landType.id().getNamespace() + ".created"), true);
+        return InteractionResult.SUCCESS;
     }
 
-    public static boolean isBlockInAnyClaim(ServerWorld world, BlockPos pos) {
+    public static boolean isBlockInAnyClaim(ServerLevel world, BlockPos pos) {
         return LandState.get(world).isClaimed(pos);
     }
 
-    public static boolean isOwnerOfClaim(ServerPlayerEntity player, BlockPos pos) {
-        return LandState.get((ServerWorld) player.getWorld()).isOwner(pos, player.getUuid());
+    public static boolean isOwnerOfClaim(ServerPlayer serverPlayer, BlockPos pos) {
+        return LandState.get((ServerLevel) serverPlayer.level()).isOwner(pos, serverPlayer.getUUID());
     }
 
-    public static boolean isAllayOfClaim(ServerPlayerEntity player, BlockPos pos) {
-        return LandState.get((ServerWorld) player.getWorld()).isAllay(pos, player.getUuid());
+    public static boolean isAllayOfClaim(ServerPlayer serverPlayer, BlockPos pos) {
+        return LandState.get((ServerLevel) serverPlayer.level()).isAllay(pos, serverPlayer.getUUID());
     }
 
-    public static Optional<Land> getLandAtCore(ServerWorld world, BlockPos blockPos) {
+    public static Optional<Land> getLandAtCore(ServerLevel world, BlockPos blockPos) {
         return LandState.get(world).getLandAtCorePos(blockPos);
     }
 
-    public static Optional<Land> getLandByPosition(ServerWorld world, BlockPos pos) {
+    public static Optional<Land> getLandByPosition(ServerLevel world, BlockPos pos) {
         return LandState.get(world).getLandAt(pos);
     }
 
-    private static void giveCoreItem(ServerPlayerEntity player, LandType landType) {
+    private static void giveCoreItem(ServerPlayer serverPlayer, LandType landType) {
         ItemStack coreItem = new ItemStack(landType.coreItem());
 
-        player.getInventory().insertStack(coreItem);
+        serverPlayer.getInventory().add(coreItem);
     }
 
-    public static Text getLandName(ServerWorld serverWorld, UUID attacker) {
-        Optional<Land> land = LandState.get(serverWorld).getLandByOwner(attacker);
-        if (land.isEmpty()) return Text.literal("");
-        return land.get().getLandTitle(serverWorld);
+    public static Component getLandName(ServerLevel serverLevel, UUID attacker) {
+        Optional<Land> land = LandState.get(serverLevel).getLandByOwner(attacker);
+        if (land.isEmpty()) return Component.literal("");
+        return land.get().getLandTitle(serverLevel);
     }
 }
 

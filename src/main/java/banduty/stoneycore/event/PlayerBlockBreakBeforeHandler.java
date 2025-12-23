@@ -5,13 +5,13 @@ import banduty.stoneycore.lands.util.LandManager;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.siege.SiegeManager;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -19,24 +19,24 @@ import java.util.Optional;
 public class PlayerBlockBreakBeforeHandler implements PlayerBlockBreakEvents.Before {
 
     @Override
-    public boolean beforeBlockBreak(World world, PlayerEntity playerEntity, BlockPos blockPos, BlockState blockState, @Nullable BlockEntity blockEntity) {
-        if (!(playerEntity instanceof ServerPlayerEntity serverPlayerEntity) || !(world instanceof ServerWorld serverWorld)) return true;
+    public boolean beforeBlockBreak(Level world, Player playerEntity, BlockPos blockPos, BlockState blockState, @Nullable BlockEntity blockEntity) {
+        if (!(playerEntity instanceof ServerPlayer serverPlayer) || !(world instanceof ServerLevel serverLevel)) return true;
 
-        if (SiegeManager.isPlayerInLandUnderSiege(serverWorld, serverPlayerEntity) && !(SiegeManager.getPlayerSiege(serverWorld, serverPlayerEntity.getUuid())
-                .map(siege -> !siege.disabledPlayers.contains(serverPlayerEntity.getUuid())).orElse(false))) {
+        if (SiegeManager.isPlayerInLandUnderSiege(serverLevel, serverPlayer) && !(SiegeManager.getPlayerSiege(serverLevel, serverPlayer.getUUID())
+                .map(siege -> !siege.disabledPlayers.contains(serverPlayer.getUUID())).orElse(false))) {
             return false;
         }
 
-        if (LandManager.isBlockInAnyClaim(serverWorld, blockPos)) {
-            Optional<Land> maybeLand = LandState.get(serverWorld).getLandAt(blockPos);
+        if (LandManager.isBlockInAnyClaim(serverLevel, blockPos)) {
+            Optional<Land> maybeLand = LandState.get(serverLevel).getLandAt(blockPos);
             boolean isLandCore = false;
             if (maybeLand.isPresent()) {
                 Land land = maybeLand.get();
                 isLandCore = land.getCorePos().equals(blockPos);
             }
 
-            return playerEntity.isCreative() || LandManager.isOwnerOfClaim(serverPlayerEntity, blockPos) ||
-                    LandManager.isAllayOfClaim(serverPlayerEntity, blockPos) || isLandCore;
+            return playerEntity.isCreative() || LandManager.isOwnerOfClaim(serverPlayer, blockPos) ||
+                    LandManager.isAllayOfClaim(serverPlayer, blockPos) || isLandCore;
         }
 
         return true;

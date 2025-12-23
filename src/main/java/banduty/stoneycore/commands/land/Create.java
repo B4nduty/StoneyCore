@@ -9,24 +9,24 @@ import banduty.stoneycore.lands.util.LandState;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.command.argument.IdentifierArgumentType;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
+import static net.minecraft.commands.Commands.argument;
 
 public class Create {
-    public static LiteralArgumentBuilder<ServerCommandSource> registerCreate() {
+    public static LiteralArgumentBuilder<CommandSourceStack> registerCreate() {
         return literal("create")
-                .then(argument("landType", IdentifierArgumentType.identifier())
+                .then(argument("landType", ResourceLocationArgument.id())
                         .suggests((ctx, builder) -> {
                             for (LandType type : LandTypeRegistry.getAll()) {
                                 builder.suggest(type.id().toString());
@@ -35,9 +35,9 @@ public class Create {
                         })
                         .then(argument("owner", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
-                                    ServerWorld world = ctx.getSource().getWorld();
-                                    for (ServerPlayerEntity player : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
-                                        var uuid = player.getUuid();
+                                    ServerLevel world = ctx.getSource().getLevel();
+                                    for (ServerPlayer player : ctx.getSource().getServer().getPlayerList().getPlayers()) {
+                                        var uuid = player.getUUID();
                                         if (LandState.get(world).getLandByOwner(uuid).isPresent()) {
                                             builder.suggest(player.getGameProfile().getName());
                                         }
@@ -46,21 +46,21 @@ public class Create {
                                 })
                                 .then(argument("x", IntegerArgumentType.integer())
                                         .suggests((ctx, builder) -> {
-                                            builder.suggest(ctx.getSource().getPlayer().getBlockPos().getX());
+                                            builder.suggest(ctx.getSource().getPlayer().getOnPos().getX());
                                             return builder.buildFuture();
                                         })
                                         .then(argument("y", IntegerArgumentType.integer())
                                                 .suggests((ctx, builder) -> {
-                                                    builder.suggest(ctx.getSource().getPlayer().getBlockPos().getY());
+                                                    builder.suggest(ctx.getSource().getPlayer().getOnPos().getY());
                                                     return builder.buildFuture();
                                                 })
                                                 .then(argument("z", IntegerArgumentType.integer())
                                                         .suggests((ctx, builder) -> {
-                                                            builder.suggest(ctx.getSource().getPlayer().getBlockPos().getZ());
+                                                            builder.suggest(ctx.getSource().getPlayer().getOnPos().getZ());
                                                             return builder.buildFuture();
                                                         })
                                                         .executes(ctx ->
-                                                                createLand(ctx.getSource(), IdentifierArgumentType.getIdentifier(ctx, "landType"), StringArgumentType.getString(ctx, "owner"),
+                                                                createLand(ctx.getSource(), ResourceLocationArgument.getId(ctx, "landType"), StringArgumentType.getString(ctx, "owner"),
                                                                 IntegerArgumentType.getInteger(ctx, "x"), IntegerArgumentType.getInteger(ctx, "y"), IntegerArgumentType.getInteger(ctx, "z")))
                                                 )
                                         )
@@ -69,15 +69,15 @@ public class Create {
                 );
     }
 
-    private static int createLand(ServerCommandSource src, Identifier typeId, String ownerName, int x, int y, int z) {
+    private static int createLand(CommandSourceStack src, ResourceLocation typeId, String ownerName, int x, int y, int z) {
         Optional<LandType> typeOpt = LandTypeRegistry.getById(typeId);
         if (typeOpt.isEmpty()) return SCCommandsHandler.error(src, typeId + " isn’t a correct LandType");
 
         UUID ownerUUID = SCCommandsHandler.getUUID(src, ownerName);
         if (ownerUUID == null) return SCCommandsHandler.error(src, "Unknown owner " + ownerName);
 
-        ServerWorld world = src.getWorld();
-        LandState state = LandState.get(world);
+        ServerLevel serverLevel = src.getLevel();
+        LandState state = LandState.get(serverLevel);
         if (state.getLandByOwner(ownerUUID).isPresent())
             return SCCommandsHandler.error(src, ownerName + " already own a Land");
 
@@ -86,10 +86,10 @@ public class Create {
             return SCCommandsHandler.error(src, "This block pos is occupied by another Land");
 
         Land land = new Land(ownerUUID, pos, typeOpt.get().baseRadius(), typeOpt.get(), "", typeOpt.get().maxAllies());
-        land.initializeClaim(world, typeOpt.get().baseRadius(), StartTickHandler.CLAIM_TASKS);
-        world.setBlockState(pos, typeOpt.get().coreBlock().getDefaultState());
+        land.initializeClaim(serverLevel, typeOpt.get().baseRadius(), StartTickHandler.CLAIM_TASKS);
+        serverLevel.setBlockAndUpdate(pos, typeOpt.get().coreBlock().defaultBlockState());
         state.addLand(land);
-        src.sendFeedback(() -> Text.literal("Land created for " + ownerName), true);
+        src.sendSuccess(() -> Component.literal("Land created for " + ownerName), true);
         return 1;
     }
 }

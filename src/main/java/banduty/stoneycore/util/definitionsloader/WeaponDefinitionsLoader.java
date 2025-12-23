@@ -7,15 +7,16 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.UseAction;
-import net.minecraft.util.profiler.Profiler;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,32 +26,35 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListener {
-    private static final Map<Identifier, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
-    private static final Identifier RELOAD_LISTENER_ID = new Identifier(StoneyCore.MOD_ID, "weapon_definitions_loader");
+    private static final Map<ResourceLocation, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
+    private static final ResourceLocation RELOAD_LISTENER_ID = new ResourceLocation(StoneyCore.MOD_ID, "weapon_definitions_loader");
 
     @Override
-    public Identifier getFabricId() {
+    public ResourceLocation getFabricId() {
         return RELOAD_LISTENER_ID;
     }
 
     @Override
-    public CompletableFuture<Void> reload(Synchronizer synchronizer, ResourceManager resourceManager,
-                                          Profiler prepareProfiler, Profiler applyProfiler,
-                                          Executor prepareExecutor, Executor applyExecutor) {
+    public @NotNull CompletableFuture<Void> reload(PreparationBarrier synchronizer,
+                                                   @NotNull ResourceManager resourceManager,
+                                                   @NotNull ProfilerFiller prepareProfiler,
+                                                   @NotNull ProfilerFiller applyProfiler,
+                                                   @NotNull Executor prepareExecutor,
+                                                   @NotNull Executor applyExecutor) {
         return CompletableFuture.runAsync(() -> {
             DEFINITIONS.clear();
 
-            Map<Identifier, Resource> resources = resourceManager.findResources("definitions/weapon", id -> id.getPath().endsWith(".json"));
+            Map<ResourceLocation, Resource> resources = resourceManager.listResources("definitions/weapon", id -> id.getPath().endsWith(".json"));
 
             resources.forEach((id, resource) -> {
-                try (InputStream stream = resource.getInputStream()) {
+                try (InputStream stream = resource.open()) {
                     com.google.gson.JsonElement element = com.google.gson.JsonParser.parseReader(new InputStreamReader(stream));
 
                     DataResult<WeaponDefinition> result = WeaponDefinition.CODEC.parse(JsonOps.INSTANCE, element);
 
                     result.resultOrPartial(StoneyCore.LOGGER::error)
                             .ifPresent(weaponDef -> {
-                                Identifier weaponId = Identifier.of(
+                                ResourceLocation weaponId = ResourceLocation.tryBuild(
                                         id.getNamespace(),
                                         id.getPath().substring("definitions/weapon/".length(), id.getPath().length() - 5)
                                 );
@@ -80,7 +84,7 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
                     StoneyCore.LOGGER.error("Failed to load definitions data from {}: {}", id, e.getMessage(), e);
                 }
             });
-        }, prepareExecutor).thenCompose(synchronizer::whenPrepared).thenRunAsync(() -> {}, applyExecutor);
+        }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {}, applyExecutor);
     }
 
     public static DefinitionData getData(ItemStack stack) {
@@ -89,7 +93,7 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
     }
 
     public static DefinitionData getData(Item item) {
-        Identifier id = Registries.ITEM.getId(item);
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
         return DEFINITIONS.getOrDefault(id, new DefinitionData(EnumSet.noneOf(Usage.class), null, null, null));
     }
 
@@ -99,7 +103,7 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
     }
 
     public static boolean containsItem(Item item) {
-        return DEFINITIONS.containsKey(Registries.ITEM.getId(item));
+        return DEFINITIONS.containsKey(BuiltInRegistries.ITEM.getKey(item));
     }
 
     public static boolean isMelee(ItemStack stack) {
@@ -169,14 +173,14 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
     }
 
     public record RangedData(String id, float baseDamage, SCDamageCalculator.DamageType damageType, int maxUseTime,
-            float speed, float divergence, int rechargeTime, boolean needsFlintAndSteel, UseAction useAction,
+            float speed, float divergence, int rechargeTime, boolean needsFlintAndSteel, UseAnim useAnim,
             Map<String, AmmoRequirementData> ammoRequirement, SoundEvent soundEvent) {
 
-        private static final Codec<UseAction> USE_ACTION_CODEC =
-                Codec.STRING.xmap(str -> UseAction.valueOf(str.toUpperCase()), UseAction::name);
+        private static final Codec<UseAnim> USE_ACTION_CODEC =
+                Codec.STRING.xmap(str -> UseAnim.valueOf(str.toUpperCase()), UseAnim::name);
 
         private static final Codec<SoundEvent> SOUND_EVENT_CODEC =
-                Identifier.CODEC.xmap(Registries.SOUND_EVENT::get, Registries.SOUND_EVENT::getId);
+                ResourceLocation.CODEC.xmap(BuiltInRegistries.SOUND_EVENT::get, BuiltInRegistries.SOUND_EVENT::getKey);
 
         public static final Codec<RangedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.STRING.optionalFieldOf("id", "bow").forGetter(RangedData::id),
@@ -187,7 +191,7 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
                 Codec.FLOAT.optionalFieldOf("divergence", 0f).forGetter(RangedData::divergence),
                 Codec.INT.optionalFieldOf("rechargeTime", 0).forGetter(RangedData::rechargeTime),
                 Codec.BOOL.optionalFieldOf("needsFlintAndSteel", false).forGetter(RangedData::needsFlintAndSteel),
-                USE_ACTION_CODEC.optionalFieldOf("useAction", UseAction.NONE).forGetter(RangedData::useAction),
+                USE_ACTION_CODEC.optionalFieldOf("useAnim", UseAnim.NONE).forGetter(RangedData::useAnim),
                 Codec.unboundedMap(Codec.STRING, AmmoRequirementData.CODEC).optionalFieldOf("ammoRequirement", Map.of()).forGetter(RangedData::ammoRequirement),
                 SOUND_EVENT_CODEC.optionalFieldOf("soundEvent").forGetter(rd -> Optional.ofNullable(rd.soundEvent))
         ).apply(instance, (id, baseDamage, damageType, maxUseTime, speed, divergence, rechargeTime, needsFlintAndSteel, useAction, ammoRequirement, soundEvent) ->

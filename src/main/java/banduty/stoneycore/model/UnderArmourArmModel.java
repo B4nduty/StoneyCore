@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.*;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.world.entity.LivingEntity;
 
 @Environment(EnvType.CLIENT)
-public class UnderArmourArmModel extends BipedEntityModel<LivingEntity> {
+public class UnderArmourArmModel extends HumanoidModel<LivingEntity> {
 	public final ModelPart armorRightArm;
 	public final ModelPart armorLeftArm;
 
@@ -18,22 +20,22 @@ public class UnderArmourArmModel extends BipedEntityModel<LivingEntity> {
 		this.armorLeftArm = root.getChild("armorLeftArm");
 	}
 
-	@Override
-	protected Iterable<ModelPart> getHeadParts() {
-		return ImmutableList.of(this.head);
-	}
+    @Override
+    protected Iterable<ModelPart> headParts() {
+        return ImmutableList.of(this.head);
+    }
 
-	@Override
-	protected Iterable<ModelPart> getBodyParts() {
+    @Override
+    protected Iterable<ModelPart> bodyParts() {
 		return ImmutableList.of(this.armorRightArm, this.armorLeftArm);
 	}
 
-	public static TexturedModelData getTexturedModelData() {
-		ModelData modelData = BipedEntityModel.getModelData(Dilation.NONE, 0f);
-		ModelPartData modelPartData = modelData.getRoot();
-		modelPartData.addChild("armorRightArm", ModelPartBuilder.create().uv(24, 80).cuboid(-2.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new Dilation(0.33F)), ModelTransform.pivot(-5.0F, 2.0F, 0.0F));
+	public static LayerDefinition getTexturedModelData() {
+        MeshDefinition modelData = HumanoidModel.createMesh(CubeDeformation.NONE, 0f);
+        PartDefinition modelPartData = modelData.getRoot();
+		modelPartData.addOrReplaceChild("armorRightArm", CubeListBuilder.create().texOffs(24, 80).addBox(-2.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new CubeDeformation(0.33F)), PartPose.offset(-5.0F, 2.0F, 0.0F));
 
-		modelPartData.addChild("armorLeftArm", ModelPartBuilder.create().uv(24, 80).mirrored().cuboid(-2.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new Dilation(0.33F)).mirrored(false), ModelTransform.pivot(5.0F, 2.0F, 0.0F));
-		return TexturedModelData.of(modelData, 128, 128);
+		modelPartData.addOrReplaceChild("armorLeftArm", CubeListBuilder.create().texOffs(24, 80).mirror().addBox(-2.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new CubeDeformation(0.33F)).mirror(false), PartPose.offset(5.0F, 2.0F, 0.0F));
+		return LayerDefinition.create(modelData, 128, 128);
 	}
 }

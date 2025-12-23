@@ -1,14 +1,14 @@
 package banduty.stoneycore.event.custom;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 
 @Environment(EnvType.CLIENT)
 public interface RenderOverlayAndAdditionsEvents {
@@ -22,7 +22,7 @@ public interface RenderOverlayAndAdditionsEvents {
             }
     );
 
-    void onRenderOverlayAndAdditionsEvents(LivingEntity entity, ItemStack stack, MatrixStack matrices,
-                                            VertexConsumerProvider vertexConsumers, int light,
-                                            BipedEntityModel<LivingEntity> model);
+    void onRenderOverlayAndAdditionsEvents(LivingEntity entity, ItemStack stack, PoseStack poseStack,
+                                           MultiBufferSource multiBufferSource, int light,
+                                           HumanoidModel<LivingEntity> model);
 }

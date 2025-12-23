@@ -7,24 +7,24 @@ import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Heightmap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.*;
 
 public class OutlineClaimRenderer {
 
-    public static void renderOutlineClaim(ServerPlayerEntity player) {
-        ServerWorld world = player.getServerWorld();
-        Optional<Land> optionalLand = LandState.get(world).getLandByOwner(player.getUuid());
+    public static void renderOutlineClaim(ServerPlayer player) {
+        ServerLevel world = player.serverLevel();
+        Optional<Land> optionalLand = LandState.get(world).getLandByOwner(player.getUUID());
 
         if (optionalLand.isEmpty()) {
             sendClearPacket(player);
@@ -33,14 +33,14 @@ public class OutlineClaimRenderer {
 
         boolean shouldRender = false;
         Land land = optionalLand.get();
-        if (player.getEquippedStack(EquipmentSlot.HEAD).isOf(land.getLandType().coreItem())) {
+        if (player.getItemBySlot(EquipmentSlot.HEAD).is(land.getLandType().coreItem())) {
             shouldRender = true;
         }
 
         if (AccessoriesCapability.getOptionally(player).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                 ItemStack equippedStack = equipped.stack();
-                if (equippedStack.getNbt() != null && equippedStack.getNbt().getBoolean(Registries.ITEM.getId(land.getLandType().coreItem()).getPath())) {
+                if (equippedStack.getTag() != null && equippedStack.getTag().getBoolean(BuiltInRegistries.ITEM.getKey(land.getLandType().coreItem()).getPath())) {
                     shouldRender = true;
                 }
             }
@@ -60,29 +60,29 @@ public class OutlineClaimRenderer {
             }
         }
 
-        PacketByteBuf buf = PacketByteBufs.create();
+        FriendlyByteBuf buf = PacketByteBufs.create();
         buf.writeInt(borderPositions.size());
         borderPositions.forEach(buf::writeBlockPos);
         ServerPlayNetworking.send(player, ModMessages.OUTLINE_CLAIM_PACKET_ID, buf);
     }
 
-    private static void sendClearPacket(ServerPlayerEntity player) {
-        PacketByteBuf clearBuf = PacketByteBufs.create();
+    private static void sendClearPacket(ServerPlayer player) {
+        FriendlyByteBuf clearBuf = PacketByteBufs.create();
         clearBuf.writeInt(0);
         ServerPlayNetworking.send(player, ModMessages.OUTLINE_CLAIM_PACKET_ID, clearBuf);
     }
 
-    private static BlockPos getAdjustedTopPosition(ServerWorld world, BlockPos pos) {
-        int minY = world.getBottomY();
-        BlockPos.Mutable checkPos = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING, pos).mutableCopy();
-        BlockState state = world.getBlockState(checkPos);
+    private static BlockPos getAdjustedTopPosition(ServerLevel serverLevel, BlockPos pos) {
+        int minY = serverLevel.getMinBuildHeight();
+        BlockPos.MutableBlockPos checkPos = serverLevel.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).mutable();
+        BlockState state = serverLevel.getBlockState(checkPos);
 
-        while ((state.isOf(Blocks.AIR) || (!state.isOpaque() && !state.isOf(Blocks.WATER))) && checkPos.getY() > minY) {
+        while ((state.is(Blocks.AIR) || (!state.canOcclude() && !state.is(Blocks.WATER))) && checkPos.getY() > minY) {
             checkPos.move(0, -1, 0);
-            state = world.getBlockState(checkPos);
+            state = serverLevel.getBlockState(checkPos);
         }
 
-        return checkPos.toImmutable();
+        return checkPos.immutable();
     }
 
     private static boolean isBorderBlock(BlockPos pos, Set<BlockPos> claimed) {

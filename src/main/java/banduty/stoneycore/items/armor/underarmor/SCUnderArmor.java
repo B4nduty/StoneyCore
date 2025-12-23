@@ -1,11 +1,12 @@
 package banduty.stoneycore.items.armor.underarmor;
 
 import banduty.stoneycore.items.armor.ISCUnderArmor;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.ArmorMaterial;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.Item;
 
 public class SCUnderArmor extends ArmorItem implements ISCUnderArmor {
-    public SCUnderArmor(Settings settings, ArmorMaterial material, Type type) {
+    public SCUnderArmor(Item.Properties settings, ArmorMaterial material, Type type) {
         super(material, type, settings);
     }
 }

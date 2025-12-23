@@ -5,17 +5,14 @@ import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsLoader;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
-import java.util.EnumSet;
-import java.util.Set;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
 
 public class ArmorUtil {
-    public static void startArmorCheck(ServerPlayerEntity player) {
+    public static void startArmorCheck(ServerPlayer player) {
         AccessoriesCapability.getOptionally(player).ifPresent(accessories -> {
             for (SlotEntryReference equipped : accessories.getAllEquipped()) {
                 ItemStack stack = equipped.stack();
@@ -29,23 +26,23 @@ public class ArmorUtil {
                 EquipmentSlot targetSlot = EquipmentSlot.valueOf(slotFromJson);
 
                 // Check if the related armor piece is equipped
-                ItemStack armorPiece = player.getEquippedStack(targetSlot);
+                ItemStack armorPiece = player.getItemBySlot(targetSlot);
                 if (!armorPiece.isEmpty() && ArmorDefinitionsLoader.containsItem(armorPiece.getItem())) {
                     // Armor is present → accessory can stay equipped
                     continue;
                 }
 
-                player.sendMessage(
-                        Text.translatable(
-                                "text.warning.stoneycore.armor_needed_for_accessory",
-                                stack.getName(),
+                player.displayClientMessage(
+                        Component.translatable(
+                                "component.warning.stoneycore.armor_needed_for_accessory",
+                                stack.getDisplayName(),
                                 targetSlot
-                        ).formatted(Formatting.DARK_RED),
+                        ).withStyle(ChatFormatting.DARK_RED),
                         true
                 );
 
                 // Armor is missing → remove the accessory
-                player.giveItemStack(stack.copy());
+                player.addItem(stack.copy());
                 stack.setCount(0);
             }
         });

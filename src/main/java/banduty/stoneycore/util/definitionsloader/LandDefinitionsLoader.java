@@ -9,12 +9,13 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.profiler.Profiler;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.item.Item;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -23,29 +24,29 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public class LandDefinitionsLoader implements IdentifiableResourceReloadListener {
-    private static final Identifier RELOAD_LISTENER_ID =
-            new Identifier(StoneyCore.MOD_ID, "land_definitions_loader");
+    private static final ResourceLocation RELOAD_LISTENER_ID =
+            new ResourceLocation(StoneyCore.MOD_ID, "land_definitions_loader");
 
     @Override
-    public Identifier getFabricId() {
+    public ResourceLocation getFabricId() {
         return RELOAD_LISTENER_ID;
     }
 
     @Override
-    public CompletableFuture<Void> reload(Synchronizer synchronizer,
-                                          ResourceManager resourceManager,
-                                          Profiler prepareProfiler,
-                                          Profiler applyProfiler,
-                                          Executor prepareExecutor,
-                                          Executor applyExecutor) {
+    public @NotNull CompletableFuture<Void> reload(PreparationBarrier synchronizer,
+                                                   @NotNull ResourceManager resourceManager,
+                                                   @NotNull ProfilerFiller prepareProfiler,
+                                                   @NotNull ProfilerFiller applyProfiler,
+                                                   @NotNull Executor prepareExecutor,
+                                                   @NotNull Executor applyExecutor) {
         return CompletableFuture.runAsync(() -> {
             LandTypeRegistry.clearOverrides();
 
-            Map<Identifier, Resource> resources =
-                    resourceManager.findResources("definitions/lands", id -> id.getPath().endsWith(".json"));
+            Map<ResourceLocation, Resource> resources =
+                    resourceManager.listResources("definitions/lands", id -> id.getPath().endsWith(".json"));
 
             resources.forEach((id, resource) -> {
-                try (InputStream stream = resource.getInputStream()) {
+                try (InputStream stream = resource.open()) {
                     JsonElement element = JsonParser.parseReader(new InputStreamReader(stream));
 
                     DataResult<LandValues> result =
@@ -53,7 +54,7 @@ public class LandDefinitionsLoader implements IdentifiableResourceReloadListener
 
                     result.resultOrPartial(StoneyCore.LOGGER::error)
                             .ifPresent(def -> {
-                                Identifier landId = new Identifier(
+                                ResourceLocation landId = new ResourceLocation(
                                         id.getNamespace(),
                                         id.getPath().substring("definitions/lands/".length(), id.getPath().length() - 5)
                                 );
@@ -64,7 +65,7 @@ public class LandDefinitionsLoader implements IdentifiableResourceReloadListener
                     StoneyCore.LOGGER.error("Failed to load land definition from {}: {}", id, e.getMessage(), e);
                 }
             });
-        }, prepareExecutor).thenCompose(synchronizer::whenPrepared).thenRunAsync(() -> {
+        }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {
         }, applyExecutor);
     }
 
@@ -77,7 +78,7 @@ public class LandDefinitionsLoader implements IdentifiableResourceReloadListener
         public static final Codec<LandValues> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.INT.optionalFieldOf("base_radius", 0)
                         .forGetter(LandValues::baseRadius),
-                Codec.unboundedMap(Identifier.CODEC.xmap(Registries.ITEM::get, Registries.ITEM::getId), Codec.INT)
+                Codec.unboundedMap(ResourceLocation.CODEC.xmap(BuiltInRegistries.ITEM::get, BuiltInRegistries.ITEM::getKey), Codec.INT)
                         .optionalFieldOf("items_to_expand", Map.of())
                         .forGetter(LandValues::itemsToExpand),
                 Codec.STRING.optionalFieldOf("expand_formula", "")

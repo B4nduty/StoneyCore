@@ -4,17 +4,17 @@ import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
-import net.minecraft.block.Block;
-import net.minecraft.block.CropBlock;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
 
@@ -73,10 +73,10 @@ public final class SCWeaponUtil {
         return piercing;
     }
 
-    public static double adjustDamageForBackstab(LivingEntity target, Vec3d playerPos, double damage) {
-        Vec3d targetFacing = target.getRotationVec(1.0F).normalize();
-        Vec3d attackDirection = playerPos.subtract(target.getPos()).normalize();
-        boolean isBehind = targetFacing.dotProduct(attackDirection) < BACKSTAB_ANGLE_THRESHOLD;
+    public static double adjustDamageForBackstab(LivingEntity target, Vec3 playerPos, double damage) {
+        Vec3 targetFacing = target.getViewVector(1.0F).normalize();
+        Vec3 attackDirection = playerPos.subtract(target.position()).normalize();
+        boolean isBehind = targetFacing.dot(attackDirection) < BACKSTAB_ANGLE_THRESHOLD;
         return isBehind ? damage * 2 : damage;
     }
 
@@ -122,17 +122,17 @@ public final class SCWeaponUtil {
         };
     }
 
-    public static void replantCrop(World world, BlockPos pos, CropBlock cropBlock, PlayerEntity player, ItemStack stack, Hand hand) {
+    public static void replantCrop(Level level, BlockPos pos, CropBlock cropBlock, Player player, ItemStack stack, InteractionHand hand) {
         ItemStack seedStack = new ItemStack(cropBlock.asItem());
         if (!seedStack.isEmpty()) {
-            world.setBlockState(pos, cropBlock.getDefaultState(), Block.NOTIFY_ALL);
-            world.emitGameEvent(player, GameEvent.BLOCK_PLACE, pos);
+            level.setBlock(pos, cropBlock.defaultBlockState(), Block.UPDATE_ALL);
+            level.gameEvent(player, GameEvent.BLOCK_PLACE, pos);
 
-            if (!player.getAbilities().creativeMode) {
-                seedStack.decrement(1);
+            if (!player.isCreative()) {
+                seedStack.shrink(1);
             }
         }
 
-        stack.damage(1, player, p -> p.sendToolBreakStatus(hand));
+        stack.hurtAndBreak(1, player, p -> p.broadcastBreakEvent(hand));
     }
 }

@@ -1,72 +1,66 @@
 package banduty.stoneycore.util.patterns;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.enums.BlockHalf;
-import net.minecraft.block.enums.SlabType;
-import net.minecraft.block.enums.StairShape;
-import net.minecraft.block.pattern.BlockPatternBuilder;
-import net.minecraft.block.pattern.CachedBlockPosition;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.pattern.BlockInWorld;
+import net.minecraft.world.level.block.state.pattern.BlockPatternBuilder;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.Half;
+import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.level.block.state.properties.StairsShape;
+
 import java.util.function.Predicate;
 
-public class StructureMatcher {
-    private final BlockPatternBuilder builder;
-    private final Direction direction;
-
-    public StructureMatcher(BlockPatternBuilder builder, Direction direction) {
-        this.builder = builder;
-        this.direction = direction;
-    }
+public record StructureMatcher(BlockPatternBuilder builder, Direction direction) {
 
     // Basic block matchers
     public StructureMatcher match(char key, Block block) {
-        builder.where(key, state -> state.getBlockState().isOf(block));
+        builder.where(key, state -> state.getState().is(block));
         return this;
     }
 
     public StructureMatcher match(char key, Predicate<BlockState> predicate) {
-        builder.where(key, CachedBlockPosition.matchesBlockState(predicate));
+        builder.where(key, BlockInWorld.hasState(predicate));
         return this;
     }
 
     // Specialized matchers
     public StructureMatcher matchLog(char key, Block logBlock, Direction.Axis axis) {
         return match(key, state ->
-                state.isOf(logBlock) &&
-                        state.contains(Properties.AXIS) &&
-                        state.get(Properties.AXIS) == axis
+                state.is(logBlock) &&
+                        state.hasProperty(BlockStateProperties.AXIS) &&
+                        state.getValue(BlockStateProperties.AXIS) == axis
         );
     }
 
     public StructureMatcher matchTrapdoor(char key, Block trapdoorBlock, Direction facing) {
         return match(key, state ->
-                state.isOf(trapdoorBlock) &&
-                        state.contains(Properties.HORIZONTAL_FACING) &&
-                        !state.get(Properties.WATERLOGGED) &&
-                        !state.get(Properties.POWERED) &&
-                        state.get(Properties.OPEN) &&
-                        state.get(Properties.HORIZONTAL_FACING) == facing
+                state.is(trapdoorBlock) &&
+                        state.hasProperty(BlockStateProperties.HORIZONTAL_FACING) &&
+                        !state.getValue(BlockStateProperties.WATERLOGGED) &&
+                        !state.getValue(BlockStateProperties.POWERED) &&
+                        state.getValue(BlockStateProperties.OPEN) &&
+                        state.getValue(BlockStateProperties.HORIZONTAL_FACING) == facing
         );
     }
 
     public StructureMatcher matchSlab(char key, Block slabBlock, SlabType slabType) {
         return match(key, state ->
-                state.isOf(slabBlock) &&
-                        state.get(Properties.SLAB_TYPE) == slabType &&
-                        !state.get(Properties.WATERLOGGED)
+                state.is(slabBlock) &&
+                        state.getValue(BlockStateProperties.SLAB_TYPE) == slabType &&
+                        !state.getValue(BlockStateProperties.WATERLOGGED)
         );
     }
 
     public StructureMatcher matchStairs(char key, Block stairsBlock, Direction facing) {
         return match(key, state ->
-                state.isOf(stairsBlock) &&
-                        state.contains(Properties.HORIZONTAL_FACING) &&
-                        !state.get(Properties.WATERLOGGED) &&
-                        state.get(Properties.BLOCK_HALF) == BlockHalf.BOTTOM &&
-                        state.get(Properties.STAIR_SHAPE) == StairShape.STRAIGHT &&
-                        state.get(Properties.HORIZONTAL_FACING) == facing
+                state.is(stairsBlock) &&
+                        state.hasProperty(BlockStateProperties.HORIZONTAL_FACING) &&
+                        !state.getValue(BlockStateProperties.WATERLOGGED) &&
+                        state.getValue(BlockStateProperties.HALF) == Half.BOTTOM &&
+                        state.getValue(BlockStateProperties.STAIRS_SHAPE) == StairsShape.STRAIGHT &&
+                        state.getValue(BlockStateProperties.HORIZONTAL_FACING) == facing
         );
     }
 

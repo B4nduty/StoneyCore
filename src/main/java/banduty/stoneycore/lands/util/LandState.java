@@ -1,15 +1,16 @@
 package banduty.stoneycore.lands.util;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.PersistentState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class LandState extends PersistentState {
+public class LandState extends SavedData {
     private final Map<BlockPos, Land> landMap = new HashMap<>();
     private final Map<BlockPos, Land> claimedChunks = new HashMap<>();
     private final Map<UUID, Land> ownerMap = new HashMap<>();
@@ -18,8 +19,8 @@ public class LandState extends PersistentState {
         return new BlockPos(pos.getX(), 0, pos.getZ());
     }
 
-    public static LandState get(ServerWorld world) {
-        return world.getPersistentStateManager().getOrCreate(
+    public static LandState get(ServerLevel serverLevel) {
+        return serverLevel.getDataStorage().computeIfAbsent(
                 LandState::fromNbt,
                 LandState::new,
                 "lands"
@@ -32,7 +33,7 @@ public class LandState extends PersistentState {
         for (BlockPos pos : land.getClaimed()) {
             claimedChunks.put(pos, land);
         }
-        markDirty();
+        setDirty();
     }
 
     public void removeLand(Land land) {
@@ -41,7 +42,7 @@ public class LandState extends PersistentState {
         for (BlockPos pos : land.getClaimed()) {
             claimedChunks.remove(pos);
         }
-        markDirty();
+        setDirty();
     }
 
     public Optional<Land> getLandByOwner(UUID owner) {
@@ -91,33 +92,33 @@ public class LandState extends PersistentState {
 
     public void markClaimed(Collection<Long> keys, Land land) {
         for (long key : keys) {
-            BlockPos pos = BlockPos.fromLong(key);
+            BlockPos pos = BlockPos.of(key);
             claimedChunks.put(pos, land);
         }
-        markDirty();
+        setDirty();
     }
 
     public void unmarkClaimed(Collection<Long> keys) {
         for (long key : keys) {
-            BlockPos pos = BlockPos.fromLong(key);
+            BlockPos pos = BlockPos.of(key);
             claimedChunks.remove(pos);
         }
-        markDirty();
+        setDirty();
     }
 
     @Override
-    public NbtCompound writeNbt(NbtCompound nbt) {
-        NbtList list = new NbtList();
+    public @NotNull CompoundTag save(@NotNull CompoundTag compoundTag) {
+        ListTag list = new ListTag();
         for (Land land : landMap.values()) {
             list.add(land.toNbt());
         }
-        nbt.put("Lands", list);
-        return nbt;
+        compoundTag.put("Lands", list);
+        return compoundTag;
     }
 
-    public static LandState fromNbt(NbtCompound nbt) {
+    public static LandState fromNbt(CompoundTag compoundTag) {
         LandState state = new LandState();
-        NbtList list = nbt.getList("Lands", NbtElement.COMPOUND_TYPE);
+        ListTag list = compoundTag.getList("Lands", Tag.TAG_COMPOUND);
         for (int i = 0, size = list.size(); i < size; i++) {
             Land land = Land.fromNbt(list.getCompound(i));
             state.landMap.put(land.getCorePos(), land);

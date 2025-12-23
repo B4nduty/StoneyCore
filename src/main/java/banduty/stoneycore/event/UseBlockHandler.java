@@ -1,6 +1,9 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.block.CraftmanAnvilBlock;
+import banduty.stoneycore.block.ModBlocks;
+import banduty.stoneycore.items.item.SmithingHammer;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.lands.util.Land;
@@ -8,92 +11,120 @@ import banduty.stoneycore.lands.util.LandManager;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.siege.SiegeManager;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.NameTagItem;
-import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.NameTagItem;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.Optional;
 
+import static banduty.stoneycore.block.CraftmanAnvilBlock.FACING;
+
 public class UseBlockHandler implements UseBlockCallback {
     @Override
-    public ActionResult interact(PlayerEntity player, World world, Hand hand, BlockHitResult hit) {
-        if (!(world instanceof ServerWorld serverWorld)) {
-            return ActionResult.PASS;
-        }
-
-        if (serverWorld.getRegistryKey() == World.NETHER) {
-            return ActionResult.PASS;
+    public InteractionResult interact(Player player, Level level, InteractionHand hand, BlockHitResult hit) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return InteractionResult.PASS;
         }
 
         BlockPos blockPos = hit.getBlockPos();
-        BlockState state = serverWorld.getBlockState(blockPos);
-        LandState stateManager = LandState.get(serverWorld);
+        BlockState state = serverLevel.getBlockState(blockPos);
+
+        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
+
+        if (player.isShiftKeyDown() && player.getMainHandItem().getItem() instanceof SmithingHammer && state.getBlock() instanceof CraftmanAnvilBlock) {
+            Direction facing = state.getValue(FACING);
+            Direction newFacing = facing.getClockWise(); // rotate right
+
+            level.setBlockAndUpdate(blockPos, state.setValue(FACING, newFacing));
+
+            level.playSound(null, blockPos, SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 0.7f, 1.0f / (level.getRandom().nextFloat() * 0.5F + 1.0F));
+
+            return InteractionResult.SUCCESS;
+        }
+
+        if (player.isShiftKeyDown() && player.getMainHandItem().getItem() instanceof SmithingHammer && state.getBlock() instanceof AnvilBlock) {
+            serverLevel.setBlockAndUpdate(blockPos, ModBlocks.CRAFTMAN_ANVIL.defaultBlockState());
+            level.playSound(null, blockPos, SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 0.7f, 1.0f / (level.getRandom().nextFloat() * 0.5F + 1.0F));
+            return InteractionResult.SUCCESS;
+        }
+
+        if (!StoneyCore.getConfig().landOptions.claimLand()) return InteractionResult.PASS;
+
+        if (serverLevel.dimension() == Level.NETHER) {
+            return InteractionResult.PASS;
+        }
+
+        LandState stateManager = LandState.get(serverLevel);
         boolean claimed = stateManager.isClaimed(blockPos);
         Optional<Land> maybeLand = stateManager.getLandAt(blockPos);
 
         boolean isCoreBlock = LandTypeRegistry.getAll().stream()
                 .anyMatch(type -> type.coreBlock() == state.getBlock());
 
-        if (SiegeManager.isPlayerInLandUnderSiege(serverWorld, player) && !(SiegeManager.getPlayerSiege(serverWorld, player.getUuid())
-                .map(siege -> !siege.disabledPlayers.contains(player.getUuid())).orElse(false)) && !isCoreBlock) {
-            return ActionResult.FAIL;
+        if (SiegeManager.isPlayerInLandUnderSiege(serverLevel, player) && !(SiegeManager.getPlayerSiege(serverLevel, player.getUUID())
+                .map(siege -> !siege.disabledPlayers.contains(player.getUUID())).orElse(false)) && !isCoreBlock) {
+            return InteractionResult.FAIL;
         }
 
-        if (maybeLand.isPresent() && !(maybeLand.get().getOwnerUUID().equals(player.getUuid()) || maybeLand.get().isAlly(player.getUuid()) || player.isCreative())) {
-            if (state.getBlock().getDefaultState().hasBlockEntity()) {
-                return ActionResult.PASS;
+        if (maybeLand.isPresent() && !(maybeLand.get().getOwnerUUID().equals(player.getUUID()) || maybeLand.get().isAlly(player.getUUID()) || player.isCreative())) {
+            if (state.getBlock().defaultBlockState().hasBlockEntity()) {
+                return InteractionResult.PASS;
             }
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         }
 
         if (!isCoreBlock) {
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         }
 
         if (maybeLand.isPresent()) {
             Land land = maybeLand.get();
 
-            if (land.getOwnerUUID().equals(player.getUuid()) && (SiegeManager.isLandDefenseSiege(serverWorld, land) || SiegeManager.isLandAttackingSiege(serverWorld, land)) && player.getMainHandStack().isOf(Items.WHITE_BANNER)) {
-                return SiegeManager.surrender(serverWorld, player, land);
+            if (land.getOwnerUUID().equals(player.getUUID()) && (SiegeManager.isLandDefenseSiege(serverLevel, land) || SiegeManager.isLandAttackingSiege(serverLevel, land)) && player.getMainHandItem().is(Items.WHITE_BANNER)) {
+                return SiegeManager.surrender(serverLevel, player, land);
             }
         }
 
         // Unclaimed core: create new land
         Optional<LandType> landTypeOpt = LandTypeRegistry.getByBlock(state.getBlock());
-        if (!claimed && player.getMainHandStack().isIn(ItemTags.BANNERS)) {
+        if (!claimed && player.getMainHandItem().is(ItemTags.BANNERS)) {
             if (landTypeOpt.isEmpty()) {
                 throw new IllegalArgumentException("LandType is empty");
             }
-            return LandManager.createLand((ServerPlayerEntity) player, blockPos, landTypeOpt.get());
+            return LandManager.createLand((ServerPlayer) player, blockPos, landTypeOpt.get());
         }
 
         // Expand existing land
-        if (maybeLand.isEmpty() || !maybeLand.get().getOwnerUUID().equals(player.getUuid()) ||
-                !player.getEquippedStack(EquipmentSlot.HEAD).isOf(maybeLand.get().getLandType().coreItem())) {
-            return ActionResult.PASS;
+        if (maybeLand.isEmpty() || !maybeLand.get().getOwnerUUID().equals(player.getUUID()) ||
+                !player.getItemBySlot(EquipmentSlot.HEAD).is(maybeLand.get().getLandType().coreItem())) {
+            return InteractionResult.PASS;
         }
 
         Land land = maybeLand.get();
 
         if (landTypeOpt.isPresent()) {
-            if (player.getStackInHand(hand).getItem() instanceof NameTagItem) {
-                land.setName(player.getStackInHand(hand).getName().getString());
-                player.sendMessage(Text.literal(land.getName()), true);
-                player.getStackInHand(hand).decrement(1);
-                return ActionResult.PASS;
+            if (player.getItemInHand(hand).getItem() instanceof NameTagItem) {
+                land.setName(player.getItemInHand(hand).getHoverName().getString());
+                player.displayClientMessage(Component.literal(land.getName()), true);
+                player.getItemInHand(hand).shrink(1);
+                return InteractionResult.PASS;
             }
 
             int available = countItem(player, landTypeOpt.get());
@@ -101,28 +132,28 @@ public class UseBlockHandler implements UseBlockCallback {
             int maxRadius = StoneyCore.getConfig().technicalOptions.maxLandExpandRadius();
             double maxAllowedRadius = maxRadius < 0 ? Double.MAX_VALUE : maxRadius + land.getLandType().baseRadius();
             if (land.getRadius() >= maxAllowedRadius) {
-                player.sendMessage(Text.translatable("text.land." + landTypeOpt.get().id().getNamespace() + ".at_max_radius"), true);
-                return ActionResult.PASS;
+                player.displayClientMessage(Component.translatable("component.land." + landTypeOpt.get().id().getNamespace() + ".at_max_radius"), true);
+                return InteractionResult.PASS;
             }
 
             if (available <= 0) {
                 long saved = land.getExpandItemStored();
                 if (saved < needed) {
-                    player.sendMessage(Text.translatable("text.land." + landTypeOpt.get().id().getNamespace() + ".stored_needed", saved, needed), true);
-                    return ActionResult.PASS;
+                    player.displayClientMessage(Component.translatable("component.land." + landTypeOpt.get().id().getNamespace() + ".stored_needed", saved, needed), true);
+                    return InteractionResult.PASS;
                 }
             }
 
             removeItems(player, available, landTypeOpt.get());
-            land.depositExpandItem(player, serverWorld, available);
+            land.depositExpandItem(player, serverLevel, available);
         }
 
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 
-    private int countItem(PlayerEntity player, LandType landType) {
+    private int countItem(Player player, LandType landType) {
         int total = 0;
-        for (ItemStack stack : player.getInventory().main) {
+        for (ItemStack stack : player.getInventory().items) {
             Item item = stack.getItem();
             Integer value = landType.itemsToExpand().get(item);
             if (value != null) {
@@ -132,15 +163,15 @@ public class UseBlockHandler implements UseBlockCallback {
         return total;
     }
 
-    private void removeItems(PlayerEntity player, long amountNeeded, LandType landType) {
-        for (ItemStack stack : player.getInventory().main) {
+    private void removeItems(Player player, long amountNeeded, LandType landType) {
+        for (ItemStack stack : player.getInventory().items) {
             if (amountNeeded <= 0) break;
             Item item = stack.getItem();
             Integer value = landType.itemsToExpand().get(item);
             if (value != null && value > 0) {
                 int count = stack.getCount();
                 int maxUsable = (int) Math.min(count, Math.ceil((double) amountNeeded / value));
-                stack.decrement(maxUsable);
+                stack.shrink(maxUsable);
                 amountNeeded -= (long) maxUsable * value;
             }
         }

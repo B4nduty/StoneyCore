@@ -1,23 +1,22 @@
 package banduty.stoneycore.items.armor.underarmor;
 
-import banduty.stoneycore.items.armor.ISCUnderArmor;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.ArmorMaterial;
-import net.minecraft.item.DyeableItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.DyeableLeatherItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
-public class SCDyeableUnderArmor extends ArmorItem implements DyeableItem, ISCUnderArmor {
+public class SCDyeableUnderArmor extends SCUnderArmor implements DyeableLeatherItem {
     int defaultColor;
 
-    public SCDyeableUnderArmor(Settings settings, ArmorMaterial material, Type type, int defaultColor) {
-        super(material, type, settings);
+    public SCDyeableUnderArmor(Item.Properties properties, ArmorMaterial material, Type type, int defaultColor) {
+        super(properties, material, type);
         this.defaultColor = defaultColor;
     }
 
     @Override
     public int getColor(ItemStack stack) {
-        NbtCompound nbtCompound = stack.getSubNbt("display");
+        CompoundTag nbtCompound = stack.getTagElement("display");
         return nbtCompound != null && nbtCompound.contains("color", 99) ? nbtCompound.getInt("color") : defaultColor;
     }
 }

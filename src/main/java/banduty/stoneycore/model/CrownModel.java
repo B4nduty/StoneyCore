@@ -2,10 +2,12 @@ package banduty.stoneycore.model;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.model.*;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.world.entity.LivingEntity;
 
-public class CrownModel extends BipedEntityModel<LivingEntity> {
+public class CrownModel extends HumanoidModel<LivingEntity> {
 	private final ModelPart head;
 	public CrownModel(ModelPart root) {
 		super(root);
@@ -13,22 +15,22 @@ public class CrownModel extends BipedEntityModel<LivingEntity> {
 		this.head = root.getChild("head");
 	}
 
-	@Override
-	protected Iterable<ModelPart> getHeadParts() {
+    @Override
+    protected Iterable<ModelPart> headParts() {
 		return ImmutableList.of(this.head);
 	}
 
-	@Override
-	protected Iterable<ModelPart> getBodyParts() {
-		return ImmutableList.of();
+    @Override
+    protected Iterable<ModelPart> bodyParts() {
+        return ImmutableList.of();
 	}
 
-	public static TexturedModelData getTexturedModelData() {
-		ModelData modelData = BipedEntityModel.getModelData(Dilation.NONE, 0f);
-		ModelPartData modelPartData = modelData.getRoot();
-		ModelPartData head = modelPartData.addChild("head", ModelPartBuilder.create(), ModelTransform.pivot(0.0F, 0.0F, 0.0F));
+	public static LayerDefinition getTexturedModelData() {
+		MeshDefinition modelData = HumanoidModel.createMesh(CubeDeformation.NONE, 0f);
+        PartDefinition modelPartData = modelData.getRoot();
+		PartDefinition head = modelPartData.addOrReplaceChild("head", CubeListBuilder.create(), PartPose.offset(0.0F, 0.0F, 0.0F));
 
-		head.addChild("crown_r1", ModelPartBuilder.create().uv(64, 0).cuboid(-5.5F, -9.0F, -5.75F, 11.0F, 5.0F, 11.0F, new Dilation(-0.4F)), ModelTransform.of(0.0F, 0.0F, 0.0F, -0.0436F, 0.0F, 0.0F));
-		return TexturedModelData.of(modelData, 128, 64);
+		head.addOrReplaceChild("crown_r1", CubeListBuilder.create().texOffs(64, 0).addBox(-5.5F, -9.0F, -5.75F, 11.0F, 5.0F, 11.0F, new CubeDeformation(-0.4F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -0.0436F, 0.0F, 0.0F));
+		return LayerDefinition.create(modelData, 128, 64);
 	}
 }

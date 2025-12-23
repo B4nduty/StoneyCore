@@ -6,6 +6,7 @@ import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
+import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsLoader;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsLoader;
 import banduty.stoneycore.util.patterns.PatternHelper;
 import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
@@ -15,24 +16,30 @@ import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import banduty.stoneycore.util.weaponutil.TooltipClientSide;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CropBlock;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
-import net.minecraft.screen.CraftingScreenHandler;
-import net.minecraft.screen.PlayerScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.CraftingMenu;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -51,108 +58,109 @@ import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
 @Mixin(Item.class)
 public abstract class ItemMixin {
     @Shadow
-    public abstract UseAction getUseAction(ItemStack stack);
+    public abstract UseAnim getUseAnimation(ItemStack stack);
 
-    @Inject(method = "getUseAction", at = @At("HEAD"), cancellable = true)
-    public void stoneycore$getUseAction(ItemStack stack, CallbackInfoReturnable<UseAction> cir) {
+    @Inject(method = "getUseAnimation", at = @At("HEAD"), cancellable = true)
+    public void stoneycore$getUseAnimation(ItemStack stack, CallbackInfoReturnable<UseAnim> cir) {
         if (WeaponDefinitionsLoader.isMelee(stack)) {
-            boolean isShield = stack.isIn(SCTags.WEAPONS_SHIELD.getTag());
-            cir.setReturnValue(isShield ? UseAction.BLOCK : UseAction.NONE);
+            boolean isShield = stack.is(SCTags.WEAPONS_SHIELD.getTag());
+            cir.setReturnValue(isShield ? UseAnim.BLOCK : UseAnim.NONE);
             return;
         }
 
         if (WeaponDefinitionsLoader.isRanged(stack)) {
-            UseAction configured = WeaponDefinitionsLoader.getData(stack).ranged().useAction();
-            cir.setReturnValue(configured == UseAction.BOW ? UseAction.BOW : UseAction.NONE);
+            UseAnim configured = WeaponDefinitionsLoader.getData(stack).ranged().useAnim();
+            cir.setReturnValue(configured == UseAnim.BOW ? UseAnim.BOW : UseAnim.NONE);
         }
     }
 
-    @Inject(method = "getMaxUseTime", at = @At("HEAD"), cancellable = true)
-    public void stoneycore$getMaxUseTime(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
+    @Inject(method = "getUseDuration", at = @At("HEAD"), cancellable = true)
+    public void stoneycore$getUseDuration(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
         if (WeaponDefinitionsLoader.isRanged(stack)) {
             cir.setReturnValue(WeaponDefinitionsLoader.getData(stack).ranged().maxUseTime());
             return;
         }
 
-        if (WeaponDefinitionsLoader.isMelee(stack) && stack.isIn(SCTags.WEAPONS_SHIELD.getTag())) {
+        if (WeaponDefinitionsLoader.isMelee(stack) && stack.is(SCTags.WEAPONS_SHIELD.getTag())) {
             cir.setReturnValue(72000);
         }
     }
 
-    @Inject(method = "usageTick", at = @At("HEAD"))
-    public void stoneycore$usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks, CallbackInfo ci) {
-        if (user instanceof PlayerEntity playerEntity) {
-            IEntityDataSaver dataSaver = (IEntityDataSaver) playerEntity;
-            if (StaminaData.isStaminaBlocked(dataSaver)) {
-                playerEntity.clearActiveItem();
-            }
+    @Inject(method = "onUseTick", at = @At("HEAD"))
+    public void stoneycore$onUseTick(Level level, LivingEntity livingEntity, ItemStack stack, int remainingUseTicks, CallbackInfo ci) {
+        if (!(livingEntity instanceof Player player)) return;
+
+        IEntityDataSaver dataSaver = (IEntityDataSaver) player;
+        if (StaminaData.isStaminaBlocked(dataSaver)) {
+            player.stopUsingItem();
         }
 
-        if (world.isClient) return;
-        if (!(user instanceof PlayerEntity player)) return;
+        if (level.isClientSide()) return;
         if (!WeaponDefinitionsLoader.isRanged(stack)) return;
 
-        int useTime = WeaponDefinitionsLoader.getData(stack).ranged().maxUseTime() - remainingUseTicks;
-        if (RangedWeaponHandlers.get(WeaponDefinitionsLoader.getData(stack).ranged().id()).isPresent())
-            RangedWeaponHandlers.get(WeaponDefinitionsLoader.getData(stack).ranged().id()).get().handleUsageTick(world, stack, player, useTime);
+        WeaponDefinitionsLoader.DefinitionData data = WeaponDefinitionsLoader.getData(stack);
+        int useTime = data.ranged().maxUseTime() - remainingUseTicks;
+        if (RangedWeaponHandlers.get(data.ranged().id()).isPresent()) {
+            RangedWeaponHandlers.get(data.ranged().id()).get().handleUsageTick(level, stack, player, useTime);
+        }
     }
 
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
-    public void stoneycore$use(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
-        ItemStack stack = user.getStackInHand(hand);
+    public void stoneycore$use(Level level, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
+        ItemStack stack = player.getItemInHand(hand);
 
-        if ((getUseAction(stack) == UseAction.DRINK || getUseAction(stack) == UseAction.EAT)) {
-            Optional.ofNullable(AccessoriesCapability.getOptionally(user))
+        if ((getUseAnimation(stack) == UseAnim.DRINK || getUseAnimation(stack) == UseAnim.EAT)) {
+            Optional.ofNullable(AccessoriesCapability.getOptionally(player))
                     .filter(Optional::isPresent)
                     .ifPresent(o -> {
-                        for (SlotEntryReference equipped : AccessoriesCapability.get(user).getAllEquipped()) {
+                        for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                             ItemStack itemStack = equipped.stack();
-                            if (user.isCreative()) break;
-                            if (!NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false) && itemStack.isIn(SCTags.VISORED_HELMET.getTag())) {
-                                user.sendMessage(Text.translatable("text.tooltip.stoneycore.openVisorEatDrink"), true);
-                                cir.setReturnValue(TypedActionResult.fail(stack));
+                            if (player.isCreative()) break;
+                            if (!NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false) && !AccessoriesDefinitionsLoader.getData(itemStack).visoredHelmet().getPath().isBlank()) {
+                                player.displayClientMessage(Component.translatable("component.tooltip.stoneycore.openVisorEatDrink"), true);
+                                cir.setReturnValue(InteractionResultHolder.fail(stack));
                                 return;
                             }
                         }
                     });
         }
 
-        if (hand == Hand.MAIN_HAND && !user.getOffHandStack().isEmpty() && WeaponDefinitionsLoader.isMelee(stack)) {
-            cir.setReturnValue(TypedActionResult.fail(stack));
+        if (hand == InteractionHand.MAIN_HAND && !player.getOffhandItem().isEmpty() && WeaponDefinitionsLoader.isMelee(stack)) {
+            cir.setReturnValue(InteractionResultHolder.fail(stack));
             return;
         }
 
-        if (hand == Hand.OFF_HAND) return;
+        if (hand == InteractionHand.OFF_HAND) return;
 
         if (WeaponDefinitionsLoader.isMelee(stack)) {
-            handleWeaponUse(world, user, hand, stack, cir);
+            handleWeaponUse(level, player, hand, stack, cir);
         } else if (WeaponDefinitionsLoader.isRanged(stack)) {
-            handleRangeWeaponUse(world, user, hand, stack, cir);
+            handleRangeWeaponUse(level, player, hand, stack, cir);
         }
     }
 
     @Unique
-    private void handleWeaponUse(World world, PlayerEntity user, Hand hand, ItemStack stack, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
-        if (!world.isClient && user.isSneaking() && isBludgeoningWeapon(stack.getItem())) {
+    private void handleWeaponUse(Level level, Player player, InteractionHand hand, ItemStack stack, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
+        if (!level.isClientSide() && player.isShiftKeyDown() && isBludgeoningWeapon(stack.getItem())) {
             toggleBludgeoningMode(stack);
-            cir.setReturnValue(TypedActionResult.success(stack));
+            cir.setReturnValue(InteractionResultHolder.success(stack));
             return;
         }
 
-        IEntityDataSaver dataSaver = (IEntityDataSaver) user;
+        IEntityDataSaver dataSaver = (IEntityDataSaver) player;
         if (StaminaData.isStaminaBlocked(dataSaver)) {
-            user.clearActiveItem();
-            cir.setReturnValue(TypedActionResult.fail(stack));
+            player.stopUsingItem();
+            cir.setReturnValue(InteractionResultHolder.fail(stack));
             return;
         }
 
-        if (stack.isIn(SCTags.WEAPONS_SHIELD.getTag())) {
-            user.setCurrentHand(hand);
-            cir.setReturnValue(TypedActionResult.consume(stack));
+        if (stack.is(SCTags.WEAPONS_SHIELD.getTag())) {
+            player.startUsingItem(hand);
+            cir.setReturnValue(InteractionResultHolder.consume(stack));
             return;
         }
 
-        cir.setReturnValue(TypedActionResult.fail(stack));
+        cir.setReturnValue(InteractionResultHolder.fail(stack));
     }
 
     @Unique
@@ -167,65 +175,65 @@ public abstract class ItemMixin {
     }
 
     @Unique
-    private void handleRangeWeaponUse(World world, PlayerEntity user, Hand hand, ItemStack stack, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
-        if (world.isClient) return;
+    private void handleRangeWeaponUse(Level level, Player player, InteractionHand hand, ItemStack stack, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
+        if (level.isClientSide()) return;
 
-        if (SCRangeWeaponUtil.getAmmoRequirement(stack) != null) {
-            handleAmmoBasedWeapon(world, user, hand, stack, cir);
+        if (SCRangeWeaponUtil.getAmmoRequirement(stack) != SCRangeWeaponUtil.AmmoRequirement.EMPTY) {
+            handleAmmoBasedWeapon(level, player, hand, stack, cir);
         } else {
-            handleProjectileWeapon(hand, user, stack, cir);
+            handleProjectileWeapon(hand, player, stack, cir);
         }
     }
 
     @Unique
-    private void handleAmmoBasedWeapon(World world, PlayerEntity user, Hand hand, ItemStack stack, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
+    private void handleAmmoBasedWeapon(Level level, Player player, InteractionHand hand, ItemStack stack, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
         SCRangeWeaponUtil.WeaponState weaponState = SCRangeWeaponUtil.getWeaponState(stack);
 
         if (!weaponState.isCharged()) {
-            cir.setReturnValue(TypedActionResult.fail(stack));
+            cir.setReturnValue(InteractionResultHolder.fail(stack));
             return;
         }
 
-        ItemStack offHandStack = user.getOffHandStack();
+        ItemStack offHandStack = player.getOffhandItem();
         boolean needsFAS = WeaponDefinitionsLoader.getData(stack).ranged().needsFlintAndSteel();
-        if (needsFAS && offHandStack.getItem() != Items.FLINT_AND_STEEL && !user.isCreative()) {
-            cir.setReturnValue(TypedActionResult.fail(stack));
+        if (needsFAS && offHandStack.getItem() != Items.FLINT_AND_STEEL && !player.isCreative()) {
+            cir.setReturnValue(InteractionResultHolder.fail(stack));
             return;
         }
 
-        user.setCurrentHand(hand);
-        SCRangeWeaponUtil.handleShoot(world, user, stack);
+        player.startUsingItem(hand);
+        SCRangeWeaponUtil.handleShoot(level, player, stack);
         SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(
                 weaponState.isReloading(), false, true));
 
-        if (!user.getAbilities().creativeMode && needsFAS && user instanceof ServerPlayerEntity serverPlayer) {
-            offHandStack.damage(1, serverPlayer, p -> p.sendToolBreakStatus(hand));
+        if (!player.getAbilities().instabuild && needsFAS && player instanceof ServerPlayer serverPlayer) {
+            offHandStack.hurtAndBreak(1, serverPlayer, p -> p.broadcastBreakEvent(hand));
         }
 
-        cir.setReturnValue(TypedActionResult.consume(stack));
+        cir.setReturnValue(InteractionResultHolder.consume(stack));
     }
 
     @Unique
-    private void handleProjectileWeapon(Hand hand, PlayerEntity user, ItemStack stack, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
-        boolean hasAmmo = SCRangeWeaponUtil.getArrowFromInventory(user).isPresent();
+    private void handleProjectileWeapon(InteractionHand hand, Player player, ItemStack stack, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
+        boolean hasAmmo = SCRangeWeaponUtil.getArrowFromInventory(player).isPresent();
         if (!hasAmmo) {
-            cir.setReturnValue(TypedActionResult.fail(stack));
+            cir.setReturnValue(InteractionResultHolder.fail(stack));
             return;
         }
 
-        user.setCurrentHand(hand);
+        player.startUsingItem(hand);
 
-        if (WeaponDefinitionsLoader.getData(stack).ranged().useAction() == UseAction.CROSSBOW) {
-            cir.setReturnValue(SCRangeWeaponUtil.handleCrossbowUse(user.getWorld(), user, hand, stack));
+        if (WeaponDefinitionsLoader.getData(stack).ranged().useAnim() == UseAnim.CROSSBOW) {
+            cir.setReturnValue(SCRangeWeaponUtil.handleCrossbowUse(player.level(), player, hand, stack));
         } else {
-            cir.setReturnValue(TypedActionResult.consume(stack));
+            cir.setReturnValue(InteractionResultHolder.consume(stack));
         }
     }
 
-    @Inject(method = "onStoppedUsing", at = @At("HEAD"))
-    public void stoneycore$onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
-        if (world.isClient) return;
-        if (!(user instanceof PlayerEntity player)) return;
+    @Inject(method = "releaseUsing", at = @At("HEAD"))
+    public void stoneycore$releaseUsing(ItemStack stack, Level level, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
+        if (level.isClientSide()) return;
+        if (!(user instanceof Player player)) return;
         if (!WeaponDefinitionsLoader.isRanged(stack)) return;
         var def = WeaponDefinitionsLoader.getData(stack);
         if (def == null || def.ranged() == null) return;
@@ -233,13 +241,13 @@ public abstract class ItemMixin {
 
         int useTime = WeaponDefinitionsLoader.getData(stack).ranged().maxUseTime() - remainingUseTicks;
         SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack ->
-                RangedWeaponHandlers.get(type).ifPresent(h -> h.handleRelease(stack, world, player, useTime, arrowStack)
+                RangedWeaponHandlers.get(type).ifPresent(h -> h.handleRelease(stack, level, player, useTime, arrowStack)
         ));
     }
 
-    @Inject(method = "appendTooltip", at = @At("HEAD"))
-    public void stoneycore$appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context, CallbackInfo ci) {
-        if (world == null) return;
+    @Inject(method = "appendHoverText", at = @At("HEAD"))
+    public void stoneycore$appendHoverText(ItemStack stack, Level level, List<Component> tooltip, TooltipFlag tooltipFlag, CallbackInfo ci) {
+        if (level == null) return;
 
         Item item = stack.getItem();
         if (WeaponDefinitionsLoader.isMelee(stack)) {
@@ -248,59 +256,63 @@ public abstract class ItemMixin {
             double bludgeoning = getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, item);
 
             if (slashing > 0 && bludgeoning > 0) {
-                tooltip.add(Text.translatable("text.tooltip.stoneycore.shift-right_click-bludgeoning"));
+                tooltip.add(Component.translatable("component.tooltip.stoneycore.shift-right_click-bludgeoning"));
             }
 
             if (slashing == 0 && bludgeoning > 0 && piercing > 0) {
-                tooltip.add(Text.translatable("text.tooltip.stoneycore.shift-right_click-bludgeoning-piercing"));
+                tooltip.add(Component.translatable("component.tooltip.stoneycore.shift-right_click-bludgeoning-piercing"));
             }
 
-            if (stack.isIn(SCTags.WEAPONS_HARVEST.getTag())) {
-                tooltip.add(Text.translatable("text.tooltip.stoneycore.right_click-replant"));
+            if (stack.is(SCTags.WEAPONS_HARVEST.getTag())) {
+                tooltip.add(Component.translatable("component.tooltip.stoneycore.right_click-replant"));
             }
 
-            if (slashing != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.slashingDamage", slashing).formatted(Formatting.GREEN));
-            if (bludgeoning != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.bludgeoningDamage", bludgeoning).formatted(Formatting.GREEN));
-            if (piercing != 0) tooltip.add(Text.translatable("text.tooltip.stoneycore.piercingDamage", piercing).formatted(Formatting.GREEN));
+            if (stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f){
+                slashing *= 0.25f; bludgeoning *= 0.25f; piercing *= 0.25f;
+            }
+
+            if (slashing != 0) tooltip.add(Component.translatable("component.tooltip.stoneycore.slashingDamage", slashing).withStyle(ChatFormatting.GREEN));
+            if (bludgeoning != 0) tooltip.add(Component.translatable("component.tooltip.stoneycore.bludgeoningDamage", bludgeoning).withStyle(ChatFormatting.GREEN));
+            if (piercing != 0) tooltip.add(Component.translatable("component.tooltip.stoneycore.piercingDamage", piercing).withStyle(ChatFormatting.GREEN));
         }
 
-        if (world.isClient()) {
+        if (level.isClientSide()) {
             TooltipClientSide.setTooltip(tooltip, stack);
         }
     }
 
-    @Inject(method = "useOnBlock", at = @At("HEAD"), cancellable = true)
-    public void stoneycore$useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
-        ItemStack stack = context.getStack();
-        if (!WeaponDefinitionsLoader.isMelee(stack) || !stack.isIn(SCTags.WEAPONS_HARVEST.getTag())) return;
+    @Inject(method = "useOn", at = @At("HEAD"), cancellable = true)
+    public void stoneycore$useOn(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
+        ItemStack stack = context.getItemInHand();
+        if (!WeaponDefinitionsLoader.isMelee(stack) || !stack.is(SCTags.WEAPONS_HARVEST.getTag())) return;
 
-        World world = context.getWorld();
-        BlockPos pos = context.getBlockPos();
-        PlayerEntity player = context.getPlayer();
-        BlockState state = world.getBlockState(pos);
+        Level level = context.getLevel();
+        BlockPos pos = context.getClickedPos();
+        Player player = context.getPlayer();
+        BlockState state = level.getBlockState(pos);
 
-        if (!world.isClient && player != null) {
-            handleCropHarvest(world, pos, state, player, stack, context.getHand(), cir);
+        if (!level.isClientSide() && player != null) {
+            handleCropHarvest(level, pos, state, player, stack, context.getHand(), cir);
         }
     }
 
     @Unique
-    private void handleCropHarvest(World world, BlockPos pos, BlockState state, PlayerEntity player, ItemStack stack, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    private void handleCropHarvest(Level world, BlockPos pos, BlockState state, Player player, ItemStack stack, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         Block block = state.getBlock();
-        if (block instanceof CropBlock crop && crop.isMature(state) && world.breakBlock(pos, true, player)) {
+        if (block instanceof CropBlock crop && crop.isMaxAge(state) && world.destroyBlock(pos, true, player)) {
             SCWeaponUtil.replantCrop(world, pos, crop, player, stack, hand);
-            cir.setReturnValue(ActionResult.SUCCESS);
+            cir.setReturnValue(InteractionResult.SUCCESS);
         }
     }
 
-    @Inject(method = "onCraft", at = @At("TAIL"))
-    public void onCraft(ItemStack stack, World world, PlayerEntity player, CallbackInfo ci) {
+    @Inject(method = "onCraftedBy", at = @At("TAIL"))
+    public void onCraftedBy(ItemStack stack, Level level, Player player, CallbackInfo ci) {
         if (!(stack.getItem() instanceof SCAccessoryItem)) return;
 
-        if (player.currentScreenHandler instanceof CraftingScreenHandler craftingInventory) {
-            applyCraftingModifiers(stack, craftingInventory.getCraftingSlotCount(), craftingInventory::getSlot);
-        } else if (player.currentScreenHandler instanceof PlayerScreenHandler playerInventory) {
-            applyCraftingModifiers(stack, 4, playerInventory::getSlot);
+        if (player.containerMenu instanceof CraftingMenu craftingInventory) {
+            applyCraftingModifiers(stack, craftingInventory.getSize(), craftingInventory::getSlot);
+        } else if (player.containerMenu instanceof InventoryMenu inventoryMenu) {
+            applyCraftingModifiers(stack, 4, inventoryMenu::getSlot);
         }
     }
 
@@ -309,48 +321,48 @@ public abstract class ItemMixin {
         ItemStack bannerStack = ItemStack.EMPTY;
 
         for (int i = 0; i < slotCount; i++) {
-            ItemStack ingredient = slotSupplier.apply(i).getStack();
+            ItemStack ingredient = slotSupplier.apply(i).getItem();
             if (ingredient.getItem() instanceof BannerItem) {
                 bannerStack = ingredient;
                 break;
             }
         }
 
-        if (bannerStack.isEmpty() || !(resultStack.getItem() instanceof SCAccessoryItem) || !resultStack.isIn(SCTags.BANNER_COMPATIBLE.getTag())) return;
+        if (bannerStack.isEmpty() || !(resultStack.getItem() instanceof SCAccessoryItem) || !resultStack.is(SCTags.BANNER_COMPATIBLE.getTag())) return;
 
-        List<Pair<Identifier, DyeColor>> bannerPatterns = getBannerPatterns(bannerStack, resultStack.getItem());
+        List<Tuple<ResourceLocation, DyeColor>> bannerPatterns = getBannerPatterns(bannerStack, resultStack.getItem());
         PatternHelper.setBannerPatterns(resultStack, bannerPatterns);
         PatternHelper.setBannerDyeColor(resultStack, ((BannerItem) bannerStack.getItem()).getColor());
     }
 
     @Unique
-    private static List<Pair<Identifier, DyeColor>> getBannerPatterns(ItemStack bannerStack, Item armor) {
-        List<Pair<Identifier, DyeColor>> patterns = new ArrayList<>();
+    private static List<Tuple<ResourceLocation, DyeColor>> getBannerPatterns(ItemStack bannerStack, Item armor) {
+        List<Tuple<ResourceLocation, DyeColor>> patterns = new ArrayList<>();
 
         if (bannerStack.isEmpty() || !(bannerStack.getItem() instanceof BannerItem)) return patterns;
 
-        NbtCompound nbt = bannerStack.getNbt();
+        CompoundTag nbt = bannerStack.getTag();
         if (nbt == null || !nbt.contains(INBTKeys.BLOCK_ENTITY_TAG)) return patterns;
 
-        NbtCompound blockEntityTag = nbt.getCompound(INBTKeys.BLOCK_ENTITY_TAG);
+        CompoundTag blockEntityTag = nbt.getCompound(INBTKeys.BLOCK_ENTITY_TAG);
         if (!blockEntityTag.contains(INBTKeys.PATTERNS)) return patterns;
 
-        NbtList patternList = blockEntityTag.getList(INBTKeys.PATTERNS, NbtCompound.COMPOUND_TYPE);
-        Identifier itemId = Registries.ITEM.getId(armor);
+        ListTag patternList = blockEntityTag.getList(INBTKeys.PATTERNS, Tag.TAG_COMPOUND);
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(armor);
 
         for (int i = 0; i < patternList.size(); i++) {
-            NbtCompound patternTag = patternList.getCompound(i);
+            CompoundTag patternTag = patternList.getCompound(i);
 
             String pattern = NBTDataHelper.get(patternTag, INBTKeys.PATTERN, "");
             int colorId = NBTDataHelper.get(patternTag, INBTKeys.COLOR, 0);
 
             DyeColor color = DyeColor.byId(colorId);
-            Identifier patternId = new Identifier(
+            ResourceLocation patternId = new ResourceLocation(
                     itemId.getNamespace(),
                     "textures/banner_pattern/" + itemId.getPath() + "/" + pattern + ".png"
             );
 
-            patterns.add(new Pair<>(patternId, color));
+            patterns.add(new Tuple<>(patternId, color));
         }
         return patterns;
     }

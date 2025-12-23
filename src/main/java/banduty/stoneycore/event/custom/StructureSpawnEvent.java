@@ -2,10 +2,10 @@ package banduty.stoneycore.event.custom;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.block.pattern.BlockPatternBuilder;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.pattern.BlockPatternBuilder;
 import org.jetbrains.annotations.NotNull;
 
 public interface StructureSpawnEvent {
@@ -24,10 +24,10 @@ public interface StructureSpawnEvent {
                 }
 
                 @Override
-                public @NotNull Entity getEntity(World world) {
+                public @NotNull Entity getEntity(Level level) {
                     Entity spawned = null;
                     for (StructureSpawnEvent listener : listeners) {
-                        Entity entity = listener.getEntity(world);
+                        Entity entity = listener.getEntity(level);
                         if (entity != null) {
                             spawned = entity;
                         }
@@ -43,5 +43,5 @@ public interface StructureSpawnEvent {
 
     void setKeyMatchers(BlockPatternBuilder builder, Direction dir);
 
-    Entity getEntity(World world);
+    Entity getEntity(Level level);
 }

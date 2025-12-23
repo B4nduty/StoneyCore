@@ -2,40 +2,40 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CropBlock;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import org.jetbrains.annotations.Nullable;
 
 public class PlayerBlockBreakAfterHandler implements PlayerBlockBreakEvents.After {
     @Override
-    public void afterBlockBreak(World world, PlayerEntity player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity) {
-        ItemStack heldItem = player.getStackInHand(Hand.MAIN_HAND);
+    public void afterBlockBreak(Level level, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity) {
+        ItemStack heldItem = player.getItemInHand(InteractionHand.MAIN_HAND);
 
-        if (heldItem.isIn(SCTags.WEAPONS_HARVEST.getTag())) {
+        if (heldItem.is(SCTags.WEAPONS_HARVEST.getTag())) {
             Block block = state.getBlock();
 
             if (block instanceof CropBlock) {
-                replantCrop(world, pos, (CropBlock) block, player);
+                replantCrop(level, pos, (CropBlock) block, player);
             }
         }
     }
 
-    private void replantCrop(World world, BlockPos pos, CropBlock cropBlock, PlayerEntity player) {
+    private void replantCrop(Level level, BlockPos pos, CropBlock cropBlock, Player player) {
         ItemStack seedStack = new ItemStack(cropBlock.asItem());
 
         if (!seedStack.isEmpty()) {
-            world.setBlockState(pos, cropBlock.getDefaultState());
-            world.emitGameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Emitter.of(player, cropBlock.getDefaultState()));
+            level.setBlockAndUpdate(pos, cropBlock.defaultBlockState());
+            level.gameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Context.of(player, cropBlock.defaultBlockState()));
             if (!player.isCreative()) {
-                seedStack.decrement(1);
+                seedStack.shrink(1);
             }
         }
     }

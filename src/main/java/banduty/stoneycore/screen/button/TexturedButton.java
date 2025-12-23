@@ -1,25 +1,26 @@
 package banduty.stoneycore.screen.button;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
-public class TexturedButton extends ButtonWidget {
-    private final Identifier buttonTexture;
-    private final Identifier hoverTexture;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
-    public TexturedButton(int x, int y, int width, int height, PressAction onPress, Identifier buttonTexture, Identifier hoverTexture) {
-        super(x, y, width, height, Text.literal(""), onPress, ButtonWidget.DEFAULT_NARRATION_SUPPLIER);
+public class TexturedButton extends Button {
+    private final ResourceLocation buttonTexture;
+    private final ResourceLocation hoverTexture;
+
+    public TexturedButton(int x, int y, int width, int height, OnPress onPress, ResourceLocation buttonTexture, ResourceLocation hoverTexture) {
+        super(x, y, width, height, Component.literal(""), onPress, Button.DEFAULT_NARRATION);
         this.buttonTexture = buttonTexture;
         this.hoverTexture = hoverTexture;
     }
 
     @Override
-    protected void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
-        Identifier texture = this.isHovered() ? hoverTexture : buttonTexture;
-        MinecraftClient.getInstance().getTextureManager().bindTexture(texture);
-        context.drawTexture(texture, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
+    protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+        ResourceLocation texture = this.isHovered() ? hoverTexture : buttonTexture;
+        Minecraft.getInstance().getTextureManager().bindForSetup(texture);
+        guiGraphics.blit(texture, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
     }
 }

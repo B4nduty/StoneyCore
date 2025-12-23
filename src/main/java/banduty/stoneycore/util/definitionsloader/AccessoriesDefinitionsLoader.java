@@ -8,14 +8,15 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.profiler.Profiler;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,35 +28,34 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadListener {
-    private static final Map<Identifier, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
-    private static final Identifier RELOAD_LISTENER_ID = new Identifier(StoneyCore.MOD_ID, "accessories_definitions_loader");
+    private static final Map<ResourceLocation, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
+    private static final ResourceLocation RELOAD_LISTENER_ID = new ResourceLocation(StoneyCore.MOD_ID, "accessories_definitions_loader");
 
     @Override
-    public Identifier getFabricId() {
+    public ResourceLocation getFabricId() {
         return RELOAD_LISTENER_ID;
     }
 
     @Override
-    public CompletableFuture<Void> reload(Synchronizer synchronizer,
-                                          ResourceManager resourceManager,
-                                          Profiler prepareProfiler,
-                                          Profiler applyProfiler,
-                                          Executor prepareExecutor,
-                                          Executor applyExecutor) {
+    public @NotNull CompletableFuture<Void> reload(PreparationBarrier synchronizer,
+                                                   @NotNull ResourceManager resourceManager,
+                                                   @NotNull ProfilerFiller prepareProfiler,
+                                                   @NotNull ProfilerFiller applyProfiler,
+                                                   @NotNull Executor prepareExecutor,
+                                                   @NotNull Executor applyExecutor) {
         return CompletableFuture.runAsync(() -> {
             DEFINITIONS.clear();
 
-            Map<Identifier, Resource> resources = resourceManager.findResources("definitions/accessories",
+            Map<ResourceLocation, Resource> resources = resourceManager.listResources("definitions/accessories",
                     id -> id.getPath().endsWith(".json"));
 
             resources.forEach((id, resource) -> {
-                try (InputStream stream = resource.getInputStream()) {
+                try (InputStream stream = resource.open()) {
                     JsonElement element = JsonParser.parseReader(new InputStreamReader(stream));
 
                     DataResult<DefinitionData> result = DefinitionData.CODEC.parse(JsonOps.INSTANCE, element);
                     result.resultOrPartial(StoneyCore.LOGGER::error)
                             .ifPresent(def -> {
-                                // Validate armorSlot manually since Codec can’t enforce enum membership
                                 String armorSlot = def.armorSlot().toUpperCase();
                                 if (!armorSlot.isEmpty() && !isValidArmorSlot(armorSlot)) {
                                     StoneyCore.LOGGER.error(
@@ -73,11 +73,12 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                                             "",
                                             def.hungerDrainMultiplier(),
                                             def.deflectChance(),
-                                            def.weight()
+                                            def.weight(),
+                                            def.visoredHelmet()
                                     );
                                 }
 
-                                Identifier attributeId = Identifier.of(
+                                ResourceLocation attributeId = ResourceLocation.tryBuild(
                                         id.getNamespace(),
                                         id.getPath().substring("definitions/accessories/".length(), id.getPath().length() - 5)
                                 );
@@ -88,7 +89,7 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                     StoneyCore.LOGGER.error("Failed to load definitions data from {}: {}", id, e.getMessage(), e);
                 }
             });
-        }, prepareExecutor).thenCompose(synchronizer::whenPrepared).thenRunAsync(() -> {
+        }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {
         }, applyExecutor);
     }
 
@@ -108,10 +109,10 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
     }
 
     public static DefinitionData getData(Item item) {
-        Identifier itemId = Registries.ITEM.getId(item);
-        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+        ResourceLocation definitionId = ResourceLocation.tryBuild(itemId.getNamespace(), itemId.getPath());
         return DEFINITIONS.getOrDefault(definitionId,
-                new DefinitionData(0, 0, "", 0, Map.of(), 0));
+                new DefinitionData(0, 0, "", 0, Map.of(), 0, new ResourceLocation("", "")));
     }
 
     public static boolean containsItem(ItemStack itemStack) {
@@ -120,8 +121,8 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
     }
 
     public static boolean containsItem(Item item) {
-        Identifier itemId = Registries.ITEM.getId(item);
-        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+        ResourceLocation definitionId = ResourceLocation.tryBuild(itemId.getNamespace(), itemId.getPath());
         return DEFINITIONS.containsKey(definitionId);
     }
 
@@ -131,7 +132,8 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
             String armorSlot,
             double hungerDrainMultiplier,
             Map<String, Double> deflectChance,
-            double weight
+            double weight,
+            ResourceLocation visoredHelmet
     ) {
         public static final Codec<DefinitionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.DOUBLE.optionalFieldOf("armor", 0.0).forGetter(DefinitionData::armor),
@@ -139,7 +141,8 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                 Codec.STRING.optionalFieldOf("armorSlot", "").forGetter(DefinitionData::armorSlot),
                 Codec.DOUBLE.optionalFieldOf("hungerDrainMultiplier", 0.0).forGetter(DefinitionData::hungerDrainMultiplier),
                 Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("deflectChance", Map.of()).forGetter(DefinitionData::deflectChance),
-                Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(DefinitionData::weight)
+                Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(DefinitionData::weight),
+                ResourceLocation.CODEC.optionalFieldOf("visoredHelmet", new ResourceLocation("", "")).forGetter(DefinitionData::visoredHelmet)
         ).apply(instance, DefinitionData::new));
     }
 }

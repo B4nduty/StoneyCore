@@ -1,22 +1,23 @@
 
 package banduty.stoneycore.screen;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
-public class BlueprintScreenHandler extends ScreenHandler {
+public class BlueprintScreenHandler extends AbstractContainerMenu {
     private final ItemStack itemStack;
-    private final Identifier structureId;
+    private final ResourceLocation structureId;
 
-    public BlueprintScreenHandler(int syncId, PlayerInventory playerInventory, PacketByteBuf buf) {
-        this(syncId, playerInventory, buf.readItemStack(), buf.readIdentifier());
+    public BlueprintScreenHandler(int syncId, Inventory inventory, FriendlyByteBuf buf) {
+        this(syncId, inventory, buf.readItem(), buf.readResourceLocation());
     }
 
-    public BlueprintScreenHandler(int syncId, PlayerInventory playerInventory, ItemStack itemStack, Identifier structureId) {
+    public BlueprintScreenHandler(int syncId, Inventory inventory, ItemStack itemStack, ResourceLocation structureId) {
         super(ModScreenHandlers.BLUEPRINT_SCREEN_HANDLER, syncId);
         this.itemStack = itemStack;
         this.structureId = structureId;
@@ -26,17 +27,17 @@ public class BlueprintScreenHandler extends ScreenHandler {
         return itemStack;
     }
 
-    public Identifier getStructureId() {
+    public ResourceLocation getStructureId() {
         return structureId;
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int slot) {
+    public @NotNull ItemStack quickMoveStack(@NotNull Player player, int slot) {
         return null;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean stillValid(@NotNull Player player) {
         return true;
     }
 }

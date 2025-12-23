@@ -5,16 +5,17 @@
   "mixins": [
     "AbstractBlockMixin",
     "CraftingScreenHandlerMixin",
-    "HungerManagerMixin",
+    "FoodDataMixin",
+    "ItemEntityMixin",
     "ItemMixin",
     "LivingEntityAccessor",
     "LivingEntityMixin",
     "MobEntityAccessor",
-    "PersistentProjectileEntityAccessor",
+    "AbstractArrowAccessor",
     "PersistentProjectileEntityMixin",
-    "PlayerEntityMixin",
+    "PlayerMixin",
     "SpawnHelperMixin",
-    "StairsBlockMixin",
+    "StairBlockMixin",
     "VindicatorEntityMixin"
   ],
   "injectors": {
@@ -26,12 +27,11 @@
     "CameraMixin",
     "GameRendererAccessor",
     "GameRendererMixin",
-    "HeldItemRendererMixin",
-    "HorseEntityModelMixin",
-    "InGameHudMixin",
+    "ItemInHandRendererMixin",
+    "HorseModelMixin",
+    "GuiMixin",
     "ItemRendererMixin",
     "MinecraftClientMixin",
-    "ModelLoaderMixin",
     "PlayerEntityRendererMixin"
   ]
 }

@@ -1,28 +1,25 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.lands.util.LandState;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.SpawnHelper;
-import net.minecraft.world.biome.SpawnSettings;
-import net.minecraft.world.gen.StructureAccessor;
-import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.level.NaturalSpawner;
+import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.biome.MobSpawnSettings;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(SpawnHelper.class)
+@Mixin(NaturalSpawner.class)
 public class SpawnHelperMixin {
-    @Inject(method = "canSpawn(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/SpawnGroup;Lnet/minecraft/world/gen/StructureAccessor;Lnet/minecraft/world/gen/chunk/ChunkGenerator;Lnet/minecraft/world/biome/SpawnSettings$SpawnEntry;Lnet/minecraft/util/math/BlockPos$Mutable;D)Z", at = @At("HEAD"), cancellable = true)
-    private static void onCanSpawn(ServerWorld world, SpawnGroup group, StructureAccessor structureAccessor,
-                                   ChunkGenerator chunkGenerator, SpawnSettings.SpawnEntry spawnEntry,
-                                   BlockPos.Mutable pos, double squaredDistance,
-                                   CallbackInfoReturnable<Boolean> cir) {
-        LandState landState = LandState.get(world);
+    @Inject(method = "isValidSpawnPostitionForType", at = @At("HEAD"), cancellable = true)
+    private static void onCanSpawn(ServerLevel serverLevel, MobCategory mobCategory, StructureManager structureManager, ChunkGenerator chunkGenerator, MobSpawnSettings.SpawnerData spawnerData, BlockPos.MutableBlockPos mutableBlockPos, double d, CallbackInfoReturnable<Boolean> cir) {
+        LandState landState = LandState.get(serverLevel);
 
-        if (landState.isClaimed(pos)) {
+        if (landState.isClaimed(mutableBlockPos)) {
             cir.setReturnValue(false);
         }
     }

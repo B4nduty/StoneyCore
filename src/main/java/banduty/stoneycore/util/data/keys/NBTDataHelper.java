@@ -1,8 +1,8 @@
 package banduty.stoneycore.util.data.keys;
 
 import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.CheckReturnValue;
 
 public class NBTDataHelper {
@@ -19,36 +19,36 @@ public class NBTDataHelper {
 
     // ITEM
     public static <T> void set(ItemStack stack, SCKey<T> key, T value) {
-        set(stack.getOrCreateNbt(), key, value);
+        set(stack.getOrCreateTag(), key, value);
     }
 
     @CheckReturnValue
     public static <T> T get(ItemStack stack, SCKey<T> key, T defaultValue) {
-        return get(stack.getNbt(), key, defaultValue);
+        return get(stack.getTag(), key, defaultValue);
     }
 
-    public static <T> void set(NbtCompound nbt, SCKey<T> key, T value) {
-        if (nbt == null) return;
-        if (value instanceof Boolean b) nbt.putBoolean(key.name(), b);
-        else if (value instanceof Integer i) nbt.putInt(key.name(), i);
-        else if (value instanceof Long l) nbt.putLong(key.name(), l);
-        else if (value instanceof Double d) nbt.putDouble(key.name(), d);
-        else if (value instanceof String s) nbt.putString(key.name(), s);
-        else if (value instanceof Float f) nbt.putFloat(key.name(), f);
+    public static <T> void set(CompoundTag tag, SCKey<T> key, T value) {
+        if (tag == null) return;
+        if (value instanceof Boolean b) tag.putBoolean(key.name(), b);
+        else if (value instanceof Integer i) tag.putInt(key.name(), i);
+        else if (value instanceof Long l) tag.putLong(key.name(), l);
+        else if (value instanceof Double d) tag.putDouble(key.name(), d);
+        else if (value instanceof String s) tag.putString(key.name(), s);
+        else if (value instanceof Float f) tag.putFloat(key.name(), f);
         else throw new IllegalArgumentException("Unsupported type: " + key.type());
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T get(NbtCompound nbt, SCKey<T> key, T defaultValue) {
-        if (nbt == null || !nbt.contains(key.name())) return defaultValue;
+    public static <T> T get(CompoundTag tag, SCKey<T> key, T defaultValue) {
+        if (tag == null || !tag.contains(key.name())) return defaultValue;
 
         Class<T> type = key.type();
-        if (type == Float.class) return (T) (Float) nbt.getFloat(key.name());
-        if (type == Boolean.class) return (T) (Boolean) nbt.getBoolean(key.name());
-        if (type == Integer.class) return (T) (Integer) nbt.getInt(key.name());
-        if (type == Long.class) return (T) (Long) nbt.getLong(key.name());
-        if (type == Double.class) return (T) (Double) nbt.getDouble(key.name());
-        if (type == String.class) return (T) nbt.getString(key.name());
+        if (type == Float.class) return (T) (Float) tag.getFloat(key.name());
+        if (type == Boolean.class) return (T) (Boolean) tag.getBoolean(key.name());
+        if (type == Integer.class) return (T) (Integer) tag.getInt(key.name());
+        if (type == Long.class) return (T) (Long) tag.getLong(key.name());
+        if (type == Double.class) return (T) (Double) tag.getDouble(key.name());
+        if (type == String.class) return (T) tag.getString(key.name());
 
         throw new IllegalArgumentException("Unsupported type: " + type);
     }

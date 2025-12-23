@@ -1,23 +1,23 @@
 package banduty.stoneycore.lands.util;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 import java.util.*;
 
 public class LandColors {
-    private static final List<Formatting> COLOR_POOL = new ArrayList<>();
-    private static final Map<UUID, Formatting> ASSIGNED_COLORS = new HashMap<>();
+    private static final List<ChatFormatting> COLOR_POOL = new ArrayList<>();
+    private static final Map<UUID, ChatFormatting> ASSIGNED_COLORS = new HashMap<>();
     private static final Random RANDOM = new Random();
 
     static {
-        for (Formatting fmt : Formatting.values()) {
+        for (ChatFormatting fmt : ChatFormatting.values()) {
             if (fmt.isColor()) {
                 COLOR_POOL.add(fmt);
             }
         }
     }
 
-    public static Formatting getColorForLand(Land land) {
+    public static ChatFormatting getColorForLand(Land land) {
         return ASSIGNED_COLORS.computeIfAbsent(land.getOwnerUUID(), id -> {
             if (COLOR_POOL.isEmpty()) {
                 refill();
@@ -28,9 +28,9 @@ public class LandColors {
 
     private static void refill() {
         COLOR_POOL.clear();
-        for (Formatting fmt : Formatting.values()) {
-            if (fmt.isColor()) {
-                COLOR_POOL.add(fmt);
+        for (ChatFormatting chatFormatting : ChatFormatting.values()) {
+            if (chatFormatting.isColor()) {
+                COLOR_POOL.add(chatFormatting);
             }
         }
     }

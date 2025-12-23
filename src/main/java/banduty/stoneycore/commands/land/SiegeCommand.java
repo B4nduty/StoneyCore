@@ -7,27 +7,27 @@ import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.siege.SiegeManager.Siege;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
+import static net.minecraft.commands.Commands.argument;
 
 public class SiegeCommand {
-    public static LiteralArgumentBuilder<ServerCommandSource> registerSiege() {
+    public static LiteralArgumentBuilder<CommandSourceStack> registerSiege() {
         return literal("siege")
                 .then(literal("start")
                         .then(argument("owner", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
-                                    ServerWorld world = ctx.getSource().getWorld();
-                                    for (ServerPlayerEntity player : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
-                                        var uuid = player.getUuid();
-                                        if (LandState.get(world).getLandByOwner(uuid).isPresent()) {
+                                    ServerLevel serverLevel = ctx.getSource().getLevel();
+                                    for (ServerPlayer player : ctx.getSource().getServer().getPlayerList().getPlayers()) {
+                                        var uuid = player.getUUID();
+                                        if (LandState.get(serverLevel).getLandByOwner(uuid).isPresent()) {
                                             builder.suggest(player.getGameProfile().getName());
                                         }
                                     }
@@ -35,7 +35,7 @@ public class SiegeCommand {
                                 })
                                 .then(argument("target", StringArgumentType.word())
                                         .suggests((ctx, builder) -> {
-                                            for (ServerPlayerEntity player : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
+                                            for (ServerPlayer player : ctx.getSource().getServer().getPlayerList().getPlayers()) {
                                                 builder.suggest(player.getGameProfile().getName());
                                             }
                                             return builder.buildFuture();
@@ -48,9 +48,9 @@ public class SiegeCommand {
                 .then(literal("cancel")
                         .then(argument("owner", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
-                                    ServerWorld world = ctx.getSource().getWorld();
-                                    for (ServerPlayerEntity player : ctx.getSource().getServer().getPlayerManager().getPlayerList()) {
-                                        var uuid = player.getUuid();
+                                    ServerLevel world = ctx.getSource().getLevel();
+                                    for (ServerPlayer player : ctx.getSource().getServer().getPlayerList().getPlayers()) {
+                                        var uuid = player.getUUID();
                                         if (LandState.get(world).getLandByOwner(uuid).isPresent()) {
                                             builder.suggest(player.getGameProfile().getName());
                                         }
@@ -63,11 +63,11 @@ public class SiegeCommand {
                 );
     }
 
-    private static int start(ServerCommandSource src, String ownerName, String targetName) {
+    private static int start(CommandSourceStack src, String ownerName, String targetName) {
         UUID ownerUUID = SCCommandsHandler.getUUID(src, ownerName);
         if (ownerUUID == null) return SCCommandsHandler.error(src, "Unknown owner " + ownerName);
 
-        ServerWorld world = src.getWorld();
+        ServerLevel world = src.getLevel();
         UUID targetUUID = SCCommandsHandler.getUUID(src, targetName);
         if (targetUUID == null) return SCCommandsHandler.error(src, "Unknown target " + targetName);
 
@@ -81,15 +81,15 @@ public class SiegeCommand {
             return SCCommandsHandler.error(src, targetName + " doesn’t own a Land");
 
         SiegeManager.startSiege(world, ownerUUID, targetUUID);
-        src.sendFeedback(() -> Text.literal("Siege started by " + ownerName + " against " + targetName), true);
+        src.sendSuccess(() -> Component.literal("Siege started by " + ownerName + " against " + targetName), true);
         return 1;
     }
 
-    private static int cancel(ServerCommandSource src, String ownerName) {
+    private static int cancel(CommandSourceStack src, String ownerName) {
         UUID ownerUUID = SCCommandsHandler.getUUID(src, ownerName);
         if (ownerUUID == null) return SCCommandsHandler.error(src, "Unknown owner " + ownerName);
 
-        ServerWorld world = src.getWorld();
+        ServerLevel world = src.getLevel();
         LandState state = LandState.get(world);
         Optional<Land> ownerLandOpt = state.getLandByOwner(ownerUUID);
         if (ownerLandOpt.isEmpty())
@@ -104,18 +104,18 @@ public class SiegeCommand {
         Siege siege = siegeOpt.get();
 
         for (UUID participant : siege.attackers) {
-            ServerPlayerEntity player = world.getServer().getPlayerManager().getPlayer(participant);
-            if (player != null) SiegeManager.sendTitle(player, Text.literal("The Siege has been Cancelled"));
+            ServerPlayer player = world.getServer().getPlayerList().getPlayer(participant);
+            if (player != null) SiegeManager.sendTitle(player, Component.literal("The Siege has been Cancelled"));
         }
         for (UUID participant : siege.defenders) {
-            ServerPlayerEntity player = world.getServer().getPlayerManager().getPlayer(participant);
-            if (player != null) SiegeManager.sendTitle(player, Text.literal("The Siege has been Cancelled"));
+            ServerPlayer player = world.getServer().getPlayerList().getPlayer(participant);
+            if (player != null) SiegeManager.sendTitle(player, Component.literal("The Siege has been Cancelled"));
         }
 
-        SiegeManager.getSiegesForWorld(world).remove(siege);
-        siege.clearBossBars();
+        SiegeManager.getSiegesForLevel(world).remove(siege);
+        siege.clearBossEvents();
 
-        src.sendFeedback(() -> Text.literal("Siege involving " + ownerName + " has been cancelled"), true);
+        src.sendSuccess(() -> Component.literal("Siege involving " + ownerName + " has been cancelled"), true);
         return 1;
     }
 }

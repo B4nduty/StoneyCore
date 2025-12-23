@@ -8,13 +8,14 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.profiler.Profiler;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,30 +25,30 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListener {
-    private static final Map<Identifier, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
-    private static final Identifier RELOAD_LISTENER_ID =
-            new Identifier(StoneyCore.MOD_ID, "armor_definitions_loader");
+    private static final Map<ResourceLocation, DefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
+    private static final ResourceLocation RELOAD_LISTENER_ID =
+            new ResourceLocation(StoneyCore.MOD_ID, "armor_definitions_loader");
 
     @Override
-    public Identifier getFabricId() {
+    public ResourceLocation getFabricId() {
         return RELOAD_LISTENER_ID;
     }
 
     @Override
-    public CompletableFuture<Void> reload(Synchronizer synchronizer,
-                                          ResourceManager resourceManager,
-                                          Profiler prepareProfiler,
-                                          Profiler applyProfiler,
-                                          Executor prepareExecutor,
-                                          Executor applyExecutor) {
+    public @NotNull CompletableFuture<Void> reload(PreparationBarrier synchronizer,
+                                                   @NotNull ResourceManager resourceManager,
+                                                   @NotNull ProfilerFiller prepareProfiler,
+                                                   @NotNull ProfilerFiller applyProfiler,
+                                                   @NotNull Executor prepareExecutor,
+                                                   @NotNull Executor applyExecutor) {
         return CompletableFuture.runAsync(() -> {
             DEFINITIONS.clear();
 
-            Map<Identifier, Resource> resources =
-                    resourceManager.findResources("definitions/armor", id -> id.getPath().endsWith(".json"));
+            Map<ResourceLocation, Resource> resources =
+                    resourceManager.listResources("definitions/armor", id -> id.getPath().endsWith(".json"));
 
             resources.forEach((id, resource) -> {
-                try (InputStream stream = resource.getInputStream()) {
+                try (InputStream stream = resource.open()) {
                     JsonElement element = JsonParser.parseReader(new InputStreamReader(stream));
 
                     DataResult<DefinitionData> result =
@@ -55,7 +56,7 @@ public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListene
 
                     result.resultOrPartial(StoneyCore.LOGGER::error)
                             .ifPresent(def -> {
-                                Identifier attributeId = Identifier.of(
+                                ResourceLocation attributeId = ResourceLocation.tryBuild(
                                         id.getNamespace(),
                                         id.getPath().substring("definitions/armor/".length(), id.getPath().length() - 5)
                                 );
@@ -66,7 +67,7 @@ public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListene
                     StoneyCore.LOGGER.error("Failed to load armor definition from {}: {}", id, e.getMessage(), e);
                 }
             });
-        }, prepareExecutor).thenCompose(synchronizer::whenPrepared).thenRunAsync(() -> {
+        }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {
         }, applyExecutor);
     }
 
@@ -76,8 +77,8 @@ public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListene
     }
 
     public static DefinitionData getData(Item item) {
-        Identifier itemId = Registries.ITEM.getId(item);
-        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+        ResourceLocation definitionId = ResourceLocation.tryBuild(itemId.getNamespace(), itemId.getPath());
         return DEFINITIONS.getOrDefault(definitionId,
                 new DefinitionData(Map.of(), Map.of(), 0));
     }
@@ -88,8 +89,8 @@ public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListene
     }
 
     public static boolean containsItem(Item item) {
-        Identifier itemId = Registries.ITEM.getId(item);
-        Identifier definitionId = Identifier.of(itemId.getNamespace(), itemId.getPath());
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+        ResourceLocation definitionId = ResourceLocation.tryBuild(itemId.getNamespace(), itemId.getPath());
         return DEFINITIONS.containsKey(definitionId);
     }
 

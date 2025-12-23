@@ -157,6 +157,10 @@ public class SCConfigs {
 
     public static class LandOptions {
         @Sync(Option.SyncMode.INFORM_SERVER)
+        @Comment("Claim Land")
+        public boolean claimLand = true;
+
+        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Remove radius claim on defender death")
         public boolean removeClaimedSiege = true;
 

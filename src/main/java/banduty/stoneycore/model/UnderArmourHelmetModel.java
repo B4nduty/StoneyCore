@@ -1,43 +1,45 @@
 	package banduty.stoneycore.model;
 
     import com.google.common.collect.ImmutableList;
+    import com.mojang.blaze3d.vertex.PoseStack;
+    import com.mojang.blaze3d.vertex.VertexConsumer;
     import net.fabricmc.api.EnvType;
     import net.fabricmc.api.Environment;
     import net.minecraft.client.model.*;
-    import net.minecraft.client.render.VertexConsumer;
-    import net.minecraft.client.render.entity.model.BipedEntityModel;
-    import net.minecraft.client.util.math.MatrixStack;
-    import net.minecraft.entity.LivingEntity;
+    import net.minecraft.client.model.geom.ModelPart;
+    import net.minecraft.client.model.geom.PartPose;
+    import net.minecraft.client.model.geom.builders.*;
+    import net.minecraft.world.entity.LivingEntity;
 
-	@Environment(EnvType.CLIENT)
-	public class UnderArmourHelmetModel extends BipedEntityModel<LivingEntity> {
+    @Environment(EnvType.CLIENT)
+	public class UnderArmourHelmetModel extends HumanoidModel<LivingEntity> {
 		private final ModelPart armorHead;
 		public UnderArmourHelmetModel(ModelPart root) {
 			super(root);
-			this.setVisible(false);
+			this.setAllVisible(false);
 			this.armorHead = root.getChild("armorHead");
 		}
 
-		@Override
-		protected Iterable<ModelPart> getHeadParts() {
+        @Override
+        protected Iterable<ModelPart> headParts() {
 			return ImmutableList.of(this.armorHead);
 		}
 
 		@Override
-		protected Iterable<ModelPart> getBodyParts() {
+        protected Iterable<ModelPart> bodyParts() {
 			return ImmutableList.of();
 		}
 
-		public static TexturedModelData getTexturedModelData() {
-			ModelData modelData = BipedEntityModel.getModelData(Dilation.NONE, 0f);
-			ModelPartData modelPartData = modelData.getRoot();
-			modelPartData.addChild("armorHead", ModelPartBuilder.create().uv(32, 64).cuboid(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, new Dilation(0.55F)), ModelTransform.pivot(0.0F, 0.0F, 0.0F));
-			return TexturedModelData.of(modelData, 128, 128);
+		public static LayerDefinition getTexturedModelData() {
+            MeshDefinition modelData = HumanoidModel.createMesh(CubeDeformation.NONE, 0f);
+            PartDefinition modelPartData = modelData.getRoot();
+			modelPartData.addOrReplaceChild("armorHead", CubeListBuilder.create().texOffs(32, 64).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.55F)), PartPose.offset(0.0F, 0.0F, 0.0F));
+			return LayerDefinition.create(modelData, 128, 128);
 		}
 
-		@Override
-		public void render(MatrixStack matrices, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
-			this.armorHead.copyTransform(this.head);
+        @Override
+		public void renderToBuffer(PoseStack matrices, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
+			this.armorHead.copyFrom(this.head);
 			this.armorHead.render(matrices, vertexConsumer, light, overlay, red, green, blue, alpha);
 		}
 	}
