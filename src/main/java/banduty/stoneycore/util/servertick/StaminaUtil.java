@@ -14,6 +14,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class StaminaUtil {
@@ -65,7 +66,11 @@ public class StaminaUtil {
         double foodLevel = entity instanceof Player player ? player.getFoodData().getFoodLevel() : 20;
         double health = entity.getHealth();
 
-        Map<String, Double> vars = Map.of("foodLevel", foodLevel, "health", health);
+        Map<String, Double> vars = new HashMap<>(Map.of(
+                "foodLevel", foodLevel,
+                "health", health
+        ));
+
         int recoveryRate = Math.max(1, (int) StrEq.evaluate(config.staminaRecoveryFormula(), vars));
 
         if (entity.tickCount % recoveryRate != 0) return;
