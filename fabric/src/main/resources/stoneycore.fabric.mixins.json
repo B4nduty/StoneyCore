@@ -9,6 +9,7 @@
     "FPlayerMixin"
   ],
   "client": [
+    "BipedEntityModelMixin"
   ],
   "server": [
   ],

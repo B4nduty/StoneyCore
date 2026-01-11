@@ -2,7 +2,6 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.lands.util.LandClientState;
 import banduty.stoneycore.platform.ClientPlatform;
-import banduty.stoneycore.platform.Services;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;

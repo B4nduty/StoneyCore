@@ -20,7 +20,6 @@
     "VindicatorEntityMixin"
   ],
   "client": [
-    "BipedEntityModelMixin",
     "CameraAccessor",
     "CameraMixin",
     "GameRendererAccessor",

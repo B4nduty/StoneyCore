@@ -12,7 +12,6 @@ repositories {
     maven { url 'https://maven.ladysnake.org/releases' }
     maven { url 'https://maven.su5ed.dev/releases' }
     maven { url 'https://maven.jamieswhiteshirt.com/libs-release' }
-    maven { url 'https://maven.fabricmc.net' }
     maven { url 'https://maven.parchmentmc.org' }
     maven { url 'https://dvs1.progwml6.com/files/maven/' }
     maven { url 'https://maven.blamejared.com/' }
@@ -58,19 +57,12 @@ legacyForge {
     runs {
         client {
             client()
-            systemProperty 'mixin.env.remapRefMap', 'true'
-            systemProperty 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
         }
         data {
             data()
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-            systemProperty 'mixin.env.remapRefMap', 'true'
-            systemProperty 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
         }
         server {
             server()
-            systemProperty 'mixin.env.remapRefMap', 'true'
-            systemProperty 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
         }
     }
 
@@ -86,9 +78,11 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 dependencies {
     modApi "dev.architectury:architectury-forge:${architectury}"
 
-    implementation "io.wispforest:accessories-neoforge:${accessories}"
+    modImplementation "io.wispforest:accessories-neoforge:${accessories}"
+    compileOnly "io.wispforest:accessories-neoforge:${accessories}"
 
-    implementation "dev.kosmx.player-anim:player-animation-lib-forge:${player_anim}"
+    modImplementation "dev.kosmx.player-anim:player-animation-lib-forge:${player_anim}"
+    compileOnly "dev.kosmx.player-anim:player-animation-lib-forge:${player_anim}"
 
     modCompileOnly "maven.modrinth:better-combat:${bettercombat}-forge"
 
@@ -103,10 +97,11 @@ dependencies {
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 
-    implementation "blue.endless:jankson:1.2.3"
+    modImplementation "blue.endless:jankson:1.2.3"
     compileOnly "org.jetbrains:annotations:24.0.1"
 
-    implementation(project(':streq'))
+    modImplementation(project(':streq'))
+    compileOnly(project(':streq'))
 }
 
 jar {

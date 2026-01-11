@@ -55,7 +55,7 @@ public class ForgeOutlineClaimRenderer implements OutlineClaimRendererHelper {
 
     @Override
     public void sendClearPacket(ServerPlayer player) {
-        ModMessages.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OutlineClaimS2CPacket(null));
+        ModMessages.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OutlineClaimS2CPacket(List.of()));
     }
 
     @Override
