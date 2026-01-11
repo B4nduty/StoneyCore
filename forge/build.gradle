@@ -1,0 +1,117 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.neoforged.moddev.legacyforge'
+}
+
+repositories {
+    maven { url 'https://maven.shedaniel.me' }
+    maven { url 'https://maven.wispforest.io/releases' }
+    maven { url 'https://maven.terraformersmc.com/releases' }
+    maven { url 'https://maven.kosmx.dev/' }
+    maven { url 'https://api.modrinth.com/maven' }
+    maven { url 'https://maven.ladysnake.org/releases' }
+    maven { url 'https://maven.su5ed.dev/releases' }
+    maven { url 'https://maven.jamieswhiteshirt.com/libs-release' }
+    maven { url 'https://maven.fabricmc.net' }
+    maven { url 'https://maven.parchmentmc.org' }
+    maven { url 'https://dvs1.progwml6.com/files/maven/' }
+    maven { url 'https://maven.blamejared.com/' }
+    maven { url 'https://modmaven.dev' }
+
+    exclusiveContent {
+        forRepository {
+            maven { url 'https://cursemaven.com' }
+        }
+        filter {
+            includeGroup 'curse.maven'
+        }
+    }
+
+    maven {
+        url 'https://maven.jamieswhiteshirt.com/libs-release'
+        content {
+            includeGroup 'com.jamieswhiteshirt'
+        }
+    }
+}
+
+mixin {
+    add(sourceSets.main, "${mod_id}.refmap.json")
+
+    config("${mod_id}.mixins.json")
+    config("${mod_id}.forge.mixins.json")
+}
+
+legacyForge {
+    version = "${minecraft_version}-${forge_version}"
+
+    validateAccessTransformers = true
+
+    def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers = ["src/main/resources/META-INF/accesstransformer.cfg"]
+    }
+    parchment {
+        minecraftVersion = parchment_minecraft
+        mappingsVersion = parchment_version
+    }
+    runs {
+        client {
+            client()
+            systemProperty 'mixin.env.remapRefMap', 'true'
+            systemProperty 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            systemProperty 'mixin.env.remapRefMap', 'true'
+            systemProperty 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+        }
+        server {
+            server()
+            systemProperty 'mixin.env.remapRefMap', 'true'
+            systemProperty 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+sourceSets.main.resources.srcDir 'src/generated/resources'
+
+dependencies {
+    modApi "dev.architectury:architectury-forge:${architectury}"
+
+    implementation "io.wispforest:accessories-neoforge:${accessories}"
+
+    implementation "dev.kosmx.player-anim:player-animation-lib-forge:${player_anim}"
+
+    modCompileOnly "maven.modrinth:better-combat:${bettercombat}-forge"
+
+    modCompileOnly "me.shedaniel:RoughlyEnoughItems-api-forge:${rei}"
+
+    modCompileOnly "mezz.jei:jei-${minecraft_version}-forge:${jei}"
+    modCompileOnlyApi "mezz.jei:jei-${minecraft_version}-forge-api:${jei}"
+    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei}"
+
+    modApi "me.shedaniel.cloth:cloth-config-forge:${cloth_config}"
+
+    compileOnly project(":common")
+    annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
+
+    implementation "blue.endless:jankson:1.2.3"
+    compileOnly "org.jetbrains:annotations:24.0.1"
+
+    implementation(project(':streq'))
+}
+
+jar {
+    finalizedBy('reobfJar')
+    manifest.attributes([
+            "MixinConfigs": "${mod_id}.mixins.json,${mod_id}.forge.mixins.json"
+    ])
+}

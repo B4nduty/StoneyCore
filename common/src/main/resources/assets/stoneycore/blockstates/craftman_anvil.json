@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "stoneycore:block/craftman_anvil" },
+    "facing=east": { "model": "stoneycore:block/craftman_anvil", "y": 90 },
+    "facing=south": { "model": "stoneycore:block/craftman_anvil", "y": 180 },
+    "facing=west": { "model": "stoneycore:block/craftman_anvil", "y": 270 }
+  }
+}

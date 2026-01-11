@@ -1,0 +1,20 @@
+{
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "model": "stoneycore:item/tongs_hotiron",
+      "predicate": {
+        "minecraft:hotiron": 1.0
+      }
+    },
+    {
+      "model": "stoneycore:item/tongs_finished",
+      "predicate": {
+        "minecraft:finished": 1.0
+      }
+    }
+  ],
+  "textures": {
+    "layer0": "stoneycore:item/tongs"
+  }
+}

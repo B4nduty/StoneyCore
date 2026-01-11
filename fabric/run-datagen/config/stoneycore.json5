@@ -1,0 +1,80 @@
+{
+	"combatOptions": {
+		// Realistic Combat
+		"getRealisticCombat": true,
+		// Time (In Ticks) to Toggle Visor
+		"getToggleVisorTime": 10,
+		// Parry
+		"getParry": true,
+		// Max Base Stamina (0 or less disables)
+		"maxBaseStamina": 20.0,
+		// Stamina Recovery Formula
+		"staminaRecoveryFormula": "10 - (foodLevel + health) / 5",
+		// Blocking Stamina Constant
+		"blockingStaminaConstant": 0.01,
+		// On Block Stamina Constant
+		"onBlockStaminaConstant": 0.03,
+		// On Parry Stamina Constant
+		"onParryStaminaConstant": 0.025,
+		// Sprinting Stamina Constant
+		"sprintingStaminaConstant": 0.04,
+		// Jumping Stamina Constant
+		"jumpingStaminaConstant": 0.01,
+		// Swimming Stamina Constant
+		"swimmingStaminaConstant": 0.02,
+		// Attack Stamina Constant
+		"attackStaminaConstant": 0.02,
+		// Stamina Time to Replenish after Using
+		"getStaminaRecoverTime": 60
+	},
+	"visualOptions": {
+		// Damage Indicator
+		"getDamageIndicator": false,
+		// Visored Helmet Overlay
+		"getVisoredHelmet": true,
+		// Visored Helmet Overlay Alpha in Creative
+		"getVisoredHelmetAlpha": 0.4000000059604645,
+		// Low Stamina Indicator
+		"getLowStaminaIndicator": true,
+		// Noise Effect in Low Stamina Indicator
+		"getNoiseEffect": true,
+		// Muzzles Smoke Particles Time Active (In Seconds)
+		"getMuzzlesSmokeParticlesTime": 60,
+		// Stamina Bar Y Offset
+		"getStaminaBarYOffset": 0,
+		// Hex Color Too/Far Close
+		"hexColorTooFarClose": 16777215,
+		// Hex Color Effective
+		"hexColorEffective": 13352291,
+		// Hex Color Critical
+		"hexColorCritical": 16730441,
+		// Hex Color Maximum
+		"hexColorMaximum": 16777215,
+		// Player waves arms when in land under siege and not participant
+		"armWave": true,
+		// Claim Outline Render Hex Color
+		"claimOutlineColor": 16777088
+	},
+	"technicalOptions": {
+		/* Max Work for Claim Worker per tick
+		   Lower numbers will make the claim slower,
+		   but it will "increase" the performance.
+		*/
+		"maxWorkPerTick": 5000,
+		// Max Land Expand Radius
+		"maxLandExpandRadius": -1,
+		/* Break or Remove Blocks on destroy with siege engines
+		   Break = False
+		   Remove = True
+		*/
+		"breakOrRemoveSiegeDestroy": false
+	},
+	"landOptions": {
+		// Claim Land
+		"claimLand": true,
+		// Remove radius claim on defender death
+		"removeClaimedSiege": true,
+		// Hunger inside a Siege
+		"hungerSiege": true
+	}
+}

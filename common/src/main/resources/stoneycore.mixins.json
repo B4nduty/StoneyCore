@@ -1,0 +1,41 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "banduty.stoneycore.mixin",
+  "refmap": "${mod_id}.refmap.json",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "AbstractArrowAccessor",
+    "AbstractBlockMixin",
+    "FoodDataMixin",
+    "ItemEntityMixin",
+    "ItemMixin",
+    "LivingEntityAccessor",
+    "LivingEntityMixin",
+    "MobEntityAccessor",
+    "PersistentProjectileEntityMixin",
+    "PlayerMixin",
+    "SpawnHelperMixin",
+    "StairBlockMixin",
+    "VindicatorEntityMixin"
+  ],
+  "client": [
+    "BipedEntityModelMixin",
+    "CameraAccessor",
+    "CameraMixin",
+    "GameRendererAccessor",
+    "GameRendererMixin",
+    "GuiMixin",
+    "HorseModelMixin",
+    "ItemInHandRendererMixin",
+    "ItemRendererMixin",
+    "MinecraftClientMixin",
+    "PlayerEntityRendererMixin"
+  ],
+  "server": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
+
