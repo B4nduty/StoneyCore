@@ -16,20 +16,19 @@ public enum SCTags {
      * You will need to make another model file with the name "your_item_3d.json",
      * <p>
      * Mixin {@link ModelBakery} and Inject in method ModelBakery#init:
-     *  <pre>
-     *   {@code
-     *   @Inject(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/model/ModelLoader;addModel(Lnet/minecraft/client/util/ModelIdentifier;)V", ordinal = 3, shift = At.Shift.AFTER))
-     *   public void mod_id$add3dModels(BlockColors blockColors, Profiler profiler, Map<Identifier, JsonUnbakedModel> jsonUnbakedModels, Map<Identifier, List<ModelLoader.SourceTrackedData>> blockStates, CallbackInfo ci) {
-     *       String[] modelNames = {
-     *           "your_item_3d",
-     *           // Add other model names here
-     *       };
+     * <pre>{@code
+     * @Inject(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/model/ModelLoader;addModel(Lnet/minecraft/client/util/ModelIdentifier;)V", ordinal = 3, shift = At.Shift.AFTER))
+     * public void mod_id$add3dModels(BlockColors blockColors, Profiler profiler, Map<Identifier, JsonUnbakedModel> jsonUnbakedModels, Map<Identifier, List<ModelLoader.SourceTrackedData>> blockStates, CallbackInfo ci) {
+     *     String[] modelNames = {
+     *         "your_item_3d",
+     *         // Add other model names here
+     *     };
      *
-     *       for (String modelName : modelNames) {
-     *           this.addModel(new ModelIdentifier(yourModId, modelName, "inventory"));
-     *       }
-     *   }
-     *   </pre>
+     *     for (String modelName : modelNames) {
+     *         this.addModel(new ModelIdentifier(yourModId, modelName, "inventory"));
+     *     }
+     * }
+     * }</pre>
      */
     WEAPONS_3D("weapons_3d"),
     /**
@@ -68,20 +67,19 @@ public enum SCTags {
      * You will need to make another model file with the name "your_item_icon.json"
      * <p>
      * Mixin {@link ModelBakery} and Inject in method ModelBakery#init:
-     * <pre>
-     * {@code
+     * <pre>{@code
      * @Inject(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/model/ModelLoader;addModel(Lnet/minecraft/client/util/ModelIdentifier;)V", ordinal = 3, shift = At.Shift.AFTER))
      * public void mod_id$add3dModels(BlockColors blockColors, Profiler profiler, Map<Identifier, JsonUnbakedModel> jsonUnbakedModels, Map<Identifier, List<ModelLoader.SourceTrackedData>> blockStates, CallbackInfo ci) {
-     *          String[] modelNames = {
-     *              "your_item_icon",
-     *              // Add other model names here
-     *          };
+     *     String[] modelNames = {
+     *         "your_item_icon",
+     *         // Add other model names here
+     *     };
      *
-     *          for (String modelName : modelNames) {
-     *              this.addModel(new ModelIdentifier(KnightsHeraldry.MOD_ID, modelName, "inventory"));
-     *          }
-     *}
-     *</pre>
+     *     for (String modelName : modelNames) {
+     *         this.addModel(new ModelIdentifier(KnightsHeraldry.MOD_ID, modelName, "inventory"));
+     *     }
+     * }
+     * }</pre>
      */
     GEO_2D_ITEMS("geo_2d_items"),
     BROKEN_WEAPONS("broken_weapons"),

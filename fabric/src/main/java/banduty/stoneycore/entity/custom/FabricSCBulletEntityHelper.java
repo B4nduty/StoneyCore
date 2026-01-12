@@ -7,6 +7,6 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 public class FabricSCBulletEntityHelper implements SCBulletEntityHelper {
     @Override
     public EntityType<? extends AbstractArrow> getBulletEntity() {
-        return ModEntities.SC_BULLET.get();
+        return ModEntities.SC_BULLET;
     }
 }

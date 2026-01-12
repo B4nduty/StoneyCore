@@ -44,7 +44,11 @@ public class StoneyCoreFabric implements ModInitializer {
         SCItems.registerItems();
         ModEntities.registerEntities();
         ModMessages.registerC2SPackets();
-        ModScreenHandlers.registerScreenHandlers();
+        ModScreenHandlers.registerMenu();
+        ModBlocks.registerBlocks();
+        ModBlockEntities.registerBlockEntities();
+        ModParticles.registerParticles();
+
         ServerTickEvents.START_SERVER_TICK.register(new StartTickHandler());
         PlayerBlockBreakEvents.AFTER.register(new PlayerBlockBreakAfterHandler());
         PlayerBlockBreakEvents.BEFORE.register(new PlayerBlockBreakBeforeHandler());
@@ -55,9 +59,6 @@ public class StoneyCoreFabric implements ModInitializer {
         PlayerNameTagEvents.EVENT.register(new PlayerNameTagHandler());
         CraftingPreviewCallback.EVENT.register(new CraftingPreviewHandler());
         CraftingPreviewCallback.EVENT.register(new ManuscriptCraftingHandler());
-        ModBlocks.registerBlocks();
-        ModParticles.registerParticles();
-        ModBlockEntities.registerBlockEntities();
         CommandRegistrationCallback.EVENT.register(new FabricSCCommandsHandler());
 
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new WeaponDefinitionsLoader());

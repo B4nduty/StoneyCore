@@ -1,24 +1,24 @@
 package banduty.stoneycore.particle;
 
 import banduty.stoneycore.StoneyCore;
-import dev.architectury.registry.registries.DeferredRegister;
-import dev.architectury.registry.registries.RegistrySupplier;
 import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes;
-import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.Registry;
 import net.minecraft.core.particles.SimpleParticleType;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 
 public interface ModParticles {
-    DeferredRegister<ParticleType<?>> PARTICLE_TYPES =
-            DeferredRegister.create(StoneyCore.MOD_ID, Registries.PARTICLE_TYPE);
+    SimpleParticleType MUZZLES_SMOKE_PARTICLE =
+            registerSimpleParticleType("muzzles_smoke_particle");
+    SimpleParticleType MUZZLES_FLASH_PARTICLE =
+            registerSimpleParticleType("muzzles_flash_particle");
 
-    RegistrySupplier<SimpleParticleType> MUZZLES_SMOKE_PARTICLE =
-            PARTICLE_TYPES.register("muzzles_smoke_particle", FabricParticleTypes::simple);
-    RegistrySupplier<SimpleParticleType> MUZZLES_FLASH_PARTICLE =
-            PARTICLE_TYPES.register("muzzles_flash_particle", FabricParticleTypes::simple);
+    private static SimpleParticleType registerSimpleParticleType(String name) {
+        SimpleParticleType particleType = FabricParticleTypes.simple();
+        return Registry.register(BuiltInRegistries.PARTICLE_TYPE, new ResourceLocation(StoneyCore.MOD_ID, name), particleType);
+    }
 
     static void registerParticles() {
-        PARTICLE_TYPES.register();
         StoneyCore.LOG.info("Registering Particles for " + StoneyCore.MOD_ID);
     }
 }

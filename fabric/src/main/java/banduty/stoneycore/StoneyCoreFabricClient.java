@@ -60,7 +60,7 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         ItemTooltipCallback.EVENT.register(new ItemTooltipHandler());
         ClientTickEvents.END_CLIENT_TICK.register(new ClientTickHandler());
         KeyInputHandler.register();
-        EntityRendererRegistry.register(ModEntities.SC_BULLET.get(), SCBulletEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SC_BULLET, SCBulletEntityRenderer::new);
         for (Item item : BuiltInRegistries.ITEM) {
             if (((item instanceof SCAccessoryItem || item instanceof ISCUnderArmor) && item instanceof DyeableLeatherItem dyeableItem)) {
                 ColorProviderRegistry.ITEM.register((stack, tintIndex) ->
@@ -92,12 +92,12 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                                 !(HotIron.getTargetStack(Tongs.getTargetStack(stack)).isEmpty()) ? 1.0F : 0.0F);
             }
         }
-        ArmorRenderer.register(new CrownRenderer(), SCItems.CROWN.get());
+        ArmorRenderer.register(new CrownRenderer(), SCItems.CROWN);
 
-        ParticleFactoryRegistry.getInstance().register(ModParticles.MUZZLES_SMOKE_PARTICLE.get(), MuzzlesSmokeParticle.Factory::new);
-        ParticleFactoryRegistry.getInstance().register(ModParticles.MUZZLES_FLASH_PARTICLE.get(), MuzzlesFlashParticle.Factory::new);
+        ParticleFactoryRegistry.getInstance().register(ModParticles.MUZZLES_SMOKE_PARTICLE, MuzzlesSmokeParticle.Factory::new);
+        ParticleFactoryRegistry.getInstance().register(ModParticles.MUZZLES_FLASH_PARTICLE, MuzzlesFlashParticle.Factory::new);
 
-        BlockEntityRenderers.register(ModBlockEntities.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(), CraftmanAnvilBlockRenderer::new);
+        BlockEntityRenderers.register(ModBlockEntities.CRAFTMAN_ANVIL_BLOCK_ENTITY, CraftmanAnvilBlockRenderer::new);
 
         MenuScreens.register(ModScreenHandlers.BLUEPRINT_SCREEN_HANDLER, BlueprintScreen::new);
 

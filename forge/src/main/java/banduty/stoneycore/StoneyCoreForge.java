@@ -6,6 +6,7 @@ import banduty.stoneycore.config.SCConfigs;
 import banduty.stoneycore.entity.ModEntities;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.networking.ModMessages;
+import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.smithing.ModRecipes;
 import banduty.stoneycore.sounds.ModSounds;
@@ -23,17 +24,20 @@ public class StoneyCoreForge {
 
     public StoneyCoreForge() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+
         AutoConfig.register(SCConfigs.class, PartitioningSerializer.wrap(JanksonConfigSerializer::new));
         CONFIG = AutoConfig.getConfigHolder(SCConfigs.class).getConfig();
-        ModRecipes.register(modEventBus);
+
+        SCAttributes.register(modEventBus);
         ModSounds.registerSounds(modEventBus);
+        ModRecipes.register(modEventBus);
         SCItems.registerItems(modEventBus);
         ModEntities.registerEntities(modEventBus);
+        ModMessages.register();
+        ModScreenHandlers.register(modEventBus);
         ModBlocks.registerBlocks(modEventBus);
         ModBlockEntities.registerBlockEntities(modEventBus);
-        ModScreenHandlers.register(modEventBus);
-        ModMessages.register();
-        SCAttributes.register(modEventBus);
+        ModParticles.registerParticles(modEventBus);
 
         StoneyCore.LOG.info("Hello Forge world!");
         StoneyCore.init();

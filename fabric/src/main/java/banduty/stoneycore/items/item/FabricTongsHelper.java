@@ -7,6 +7,6 @@ import net.minecraft.world.item.ItemStack;
 public class FabricTongsHelper implements ITongsHelper {
     @Override
     public ItemStack getTongs(ItemStack targetStack) {
-        return new ItemStack(SCItems.TONGS.get());
+        return new ItemStack(SCItems.TONGS);
     }
 }

@@ -24,7 +24,7 @@ public class ManuscriptCraftingHandler implements CraftingPreviewCallback {
 
             if (stack.is(Items.PAPER)) {
                 paper = stack;
-            } else if (stack.is(SCItems.MANUSCRIPT.get())) {
+            } else if (stack.is(SCItems.MANUSCRIPT)) {
                 manuscript = stack;
             } else if (stack.getItem() instanceof SmithingHammer) {
                 hammer = stack;

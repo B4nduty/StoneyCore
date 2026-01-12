@@ -46,8 +46,6 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
-    modApi "dev.architectury:architectury-fabric:${architectury}"
-
     modImplementation "io.wispforest:accessories-fabric:${accessories}"
 
     include modCompileOnly("dev.kosmx.player-anim:player-animation-lib-fabric:${player_anim}")

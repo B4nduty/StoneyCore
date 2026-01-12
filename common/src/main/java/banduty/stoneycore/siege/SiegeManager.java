@@ -86,7 +86,7 @@ public class SiegeManager {
                 for (UUID uuid : defenders) {
                     ServerPlayer player = serverLevel.getServer().getPlayerList().getPlayer(uuid);
                     if (player != null) {
-                        Services.PLATFORM.sendTitle(player, Component.literal(previousRadius + " ➝ " + newRadius));
+                        Services.PLATFORM.sendTitle(player, Component.literal(previousRadius + " --> " + newRadius));
                     }
                 }
             }

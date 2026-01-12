@@ -7,6 +7,6 @@ import net.minecraft.world.item.ItemStack;
 public class FabricHotIronHelper implements IHotIronHelper {
     @Override
     public ItemStack getHotIron(ItemStack targetStack) {
-        return new ItemStack(SCItems.HOT_IRON.get());
+        return new ItemStack(SCItems.HOT_IRON);
     }
 }

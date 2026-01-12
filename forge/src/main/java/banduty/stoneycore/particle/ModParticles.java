@@ -20,7 +20,7 @@ public interface ModParticles {
             PARTICLE_TYPES.register("muzzles_flash_particle",
                     () -> new SimpleParticleType(false));
 
-    static void register(IEventBus eventBus) {
+    static void registerParticles(IEventBus eventBus) {
         PARTICLE_TYPES.register(eventBus);
         StoneyCore.LOG.info("Registering Particles for " + StoneyCore.MOD_ID);
     }

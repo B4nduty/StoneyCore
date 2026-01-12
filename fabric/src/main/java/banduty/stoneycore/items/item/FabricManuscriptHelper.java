@@ -7,6 +7,6 @@ import net.minecraft.world.item.ItemStack;
 public class FabricManuscriptHelper implements IManuscriptHelper {
     @Override
     public ItemStack getManuscript(ItemStack targetStack) {
-        return new ItemStack(SCItems.MANUSCRIPT.get());
+        return new ItemStack(SCItems.MANUSCRIPT);
     }
 }

@@ -60,7 +60,7 @@ public class UseBlockHandler implements UseBlockCallback {
         }
 
         if (player.isShiftKeyDown() && player.getMainHandItem().getItem() instanceof SmithingHammer && state.getBlock() instanceof AnvilBlock) {
-            serverLevel.setBlockAndUpdate(blockPos, ModBlocks.CRAFTMAN_ANVIL.get().defaultBlockState());
+            serverLevel.setBlockAndUpdate(blockPos, ModBlocks.CRAFTMAN_ANVIL.defaultBlockState());
             level.playSound(null, blockPos, SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 0.7f, 1.0f / (level.getRandom().nextFloat() * 0.5F + 1.0F));
             return InteractionResult.SUCCESS;
         }

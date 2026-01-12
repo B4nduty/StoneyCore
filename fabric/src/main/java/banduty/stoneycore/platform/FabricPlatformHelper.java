@@ -113,7 +113,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
 
     @Override
     public Block getCraftmanAnvil() {
-        return ModBlocks.CRAFTMAN_ANVIL.get();
+        return ModBlocks.CRAFTMAN_ANVIL;
     }
 
     @Override

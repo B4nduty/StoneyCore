@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class FabricAbstractSiegeHelper implements AbstractSiegeHelper {
     @Override
     public SoundEvent getDefaultHitGroundSoundEvent() {
-        return ModSounds.BULLET_CRACK.get();
+        return ModSounds.BULLET_CRACK;
     }
 
     @Override

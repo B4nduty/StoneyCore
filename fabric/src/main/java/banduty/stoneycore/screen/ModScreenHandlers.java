@@ -5,15 +5,18 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 
-public class ModScreenHandlers {
-    public static final MenuType<BlueprintScreenHandler> BLUEPRINT_SCREEN_HANDLER =
-            Registry.register(BuiltInRegistries.MENU,
-                    new ResourceLocation(StoneyCore.MOD_ID, "blueprint_gui"),
-                    new ExtendedScreenHandlerType<>(BlueprintScreenHandler::new));
+public interface ModScreenHandlers {
+    MenuType<BlueprintScreenHandler> BLUEPRINT_SCREEN_HANDLER =
+            registerSound("blueprint_gui", new ExtendedScreenHandlerType<>(BlueprintScreenHandler::new));
 
-    public static void registerScreenHandlers() {
-        StoneyCore.LOG.info("Registering Screen Handlers for " + StoneyCore.MOD_ID);
+    private static <T extends AbstractContainerMenu> MenuType<T> registerSound(String name, MenuType<T> menuType) {
+        return Registry.register(BuiltInRegistries.MENU, new ResourceLocation(StoneyCore.MOD_ID, name), menuType);
+    }
+
+    static void registerMenu() {
+        StoneyCore.LOG.info("Registering Menu for " + StoneyCore.MOD_ID);
     }
 }
