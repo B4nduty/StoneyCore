@@ -26,7 +26,3 @@ rootProject.name = 'StoneyCore'
 include("common")
 include("fabric")
 include("forge")
-
-
-include ':streq'
-project(':streq').projectDir = new File("C:\\bandutys-mods\\streq-mod\\common")

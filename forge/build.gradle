@@ -100,8 +100,8 @@ dependencies {
     modImplementation "blue.endless:jankson:1.2.3"
     compileOnly "org.jetbrains:annotations:24.0.1"
 
-    modImplementation(project(':streq'))
-    compileOnly(project(':streq'))
+    modImplementation "maven.modrinth:streq:${streq}"
+    compileOnly "maven.modrinth:streq:${streq}"
 }
 
 jar {

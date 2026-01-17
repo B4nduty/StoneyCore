@@ -71,7 +71,7 @@ dependencies {
     compileOnly project(":common")
     runtimeOnly project(":common")
 
-    include modImplementation(project(':streq'))
+    include modImplementation("maven.modrinth:streq:${streq}")
 }
 
 sourceSets {
