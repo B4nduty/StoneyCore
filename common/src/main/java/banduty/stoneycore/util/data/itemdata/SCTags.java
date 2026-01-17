@@ -76,7 +76,7 @@ public enum SCTags {
      *     };
      *
      *     for (String modelName : modelNames) {
-     *         this.addModel(new ModelIdentifier(KnightsHeraldry.MOD_ID, modelName, "inventory"));
+     *         this.addModel(new ModelIdentifier("yourWeaponModId", modelName, "inventory"));
      *     }
      * }
      * }</pre>

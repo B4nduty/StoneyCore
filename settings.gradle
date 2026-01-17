@@ -29,4 +29,4 @@ include("forge")
 
 
 include ':streq'
-project(':streq').projectDir = new File("C:\\Banduty's Mods\\streq-mod\\common")
+project(':streq').projectDir = new File("C:\\bandutys-mods\\streq-mod\\common")
