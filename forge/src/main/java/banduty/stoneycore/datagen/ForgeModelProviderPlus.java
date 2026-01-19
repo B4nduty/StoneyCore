@@ -39,11 +39,13 @@ public abstract class ForgeModelProviderPlus extends ItemModelProvider {
 
     protected void generateBannerPatternModels(Item item) {
         String path = BuiltInRegistries.ITEM.getKey(item).getPath();
-        String[] patterns = {"bl", "bo", "br", "bri", "bs", "bt", "bts", "cbo", "cr", "cre", "cs", "dls", "drs", "flo", "glb", "gra", "gru", "hh", "hhb", "ld", "ls", "lud", "mc", "moj", "mr", "ms", "pig", "rd", "rs", "rud", "sc", "sku", "ss", "tl", "tr", "ts", "tt", "tts", "vh", "vhr"};
+        String[] patterns = new String[]{"bl", "bo", "br", "bri", "bs", "bt", "bts", "cbo", "cr", "cre", "cs", "dls", "drs", "flo", "glb", "gra", "gru", "hh", "hhb", "ld", "ls", "lud", "mc", "moj", "mr", "ms", "pig", "rd", "rs", "rud", "sc", "sku", "ss", "tl", "tr", "ts", "tt", "tts", "vh", "vhr"};
 
-        for (String pattern : patterns) {
-            withExistingParent(path + "/" + pattern, "item/generated")
-                    .texture("layer0", modLoc("item/" + path + "/" + pattern));
+        for(String pattern : patterns) {
+            String modelLocation = "item/" + path + "/" + pattern;
+
+            this.withExistingParent(modelLocation, "item/generated")
+                    .texture("layer0", this.modLoc("item/" + path + "/" + pattern));
         }
     }
 
