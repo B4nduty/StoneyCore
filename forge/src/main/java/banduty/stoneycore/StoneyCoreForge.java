@@ -4,6 +4,7 @@ import banduty.stoneycore.block.ModBlockEntities;
 import banduty.stoneycore.block.ModBlocks;
 import banduty.stoneycore.config.SCConfigs;
 import banduty.stoneycore.entity.ModEntities;
+import banduty.stoneycore.event.AdjustAttributeModifierEvent;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
@@ -11,6 +12,7 @@ import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.smithing.ModRecipes;
 import banduty.stoneycore.sounds.ModSounds;
 import banduty.stoneycore.util.data.playerdata.SCAttributes;
+import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import me.shedaniel.autoconfig.serializer.PartitioningSerializer;
@@ -38,6 +40,8 @@ public class StoneyCoreForge {
         ModBlocks.registerBlocks(modEventBus);
         ModBlockEntities.registerBlockEntities(modEventBus);
         ModParticles.registerParticles(modEventBus);
+
+        AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
 
         StoneyCore.LOG.info("Hello Forge world!");
         StoneyCore.init();
