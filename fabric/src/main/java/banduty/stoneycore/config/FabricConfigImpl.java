@@ -1,5 +1,7 @@
 package banduty.stoneycore.config;
 
+import banduty.stoneycore.config.StoneyCoreConfig;
+
 public class FabricConfigImpl extends ConfigImpl {
     private final StoneyCoreConfig config;
 

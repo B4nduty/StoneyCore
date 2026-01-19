@@ -4,8 +4,8 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
-import banduty.stoneycore.util.data.playerdata.SCAttributes;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
@@ -20,48 +20,39 @@ public class AdjustAttributeModifierEvent {
 
     @SubscribeEvent
     public static void onItemAttributeModifier(ItemAttributeModifierEvent event) {
-        ItemStack stack = event.getItemStack();
+        updatePlayerAttributes(event.getItemStack(), event);
+    }
 
-        if (!AccessoriesDefinitionsStorage.containsItem(stack)) return;
+    private static void handleAttribute(ItemAttributeModifierEvent event, Attribute attribute, String name, double value) {
+        if (value == 0 || attribute == null) return;
 
-        updatePlayerAttributes(stack, event);
+        event.addModifier(attribute, new AttributeModifier(
+                UUID.nameUUIDFromBytes((StoneyCore.MOD_ID + ":" + name).getBytes()),
+                StoneyCore.MOD_ID + "." + name,
+                value,
+                AttributeModifier.Operation.ADDITION
+        ));
     }
 
     private static void updatePlayerAttributes(ItemStack stack, ItemAttributeModifierEvent event) {
-        var data = AccessoriesDefinitionsStorage.getData(stack);
-        var armor = data.armor();
-        var toughness = data.toughness();
+        double armor = 0;
+        double toughness = 0;
+
+        if (AccessoriesDefinitionsStorage.containsItem(stack)) {
+            var data = AccessoriesDefinitionsStorage.getData(stack);
+            armor = data.armor();
+            toughness = data.toughness();
+
+            handleAttribute(event, Services.ATTRIBUTES.getHungerDrainMultiplier(),
+                    "hunger_drain_multiplier", data.hungerDrainMultiplier());
+        }
 
         if (NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false)) {
             armor -= 1;
             toughness -= 1;
         }
 
-        if (armor != 0) {
-            event.addModifier(Attributes.ARMOR, new AttributeModifier(
-                    UUID.nameUUIDFromBytes((StoneyCore.MOD_ID + ".armor").getBytes()),
-                    StoneyCore.MOD_ID + ".armor",
-                    armor,
-                    AttributeModifier.Operation.ADDITION
-            ));
-        }
-
-        if (toughness != 0) {
-            event.addModifier(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(
-                    UUID.nameUUIDFromBytes((StoneyCore.MOD_ID + ".armor_toughness").getBytes()),
-                    StoneyCore.MOD_ID + ".armor_toughness",
-                    toughness,
-                    AttributeModifier.Operation.ADDITION
-            ));
-        }
-
-        if (data.hungerDrainMultiplier() != 0) {
-            event.addModifier(Services.ATTRIBUTES.getHungerDrainMultiplier(), new AttributeModifier(
-                    UUID.nameUUIDFromBytes((StoneyCore.MOD_ID + ".hunger_drain_multiplier").getBytes()),
-                    StoneyCore.MOD_ID + ".hunger_drain_multiplier",
-                    data.hungerDrainMultiplier(),
-                    AttributeModifier.Operation.ADDITION
-            ));
-        }
+        handleAttribute(event, Attributes.ARMOR, "armor", armor);
+        handleAttribute(event, Attributes.ARMOR_TOUGHNESS, "armor_toughness", toughness);
     }
 }

@@ -4,7 +4,6 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
-import banduty.stoneycore.util.data.playerdata.SCAttributes;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
 import io.wispforest.accessories.api.attributes.AccessoryAttributeBuilder;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
@@ -19,7 +18,6 @@ import net.minecraft.world.item.ItemStack;
 public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCallback {
     @Override
     public void adjustAttributes(ItemStack stack, SlotReference reference, AccessoryAttributeBuilder builder) {
-        if (!AccessoriesDefinitionsStorage.containsItem(stack)) return;
         updatePlayerAttributes(stack, reference, builder);
     }
 
@@ -31,9 +29,14 @@ public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCall
     }
 
     private static void updatePlayerAttributes(ItemStack stack, SlotReference reference, AccessoryAttributeBuilder builder) {
-        var data = AccessoriesDefinitionsStorage.getData(stack);
-        var armor = data.armor();
-        var toughness = data.toughness();
+        double armor = 0;
+        double toughness = 0;
+        if (AccessoriesDefinitionsStorage.containsItem(stack)) {
+            var data = AccessoriesDefinitionsStorage.getData(stack);
+            armor = data.armor();
+            toughness = data.toughness();
+            handleAttribute(reference, Services.ATTRIBUTES.getHungerDrainMultiplier(), "hunger_drain_multiplier", data.hungerDrainMultiplier(), builder);
+        }
         if (NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false)) {
             armor -= 1;
             toughness -= 1;
@@ -41,6 +44,5 @@ public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCall
 
         handleAttribute(reference, Attributes.ARMOR, "armor", armor, builder);
         handleAttribute(reference, Attributes.ARMOR_TOUGHNESS, "armor_toughness", toughness, builder);
-        handleAttribute(reference, Services.ATTRIBUTES.getHungerDrainMultiplier(), "hunger_drain_multiplier", data.hungerDrainMultiplier(), builder);
     }
 }
