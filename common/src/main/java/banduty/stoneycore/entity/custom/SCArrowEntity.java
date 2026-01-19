@@ -43,6 +43,7 @@ public abstract class SCArrowEntity extends AbstractArrow {
         return new ClientboundAddEntityPacket(this);
     }
 
+    @Override
     protected abstract ItemStack getPickupItem();
 
     @Override
