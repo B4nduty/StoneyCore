@@ -10,6 +10,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.ItemAttributeModifierEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class AdjustAttributeModifierEvent {
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onItemAttributeModifier(ItemAttributeModifierEvent event) {
         updatePlayerAttributes(event.getItemStack(), event);
     }
