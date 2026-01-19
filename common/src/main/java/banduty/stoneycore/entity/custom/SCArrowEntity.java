@@ -44,9 +44,6 @@ public abstract class SCArrowEntity extends AbstractArrow {
     }
 
     @Override
-    protected abstract ItemStack getPickupItem();
-
-    @Override
     protected void onHitEntity(EntityHitResult entityHitResult) {
         if (!(this.level() instanceof ServerLevel serverLevel)) return;
 
