@@ -1,6 +1,6 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
+import banduty.stoneycore.items.armor.ISCUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;
 import banduty.stoneycore.platform.ClientPlatform;
 import banduty.stoneycore.platform.Services;
@@ -22,6 +22,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.DyeableArmorItem;
+import net.minecraft.world.item.DyeableLeatherItem;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -74,7 +75,7 @@ public class ItemInHandRendererMixin {
 
             // Handle color if it's dyeable
             float[] color = new float[] { 1f, 1f, 1f };
-            if (chestStack.getItem() instanceof SCDyeableUnderArmor) {
+            if (chestStack.getItem() instanceof ISCUnderArmor && chestStack.getItem() instanceof DyeableLeatherItem) {
                 color = DyeUtil.getFloatDyeColor(chestStack);
             }
 

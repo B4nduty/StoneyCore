@@ -18,7 +18,8 @@ public class CrownItem extends ArmorItem {
 
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-        consumer.accept(new CrownClientExtensions() );
+        super.initializeClient(consumer);
+        consumer.accept(new CrownClientExtensions());
     }
 
     @Override

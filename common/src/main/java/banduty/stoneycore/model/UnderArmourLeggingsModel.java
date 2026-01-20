@@ -1,15 +1,21 @@
 package banduty.stoneycore.model;
 
+import banduty.stoneycore.StoneyCore;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 
 public class UnderArmourLeggingsModel extends HumanoidModel<LivingEntity> {
+	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+			new ResourceLocation(StoneyCore.MOD_ID, "under_armour_leggings"), "main");
+
 	private final ModelPart armorRightLeg;
 	private final ModelPart armorLeftLeg;
 	public UnderArmourLeggingsModel(ModelPart root) {

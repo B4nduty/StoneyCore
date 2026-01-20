@@ -101,7 +101,9 @@ dependencies {
     compileOnly "org.jetbrains:annotations:24.0.1"
 
     modImplementation "maven.modrinth:streq:${streq}"
-    compileOnly "maven.modrinth:streq:${streq}"
+    jarJar("maven.modrinth:streq:${streq}") {
+        transitive = false
+    }
 }
 
 jar {
