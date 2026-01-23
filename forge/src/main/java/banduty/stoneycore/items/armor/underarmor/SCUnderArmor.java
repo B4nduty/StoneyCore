@@ -2,6 +2,7 @@ package banduty.stoneycore.items.armor.underarmor;
 
 import banduty.stoneycore.client.SCUnderArmourRenderer;
 import banduty.stoneycore.items.armor.ISCUnderArmor;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
@@ -26,9 +27,9 @@ public class SCUnderArmor extends ArmorItem implements ISCUnderArmor {
         String materialName = this.getMaterial().toString().toLowerCase();
 
         if (type == null) {
-            return "stoneycore:textures/models/armor/" + materialName + ".png";
+            return BuiltInRegistries.ITEM.getKey(this).getNamespace() + ":textures/models/armor/" + materialName + ".png";
         } else {
-            return "stoneycore:textures/models/armor/" + materialName + "_" + type + ".png";
+            return BuiltInRegistries.ITEM.getKey(this).getNamespace() + ":textures/models/armor/" + materialName + "_" + type + ".png";
         }
     }
 }
