@@ -3,6 +3,8 @@ package banduty.stoneycore;
 import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.ModBlockEntities;
 import banduty.stoneycore.client.SCAccessoryItemRenderer;
+import banduty.stoneycore.client.SCBulletEntityRenderer;
+import banduty.stoneycore.entity.ModEntities;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.model.UnderArmourBootsModel;
 import banduty.stoneycore.model.UnderArmourChestplateModel;
@@ -49,5 +51,10 @@ public class StoneyCoreForgeClient {
         event.registerLayerDefinition(UnderArmourChestplateModel.LAYER_LOCATION, UnderArmourChestplateModel::getTexturedModelData);
         event.registerLayerDefinition(UnderArmourLeggingsModel.LAYER_LOCATION, UnderArmourLeggingsModel::getTexturedModelData);
         event.registerLayerDefinition(UnderArmourBootsModel.LAYER_LOCATION, UnderArmourBootsModel::getTexturedModelData);
+    }
+
+    @SubscribeEvent
+    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ModEntities.SC_BULLET.get(), SCBulletEntityRenderer::new);
     }
 }
