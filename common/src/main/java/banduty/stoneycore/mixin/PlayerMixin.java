@@ -76,11 +76,12 @@ public abstract class PlayerMixin {
                     value = "STORE",
                     ordinal = 0
             ),
-            name = "f")
+            index = 2
+    )
     private float stoneycore$modifyDamage(float f, Entity target) {
         if (!(target instanceof LivingEntity living) || living.level().isClientSide()) return f;
         ItemStack weaponStack = playerEntity.getMainHandItem();
-        if (Services.PLATFORM.isModLoaded("bettercombat")) SCBetterCombat.getWeaponStack(playerEntity, playerEntity.getMainHandItem());
+        if (Services.PLATFORM.isModLoaded("bettercombat")) weaponStack = SCBetterCombat.getWeaponStack(playerEntity, playerEntity.getMainHandItem());
 
         if (!WeaponDefinitionsStorage.isMelee(weaponStack)) return f;
 
