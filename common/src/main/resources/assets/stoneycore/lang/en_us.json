@@ -15,9 +15,6 @@
   "key.stoneycore.reload": "Reload",
   "key.stoneycore.toggle_visor": "Toggle Visor",
 
-  "component.tooltip.stoneycore.hungerDrain": "+%s%% Hunger Drain",
-  "component.tooltip.stoneycore.armor": "+%s Armor",
-  "component.tooltip.stoneycore.armor_toughness": "+%s Armor Toughness",
   "component.tooltip.stoneycore.freezing": "Prevents freezing",
   "component.tooltip.stoneycore.hideNameTag": "Hide Name Tag",
   "component.tooltip.stoneycore.baseDamage": "%s Base Damage",
@@ -90,5 +87,6 @@
 
   "component.warning.stoneycore.armor_needed_for_accessory": "%s requires %s to be equipped!",
 
-  "attribute.name.generic.stoneycore.hunger_drain_multiplier": "Hunger Drain Multiplier"
+  "attribute.name.generic.stoneycore.hunger_drain_multiplier": "Hunger Drain Multiplier",
+  "attribute.name.generic.stoneycore.deflect_chance": "Deflect Chance"
 }
