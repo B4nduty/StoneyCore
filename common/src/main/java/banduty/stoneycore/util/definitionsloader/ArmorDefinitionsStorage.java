@@ -42,6 +42,6 @@ public class ArmorDefinitionsStorage {
     }
 
     private static ArmorDefinitionData getDefaultData() {
-        return new ArmorDefinitionData(Map.of(), Map.of(), 0);
+        return new ArmorDefinitionData(Map.of(), 0, 0);
     }
 }

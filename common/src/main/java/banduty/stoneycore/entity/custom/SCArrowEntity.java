@@ -51,7 +51,7 @@ public abstract class SCArrowEntity extends AbstractArrow {
             if (this.getPickupItem().isEmpty()) {
                 return;
             }
-            if (DeflectChanceHelper.shouldDeflect(livingEntity, this.getPickupItem())) {
+            if (DeflectChanceHelper.shouldDeflect(livingEntity)) {
                 this.setDeltaMovement(this.getDeltaMovement().scale(0.5).scale(-1));
                 this.setBaseDamage(this.getBbHeight() * 0.5);
                 this.setYRot(this.getYRot() + 180);

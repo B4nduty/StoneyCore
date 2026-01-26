@@ -15,7 +15,6 @@
   "key.stoneycore.reload": "Reload",
   "key.stoneycore.toggle_visor": "Toggle Visor",
 
-  "component.tooltip.stoneycore.hold_shift_for_info": "Hold [Shift] for more info",
   "component.tooltip.stoneycore.hungerDrain": "+%s%% Hunger Drain",
   "component.tooltip.stoneycore.armor": "+%s Armor",
   "component.tooltip.stoneycore.armor_toughness": "+%s Armor Toughness",
@@ -35,11 +34,12 @@
   "component.tooltip.stoneycore.need_to_hold": "§1Hold §r[ %s ] §1to Recharge",
   "component.tooltip.stoneycore.bonusKnockback": "Bonus Knockback: %s",
   "component.tooltip.stoneycore.deflectChance": "Deflect chance: %s%%",
-  "component.tooltip.stoneycore.deflectChanceType": "%s Deflect chance: %s%%",
   "component.tooltip.stoneycore.coreItem": "Equip to see your claimed land",
   "component.tooltip.stoneycore.weight": "Weight: %s Kg",
   "component.tooltip.stoneycore.openVisor": "Alt to Open/Close Visor",
   "component.tooltip.stoneycore.openVisorDeflectChance": "Open Visor: -5% Deflect Chance",
+  "component.tooltip.stoneycore.openVisorArmor": "Open Visor: -1 Armor",
+  "component.tooltip.stoneycore.openVisorToughness": "Open Visor: -1 Toughness",
   "component.tooltip.stoneycore.openVisorEatDrink": "You can't §l§4eat/drink §rwith the §l§4Visor Closed",
 
   "text.config.stoneycore.title": "StoneyCore",

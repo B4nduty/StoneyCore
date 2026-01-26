@@ -42,6 +42,6 @@ public class AccessoriesDefinitionsStorage {
     }
 
     private static AccessoriesDefinitionData getDefaultData() {
-        return new AccessoriesDefinitionData(0, 0, "", 0, Map.of(), 0, new ResourceLocation("", ""));
+        return new AccessoriesDefinitionData(0, 0, "", 0, 0, 0, new ResourceLocation("", ""));
     }
 }

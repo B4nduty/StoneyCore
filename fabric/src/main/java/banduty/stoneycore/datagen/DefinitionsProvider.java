@@ -123,7 +123,7 @@ public abstract class DefinitionsProvider implements DataProvider {
                 double toughness,
                 String armorSlot,
                 double hungerDrainMultiplier,
-                Map<String, Double> deflectChance,
+                double deflectChance,
                 double weight,
                 ResourceLocation visoredHelmet
         ) {
@@ -133,7 +133,7 @@ public abstract class DefinitionsProvider implements DataProvider {
                             Codec.DOUBLE.optionalFieldOf("toughness", 0.0).forGetter(DefinitionEntry::toughness),
                             Codec.STRING.optionalFieldOf("armorSlot", "").forGetter(DefinitionEntry::armorSlot),
                             Codec.DOUBLE.optionalFieldOf("hungerDrainMultiplier", 0.0).forGetter(DefinitionEntry::hungerDrainMultiplier),
-                            Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("deflectChance", Map.of()).forGetter(DefinitionEntry::deflectChance),
+                            Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(DefinitionEntry::deflectChance),
                             Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(DefinitionEntry::weight),
                             ResourceLocation.CODEC.optionalFieldOf("visoredHelmet", new ResourceLocation("", "")).forGetter(DefinitionEntry::visoredHelmet)
                     ).apply(instance, DefinitionEntry::new)
@@ -145,7 +145,7 @@ public abstract class DefinitionsProvider implements DataProvider {
             private double toughness = 0.0;
             private String armorSlot = "";
             private double hungerDrainMultiplier = 0.0;
-            private Map<String, Double> deflectChance = new HashMap<>();
+            private double deflectChance = 0.0;
             private double weight = 0.0;
             private ResourceLocation visoredHelmet = new ResourceLocation("", "");
 
@@ -191,21 +191,8 @@ public abstract class DefinitionsProvider implements DataProvider {
                 return this;
             }
 
-            public Builder deflectChance(String damageType, double chance) {
-                this.deflectChance.put(damageType, chance);
-                return this;
-            }
-
-            public Builder deflectChance(EntityType<?> entityType, double chance) {
-                ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
-                this.deflectChance.put(entityId.toString(), chance);
-                return this;
-            }
-
-            public Builder deflectChance(double chance, EntityType<?>... entityTypes) {
-                for (EntityType<?> entityType : entityTypes) {
-                    deflectChance(entityType, chance);
-                }
+            public Builder deflectChance(double chance) {
+                this.deflectChance = chance;
                 return this;
             }
 

@@ -24,6 +24,10 @@ public interface SCAttributes {
             () -> new RangedAttribute("attribute.name.generic." + StoneyCore.MOD_ID + ".max_stamina",
                     StoneyCore.getConfig().combatOptions().maxBaseStamina(), 0.0, 1024.0).setSyncable(true));
 
+    RegistryObject<Attribute> DEFLECT_CHANCE = ATTRIBUTES.register("deflect_chance",
+            () -> new RangedAttribute("attribute.name.generic." + StoneyCore.MOD_ID + ".deflect_chance",
+                    StoneyCore.getConfig().combatOptions().maxBaseStamina(), 0.0, 1024.0).setSyncable(true));
+
     static void register(IEventBus eventBus) {
         ATTRIBUTES.register(eventBus);
         StoneyCore.LOG.info("Registered custom attributes");

@@ -1,6 +1,5 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
@@ -18,15 +17,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
-import java.util.Map;
 
 public class ItemTooltipHandler implements ItemTooltipCallback {
     @Override
@@ -93,124 +89,23 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             }
         }
 
-        boolean shiftPressed = GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS ||
-                GLFW.glfwGetKey(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
-
-        if (!shiftPressed) {
-            boolean hasAdditionalInfo = hasAdditionalTooltipInfo(stack, tooltipFlag);
-            if (hasAdditionalInfo) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.hold_shift_for_info"));
-            }
-            return;
-        }
-
-        addShiftTooltipInfo(stack, tooltipFlag, lines);
-    }
-
-    private boolean hasAdditionalTooltipInfo(ItemStack stack, TooltipFlag tooltipFlag) {
         if (ArmorDefinitionsStorage.containsItem(stack)) {
-            Map<String, Double> deflectMap = ArmorDefinitionsStorage.getData(stack).deflectChance();
-            if (!deflectMap.isEmpty()) {
-                double avg = deflectMap.values().stream()
-                        .mapToDouble(Double::doubleValue)
-                        .average()
-                        .orElse(0.0);
-                if (avg > 0) {
-                    return true;
-                }
-            }
+            double deflectChance = ArmorDefinitionsStorage.getData(stack).deflectChance();
+            if (deflectChance != 0) lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).withStyle(ChatFormatting.AQUA));
         }
 
         if (AccessoriesDefinitionsStorage.containsItem(stack)) {
-            Map<String, Double> deflectMap = AccessoriesDefinitionsStorage.getData(stack).deflectChance();
-            if (!deflectMap.isEmpty()) {
-                double avg = deflectMap.values().stream()
-                        .mapToDouble(Double::doubleValue)
-                        .average()
-                        .orElse(0.0);
-                if (avg > 0) {
-                    return true;
-                }
-            }
+            double deflectChance = AccessoriesDefinitionsStorage.getData(stack).deflectChance();
+            if (deflectChance != 0) lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).withStyle(ChatFormatting.AQUA));
         }
 
         if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.getModels(stack).visorOpen().isPresent()) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private void addShiftTooltipInfo(ItemStack stack, TooltipFlag conComponent, List<Component> lines) {
-        if (ArmorDefinitionsStorage.containsItem(stack)) {
-            Map<String, Double> deflectMap = ArmorDefinitionsStorage.getData(stack).deflectChance();
-            if (conComponent.isAdvanced()) {
-                deflectMap.forEach((key, value) -> {
-                    try {
-                        ResourceLocation id = new ResourceLocation(key);
-                        if (value != 0) {
-                            if (BuiltInRegistries.ITEM.containsKey(id)) {
-                                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChanceType",
-                                        BuiltInRegistries.ITEM.get(id).getDescription(), (int) (value * 100)).withStyle(ChatFormatting.AQUA));
-                            } else if (BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
-                                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChanceType",
-                                        BuiltInRegistries.ENTITY_TYPE.get(id).getDescription(), (int) (value * 100)).withStyle(ChatFormatting.AQUA));
-                            }
-                        }
-                    } catch (Exception e) {
-                        StoneyCore.LOG.warn("Invalid identifier in armor deflectChance map: {}", key);
-                    }
-                });
-            } else {
-                if (!deflectMap.isEmpty()) {
-                    double avg = deflectMap.values().stream()
-                            .mapToDouble(Double::doubleValue)
-                            .average()
-                            .orElse(0.0);
-                    if (avg > 0) {
-                        lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", (int) (avg * 100))
-                                .withStyle(ChatFormatting.AQUA));
-                    }
-                }
-            }
-        }
-
-        if (AccessoriesDefinitionsStorage.containsItem(stack)) {
-            Map<String, Double> deflectMap = AccessoriesDefinitionsStorage.getData(stack).deflectChance();
-            if (conComponent.isAdvanced()) {
-                deflectMap.forEach((key, value) -> {
-                    try {
-                        ResourceLocation id = new ResourceLocation(key);
-                        if (value != 0) {
-                            if (BuiltInRegistries.ITEM.containsKey(id)) {
-                                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChanceType",
-                                        BuiltInRegistries.ITEM.get(id).getDescription(), (int) (value * 100)).withStyle(ChatFormatting.AQUA));
-                            } else if (BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
-                                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChanceType",
-                                        BuiltInRegistries.ENTITY_TYPE.get(id).getDescription(), (int) (value * 100)).withStyle(ChatFormatting.AQUA));
-                            }
-                        }
-                    } catch (Exception e) {
-                        StoneyCore.LOG.warn("Invalid identifier in accessories deflectChance map: {}", key);
-                    }
-                });
-            } else {
-                if (!deflectMap.isEmpty()) {
-                    double avg = deflectMap.values().stream()
-                            .mapToDouble(Double::doubleValue)
-                            .average()
-                            .orElse(0.0);
-                    if (avg > 0) {
-                        lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", (int) (avg * 100))
-                                .withStyle(ChatFormatting.AQUA));
-                    }
-                }
-            }
-        }
-
-        if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.getModels(stack).visorOpen().isPresent()) {
-            if (NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false)) lines.add(Component.translatable("component.tooltip.stoneycore.openVisorDeflectChance").withStyle(ChatFormatting.AQUA));
             lines.add(Component.translatable("component.tooltip.stoneycore.openVisor").withStyle(ChatFormatting.WHITE));
+            if (!NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false)) {
+                lines.add(Component.translatable("component.tooltip.stoneycore.openVisorDeflectChance").withStyle(ChatFormatting.AQUA));
+                lines.add(Component.translatable("component.tooltip.stoneycore.openVisorArmor").withStyle(ChatFormatting.AQUA));
+                lines.add(Component.translatable("component.tooltip.stoneycore.openVisorToughness").withStyle(ChatFormatting.AQUA));
+            }
         }
     }
 }

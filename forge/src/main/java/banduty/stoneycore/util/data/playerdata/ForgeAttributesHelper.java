@@ -17,4 +17,9 @@ public class ForgeAttributesHelper implements AttributesHelper {
     public Attribute getMaxStamina() {
         return SCAttributes.MAX_STAMINA.get();
     }
+
+    @Override
+    public Attribute getDeflectChance() {
+        return SCAttributes.DEFLECT_CHANCE.get();
+    }
 }

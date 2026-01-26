@@ -6,4 +6,5 @@ public interface AttributesHelper {
     Attribute getHungerDrainMultiplier();
     Attribute getStamina();
     Attribute getMaxStamina();
+    Attribute getDeflectChance();
 }

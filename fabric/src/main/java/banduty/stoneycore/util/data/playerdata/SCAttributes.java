@@ -11,6 +11,7 @@ public interface SCAttributes {
     Attribute HUNGER_DRAIN_MULTIPLIER = registerAttribute("hunger_drain_multiplier", 0.0, -1024.0, 1024.0);
     Attribute STAMINA = registerAttribute("stamina", 0.0, 0.0, 1024.0);
     Attribute MAX_STAMINA = registerAttribute("max_stamina", StoneyCore.getConfig().combatOptions().maxBaseStamina(), 0.0, 1024.0);
+    Attribute DEFLECT_CHANCE = registerAttribute("deflect_chance", 0.0, -1024.0, 1024.0);
 
     private static Attribute registerAttribute(final String name, final double base, final double min, final double max) {
         return Registry.register(BuiltInRegistries.ATTRIBUTE, new ResourceLocation(StoneyCore.MOD_ID, name),

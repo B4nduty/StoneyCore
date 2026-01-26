@@ -167,7 +167,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         ItemStack weaponStack = ItemStack.EMPTY;
         if (Services.PLATFORM.isModLoaded("bettercombat")) SCBetterCombat.getWeaponStack(source.getEntity(), ItemStack.EMPTY);
 
-        if (DeflectChanceHelper.shouldDeflect(livingEntity, weaponStack)) {
+        if (DeflectChanceHelper.shouldDeflect(livingEntity)) {
             cir.cancel();
         }
 

@@ -17,4 +17,9 @@ public class FabricAttributesHelper implements AttributesHelper {
     public Attribute getMaxStamina() {
         return SCAttributes.MAX_STAMINA;
     }
+
+    @Override
+    public Attribute getDeflectChance() {
+        return SCAttributes.DEFLECT_CHANCE;
+    }
 }

@@ -31,7 +31,7 @@ public abstract class PersistentProjectileEntityMixin {
         }
 
         if (projectileEntity != null) {
-            if (entityHitResult.getEntity() instanceof LivingEntity livingEntity && DeflectChanceHelper.shouldDeflect(livingEntity, getPickupItem())) {
+            if (entityHitResult.getEntity() instanceof LivingEntity livingEntity && DeflectChanceHelper.shouldDeflect(livingEntity)) {
                 projectileEntity.setDeltaMovement(projectileEntity.getDeltaMovement().scale(0.5).scale(-1));
                 projectileEntity.setBaseDamage(projectileEntity.getBaseDamage() * 0.5);
                 projectileEntity.setYRot(projectileEntity.getYRot() + 180);
