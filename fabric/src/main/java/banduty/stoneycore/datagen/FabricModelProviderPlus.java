@@ -52,7 +52,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
                     List<String> modelNames = new ArrayList<>();
 
                     for (OverrideCondition condition : combination) {
-                        combinedPredicate.addProperty(condition.predicateKey, condition.predicateValue);
+                        combinedPredicate.addProperty(condition.predicateKey.toString(), condition.predicateValue);
                         modelNames.add(condition.getModelName(path));
                     }
 
@@ -200,9 +200,9 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
     }
 
     private void addOverride(JsonArray overrides, String namespace,
-                             String predicateKey, Number predicateValue, String modelName) {
+                             ResourceLocation predicateKey, Number predicateValue, String modelName) {
         JsonObject predicate = new JsonObject();
-        predicate.addProperty(predicateKey, predicateValue);
+        predicate.addProperty(predicateKey.toString(), predicateValue);
         addOverride(overrides, namespace, predicate, modelName);
     }
 
@@ -247,9 +247,9 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         model.create(modelId, texture, itemModelGenerator.output);
     }
 
-    public record OverrideCondition(String predicateKey, Number predicateValue) {
+    public record OverrideCondition(ResourceLocation predicateKey, Number predicateValue) {
         String getModelName(String basePath) {
-            return basePath + "_" + predicateKey;
+            return basePath + "_" + predicateKey.getPath();
         }
     }
 }

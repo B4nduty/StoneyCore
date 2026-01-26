@@ -52,7 +52,7 @@ public abstract class ForgeModelProviderPlus extends ItemModelProvider {
                     .texture("layer0", modLoc("item/" + modelName));
 
             mainBuilder.override()
-                    .predicate(new ResourceLocation(condition.predicateKey), condition.predicateValue.floatValue())
+                    .predicate(condition.predicateKey, condition.predicateValue.floatValue())
                     .model(getExistingFile(modLoc("item/" + modelName)))
                     .end();
         }
@@ -75,7 +75,7 @@ public abstract class ForgeModelProviderPlus extends ItemModelProvider {
 
             // Add the override logic to the base model
             builder.override()
-                    .predicate(new ResourceLocation(condition.predicateKey), condition.predicateValue.floatValue())
+                    .predicate(condition.predicateKey, condition.predicateValue.floatValue())
                     .model(getExistingFile(modLoc("item/" + modelName)))
                     .end();
         }
@@ -93,9 +93,9 @@ public abstract class ForgeModelProviderPlus extends ItemModelProvider {
         }
     }
 
-    public static record OverrideCondition(String predicateKey, Number predicateValue) {
+    public record OverrideCondition(ResourceLocation predicateKey, Number predicateValue) {
         String getModelName(String basePath) {
-            return basePath + "_" + this.predicateKey;
+            return basePath + "_" + this.predicateKey.getPath();
         }
     }
 }

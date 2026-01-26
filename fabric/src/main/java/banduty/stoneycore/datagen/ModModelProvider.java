@@ -1,10 +1,12 @@
 package banduty.stoneycore.datagen;
 
+import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.SCItems;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.data.models.BlockModelGenerators;
 import net.minecraft.data.models.ItemModelGenerators;
 import net.minecraft.data.models.model.ModelTemplates;
+import net.minecraft.resources.ResourceLocation;
 
 public class ModModelProvider extends FabricModelProviderPlus {
     public ModModelProvider(FabricDataOutput output) {
@@ -24,10 +26,10 @@ public class ModModelProvider extends FabricModelProviderPlus {
         itemModelGenerator.generateFlatItem(SCItems.MANUSCRIPT, ModelTemplates.FLAT_ITEM);
 
         registerItemWConditions(SCItems.TONGS, ModelTemplates.FLAT_ITEM, itemModelGenerator, false,
-                new OverrideCondition("hotiron", 1),
-                new OverrideCondition("finished", 1));
+                new OverrideCondition(new ResourceLocation(StoneyCore.MOD_ID, "hotiron"), 1),
+                new OverrideCondition(new ResourceLocation(StoneyCore.MOD_ID,"finished"), 1));
 
         registerItemWConditions(SCItems.HOT_IRON, ModelTemplates.FLAT_ITEM, itemModelGenerator,
-                new OverrideCondition("finished", 1));
+                new OverrideCondition(new ResourceLocation(StoneyCore.MOD_ID,"finished"), 1));
     }
 }
