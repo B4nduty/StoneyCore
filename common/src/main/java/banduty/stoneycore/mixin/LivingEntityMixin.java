@@ -90,7 +90,8 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             method = "createLivingAttributes",
             require = 1, allow = 1, at = @At("RETURN"))
     private static void stoneycore$addAttributes(final CallbackInfoReturnable<AttributeSupplier.Builder> info) {
-        info.getReturnValue().add(Services.ATTRIBUTES.getHungerDrainMultiplier()).add(Services.ATTRIBUTES.getStamina()).add(Services.ATTRIBUTES.getMaxStamina());
+        info.getReturnValue().add(Services.ATTRIBUTES.getHungerDrainMultiplier()).add(Services.ATTRIBUTES.getStamina())
+                .add(Services.ATTRIBUTES.getMaxStamina()).add(Services.ATTRIBUTES.getDeflectChance());
     }
 
     @Unique

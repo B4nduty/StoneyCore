@@ -26,7 +26,7 @@ public interface SCAttributes {
 
     RegistryObject<Attribute> DEFLECT_CHANCE = ATTRIBUTES.register("deflect_chance",
             () -> new RangedAttribute("attribute.name.generic." + StoneyCore.MOD_ID + ".deflect_chance",
-                    StoneyCore.getConfig().combatOptions().maxBaseStamina(), 0.0, 1024.0).setSyncable(true));
+                    StoneyCore.getConfig().combatOptions().maxBaseStamina(), -1024.0, 1024.0).setSyncable(true));
 
     static void register(IEventBus eventBus) {
         ATTRIBUTES.register(eventBus);

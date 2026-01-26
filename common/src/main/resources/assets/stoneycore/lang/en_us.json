@@ -33,7 +33,6 @@
   "component.tooltip.stoneycore.right_click-replant": "§4Right-Click Crops §rto §lHarvest §r& §lReplant",
   "component.tooltip.stoneycore.need_to_hold": "§1Hold §r[ %s ] §1to Recharge",
   "component.tooltip.stoneycore.bonusKnockback": "Bonus Knockback: %s",
-  "component.tooltip.stoneycore.deflectChance": "Deflect chance: %s%%",
   "component.tooltip.stoneycore.coreItem": "Equip to see your claimed land",
   "component.tooltip.stoneycore.weight": "Weight: %s Kg",
   "component.tooltip.stoneycore.openVisor": "Alt to Open/Close Visor",

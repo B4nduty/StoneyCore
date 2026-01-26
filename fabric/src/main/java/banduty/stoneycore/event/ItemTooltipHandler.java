@@ -89,16 +89,6 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             }
         }
 
-        if (ArmorDefinitionsStorage.containsItem(stack)) {
-            double deflectChance = ArmorDefinitionsStorage.getData(stack).deflectChance();
-            if (deflectChance != 0) lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).withStyle(ChatFormatting.AQUA));
-        }
-
-        if (AccessoriesDefinitionsStorage.containsItem(stack)) {
-            double deflectChance = AccessoriesDefinitionsStorage.getData(stack).deflectChance();
-            if (deflectChance != 0) lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).withStyle(ChatFormatting.AQUA));
-        }
-
         if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.getModels(stack).visorOpen().isPresent()) {
             lines.add(Component.translatable("component.tooltip.stoneycore.openVisor").withStyle(ChatFormatting.WHITE));
             if (!NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false)) {
