@@ -93,8 +93,13 @@ public class FabricConfigImpl extends ConfigImpl {
             }
 
             @Override
-            public float getVisoredHelmetAlpha() {
-                return config.visualOptions.getVisoredHelmetAlpha();
+            public float getVisoredHelmetAlphaCreative() {
+                return config.visualOptions.getVisoredHelmetAlphaCreative();
+            }
+
+            @Override
+            public float getVisoredHelmetAlphaSurvival() {
+                return config.visualOptions.getVisoredHelmetAlphaSurvival();
             }
 
             @Override

@@ -103,7 +103,12 @@ public class SCConfigs extends PartitioningSerializer.GlobalData {
         @ConfigEntry.Gui.Tooltip()
         @ConfigEntry.BoundedDiscrete(min = 0, max = 1)
         @Comment("Visored Helmet Overlay Alpha in Creative | Default: 0.4")
-        public float visoredHelmetAlpha = 0.4f;
+        public float visoredHelmetAlphaCreative = 0.4f;
+
+        @ConfigEntry.Gui.Tooltip()
+        @ConfigEntry.BoundedDiscrete(min = 0, max = 1)
+        @Comment("Visored Helmet Overlay Alpha in Survival | Default: 1.0")
+        public float visoredHelmetAlphaSurvival = 1.0f;
 
         @ConfigEntry.Gui.Tooltip()
         @Comment("Low Stamina Indicator | Default: true")

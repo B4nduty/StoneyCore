@@ -11,6 +11,8 @@ public enum SCTags {
 
     // Weapon Tags
     /**
+     * Only Fabric
+     * <p>
      * If you want to have your Weapon 3D
      * <p>
      * You will need to make another model file with the name "your_item_3d.json",

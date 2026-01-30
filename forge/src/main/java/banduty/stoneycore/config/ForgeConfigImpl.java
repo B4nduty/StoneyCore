@@ -87,8 +87,13 @@ public class ForgeConfigImpl extends ConfigImpl {
             }
 
             @Override
-            public float getVisoredHelmetAlpha() {
-                return StoneyCoreForge.CONFIG.visual.visoredHelmetAlpha;
+            public float getVisoredHelmetAlphaCreative() {
+                return StoneyCoreForge.CONFIG.visual.visoredHelmetAlphaCreative;
+            }
+
+            @Override
+            public float getVisoredHelmetAlphaSurvival() {
+                return StoneyCoreForge.CONFIG.visual.visoredHelmetAlphaSurvival;
             }
 
             @Override

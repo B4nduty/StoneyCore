@@ -83,7 +83,11 @@ public class SCConfigs {
 
         @Comment("Visored Helmet Overlay Alpha in Creative")
         @RangeConstraint(min = 0f, max = 1f)
-        public float getVisoredHelmetAlpha = 0.4f;
+        public float getVisoredHelmetAlphaCreative = 0.4f;
+
+        @Comment("Visored Helmet Overlay Alpha in Survival")
+        @RangeConstraint(min = 0f, max = 1f)
+        public float getVisoredHelmetAlphaSurvival = 1.0f;
 
         @Comment("Low Stamina Indicator")
         @Sync(Option.SyncMode.INFORM_SERVER)

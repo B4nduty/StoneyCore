@@ -1,6 +1,6 @@
 package banduty.stoneycore.block;
 
-import banduty.stoneycore.smithing.AnvilRecipe;
+import banduty.stoneycore.recipes.AnvilRecipe;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;

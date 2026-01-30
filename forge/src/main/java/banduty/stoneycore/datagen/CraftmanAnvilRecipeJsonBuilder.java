@@ -1,6 +1,6 @@
 package banduty.stoneycore.datagen;
 
-import banduty.stoneycore.smithing.ModRecipes;
+import banduty.stoneycore.recipes.ModRecipes;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;

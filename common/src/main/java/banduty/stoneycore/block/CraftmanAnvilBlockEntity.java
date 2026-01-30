@@ -1,7 +1,7 @@
 package banduty.stoneycore.block;
 
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.smithing.AnvilRecipe;
+import banduty.stoneycore.recipes.AnvilRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;

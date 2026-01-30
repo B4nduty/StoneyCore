@@ -2,7 +2,9 @@ package banduty.stoneycore.platform.services;
 
 import banduty.stoneycore.config.ConfigImpl;
 import banduty.stoneycore.lands.util.ClaimWorker;
-import banduty.stoneycore.smithing.AnvilRecipe;
+import banduty.stoneycore.recipes.BannerPatternRecipe;
+import banduty.stoneycore.recipes.ManuscriptCraftingRecipe;
+import banduty.stoneycore.recipes.AnvilRecipe;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.network.chat.Component;
@@ -72,6 +74,9 @@ public interface IPlatformHelper {
     Block getCraftmanAnvil();
     RecipeType<AnvilRecipe> getCraftmanAnvilRecipe();
     RecipeSerializer<AnvilRecipe> getCraftmanAnvilRecipeSerializer();
+
+    RecipeSerializer<ManuscriptCraftingRecipe> getManuscriptRecipeSerializer();
+    RecipeSerializer<BannerPatternRecipe> getBannerRecipeSerializer();
 
     ConfigImpl getConfig();
 

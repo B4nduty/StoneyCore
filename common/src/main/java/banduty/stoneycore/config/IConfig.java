@@ -20,7 +20,8 @@ public interface IConfig {
     interface VisualOptions {
         boolean getDamageIndicator();
         boolean getVisoredHelmet();
-        float getVisoredHelmetAlpha();
+        float getVisoredHelmetAlphaCreative();
+        float getVisoredHelmetAlphaSurvival();
         boolean getLowStaminaIndicator();
         boolean getNoiseEffect();
         int getMuzzlesSmokeParticlesTime();

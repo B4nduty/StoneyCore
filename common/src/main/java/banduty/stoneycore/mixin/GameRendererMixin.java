@@ -95,7 +95,7 @@ public class GameRendererMixin {
                 ResourceLocation visorTexture = new ResourceLocation(namespace, "textures/overlay/visor/" + visorId.getPath() + ".png");
 
                 RenderSystem.setShaderTexture(0, visorTexture);
-                guiGraphics.setColor(1f, 1f, 1f, player.isCreative() ? StoneyCore.getConfig().visualOptions().getVisoredHelmetAlpha() : 1f);
+                guiGraphics.setColor(1f, 1f, 1f, player.isCreative() ? StoneyCore.getConfig().visualOptions().getVisoredHelmetAlphaCreative() : StoneyCore.getConfig().visualOptions().getVisoredHelmetAlphaSurvival());
                 guiGraphics.blit(visorTexture, 0, 0, 0, 0, width, height, width, height);
                 break;
             }

@@ -8,8 +8,10 @@ import banduty.stoneycore.lands.util.ClaimWorker;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.networking.packet.LandTitleS2CPacket;
 import banduty.stoneycore.platform.services.IPlatformHelper;
-import banduty.stoneycore.smithing.AnvilRecipe;
-import banduty.stoneycore.smithing.ModRecipes;
+import banduty.stoneycore.recipes.BannerPatternRecipe;
+import banduty.stoneycore.recipes.ManuscriptCraftingRecipe;
+import banduty.stoneycore.recipes.AnvilRecipe;
+import banduty.stoneycore.recipes.ModRecipes;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.bettercombat.api.AttackHand;
@@ -123,6 +125,16 @@ public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public RecipeSerializer<AnvilRecipe> getCraftmanAnvilRecipeSerializer() {
         return ModRecipes.ANVIL_RECIPE_SERIALIZER.get();
+    }
+
+    @Override
+    public RecipeSerializer<ManuscriptCraftingRecipe> getManuscriptRecipeSerializer() {
+        return ModRecipes.MANUSCRIPT_SERIALIZER.get();
+    }
+
+    @Override
+    public RecipeSerializer<BannerPatternRecipe> getBannerRecipeSerializer() {
+        return ModRecipes.BANNER_SERIALIZER.get();
     }
 
     @Override

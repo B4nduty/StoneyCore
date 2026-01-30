@@ -1,8 +1,9 @@
-package banduty.stoneycore.smithing;
+package banduty.stoneycore.recipes;
 
 import banduty.stoneycore.StoneyCore;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -23,6 +24,14 @@ public interface ModRecipes {
 
     RegistryObject<RecipeSerializer<AnvilRecipe>> ANVIL_RECIPE_SERIALIZER =
             RECIPE_SERIALIZERS.register("craftman_anvil_crafting", () -> AnvilRecipeSerializer.INSTANCE);
+
+    RegistryObject<RecipeSerializer<ManuscriptCraftingRecipe>> MANUSCRIPT_SERIALIZER =
+            RECIPE_SERIALIZERS.register("manuscript_crafting",
+                    () -> new SimpleCraftingRecipeSerializer<>(ManuscriptCraftingRecipe::new));
+
+    RegistryObject<RecipeSerializer<BannerPatternRecipe>> BANNER_SERIALIZER =
+            RECIPE_SERIALIZERS.register("banner_pattern_crafting",
+                    () -> new SimpleCraftingRecipeSerializer<>(BannerPatternRecipe::new));
 
     static void register(IEventBus modEventBus) {
         RECIPE_TYPES.register(modEventBus);

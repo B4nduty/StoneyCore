@@ -2,8 +2,8 @@ package banduty.stoneycore.compat.rei;
 
 import banduty.stoneycore.items.hotiron.HotIron;
 import banduty.stoneycore.items.manuscript.Manuscript;
-import banduty.stoneycore.smithing.AnvilRecipe;
-import banduty.stoneycore.smithing.StackIngredient;
+import banduty.stoneycore.recipes.AnvilRecipe;
+import banduty.stoneycore.recipes.StackIngredient;
 import me.shedaniel.rei.api.common.category.CategoryIdentifier;
 import me.shedaniel.rei.api.common.display.basic.BasicDisplay;
 import me.shedaniel.rei.api.common.entry.EntryIngredient;

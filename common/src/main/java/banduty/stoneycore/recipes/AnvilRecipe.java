@@ -1,4 +1,4 @@
-package banduty.stoneycore.smithing;
+package banduty.stoneycore.recipes;
 
 import banduty.stoneycore.block.CraftmanAnvilBlockEntity;
 import banduty.stoneycore.platform.Services;

@@ -1,4 +1,4 @@
-package banduty.stoneycore.smithing;
+package banduty.stoneycore.recipes;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

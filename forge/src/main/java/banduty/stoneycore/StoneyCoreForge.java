@@ -9,7 +9,7 @@ import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.screen.ModScreenHandlers;
-import banduty.stoneycore.smithing.ModRecipes;
+import banduty.stoneycore.recipes.ModRecipes;
 import banduty.stoneycore.sounds.ModSounds;
 import banduty.stoneycore.util.data.playerdata.SCAttributes;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;

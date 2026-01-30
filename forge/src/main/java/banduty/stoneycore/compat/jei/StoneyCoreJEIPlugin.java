@@ -2,7 +2,7 @@ package banduty.stoneycore.compat.jei;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.smithing.AnvilRecipe;
+import banduty.stoneycore.recipes.AnvilRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
