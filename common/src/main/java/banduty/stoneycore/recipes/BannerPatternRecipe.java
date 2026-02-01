@@ -25,8 +25,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BannerPatternRecipe extends CustomRecipe {
-    public BannerPatternRecipe(ResourceLocation id, CraftingBookCategory category) {
+    private final Ingredient input;
+
+    public BannerPatternRecipe(ResourceLocation id, CraftingBookCategory category, Ingredient input) {
         super(id, category);
+        this.input = input;
+    }
+
+    public Ingredient getInput() {
+        return this.input;
     }
 
     @Override
@@ -46,17 +53,7 @@ public class BannerPatternRecipe extends CustomRecipe {
 
         if (count != 2 || banner.isEmpty() || itemInput.isEmpty()) return false;
 
-        final ItemStack finalItemInput = itemInput;
-
-        return level.getRecipeManager()
-                .getAllRecipesFor(Services.PLATFORM.getBannerRecipeType())
-                .stream()
-                .anyMatch(recipe -> {
-                    for (Ingredient ingredient : recipe.getIngredients()) {
-                        if (ingredient.test(finalItemInput)) return true;
-                    }
-                    return false;
-                });
+        return this.input.test(itemInput);
     }
 
     @Override

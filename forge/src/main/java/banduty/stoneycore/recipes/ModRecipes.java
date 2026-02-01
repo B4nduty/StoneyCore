@@ -3,7 +3,6 @@ package banduty.stoneycore.recipes;
 import banduty.stoneycore.StoneyCore;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -35,7 +34,7 @@ public interface ModRecipes {
 
     RegistryObject<RecipeSerializer<ManuscriptCraftingRecipe>> MANUSCRIPT_SERIALIZER =
             RECIPE_SERIALIZERS.register("manuscript_crafting",
-                    () -> new SimpleCraftingRecipeSerializer<>(ManuscriptCraftingRecipe::new));
+                    () -> ManuscriptSerializer.INSTANCE);
 
     RegistryObject<RecipeType<BannerPatternRecipe>> BANNER_RECIPE_TYPE =
             RECIPE_TYPES.register("banner_pattern_crafting", () -> new RecipeType<>() {
@@ -47,7 +46,7 @@ public interface ModRecipes {
 
     RegistryObject<RecipeSerializer<BannerPatternRecipe>> BANNER_SERIALIZER =
             RECIPE_SERIALIZERS.register("banner_pattern_crafting",
-                    () -> new SimpleCraftingRecipeSerializer<>(BannerPatternRecipe::new));
+                    () -> BannerPatternSerializer.INSTANCE);
 
     static void register(IEventBus modEventBus) {
         RECIPE_TYPES.register(modEventBus);

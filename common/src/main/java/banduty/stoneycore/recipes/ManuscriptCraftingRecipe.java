@@ -14,8 +14,15 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
 public class ManuscriptCraftingRecipe extends CustomRecipe {
-    public ManuscriptCraftingRecipe(ResourceLocation id, CraftingBookCategory category) {
+    private final Ingredient input;
+
+    public ManuscriptCraftingRecipe(ResourceLocation id, CraftingBookCategory category, Ingredient input) {
         super(id, category);
+        this.input = input;
+    }
+
+    public Ingredient getInput() {
+        return this.input;
     }
 
     @Override
@@ -39,17 +46,7 @@ public class ManuscriptCraftingRecipe extends CustomRecipe {
             return false;
         }
 
-        final ItemStack finalItemInput = itemInput;
-
-        return level.getRecipeManager()
-                .getAllRecipesFor(Services.PLATFORM.getManuscriptRecipeType())
-                .stream()
-                .anyMatch(recipe -> {
-                    for (Ingredient ingredient : recipe.getIngredients()) {
-                        if (ingredient.test(finalItemInput)) return true;
-                    }
-                    return false;
-                });
+        return this.input.test(itemInput);
     }
 
     @Override
