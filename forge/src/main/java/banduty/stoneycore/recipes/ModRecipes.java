@@ -25,9 +25,25 @@ public interface ModRecipes {
     RegistryObject<RecipeSerializer<AnvilRecipe>> ANVIL_RECIPE_SERIALIZER =
             RECIPE_SERIALIZERS.register("craftman_anvil_crafting", () -> AnvilRecipeSerializer.INSTANCE);
 
+    RegistryObject<RecipeType<ManuscriptCraftingRecipe>> MANUSCRIPT_RECIPE_TYPE =
+            RECIPE_TYPES.register("manuscript_crafting", () -> new RecipeType<>() {
+                @Override
+                public String toString() {
+                    return "manuscript_crafting";
+                }
+            });
+
     RegistryObject<RecipeSerializer<ManuscriptCraftingRecipe>> MANUSCRIPT_SERIALIZER =
             RECIPE_SERIALIZERS.register("manuscript_crafting",
                     () -> new SimpleCraftingRecipeSerializer<>(ManuscriptCraftingRecipe::new));
+
+    RegistryObject<RecipeType<BannerPatternRecipe>> BANNER_RECIPE_TYPE =
+            RECIPE_TYPES.register("banner_pattern_crafting", () -> new RecipeType<>() {
+                @Override
+                public String toString() {
+                    return "banner_pattern_crafting";
+                }
+            });
 
     RegistryObject<RecipeSerializer<BannerPatternRecipe>> BANNER_SERIALIZER =
             RECIPE_SERIALIZERS.register("banner_pattern_crafting",

@@ -29,10 +29,30 @@ public interface ModRecipes {
             AnvilRecipeSerializer.INSTANCE
     );
 
+    RecipeType<ManuscriptCraftingRecipe> MANUSCRIPT_RECIPE_TYPE = Registry.register(
+            BuiltInRegistries.RECIPE_TYPE,
+            new ResourceLocation(StoneyCore.MOD_ID, "manuscript_crafting"),
+            new RecipeType<ManuscriptCraftingRecipe>() {
+                public String toString() {
+                    return "manuscript_crafting";
+                }
+            }
+    );
+
     RecipeSerializer<ManuscriptCraftingRecipe> MANUSCRIPT_SERIALIZER = Registry.register(
             BuiltInRegistries.RECIPE_SERIALIZER,
             new ResourceLocation(StoneyCore.MOD_ID, "manuscript_crafting"),
             new SimpleCraftingRecipeSerializer<>(ManuscriptCraftingRecipe::new));
+
+    RecipeType<BannerPatternRecipe> BANNER_RECIPE_TYPE = Registry.register(
+            BuiltInRegistries.RECIPE_TYPE,
+            new ResourceLocation(StoneyCore.MOD_ID, "banner_pattern_crafting"),
+            new RecipeType<BannerPatternRecipe>() {
+                public String toString() {
+                    return "banner_pattern_crafting";
+                }
+            }
+    );
 
     RecipeSerializer<BannerPatternRecipe> BANNER_SERIALIZER = Registry.register(
             BuiltInRegistries.RECIPE_SERIALIZER,

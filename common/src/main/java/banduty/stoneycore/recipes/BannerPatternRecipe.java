@@ -2,7 +2,6 @@ package banduty.stoneycore.recipes;
 
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
-import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.patterns.PatternHelper;
 import net.minecraft.core.RegistryAccess;
@@ -32,7 +31,7 @@ public class BannerPatternRecipe extends CustomRecipe {
     @Override
     public boolean matches(CraftingContainer container, Level level) {
         ItemStack banner = ItemStack.EMPTY;
-        ItemStack armor = ItemStack.EMPTY;
+        ItemStack itemInput = ItemStack.EMPTY;
         int count = 0;
 
         for (int i = 0; i < container.getContainerSize(); i++) {
@@ -41,10 +40,17 @@ public class BannerPatternRecipe extends CustomRecipe {
             count++;
 
             if (stack.getItem() instanceof BannerItem) banner = stack;
-            else if (stack.is(SCTags.BANNER_COMPATIBLE.getTag())) armor = stack;
+            else itemInput = stack;
         }
 
-        return count == 2 && !banner.isEmpty() && !armor.isEmpty();
+        if (count != 2 || banner.isEmpty() || itemInput.isEmpty()) return false;
+
+        final ItemStack finalItemInput = itemInput;
+
+        return level.getRecipeManager()
+                .getAllRecipesFor(Services.PLATFORM.getBannerRecipeType())
+                .stream()
+                .anyMatch(recipe -> recipe.getIngredients().get(0).test(finalItemInput));
     }
 
     @Override
@@ -55,7 +61,7 @@ public class BannerPatternRecipe extends CustomRecipe {
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
             if (stack.getItem() instanceof BannerItem) banner = stack;
-            else if (stack.is(SCTags.BANNER_COMPATIBLE.getTag())) armor = stack;
+            else armor = stack;
         }
 
         ItemStack result = armor.copy();

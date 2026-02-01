@@ -78,6 +78,9 @@ public interface IPlatformHelper {
     RecipeSerializer<ManuscriptCraftingRecipe> getManuscriptRecipeSerializer();
     RecipeSerializer<BannerPatternRecipe> getBannerRecipeSerializer();
 
+    RecipeType<ManuscriptCraftingRecipe> getManuscriptRecipeType();
+    RecipeType<BannerPatternRecipe> getBannerRecipeType();
+
     ConfigImpl getConfig();
 
     List<ItemStack> getEquippedAccessories(LivingEntity livingEntity);

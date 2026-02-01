@@ -139,6 +139,16 @@ public class FabricPlatformHelper implements IPlatformHelper {
     }
 
     @Override
+    public RecipeType<ManuscriptCraftingRecipe> getManuscriptRecipeType() {
+        return ModRecipes.MANUSCRIPT_RECIPE_TYPE;
+    }
+
+    @Override
+    public RecipeType<BannerPatternRecipe> getBannerRecipeType() {
+        return ModRecipes.BANNER_RECIPE_TYPE;
+    }
+
+    @Override
     public ConfigImpl getConfig() {
         return config;
     }

@@ -138,6 +138,16 @@ public class ForgePlatformHelper implements IPlatformHelper {
     }
 
     @Override
+    public RecipeType<ManuscriptCraftingRecipe> getManuscriptRecipeType() {
+        return ModRecipes.MANUSCRIPT_RECIPE_TYPE.get();
+    }
+
+    @Override
+    public RecipeType<BannerPatternRecipe> getBannerRecipeType() {
+        return ModRecipes.BANNER_RECIPE_TYPE.get();
+    }
+
+    @Override
     public ConfigImpl getConfig() {
         return config;
     }

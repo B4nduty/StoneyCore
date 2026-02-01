@@ -33,8 +33,17 @@ public class ManuscriptCraftingRecipe extends CustomRecipe {
                 else itemInput = stack;
             }
         }
-        // Only return true if exactly these 3 items are present
-        return count == 3 && !paper.isEmpty() && !hammer.isEmpty() && !itemInput.isEmpty();
+
+        if (count != 3 || paper.isEmpty() || hammer.isEmpty() || itemInput.isEmpty()) {
+            return false;
+        }
+
+        final ItemStack finalItemInput = itemInput;
+
+        return level.getRecipeManager()
+                .getAllRecipesFor(Services.PLATFORM.getManuscriptRecipeType())
+                .stream()
+                .anyMatch(recipe -> recipe.getIngredients().get(0).test(finalItemInput));
     }
 
     @Override
@@ -47,7 +56,6 @@ public class ManuscriptCraftingRecipe extends CustomRecipe {
                 break;
             }
         }
-        // This creates the actual item that appears in the output slot
         return Manuscript.createForStack(itemInput);
     }
 
