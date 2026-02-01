@@ -17,6 +17,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
@@ -50,7 +51,12 @@ public class BannerPatternRecipe extends CustomRecipe {
         return level.getRecipeManager()
                 .getAllRecipesFor(Services.PLATFORM.getBannerRecipeType())
                 .stream()
-                .anyMatch(recipe -> recipe.getIngredients().get(0).test(finalItemInput));
+                .anyMatch(recipe -> {
+                    for (Ingredient ingredient : recipe.getIngredients()) {
+                        if (ingredient.test(finalItemInput)) return true;
+                    }
+                    return false;
+                });
     }
 
     @Override
