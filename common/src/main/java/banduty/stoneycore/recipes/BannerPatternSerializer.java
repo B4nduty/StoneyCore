@@ -21,12 +21,10 @@ public class BannerPatternSerializer implements RecipeSerializer<BannerPatternRe
         for (var element : ingredients) {
             Ingredient ing = Ingredient.fromJson(element);
 
-            boolean isBanner = Arrays.stream(ing.getItems()).anyMatch(stack ->
-                    stack.getItem() instanceof BannerItem
-            );
-
+            boolean isBanner = Arrays.stream(ing.getItems()).anyMatch(s -> s.getItem() instanceof BannerItem);
             if (!isBanner) {
                 input = ing;
+                break;
             }
         }
 

@@ -45,29 +45,34 @@ public class BannerPatternRecipe extends CustomRecipe {
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
             if (stack.isEmpty()) continue;
-            count++;
 
-            if (stack.getItem() instanceof BannerItem) banner = stack;
-            else itemInput = stack;
+            if (stack.getItem() instanceof BannerItem) {
+                count++;
+                banner = stack;
+            }
+            else if (itemInput.isEmpty()) {
+                count++;
+                itemInput = stack;
+            }
         }
 
         if (count != 2 || banner.isEmpty() || itemInput.isEmpty()) return false;
 
-        return this.input.test(itemInput);
+        return true;
     }
 
     @Override
     public ItemStack assemble(CraftingContainer container, RegistryAccess registry) {
         ItemStack banner = ItemStack.EMPTY;
-        ItemStack armor = ItemStack.EMPTY;
+        ItemStack itemInput = ItemStack.EMPTY;
 
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
             if (stack.getItem() instanceof BannerItem) banner = stack;
-            else armor = stack;
+            else if (itemInput.isEmpty()) itemInput = stack;
         }
 
-        ItemStack result = armor.copy();
+        ItemStack result = itemInput.copy();
         List<Tuple<ResourceLocation, DyeColor>> patterns = getBannerPatterns(banner, result.getItem());
         PatternHelper.setBannerPatterns(result, patterns);
         return result;
