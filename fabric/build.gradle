@@ -68,6 +68,11 @@ dependencies {
     include "io.wispforest:owo-sentinel:${owo_version}"
     annotationProcessor "io.wispforest:owo-lib:${owo_version}"
 
+/*    modRuntimeOnly "curse.maven:playeranimator-658587:4587215"
+    modRuntimeOnly "curse.maven:architectury-api-419699:5137936"
+    modRuntimeOnly "curse.maven:better-combat-by-daedelus-639842:7287333"
+    modRuntimeOnly "curse.maven:geckolib-388172:7553256"*/
+
     compileOnly project(":common")
     runtimeOnly project(":common")
 

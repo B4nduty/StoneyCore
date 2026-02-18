@@ -1,6 +1,7 @@
 package banduty.stoneycore;
 
-import banduty.stoneycore.datagen.ModModelProvider;
+import banduty.stoneycore.datagen.ModBlockStateProvider;
+import banduty.stoneycore.datagen.ModItemModelProvider;
 import banduty.stoneycore.datagen.ModRecipeProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
@@ -21,7 +22,8 @@ public class StoneyCoreForgeDatagen {
         ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
-        generator.addProvider(event.includeClient(), new ModModelProvider(packOutput, existingFileHelper));
+        generator.addProvider(event.includeClient(), new ModItemModelProvider(packOutput, existingFileHelper));
+        generator.addProvider(event.includeClient(), new ModBlockStateProvider(packOutput, existingFileHelper));
         generator.addProvider(event.includeServer(), new ModRecipeProvider(packOutput));
     }
 }

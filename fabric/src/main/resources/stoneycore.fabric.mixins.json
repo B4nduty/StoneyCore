@@ -9,7 +9,8 @@
   ],
   "client": [
     "BipedEntityModelMixin",
-    "FGuiMixin"
+    "FGuiMixin",
+    "ItemRendererMixin"
   ],
   "server": [
   ],

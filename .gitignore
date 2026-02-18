@@ -21,3 +21,6 @@ build
 # other
 eclipse
 run
+/fabric/run-datagen
+/fabric/src/generated
+/forge/src/generated

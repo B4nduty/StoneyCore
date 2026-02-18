@@ -60,6 +60,15 @@ legacyForge {
         }
         data {
             data()
+
+            programArguments.addAll(
+                    '--mod', mod_id,
+                    '--all',
+                    '--output', file('src/generated/resources/').absolutePath,
+                    '--existing', file('src/main/resources/').absolutePath,
+                    '--existing', file('../common/src/main/resources').absolutePath,
+                    '--existing', file('src/generated/resources/').absolutePath
+            )
         }
         server {
             server()

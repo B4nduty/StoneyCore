@@ -62,3 +62,13 @@ repositories {
         url = "https://modmaven.dev"
     }
 }
+
+tasks.register("runAllDatagen") {
+    group = "datagen"
+    description = "Runs datagen for Forge and Fabric"
+
+    dependsOn(
+            ":forge:runData",
+            ":fabric:runDatagen"
+    )
+}

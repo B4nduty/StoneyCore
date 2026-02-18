@@ -1,18 +1,20 @@
 package banduty.stoneycore.datagen;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.block.ModBlocks;
 import banduty.stoneycore.items.SCItems;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.model.generators.ItemModelBuilder;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
-public class ModModelProvider extends ItemModelProvider {
-    public ModModelProvider(PackOutput output, ExistingFileHelper existingFileHelper) {
+public class ModItemModelProvider extends ItemModelProvider {
+    public ModItemModelProvider(PackOutput output, ExistingFileHelper existingFileHelper) {
         super(output, StoneyCore.MOD_ID, existingFileHelper);
     }
 
@@ -25,12 +27,13 @@ public class ModModelProvider extends ItemModelProvider {
         simpleItem(SCItems.BLACK_POWDER);
         simpleItem(SCItems.CROWN);
         simpleItem(SCItems.MANUSCRIPT);
-
         // Tongs with overrides
         createTongsModel();
 
         // Hot Iron with override
         createHotIronModel();
+
+        blockItem(ModBlocks.CRAFTMAN_ANVIL);
     }
 
     private void createTongsModel() {
@@ -89,4 +92,10 @@ public class ModModelProvider extends ItemModelProvider {
                 new ResourceLocation("item/generated")).texture("layer0",
                 new ResourceLocation(StoneyCore.MOD_ID, "item/" + item.getId().getPath()));
     }
+
+    private void blockItem(RegistryObject<Block> block) {
+        withExistingParent(block.getId().getPath(),
+                modLoc("block/" + block.getId().getPath()));
+    }
+
 }

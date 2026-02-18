@@ -100,7 +100,7 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<AnvilRecipe> {
         if (target.isEmpty()) target = Manuscript.getTargetStack(output);
         if (target.isEmpty()) target = output;
 
-        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(target);
+        builder.addSlot(RecipeIngredientRole.OUTPUT).addItemStack(target);
     }
 
     @Override
