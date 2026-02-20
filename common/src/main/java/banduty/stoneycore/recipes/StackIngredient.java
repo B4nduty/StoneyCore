@@ -3,6 +3,7 @@ package banduty.stoneycore.recipes;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.FriendlyByteBuf;
@@ -11,6 +12,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,7 +22,7 @@ public record StackIngredient(ItemStack stack, TagKey<Item> tag) {
 
     public boolean test(ItemStack input) {
         if (tag != null) {
-            return input.is(tag);
+            return !input.isEmpty() && input.is(tag);
         }
         if (input.isEmpty()) return false;
         if (!ItemStack.isSameItem(stack, input)) return false;
@@ -55,9 +57,9 @@ public record StackIngredient(ItemStack stack, TagKey<Item> tag) {
 
     public static StackIngredient fromJson(JsonObject json) {
         if (json.has("tag")) {
-            TagKey<Item> tag = TagKey.create(BuiltInRegistries.ITEM.key(), new ResourceLocation(GsonHelper.getAsString(json, "tag")));
+            TagKey<Item> tag = TagKey.create(Registries.ITEM, new ResourceLocation(GsonHelper.getAsString(json, "tag")));
             int count = GsonHelper.getAsInt(json, "count", 1);
-            ItemStack stack = new ItemStack(net.minecraft.world.item.Items.AIR, count);
+            ItemStack stack = new ItemStack(Items.BARRIER, count);
             return new StackIngredient(stack, tag);
         } else {
             Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(GsonHelper.getAsString(json, "item")));

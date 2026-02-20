@@ -86,65 +86,73 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
 
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (level.isClientSide()) return InteractionResult.PASS;
-
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-
-        if (!(blockEntity instanceof CraftmanAnvilBlockEntity anvilEntity)) {
-            return InteractionResult.PASS;
-        }
-
-        if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
-
         ItemStack stack = player.getItemInHand(hand);
 
-        if (stack.getItem() instanceof SmithingHammer && anvilEntity.getRecipe().isPresent()) {
-            anvilEntity.hitAnvil(serverPlayer);
-            if (player.isCreative()) return InteractionResult.SUCCESS;
-            stack.hurtAndBreak(1, serverPlayer, p -> p.broadcastBreakEvent(serverPlayer.getUsedItemHand()));
-            if (stack.getDamageValue() >= stack.getMaxDamage()) stack.shrink(1);
-            return InteractionResult.SUCCESS;
-        }
+        if (!level.isClientSide()) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
 
-        if (hand == InteractionHand.MAIN_HAND) {
-            if (Tongs.getTargetStack(stack).isEmpty() && (stack.isEmpty() || player.getMainHandItem().getItem() instanceof Tongs || player.getOffhandItem().getItem() instanceof Tongs)) {
-                NonNullList<ItemStack> itemStacks = anvilEntity.getItems();
-                for (ItemStack itemStack : itemStacks) {
-                    Optional<ItemStack> tongs = getTongsFromInventory(player);
-                    if (tongs.isEmpty() && player.getMainHandItem().getItem() instanceof Tongs) tongs = Optional.of(player.getMainHandItem());
-                    if (tongs.isEmpty() && player.getOffhandItem().getItem() instanceof Tongs) tongs = Optional.of(player.getOffhandItem());
-                    if (tongs.isEmpty()) continue;
-                    if (!Tongs.getTargetStack(tongs.get()).isEmpty()) continue;
-                    if (itemStack.isEmpty()) continue;
+            if (!(blockEntity instanceof CraftmanAnvilBlockEntity anvilEntity)) {
+                return InteractionResult.PASS;
+            }
 
-                    if (!(itemStack.getItem() instanceof HotIron))
-                        continue;
+            if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
 
-                    Tongs.setTargetStack(tongs.get(), itemStack);
-                    itemStack.shrink(1);
-                }
-                anvilEntity.removeItems(serverPlayer);
+            if (stack.getItem() instanceof SmithingHammer && anvilEntity.getRecipe().isPresent()) {
+                anvilEntity.hitAnvil(serverPlayer);
+                if (player.isCreative()) return InteractionResult.SUCCESS;
+                stack.hurtAndBreak(1, serverPlayer, p -> p.broadcastBreakEvent(serverPlayer.getUsedItemHand()));
+                if (stack.getDamageValue() >= stack.getMaxDamage()) stack.shrink(1);
                 return InteractionResult.SUCCESS;
             }
 
-            if (stack.getItem() instanceof SmithingHammer) return InteractionResult.PASS;
+            if (hand == InteractionHand.MAIN_HAND) {
+                if (Tongs.getTargetStack(stack).isEmpty() && (stack.isEmpty() || player.getMainHandItem().getItem() instanceof Tongs || player.getOffhandItem().getItem() instanceof Tongs)) {
+                    NonNullList<ItemStack> itemStacks = anvilEntity.getItems();
+                    for (ItemStack itemStack : itemStacks) {
+                        Optional<ItemStack> tongs = getTongsFromInventory(player);
+                        if (tongs.isEmpty() && player.getMainHandItem().getItem() instanceof Tongs) tongs = Optional.of(player.getMainHandItem());
+                        if (tongs.isEmpty() && player.getOffhandItem().getItem() instanceof Tongs) tongs = Optional.of(player.getOffhandItem());
+                        if (tongs.isEmpty()) continue;
+                        if (!Tongs.getTargetStack(tongs.get()).isEmpty()) continue;
+                        if (itemStack.isEmpty()) continue;
 
-            ItemStack newStack = stack;
+                        if (!(itemStack.getItem() instanceof HotIron))
+                            continue;
 
-            if (stack.getItem() instanceof CraftmanAnvilHelper helper) {
-                newStack = helper.acceptCraftmanAnvilItem(stack);
+                        Tongs.setTargetStack(tongs.get(), itemStack);
+                        itemStack.shrink(1);
+                    }
+                    anvilEntity.removeItems(serverPlayer);
+                    return InteractionResult.SUCCESS;
+                }
+
+                if (stack.getItem() instanceof SmithingHammer) return InteractionResult.PASS;
+
+                ItemStack newStack = stack;
+
+                if (stack.getItem() instanceof CraftmanAnvilHelper helper) {
+                    newStack = helper.acceptCraftmanAnvilItem(stack);
+                }
+
+                boolean wasAdded = anvilEntity.addItem(newStack);
+                if (wasAdded) {
+                    level.playSound(null, pos, SoundEvents.METAL_PLACE, SoundSource.BLOCKS, 0.5f, 1.0f);
+                    anvilEntity.checkAndSpawnRecipeParticles();
+                    // If we added an item from a stack that had more than 1, we need to handle it properly
+                    if (!stack.isEmpty() && stack.getCount() > 1) {
+                        stack.shrink(1);
+                    } else if (!stack.isEmpty() && !(stack.getItem() instanceof CraftmanAnvilHelper)) {
+                        player.setItemInHand(hand, ItemStack.EMPTY);
+                    }
+                }
+
+                return InteractionResult.SUCCESS;
             }
-
-            boolean wasAdded = anvilEntity.addItem(newStack);
-            if (wasAdded) {
-                level.playSound(null, pos, SoundEvents.METAL_PLACE, SoundSource.BLOCKS, 0.5f, 1.0f);
-                anvilEntity.checkAndSpawnRecipeParticles();
-            }
-
+        } else {
             return InteractionResult.SUCCESS;
         }
 
-        return InteractionResult.PASS;
+        return InteractionResult.SUCCESS;
     }
 
     public static Optional<ItemStack> getTongsFromInventory(Player player) {
@@ -176,23 +184,23 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     }
 
     @Override
-    public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource randomSource) {
-        if (canFallThrough(serverLevel.getBlockState(blockPos.below())) && blockPos.getY() >= serverLevel.getMinBuildHeight()) {
-            BlockEntity blockEntity = serverLevel.getBlockEntity(blockPos);
-            CompoundTag nbt = null;
+    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (canFallThrough(level.getBlockState(pos.below()))
+                && pos.getY() >= level.getMinBuildHeight()) {
 
-            if (blockEntity != null) {
-                nbt = blockEntity.saveWithId();
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+
+            // Drop inventory BEFORE removing block
+            if (blockEntity instanceof CraftmanAnvilBlockEntity anvil) {
+                Containers.dropContents(level, pos, anvil);
             }
 
-            serverLevel.removeBlockEntity(blockPos);
-            serverLevel.removeBlock(blockPos, false);
+            // Remove BE safely
+            level.removeBlockEntity(pos);
+            level.removeBlock(pos, false);
 
-            FallingBlockEntity falling = FallingBlockEntity.fall(serverLevel, blockPos, blockState);
-
-            if (nbt != null) {
-                falling.blockData = nbt.copy();
-            }
+            // Spawn falling block WITHOUT block entity data
+            FallingBlockEntity.fall(level, pos, state);
         }
     }
 
@@ -208,5 +216,12 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     public void neighborChanged(BlockState blockState, Level level, BlockPos blockPos, Block sourceBlock, BlockPos fromPos, boolean notify) {
         super.neighborChanged(blockState, level, blockPos, sourceBlock, fromPos, notify);
         level.scheduleTick(blockPos, this, this.getFallDelay());
+    }
+
+    @Override
+    public void onLand(Level pLevel, BlockPos pPos, BlockState pState, BlockState pReplaceableState, FallingBlockEntity pFallingBlock) {
+        if (!pFallingBlock.isSilent()) {
+            pLevel.levelEvent(1031, pPos, 0);
+        }
     }
 }
