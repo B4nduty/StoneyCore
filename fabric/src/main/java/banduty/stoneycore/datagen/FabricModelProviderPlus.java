@@ -72,41 +72,26 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         // Register the main model with overrides
         ResourceLocation modelId = new ResourceLocation(namespace, "item/" + path);
 
+        TextureMapping textures;
         if (item instanceof DyeableLeatherItem) {
-            // For dyeable items, create a custom model that supports both layers
-            TextureMapping textures = TextureMapping.layered(
+            textures = TextureMapping.layered(
                     new ResourceLocation(namespace, "item/" + path),
                     new ResourceLocation(namespace, "item/" + path + "_overlay")
             );
-
-            // Create a custom model that supports both LAYER0 and LAYER1
-            ModelTemplate customModel = new ModelTemplate(Optional.of(new ResourceLocation("item/handheld")), Optional.empty(), TextureSlot.LAYER0, TextureSlot.LAYER1);
-            customModel.create(modelId, textures, itemModelGenerators.output, (id, textureMap) -> {
-                JsonObject json = new JsonObject();
-                json.addProperty("parent", "item/handheld");
-
-                JsonObject texturesJson = new JsonObject();
-                texturesJson.addProperty("layer0", textureMap.get(TextureSlot.LAYER0).toString());
-                texturesJson.addProperty("layer1", textureMap.get(TextureSlot.LAYER1).toString());
-                json.add("textures", texturesJson);
-
-                json.add("overrides", overrides);
-                return json;
-            });
         } else {
             // For non-dyeable items, use the standard approach
-            TextureMapping textures = TextureMapping.layer0(new ResourceLocation(namespace, "item/" + path));
-            model.create(
-                    modelId,
-                    textures,
-                    itemModelGenerators.output,
-                    (id, textureMap) -> {
-                        JsonObject json = model.createBaseTemplate(id, textureMap);
-                        json.add("overrides", overrides);
-                        return json;
-                    }
-            );
+            textures = TextureMapping.layer0(new ResourceLocation(namespace, "item/" + path));
         }
+        model.create(
+                modelId,
+                textures,
+                itemModelGenerators.output,
+                (id, textureMap) -> {
+                    JsonObject json = model.createBaseTemplate(id, textureMap);
+                    json.add("overrides", overrides);
+                    return json;
+                }
+        );
     }
 
     private List<List<OverrideCondition>> generateAllCombinations(OverrideCondition[] conditions) {
