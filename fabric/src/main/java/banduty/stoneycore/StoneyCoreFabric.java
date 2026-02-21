@@ -5,12 +5,13 @@ import banduty.stoneycore.block.ModBlocks;
 import banduty.stoneycore.commands.FabricSCCommandsHandler;
 import banduty.stoneycore.entity.ModEntities;
 import banduty.stoneycore.event.*;
+import banduty.stoneycore.event.custom.CraftingPreviewCallback;
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
-import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.recipes.ModRecipes;
+import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.sounds.ModSounds;
 import banduty.stoneycore.util.BetterCombatEvents;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
@@ -34,7 +35,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
 
 public class StoneyCoreFabric implements ModInitializer {
-    
+
     @Override
     public void onInitialize() {
         SCAttributes.registerAttributes();
@@ -57,6 +58,8 @@ public class StoneyCoreFabric implements ModInitializer {
         UseEntityCallback.EVENT.register(new UseEntityHandler());
         PlayerNameTagEvents.EVENT.register(new PlayerNameTagHandler());
         CommandRegistrationCallback.EVENT.register(new FabricSCCommandsHandler());
+        CraftingPreviewCallback.EVENT.register(new CraftingPreviewHandler());
+        TongsPickupHandler.register();
 
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new WeaponDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ArmorDefinitionsLoader());
@@ -78,9 +81,9 @@ public class StoneyCoreFabric implements ModInitializer {
             }
 
             player.displayClientMessage(Component.literal("""
-                   §4StoneyCore §radds an overlay that makes a noise effect.
-                   If you have §4epilepsy §rit is §lhighly recommended §rto §4disable Noise Effect.
-                   """),
+                            §4StoneyCore §radds an overlay that makes a noise effect.
+                            If you have §4epilepsy §rit is §lhighly recommended §rto §4disable Noise Effect.
+                            """),
                     false);
 
             NBTDataHelper.set((IEntityDataSaver) player, PDKeys.FIRST_JOIN, true);

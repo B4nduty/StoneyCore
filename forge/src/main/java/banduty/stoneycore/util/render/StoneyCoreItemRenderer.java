@@ -28,32 +28,73 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class StoneyCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
-    public static final StoneyCoreItemRenderer INSTANCE = new StoneyCoreItemRenderer();
+    // Use lazy initialization instead of static final instance
+    private static final AtomicReference<StoneyCoreItemRenderer> INSTANCE = new AtomicReference<>();
 
-    public StoneyCoreItemRenderer() {
-        super(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels());
+    public static StoneyCoreItemRenderer getInstance() {
+        if (INSTANCE.get() == null) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc != null && mc.getBlockEntityRenderDispatcher() != null) {
+                INSTANCE.compareAndSet(null, new StoneyCoreItemRenderer());
+            } else {
+                // Return a dummy renderer or handle gracefully
+                return null;
+            }
+        }
+        return INSTANCE.get();
+    }
+
+    private StoneyCoreItemRenderer() {
+        super(Minecraft.getInstance().getBlockEntityRenderDispatcher(),
+                Minecraft.getInstance().getEntityModels());
     }
 
     @Override
-    public void renderByItem(ItemStack stack, ItemDisplayContext context, PoseStack poseStack, MultiBufferSource buffer, int light, int overlay) {
-        Minecraft mc = Minecraft.getInstance();
-        ItemRenderer itemRenderer = mc.getItemRenderer();
+    public void renderByItem(ItemStack stack, ItemDisplayContext context,
+                             PoseStack poseStack, MultiBufferSource buffer,
+                             int light, int overlay) {
 
+        // Add null check at the beginning
+        if (Minecraft.getInstance() == null ||
+                Minecraft.getInstance().getBlockEntityRenderDispatcher() == null) {
+            return;
+        }
+
+        // Only handle items that actually need custom rendering
+        if (!shouldUseCustomRenderer(stack)) {
+            super.renderByItem(stack, context, poseStack, buffer, light, overlay);
+            return;
+        }
+
+        Minecraft mc = Minecraft.getInstance();
         BakedModel model = getCustomModel(stack, mc);
 
         if (stack.is(SCTags.GEO_2D_ITEMS.getTag())) {
-            if (context == ItemDisplayContext.GUI || context == ItemDisplayContext.GROUND || context == ItemDisplayContext.FIXED) {
+            if (context == ItemDisplayContext.GUI
+                    || context == ItemDisplayContext.GROUND
+                    || context == ItemDisplayContext.FIXED) {
+
                 ResourceLocation baseId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-                model = mc.getModelManager().getModel(new ModelResourceLocation(baseId.getNamespace(), baseId.getPath() + "_icon", "inventory"));
+                ModelResourceLocation iconModelId = new ModelResourceLocation(
+                        baseId.getNamespace(),
+                        baseId.getPath() + "_icon",
+                        "inventory"
+                );
+
+                BakedModel iconModel = mc.getModelManager().getModel(iconModelId);
+
+                if (iconModel != mc.getModelManager().getMissingModel()) {
+                    model = iconModel;
+                }
             }
         }
 
         poseStack.pushPose();
 
         model = model.applyTransform(context, poseStack, false);
-
         poseStack.translate(-0.5F, -0.5F, -0.5F);
 
         float[] color = {1.0f, 1.0f, 1.0f};
@@ -61,11 +102,20 @@ public class StoneyCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
             color = DyeUtil.getFloatDyeColor(stack);
         }
 
-        renderBakedModel(model, light, overlay, poseStack, buffer.getBuffer(ItemBlockRenderTypes.getRenderType(stack, true)), color);
+        renderBakedModel(model, light, overlay, poseStack,
+                buffer.getBuffer(ItemBlockRenderTypes.getRenderType(stack, true)),
+                color);
 
         renderBannerPatterns(stack, poseStack, buffer, light, overlay);
 
         poseStack.popPose();
+    }
+
+    private boolean shouldUseCustomRenderer(ItemStack stack) {
+        return stack.is(SCTags.GEO_2D_ITEMS.getTag())
+                || stack.is(SCTags.WEAPONS_3D.getTag())
+                || stack.getItem() instanceof Manuscript
+                || !PatternHelper.getBannerPatterns(stack).isEmpty();
     }
 
     private BakedModel getCustomModel(ItemStack stack, Minecraft mc) {

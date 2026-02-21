@@ -1,0 +1,23 @@
+{
+  "type": "stoneycore:craftman_anvil_crafting",
+  "chance": 0.5,
+  "hit_times": 5,
+  "ingredients": [
+    {
+      "count": 1,
+      "tag": "minecraft:planks"
+    },
+    {
+      "count": 1,
+      "item": "stoneycore:hot_iron"
+    },
+    {
+      "count": 1,
+      "item": "stoneycore:hot_iron"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "item": "stoneycore:hot_iron"
+  }
+}

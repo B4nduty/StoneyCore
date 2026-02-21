@@ -40,7 +40,7 @@ import java.util.List;
 import static net.minecraft.client.renderer.entity.ItemRenderer.getFoilBufferDirect;
 
 @Mixin(ItemRenderer.class)
-public abstract class ItemRendererMixin {
+public abstract class FItemRendererMixin {
 
     @Inject(method = "renderStatic(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/level/Level;III)V",
             at = @At("HEAD"),

@@ -24,3 +24,27 @@ mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
+[[dependencies.${mod_id}]]
+modId = "accessories"
+mandatory = true
+versionRange = "[1.0.0-beta47,)"
+ordering = "AFTER"
+side = "BOTH"
+[[dependencies.${mod_id}]]
+modId = "cloth_config"
+mandatory = true
+versionRange = "[11.1,)"
+ordering = "AFTER"
+side = "BOTH"
+[[dependencies.${mod_id}]]
+modId = "architectury"
+mandatory = true
+versionRange = "[9.2,)"
+ordering = "AFTER"
+side = "BOTH"
+[[dependencies.${mod_id}]]
+modId = "playeranimator"
+mandatory = true
+versionRange = "[1.0.2-rc1,)"
+ordering = "AFTER"
+side = "BOTH"

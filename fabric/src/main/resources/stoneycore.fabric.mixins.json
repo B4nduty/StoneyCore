@@ -5,17 +5,19 @@
   "refmap": "${mod_id}.refmap.json",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "FItemEntityMixin",
     "FPlayerMixin"
   ],
   "client": [
     "BipedEntityModelMixin",
     "FGuiMixin",
-    "ItemRendererMixin"
+    ,
+    "FItemRendererMixin"
   ],
   "server": [
   ],
   "injectors": {
     "defaultRequire": 1
   }
-  }
+}
   
