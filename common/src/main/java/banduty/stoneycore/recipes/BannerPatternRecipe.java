@@ -4,6 +4,7 @@ import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.patterns.PatternHelper;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -16,71 +17,79 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BannerPatternRecipe extends CustomRecipe {
-    private final Ingredient input;
+public class BannerPatternRecipe extends ShapelessRecipe {
 
-    public BannerPatternRecipe(ResourceLocation id, CraftingBookCategory category, Ingredient input) {
-        super(id, category);
-        this.input = input;
-    }
-
-    public Ingredient getInput() {
-        return this.input;
+    public BannerPatternRecipe(ResourceLocation id,
+                               String group,
+                               CraftingBookCategory category,
+                               ItemStack result,
+                               NonNullList<Ingredient> ingredients) {
+        super(id, group, category, result, ingredients);
     }
 
     @Override
     public boolean matches(CraftingContainer container, Level level) {
+
+        if (!super.matches(container, level)) return false;
+
         ItemStack banner = ItemStack.EMPTY;
         ItemStack itemInput = ItemStack.EMPTY;
-        int count = 0;
 
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
             if (stack.isEmpty()) continue;
 
             if (stack.getItem() instanceof BannerItem) {
-                count++;
                 banner = stack;
-            }
-            else if (itemInput.isEmpty()) {
-                count++;
+            } else {
                 itemInput = stack;
             }
         }
 
-        if (count != 2 || banner.isEmpty() || itemInput.isEmpty()) return false;
+        if (banner.isEmpty() || itemInput.isEmpty()) return false;
+
+        if (PatternHelper.hasBannerPatterns(itemInput)) return false;
+
+        if (getBannerPatterns(banner, itemInput.getItem()).isEmpty()) return false;
 
         return true;
     }
 
     @Override
     public ItemStack assemble(CraftingContainer container, RegistryAccess registry) {
+
         ItemStack banner = ItemStack.EMPTY;
         ItemStack itemInput = ItemStack.EMPTY;
 
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
-            if (stack.getItem() instanceof BannerItem) banner = stack;
-            else if (itemInput.isEmpty()) itemInput = stack;
+            if (stack.isEmpty()) continue;
+
+            if (stack.getItem() instanceof BannerItem) {
+                banner = stack;
+            } else {
+                itemInput = stack;
+            }
         }
 
-        ItemStack result = itemInput.copy();
-        List<Tuple<ResourceLocation, DyeColor>> patterns = getBannerPatterns(banner, result.getItem());
-        PatternHelper.setBannerPatterns(result, patterns);
-        return result;
-    }
+        if (banner.isEmpty() || itemInput.isEmpty()) return ItemStack.EMPTY;
 
-    @Override
-    public boolean canCraftInDimensions(int width, int height) {
-        return width * height >= 2;
+        ItemStack result = itemInput.copy();
+
+        List<Tuple<ResourceLocation, DyeColor>> patterns =
+                getBannerPatterns(banner, result.getItem());
+
+        PatternHelper.setBannerPatterns(result, patterns);
+
+        return result;
     }
 
     @Override
@@ -90,15 +99,18 @@ public class BannerPatternRecipe extends CustomRecipe {
 
     public static List<Tuple<ResourceLocation, DyeColor>> getBannerPatterns(ItemStack banner, Item armor) {
         CompoundTag nbt = banner.getTag();
-        if (banner.isEmpty() || !(banner.getItem() instanceof BannerItem) || nbt == null) return List.of();
+        if (banner.isEmpty() || !(banner.getItem() instanceof BannerItem) || nbt == null)
+            return List.of();
 
         CompoundTag blockEntityTag = nbt.getCompound(INBTKeys.BLOCK_ENTITY_TAG);
-        if (!blockEntityTag.contains(INBTKeys.PATTERNS)) return List.of();
+        if (!blockEntityTag.contains(INBTKeys.PATTERNS))
+            return List.of();
 
         ResourceLocation armorId = BuiltInRegistries.ITEM.getKey(armor);
         ListTag patternList = blockEntityTag.getList(INBTKeys.PATTERNS, CompoundTag.TAG_COMPOUND);
 
         List<Tuple<ResourceLocation, DyeColor>> patterns = new ArrayList<>();
+
         for (int i = 0; i < patternList.size(); i++) {
             CompoundTag patternTag = patternList.getCompound(i);
             String pattern = NBTDataHelper.get(patternTag, INBTKeys.PATTERN, "");
@@ -108,8 +120,10 @@ public class BannerPatternRecipe extends CustomRecipe {
                     armorId.getNamespace(),
                     "textures/banner_pattern/" + armorId.getPath() + "/" + pattern + ".png"
             );
+
             patterns.add(new Tuple<>(patternId, DyeColor.byId(colorId)));
         }
+
         return patterns;
     }
 }

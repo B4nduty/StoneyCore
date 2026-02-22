@@ -88,10 +88,18 @@ public class PatternHelper {
     }
 
     public static float[] getBannerDyeColor(ItemStack stack) {
-        return new float[] {
+        return new float[]{
                 NBTDataHelper.get(stack, INBTKeys.DYE_COLOR_R, 1.0f),
                 NBTDataHelper.get(stack, INBTKeys.DYE_COLOR_G, 1.0f),
                 NBTDataHelper.get(stack, INBTKeys.DYE_COLOR_B, 1.0f)
         };
+    }
+
+    public static boolean hasBannerPatterns(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        if (tag == null) return false;
+
+        CompoundTag blockEntityTag = tag.getCompound(INBTKeys.BLOCK_ENTITY_TAG);
+        return blockEntityTag.contains(INBTKeys.PATTERNS);
     }
 }

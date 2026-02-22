@@ -2,9 +2,9 @@ package banduty.stoneycore.platform.services;
 
 import banduty.stoneycore.config.ConfigImpl;
 import banduty.stoneycore.lands.util.ClaimWorker;
+import banduty.stoneycore.recipes.AnvilRecipe;
 import banduty.stoneycore.recipes.BannerPatternRecipe;
 import banduty.stoneycore.recipes.ManuscriptCraftingRecipe;
-import banduty.stoneycore.recipes.AnvilRecipe;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.network.chat.Component;
@@ -69,17 +69,18 @@ public interface IPlatformHelper {
     ItemStack getWeaponStack(Entity attacker, ItemStack defaultStack);
 
     Attribute getAttackRange();
+
     Attribute getReach();
 
     Block getCraftmanAnvil();
+
     RecipeType<AnvilRecipe> getCraftmanAnvilRecipe();
+
     RecipeSerializer<AnvilRecipe> getCraftmanAnvilRecipeSerializer();
 
     RecipeSerializer<ManuscriptCraftingRecipe> getManuscriptRecipeSerializer();
-    RecipeSerializer<BannerPatternRecipe> getBannerRecipeSerializer();
 
-    RecipeType<ManuscriptCraftingRecipe> getManuscriptRecipeType();
-    RecipeType<BannerPatternRecipe> getBannerRecipeType();
+    RecipeSerializer<BannerPatternRecipe> getBannerRecipeSerializer();
 
     ConfigImpl getConfig();
 

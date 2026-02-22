@@ -8,41 +8,63 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import org.jetbrains.annotations.Nullable;
 
-public record BannerRecipeBuilder(ResourceLocation id, Item result, NonNullList<Ingredient> ingredients) implements FinishedRecipe {
+public record BannerRecipeBuilder(
+        ResourceLocation id,
+        Item result,
+        NonNullList<Ingredient> ingredients,
+        CraftingBookCategory category,
+        String group
+) implements FinishedRecipe {
 
     @Override
     public void serializeRecipeData(JsonObject json) {
+
+        // group (optional)
+        if (!group.isEmpty()) {
+            json.addProperty("group", group);
+        }
+
+        // category
+        json.addProperty("category", category.getSerializedName());
+
+        // ingredients
         JsonArray jsonArray = new JsonArray();
         for (Ingredient ingredient : ingredients) {
             jsonArray.add(ingredient.toJson());
         }
         json.add("ingredients", jsonArray);
 
+        // result
         JsonObject resultJson = new JsonObject();
         resultJson.addProperty("item", BuiltInRegistries.ITEM.getKey(result).toString());
+        resultJson.addProperty("count", 1);
         json.add("result", resultJson);
     }
 
     @Override
-    public ResourceLocation getId() { return id; }
+    public ResourceLocation getId() {
+        return id;
+    }
 
     @Override
     public RecipeSerializer<?> getType() {
         return ModRecipes.BANNER_SERIALIZER;
     }
 
+    @Nullable
     @Override
-    public JsonObject serializeRecipe() {
-        JsonObject json = new JsonObject();
-        json.addProperty("type", "stoneycore:banner_pattern_crafting");
-        serializeRecipeData(json);
-        return json;
+    public JsonObject serializeAdvancement() {
+        return null;
     }
 
-    @Nullable @Override public JsonObject serializeAdvancement() { return null; }
-    @Nullable @Override public ResourceLocation getAdvancementId() { return null; }
+    @Nullable
+    @Override
+    public ResourceLocation getAdvancementId() {
+        return null;
+    }
 }

@@ -7,9 +7,9 @@ import banduty.stoneycore.event.StartTickHandler;
 import banduty.stoneycore.lands.util.ClaimWorker;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.platform.services.IPlatformHelper;
+import banduty.stoneycore.recipes.AnvilRecipe;
 import banduty.stoneycore.recipes.BannerPatternRecipe;
 import banduty.stoneycore.recipes.ManuscriptCraftingRecipe;
-import banduty.stoneycore.recipes.AnvilRecipe;
 import banduty.stoneycore.recipes.ModRecipes;
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import io.wispforest.accessories.api.AccessoriesCapability;
@@ -136,16 +136,6 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public RecipeSerializer<BannerPatternRecipe> getBannerRecipeSerializer() {
         return ModRecipes.BANNER_SERIALIZER;
-    }
-
-    @Override
-    public RecipeType<ManuscriptCraftingRecipe> getManuscriptRecipeType() {
-        return ModRecipes.MANUSCRIPT_RECIPE_TYPE;
-    }
-
-    @Override
-    public RecipeType<BannerPatternRecipe> getBannerRecipeType() {
-        return ModRecipes.BANNER_RECIPE_TYPE;
     }
 
     @Override
