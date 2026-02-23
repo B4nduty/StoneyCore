@@ -22,6 +22,7 @@
   "client": [
     "CameraAccessor",
     "CameraMixin",
+    "FItemRendererMixin",
     "GameRendererAccessor",
     "GameRendererMixin",
     "GuiMixin",
