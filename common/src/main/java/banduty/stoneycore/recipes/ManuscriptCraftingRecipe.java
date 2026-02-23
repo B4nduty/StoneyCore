@@ -2,7 +2,9 @@ package banduty.stoneycore.recipes;
 
 import banduty.stoneycore.items.SmithingHammer;
 import banduty.stoneycore.items.manuscript.Manuscript;
-import banduty.stoneycore.platform.Services;import net.minecraft.core.RegistryAccess;
+import banduty.stoneycore.platform.Services;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
@@ -60,6 +62,30 @@ public class ManuscriptCraftingRecipe extends CustomRecipe {
             }
         }
         return Manuscript.createForStack(itemInput);
+    }
+
+    @Override
+    public NonNullList<ItemStack> getRemainingItems(CraftingContainer container) {
+        NonNullList<ItemStack> remaining = NonNullList.withSize(container.getContainerSize(), ItemStack.EMPTY);
+
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack stack = container.getItem(i);
+
+            if (stack.isEmpty()) continue;
+
+            if (stack.getItem() instanceof SmithingHammer) {
+                ItemStack hammerCopy = stack.copy();
+
+                int newDamage = hammerCopy.getDamageValue() + 1;
+
+                if (newDamage < hammerCopy.getMaxDamage()) {
+                    hammerCopy.setDamageValue(newDamage);
+                    remaining.set(i, hammerCopy);
+                }
+            }
+        }
+
+        return remaining;
     }
 
     @Override
