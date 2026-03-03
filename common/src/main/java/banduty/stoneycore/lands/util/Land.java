@@ -7,7 +7,6 @@ import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.data.playerdata.PDKeys;
-import banduty.streq.StrEq;
 import com.mojang.authlib.GameProfile;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -105,9 +104,7 @@ public class Land {
         while (testRadius < maxAllowedRadius) {
             vars.put("radius", testRadius);
 
-            StrEq strEq = new StrEq();
-
-            int cost = Math.max(0, (int) strEq.evaluate(formula, vars));
+            int cost = Math.max(0, (int) StoneyCore.getStrEq().evaluate(formula, vars));
 
             if (totalCost + cost > expandItemStored) break;
 
@@ -153,9 +150,7 @@ public class Land {
         Map<String, Double> variables = new HashMap<>();
         variables.put("radius", (double) radius);
 
-        StrEq strEq = new StrEq();
-
-        return Math.max(1, (int) strEq.evaluate(formula, variables));
+        return Math.max(1, (int) StoneyCore.getStrEq().evaluate(formula, variables));
     }
 
     public BlockPos getCorePos() {

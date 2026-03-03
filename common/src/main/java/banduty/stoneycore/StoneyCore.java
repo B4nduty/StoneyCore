@@ -6,6 +6,7 @@ import banduty.stoneycore.combat.range.MusketHandler;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.config.IConfig;
 import banduty.stoneycore.platform.Services;
+import banduty.streq.StrEq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,8 @@ public class StoneyCore {
     public static final String MOD_ID = "stoneycore";
     public static final String MOD_NAME = "StoneyCore";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
+
+    private final static StrEq strEq = new StrEq();
 
     public static void init() {
         RangedWeaponHandlers.register(new BowHandler());
@@ -27,5 +30,9 @@ public class StoneyCore {
 
     public static IConfig getConfig() {
         return Services.PLATFORM.getConfig();
+    }
+
+    public static StrEq getStrEq() {
+        return strEq;
     }
 }

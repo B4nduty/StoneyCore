@@ -8,7 +8,6 @@ import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.data.playerdata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
-import banduty.streq.StrEq;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -72,7 +71,7 @@ public class StaminaUtil {
                 "health", health
         ));
 
-        int recoveryRate = Math.max(1, (int) StrEq.evaluate(config.staminaRecoveryFormula(), vars));
+        int recoveryRate = Math.max(1, (int) StoneyCore.getStrEq().evaluate(config.staminaRecoveryFormula(), vars));
 
         if (entity.tickCount % recoveryRate != 0) return;
 
