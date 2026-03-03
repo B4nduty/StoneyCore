@@ -16,7 +16,7 @@ public class StoneyCore {
     public static final String MOD_NAME = "StoneyCore";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
 
-    private final static StrEq strEq = new StrEq();
+    private static StrEq strEq;
 
     public static void init() {
         RangedWeaponHandlers.register(new BowHandler());
@@ -33,6 +33,9 @@ public class StoneyCore {
     }
 
     public static StrEq getStrEq() {
+        if (strEq == null) {
+            strEq = new StrEq();
+        }
         return strEq;
     }
 }
