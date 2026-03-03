@@ -11,7 +11,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import java.util.UUID;
 
 public class StaminaData {
-    private static final UUID GENERIC_STAMINA_MODIFIER_ID = UUID.randomUUID();
+    private static final UUID GENERIC_STAMINA_MODIFIER_ID =
+            UUID.fromString("9e6b3f6e-4c3d-4b5b-9a2e-1d7a4e6f8abc");
 
     public static void setStamina(LivingEntity livingEntity, double stamina) {
         ModifiersHelper.updateModifier(livingEntity.getAttribute(Services.ATTRIBUTES.getStamina()),
@@ -62,7 +63,14 @@ public class StaminaData {
     }
 
     public static void loadStamina(LivingEntity livingEntity) {
-        if (!(livingEntity instanceof IEntityDataSaver iEntityDataSaver)) return;
-        NBTDataHelper.set(iEntityDataSaver, PDKeys.STAMINA_VALUE_SAVED, NBTDataHelper.get(iEntityDataSaver, PDKeys.STAMINA_VALUE_SAVED, livingEntity.getAttributeValue(Services.ATTRIBUTES.getMaxStamina())));
+        if (!(livingEntity instanceof IEntityDataSaver saver)) return;
+
+        double saved = NBTDataHelper.get(
+                saver,
+                PDKeys.STAMINA_VALUE_SAVED,
+                livingEntity.getAttributeValue(Services.ATTRIBUTES.getMaxStamina())
+        );
+
+        setStamina(livingEntity, saved);
     }
 }

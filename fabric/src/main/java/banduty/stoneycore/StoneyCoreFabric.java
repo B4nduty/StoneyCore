@@ -23,6 +23,7 @@ import banduty.stoneycore.util.definitionsloader.*;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
@@ -30,6 +31,7 @@ import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
@@ -66,31 +68,46 @@ public class StoneyCoreFabric implements ModInitializer {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new AccessoriesDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new LandDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new SiegeEngineDefinitionsLoader());
+        ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
+
+            if (!(oldPlayer instanceof IEntityDataSaver oldSaver)) return;
+            if (!(newPlayer instanceof IEntityDataSaver newSaver)) return;
+
+            CompoundTag oldData = oldSaver.stoneycore$getPersistentData();
+            CompoundTag newData = newSaver.stoneycore$getPersistentData();
+
+            newData.merge(oldData); // Fabric-friendly copy
+        });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayer player = handler.getPlayer();
+
+            IEntityDataSaver saver = (IEntityDataSaver) player;
             double currentStamina = StaminaData.getStamina(player);
-            StaminaData.saveStamina((IEntityDataSaver) player, currentStamina);
+            StaminaData.saveStamina(saver, currentStamina);
+
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerPlayer player = handler.getPlayer();
-            if (NBTDataHelper.get((IEntityDataSaver) player, PDKeys.FIRST_JOIN, false)) {
-                StaminaData.loadStamina(player);
-                return;
-            }
+            server.execute(() -> {
+                ServerPlayer player = handler.getPlayer();
 
-            player.displayClientMessage(Component.literal("""
-                            §4StoneyCore §radds an overlay that makes a noise effect.
-                            If you have §4epilepsy §rit is §lhighly recommended §rto §4disable Noise Effect.
-                            """),
-                    false);
+                if (NBTDataHelper.get((IEntityDataSaver) player, PDKeys.FIRST_JOIN, false)) {
+                    StaminaData.loadStamina(player);
+                    return;
+                }
 
-            NBTDataHelper.set((IEntityDataSaver) player, PDKeys.FIRST_JOIN, true);
+                player.displayClientMessage(Component.literal("""
+                                §4StoneyCore §radds an overlay that makes a noise effect.
+                                If you have §4epilepsy §rit is §lhighly recommended §rto §4disable Noise Effect.
+                                """),
+                        false);
 
-            StaminaData.setStamina(player, player.getAttributeValue(SCAttributes.MAX_STAMINA));
+                NBTDataHelper.set((IEntityDataSaver) player, PDKeys.FIRST_JOIN, true);
+
+                StaminaData.setStamina(player, player.getAttributeValue(SCAttributes.MAX_STAMINA));
+            });
         });
-
         StoneyCore.LOG.info("Hello Fabric world!");
         StoneyCore.init();
     }
