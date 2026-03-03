@@ -104,7 +104,10 @@ public class Land {
 
         while (testRadius < maxAllowedRadius) {
             vars.put("radius", testRadius);
-            int cost = Math.max(0, (int) StrEq.evaluate(formula, vars));
+
+            StrEq strEq = new StrEq();
+
+            int cost = Math.max(0, (int) strEq.evaluate(formula, vars));
 
             if (totalCost + cost > expandItemStored) break;
 
@@ -149,7 +152,10 @@ public class Land {
         String formula = landType.expandFormula();
         Map<String, Double> variables = new HashMap<>();
         variables.put("radius", (double) radius);
-        return Math.max(1, (int) StrEq.evaluate(formula, variables));
+
+        StrEq strEq = new StrEq();
+
+        return Math.max(1, (int) strEq.evaluate(formula, variables));
     }
 
     public BlockPos getCorePos() {
