@@ -21,6 +21,7 @@ import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -101,6 +102,16 @@ public class GameRendererMixin {
                         new ResourceLocation(namespace, "textures/overlay/visor/" + visorId.getPath() + ".png");
 
                 RenderSystem.setShaderTexture(0, visorTexture);
+                RenderSystem.texParameter(
+                        GL11.GL_TEXTURE_2D,
+                        GL11.GL_TEXTURE_MIN_FILTER,
+                        GL11.GL_LINEAR
+                );
+                RenderSystem.texParameter(
+                        GL11.GL_TEXTURE_2D,
+                        GL11.GL_TEXTURE_MAG_FILTER,
+                        GL11.GL_LINEAR
+                );
                 guiGraphics.setColor(
                         1f, 1f, 1f,
                         player.isCreative()
