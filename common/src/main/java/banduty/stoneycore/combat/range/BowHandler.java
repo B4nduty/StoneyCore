@@ -8,13 +8,17 @@ import net.minecraft.world.level.Level;
 import java.util.Optional;
 
 public class BowHandler implements IRangedWeaponHandler {
-    @Override public String getTypeId() { return "bow"; }
+    @Override
+    public String getTypeId() {
+        return "bow";
+    }
 
     @Override
     public void shoot(Level level, Player player, ItemStack weapon) {
     }
 
-    @Override public void reload(Level level, Player player, ItemStack weapon) { /* bows don't reload */ }
+    @Override
+    public void reload(Level level, Player player, ItemStack weapon) { /* bows don't reload */ }
 
     @Override
     public void handleRelease(ItemStack stack, Level level, Player player, int useTime, ItemStack arrowStack) {
@@ -23,7 +27,7 @@ public class BowHandler implements IRangedWeaponHandler {
         if (pullProgress < 0.1f) return;
         Optional<ItemStack> arrow = SCRangeWeaponUtil.getArrowFromInventory(player);
         if (arrow.isEmpty()) return;
-        SCRangeWeaponUtil.shootArrow(level, stack, player, arrow.get(), 1.0f);
+        SCRangeWeaponUtil.shootArrow(level, stack, player, arrow.get(), pullProgress);
         if (!player.isCreative()) arrow.get().shrink(1);
     }
 
