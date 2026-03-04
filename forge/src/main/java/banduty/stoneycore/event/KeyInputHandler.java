@@ -5,6 +5,9 @@ import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.networking.packet.ReloadC2SPacket;
 import banduty.stoneycore.networking.packet.ToggleVisorC2SPacket;
+import banduty.stoneycore.sounds.ModSounds;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
@@ -87,6 +90,29 @@ public class KeyInputHandler {
                     toggleProgress = Math.min(1.0f, (float) toggleVisorTicks / (StoneyCore.getConfig().combatOptions().getToggleVisorTime() - 1));
 
                     if (!visorToggled && toggleVisorTicks >= StoneyCore.getConfig().combatOptions().getToggleVisorTime()) {
+
+                        // Determine visor state BEFORE toggle
+                        boolean isCurrentlyOpen = false;
+
+                        if (AccessoriesCapability.getOptionally(localPlayer).isPresent()) {
+                            for (SlotEntryReference equipped : AccessoriesCapability.get(localPlayer).getAllEquipped()) {
+                                ItemStack stack = equipped.stack();
+                                if (!stack.isEmpty() && stack.getItem() instanceof SCAccessoryItem accessory) {
+                                    if (accessory.hasOpenVisor(stack)) {
+                                        isCurrentlyOpen = NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Play appropriate sound
+                        if (isCurrentlyOpen) {
+                            localPlayer.playSound(ModSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
+                        } else {
+                            localPlayer.playSound(ModSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
+                        }
+
                         ModMessages.CHANNEL.send(PacketDistributor.SERVER.noArg(), new ToggleVisorC2SPacket());
                         visorToggled = true;
                         isTogglingVisor = false;

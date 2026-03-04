@@ -3,6 +3,9 @@ package banduty.stoneycore.event;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.networking.ModMessages;
+import banduty.stoneycore.sounds.ModSounds;
+import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
@@ -58,6 +61,29 @@ public class KeyInputHandler {
                     toggleProgress = Math.min(1.0f, (float) toggleVisorTicks / (StoneyCore.getConfig().combatOptions().getToggleVisorTime() - 1));
 
                     if (!visorToggled && toggleVisorTicks >= StoneyCore.getConfig().combatOptions().getToggleVisorTime()) {
+
+                        // Determine visor state BEFORE toggle
+                        boolean isCurrentlyOpen = false;
+
+                        if (AccessoriesCapability.getOptionally(localPlayer).isPresent()) {
+                            for (SlotEntryReference equipped : AccessoriesCapability.get(localPlayer).getAllEquipped()) {
+                                ItemStack stack = equipped.stack();
+                                if (!stack.isEmpty() && stack.getItem() instanceof SCAccessoryItem accessory) {
+                                    if (accessory.hasOpenVisor(stack)) {
+                                        isCurrentlyOpen = NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Play appropriate sound
+                        if (isCurrentlyOpen) {
+                            localPlayer.playSound(ModSounds.VISOR_CLOSE, 1.0F, 1.0F);
+                        } else {
+                            localPlayer.playSound(ModSounds.VISOR_OPEN, 1.0F, 1.0F);
+                        }
+
                         ClientPlayNetworking.send(ModMessages.TOGGLE_VISOR_ID, PacketByteBufs.create());
                         visorToggled = true;
                         isTogglingVisor = false;

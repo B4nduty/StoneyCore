@@ -49,7 +49,7 @@ public class GameRendererMixin {
 
         Window window = gameRenderer.getMinecraft().getWindow();
         RenderSystem.clear(256, Minecraft.ON_OSX);
-        Matrix4f matrix4f = (new Matrix4f()).setOrtho(0.0F, (float)((double)window.getWidth() / window.getGuiScale()), (float)((double)window.getHeight() / window.getGuiScale()), 0.0F, 1000.0F, 21000.0F);
+        Matrix4f matrix4f = (new Matrix4f()).setOrtho(0.0F, (float) ((double) window.getWidth() / window.getGuiScale()), (float) ((double) window.getHeight() / window.getGuiScale()), 0.0F, 1000.0F, 21000.0F);
         RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.ORTHOGRAPHIC_Z);
         PoseStack poseStack = RenderSystem.getModelViewStack();
         poseStack.pushPose();
@@ -76,6 +76,9 @@ public class GameRendererMixin {
 
         if (player == null || player.isSpectator()) return;
 
+        // ✅ Only render in first person
+        if (!client.options.getCameraType().isFirstPerson()) return;
+
         int width = guiGraphics.guiWidth();
         int height = guiGraphics.guiHeight();
 
@@ -87,40 +90,55 @@ public class GameRendererMixin {
         for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(player)) {
             ResourceLocation visorId = AccessoriesDefinitionsStorage.getData(itemStack).visoredHelmet();
 
-            if (!NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false) && !(visorId.getPath().isEmpty() || visorId.getPath().equals("empty")) && StoneyCore.getConfig().visualOptions().getVisoredHelmet()) {
+            if (!NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false)
+                    && !(visorId.getPath().isEmpty() || visorId.getPath().equals("empty"))
+                    && StoneyCore.getConfig().visualOptions().getVisoredHelmet()) {
 
                 String namespace = visorId.getNamespace();
-                if (visorId.getNamespace().isEmpty()) namespace = "stoneycore";
+                if (namespace.isEmpty()) namespace = "stoneycore";
 
-                ResourceLocation visorTexture = new ResourceLocation(namespace, "textures/overlay/visor/" + visorId.getPath() + ".png");
+                ResourceLocation visorTexture =
+                        new ResourceLocation(namespace, "textures/overlay/visor/" + visorId.getPath() + ".png");
 
                 RenderSystem.setShaderTexture(0, visorTexture);
-                guiGraphics.setColor(1f, 1f, 1f, player.isCreative() ? StoneyCore.getConfig().visualOptions().getVisoredHelmetAlphaCreative() : StoneyCore.getConfig().visualOptions().getVisoredHelmetAlphaSurvival());
+                guiGraphics.setColor(
+                        1f, 1f, 1f,
+                        player.isCreative()
+                                ? StoneyCore.getConfig().visualOptions().getVisoredHelmetAlphaCreative()
+                                : StoneyCore.getConfig().visualOptions().getVisoredHelmetAlphaSurvival()
+                );
+
                 guiGraphics.blit(visorTexture, 0, 0, 0, 0, width, height, width, height);
                 break;
             }
         }
+
         guiGraphics.setColor(1f, 1f, 1f, 1f);
 
         double stamina = StaminaData.getStamina(player);
         double secondLevel = player.getAttributeBaseValue(Services.ATTRIBUTES.getMaxStamina()) * 0.15d;
 
-        if (!player.isCreative() && StaminaData.isStaminaBlocked((IEntityDataSaver) player) && StoneyCore.getConfig().visualOptions().getLowStaminaIndicator()) {
+        if (!player.isCreative()
+                && StaminaData.isStaminaBlocked((IEntityDataSaver) player)
+                && StoneyCore.getConfig().visualOptions().getLowStaminaIndicator()) {
+
             double staminaPercentage = stamina / secondLevel;
+
             if (StoneyCore.getConfig().combatOptions().getRealisticCombat()) {
                 if (noiseTextures == null) stoneyCore$initNoiseTextures();
                 stoneyCore$renderBlurEffect(guiGraphics, width, height, staminaPercentage);
             } else {
-                int opacity = (int)((Math.max(0, 0.4f - staminaPercentage) * 255));
-                int green = StaminaData.isStaminaBlocked((IEntityDataSaver) player) ? 0 : (int) (stamina / secondLevel);
-                int gradientColorEnd = opacity << 24 | green | 0x00FF0000;
+                int opacity = (int) ((Math.max(0, 0.4f - staminaPercentage) * 255));
+                int green = StaminaData.isStaminaBlocked((IEntityDataSaver) player)
+                        ? 0
+                        : (int) (stamina / secondLevel);
 
+                int gradientColorEnd = opacity << 24 | green | 0x00FF0000;
                 guiGraphics.fillGradient(0, 0, width, height, 0x00FFFFFF, gradientColorEnd);
             }
         }
 
         stoneyCore$renderVisorToggleProgress(guiGraphics, tickDelta);
-
         StoneyCoreClient.LAND_TITLE_RENDERER.render(guiGraphics);
     }
 
@@ -143,7 +161,8 @@ public class GameRendererMixin {
     private void stoneyCore$renderBlurEffect(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
         stoneyCore$renderBlur(guiGraphics, width, height, staminaPercentage);
         stoneyCore$renderTunnelVision(guiGraphics, width, height, staminaPercentage);
-        if (StoneyCore.getConfig().visualOptions().getNoiseEffect()) stoneyCore$renderNoise(guiGraphics, width, height, staminaPercentage);
+        if (StoneyCore.getConfig().visualOptions().getNoiseEffect())
+            stoneyCore$renderNoise(guiGraphics, width, height, staminaPercentage);
     }
 
     @Unique
@@ -192,10 +211,10 @@ public class GameRendererMixin {
 
     @Unique
     private void stoneyCore$renderTunnelVision(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
-        int opacity = (int)((Math.max(0, 0.2f - staminaPercentage) * 255));
+        int opacity = (int) ((Math.max(0, 0.2f - staminaPercentage) * 255));
         int gradientColor = opacity << 24;
 
-        int opacity2 = (int)((Math.max(0, 0.6f - staminaPercentage) * 255));
+        int opacity2 = (int) ((Math.max(0, 0.6f - staminaPercentage) * 255));
         int gradientColor2 = opacity2 << 24;
 
         guiGraphics.fillGradient(0, 0, width, height, gradientColor, gradientColor2);

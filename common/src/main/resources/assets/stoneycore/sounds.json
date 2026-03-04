@@ -4,5 +4,17 @@
     "sounds": [
       "stoneycore:bullet_crack"
     ]
+  },
+  "visor_open": {
+    "subtitle": "sounds.stoneycore.visor_open",
+    "sounds": [
+      "stoneycore:visor_open"
+    ]
+  },
+  "visor_close": {
+    "subtitle": "sounds.stoneycore.visor_close",
+    "sounds": [
+      "stoneycore:visor_close"
+    ]
   }
 }

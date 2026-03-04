@@ -8,13 +8,10 @@
   "item.stoneycore.tongs": "Tongs",
   "item.stoneycore.tongs_hot_iron": "Tongs with Hot Iron",
   "item.stoneycore.tongs_hot_iron_finished": "Tongs with Hot Iron Finished",
-
   "block.stoneycore.craftman_anvil": "Craftman's Anvil",
-
   "key.category.stoneycore": "StoneyCore",
   "key.stoneycore.reload": "Reload",
   "key.stoneycore.toggle_visor": "Toggle Visor",
-
   "component.tooltip.stoneycore.freezing": "Prevents freezing",
   "component.tooltip.stoneycore.hideNameTag": "Hide Name Tag",
   "component.tooltip.stoneycore.baseDamage": "%s Base Damage",
@@ -37,7 +34,6 @@
   "component.tooltip.stoneycore.openVisorArmor": "Open Visor: -1 Armor",
   "component.tooltip.stoneycore.openVisorToughness": "Open Visor: -1 Toughness",
   "component.tooltip.stoneycore.openVisorEatDrink": "You can't §l§4eat/drink §rwith the §l§4Visor Closed",
-
   "text.config.stoneycore.title": "StoneyCore",
   "text.config.stoneycore.section.combatOptions": "Combat Options",
   "text.config.stoneycore.category.combatOptions": "Combat Options",
@@ -54,7 +50,6 @@
   "text.config.stoneycore.option.combatOptions.swimmingStaminaConstant": "Swimming Stamina Constant",
   "text.config.stoneycore.option.combatOptions.attackStaminaConstant": "Attack Stamina Constant",
   "text.config.stoneycore.option.combatOptions.getStaminaRecoverTime": "Stamina Time to Replenish after Using",
-
   "text.config.stoneycore.section.visualOptions": "Visual Options",
   "text.config.stoneycore.category.visualOptions": "Visual Options",
   "text.config.stoneycore.option.visualOptions.getDamageIndicator": "Damage Indicator",
@@ -70,23 +65,21 @@
   "text.config.stoneycore.option.visualOptions.hexColorMaximum": "Hex Color Maximum",
   "text.config.stoneycore.option.visualOptions.armWave": "Wave arms if not participant in a siege",
   "text.config.stoneycore.option.visualOptions.claimOutlineColor": "Claim Outline Render Hex Color",
-
   "text.config.stoneycore.section.technicalOptions": "Technical Options",
   "text.config.stoneycore.category.technicalOptions": "Technical Options",
   "text.config.stoneycore.option.technicalOptions.maxWorkPerTick": "Max Work for Claim Worker per tick",
   "text.config.stoneycore.option.technicalOptions.maxLandExpandRadius": "Max Land Expand Radius",
   "text.config.stoneycore.option.technicalOptions.breakOrRemoveSiegeDestroy": "Break or Remove Blocks on destroy with siege engines",
-
   "text.config.stoneycore.section.landOptions": "Land Options",
   "text.config.stoneycore.category.landOptions": "Land Options",
   "text.config.stoneycore.option.landOptions.claimLand": "Claim Land",
   "text.config.stoneycore.option.landOptions.removeClaimedSiege": "Remove radius claim on defender death",
   "text.config.stoneycore.option.landOptions.hungerSiege": "Hunger inside a Siege",
-
   "component.land.stoneycore.expansion.increased": "Radius increased: %d → %d",
-
   "component.warning.stoneycore.armor_needed_for_accessory": "%s requires %s to be equipped!",
-
   "attribute.name.generic.stoneycore.hunger_drain_multiplier": "Hunger Drain Multiplier",
-  "attribute.name.generic.stoneycore.deflect_chance": "Deflect Chance"
+  "attribute.name.generic.stoneycore.deflect_chance": "Deflect Chance",
+  "sounds.stoneycore.bullet_crack": "Bullet cracking",
+  "sounds.stoneycore.visor_open": "Visor opening",
+  "sounds.stoneycore.visor_close": "Visor closing"
 }
