@@ -7,15 +7,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 
 public interface ModSounds {
-    SoundEvent BULLET_CRACK = registerSound("bullet_crack",
-            SoundEvent.createVariableRangeEvent(new ResourceLocation(StoneyCore.MOD_ID, "bullet_crack")));
-    SoundEvent VISOR_OPEN = registerSound("visor_open",
-            SoundEvent.createVariableRangeEvent(new ResourceLocation(StoneyCore.MOD_ID, "visor_open")));
-    SoundEvent VISOR_CLOSE = registerSound("visor_close",
-            SoundEvent.createVariableRangeEvent(new ResourceLocation(StoneyCore.MOD_ID, "visor_close")));
+    SoundEvent BULLET_CRACK = registerSound("bullet_crack");
+    SoundEvent VISOR_OPEN = registerSound("visor_open");
+    SoundEvent VISOR_CLOSE = registerSound("visor_close");
 
-    private static SoundEvent registerSound(String name, SoundEvent soundEvent) {
-        return Registry.register(BuiltInRegistries.SOUND_EVENT, new ResourceLocation(StoneyCore.MOD_ID, name), soundEvent);
+    private static SoundEvent registerSound(String name) {
+        ResourceLocation id = new ResourceLocation(StoneyCore.MOD_ID, name);
+        return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));
     }
 
     static void registerSounds() {

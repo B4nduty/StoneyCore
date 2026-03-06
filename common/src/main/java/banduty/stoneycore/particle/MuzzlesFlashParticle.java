@@ -45,7 +45,7 @@ public class MuzzlesFlashParticle extends TextureSheetParticle {
 
         public Particle createParticle(@NotNull SimpleParticleType particleType, @NotNull ClientLevel clientLevel,
                                        double x, double y, double z, double xd, double yd, double zd) {
-                return new MuzzlesFlashParticle(clientLevel, x, y, z, this.sprites, xd, yd, zd);
-            }
+            return new MuzzlesFlashParticle(clientLevel, x, y, z, this.sprites, xd, yd, zd);
         }
+    }
 }

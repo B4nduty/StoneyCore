@@ -35,7 +35,7 @@ public class MuzzlesSmokeParticle extends TextureSheetParticle {
     @Override
     public void tick() {
         super.tick();
-        this.alpha = 1f - ((float)this.age / (float)this.lifetime);
+        this.alpha = 1f - ((float) this.age / (float) this.lifetime);
 
         if (!this.removed) {
             this.setSpriteFromAge(this.spriteSet);
@@ -51,7 +51,7 @@ public class MuzzlesSmokeParticle extends TextureSheetParticle {
 
         public Particle createParticle(@NotNull SimpleParticleType particleType, @NotNull ClientLevel clientLevel,
                                        double x, double y, double z, double xd, double yd, double zd) {
-                return new MuzzlesSmokeParticle(clientLevel, x, y, z, this.sprites, xd, yd, zd);
-            }
+            return new MuzzlesSmokeParticle(clientLevel, x, y, z, this.sprites, xd, yd, zd);
         }
+    }
 }

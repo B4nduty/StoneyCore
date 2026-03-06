@@ -12,12 +12,15 @@ public interface ModSounds {
     DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, StoneyCore.MOD_ID);
 
-    RegistryObject<SoundEvent> BULLET_CRACK = SOUND_EVENTS.register("bullet_crack",
-            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(StoneyCore.MOD_ID, "bullet_crack")));
-    RegistryObject<SoundEvent> VISOR_CLOSE = SOUND_EVENTS.register("visor_close",
-            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(StoneyCore.MOD_ID, "visor_close")));
-    RegistryObject<SoundEvent> VISOR_OPEN = SOUND_EVENTS.register("visor_open",
-            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(StoneyCore.MOD_ID, "visor_open")));
+    RegistryObject<SoundEvent> BULLET_CRACK = register("bullet_crack");
+    RegistryObject<SoundEvent> VISOR_CLOSE = register("visor_close");
+    RegistryObject<SoundEvent> VISOR_OPEN = register("visor_open");
+
+    private static RegistryObject<SoundEvent> register(String name) {
+        return SOUND_EVENTS.register(name,
+                () -> SoundEvent.createVariableRangeEvent(
+                        new ResourceLocation(StoneyCore.MOD_ID, name)));
+    }
 
     static void registerSounds(IEventBus eventBus) {
         SOUND_EVENTS.register(eventBus);

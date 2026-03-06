@@ -13,11 +13,10 @@ import banduty.stoneycore.model.UnderArmourBootsModel;
 import banduty.stoneycore.model.UnderArmourChestplateModel;
 import banduty.stoneycore.model.UnderArmourHelmetModel;
 import banduty.stoneycore.model.UnderArmourLeggingsModel;
-import banduty.stoneycore.platform.ForgeHumanoidModelSetupAnimHelper;
-import banduty.stoneycore.platform.ForgeKeyInputHelper;
-import banduty.stoneycore.platform.ForgeRenderFirstPersonAccessoryArmorHelper;
-import banduty.stoneycore.platform.ClientPlatform;
-import banduty.stoneycore.platform.ForgeClientPlatformHelper;
+import banduty.stoneycore.particle.ModParticles;
+import banduty.stoneycore.particle.MuzzlesFlashParticle;
+import banduty.stoneycore.particle.MuzzlesSmokeParticle;
+import banduty.stoneycore.platform.*;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.render.ForgeRenderTypeHelper;
 import io.wispforest.accessories.api.client.AccessoriesRendererRegistry;
@@ -30,6 +29,7 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
+import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -93,8 +93,14 @@ public class StoneyCoreForgeClient {
         for (Item item : ForgeRegistries.ITEMS.getValues()) {
             if (((item instanceof SCAccessoryItem || item instanceof ISCUnderArmor) && item instanceof DyeableLeatherItem dyeableItem)) {
                 event.register((stack, tintIndex) ->
-                    tintIndex > 0 ? -1 : dyeableItem.getColor(stack), item);
+                        tintIndex > 0 ? -1 : dyeableItem.getColor(stack), item);
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void registerParticleFactories(RegisterParticleProvidersEvent event) {
+        event.registerSpriteSet(ModParticles.MUZZLES_SMOKE_PARTICLE.get(), MuzzlesSmokeParticle.Factory::new);
+        event.registerSpriteSet(ModParticles.MUZZLES_FLASH_PARTICLE.get(), MuzzlesFlashParticle.Factory::new);
     }
 }
