@@ -165,9 +165,6 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             cir.cancel();
         }
 
-        ItemStack weaponStack = ItemStack.EMPTY;
-        if (Services.PLATFORM.isModLoaded("bettercombat")) SCBetterCombat.getWeaponStack(source.getEntity(), ItemStack.EMPTY);
-
         if (DeflectChanceHelper.shouldDeflect(livingEntity)) {
             cir.cancel();
         }
@@ -243,7 +240,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
         Entity attacker = stoneycore$currentDamageSource.getEntity();
         ItemStack weaponStack = ItemStack.EMPTY;
-        if (Services.PLATFORM.isModLoaded("bettercombat")) SCBetterCombat.getWeaponStack(attacker, ItemStack.EMPTY);
+        if (Services.PLATFORM.isModLoaded("bettercombat")) weaponStack = SCBetterCombat.getWeaponStack(attacker, ItemStack.EMPTY);
 
         if (!(attacker instanceof LivingEntity && !weaponStack.isEmpty() && WeaponDefinitionsStorage.isMelee(weaponStack))) {
             return;

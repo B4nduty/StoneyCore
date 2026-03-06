@@ -65,15 +65,15 @@ public class CrossbowHandler implements IRangedWeaponHandler {
             if (!weaponState.isCharged()) {
                 SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack -> {
                     if (arrowStack.getItem() instanceof ArrowItem) {
-                        if (!player.isCreative()) {
-                            int slot = SCRangeWeaponUtil.getArrowSlot(player);
-                            if (slot >= 0) player.getInventory().removeItem(slot, 1);
-                        }
-
                         CompoundTag nbt = stack.getOrCreateTag();
                         nbt.putString("loaded_arrow", BuiltInRegistries.ITEM.getKey(arrowStack.getItem()).toString());
 
                         SCRangeWeaponUtil.loadAndPlayCrossbowSound(level, stack, player);
+
+                        if (!player.isCreative()) {
+                            int slot = SCRangeWeaponUtil.getArrowSlot(player);
+                            if (slot >= 0) player.getInventory().removeItem(slot, 1);
+                        }
                     }
                 });
             }
