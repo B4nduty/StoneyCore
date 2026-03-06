@@ -103,12 +103,16 @@ public class SCConfigs extends PartitioningSerializer.GlobalData {
         @ConfigEntry.Gui.Tooltip()
         @ConfigEntry.BoundedDiscrete(min = 0, max = 1)
         @Comment("Visored Helmet Overlay Alpha in Creative | Default: 0.4")
-        public float visoredHelmetAlphaCreative = 0.4f;
+        public float visoredHelmetAlphaCreative = 0.4F;
 
         @ConfigEntry.Gui.Tooltip()
         @ConfigEntry.BoundedDiscrete(min = 0, max = 1)
         @Comment("Visored Helmet Overlay Alpha in Survival | Default: 1.0")
         public float visoredHelmetAlphaSurvival = 1.0f;
+
+        @ConfigEntry.Gui.Tooltip()
+        @Comment("Visor Overlay being visible in Third Person | Default: true")
+        public boolean overlayThirdPerson = true;
 
         @ConfigEntry.Gui.Tooltip()
         @Comment("Low Stamina Indicator | Default: true")
@@ -128,19 +132,19 @@ public class SCConfigs extends PartitioningSerializer.GlobalData {
 
         @ConfigEntry.Gui.Tooltip()
         @Comment("Hex Color Too/Far Close")
-        public int hexColorTooFarClose = 0xFFFFFF;
+        public String hexColorTooFarClose = "0xFFFFFF";
 
         @ConfigEntry.Gui.Tooltip()
         @Comment("Hex Color Effective")
-        public int hexColorEffective = 0xCBBD63;
+        public String hexColorEffective = "0xCBBD63";
 
         @ConfigEntry.Gui.Tooltip()
         @Comment("Hex Color Critical")
-        public int hexColorCritical = 0xFF4949;
+        public String hexColorCritical = "0xFF4949";
 
         @ConfigEntry.Gui.Tooltip()
         @Comment("Hex Color Maximum")
-        public int hexColorMaximum = 0xFFFFFF;
+        public String hexColorMaximum = "0xFFFFFF";
 
         @ConfigEntry.Gui.Tooltip()
         @Comment("Player waves arms when in land under siege and not participant")
@@ -148,7 +152,8 @@ public class SCConfigs extends PartitioningSerializer.GlobalData {
 
         @ConfigEntry.Gui.Tooltip()
         @Comment("Claim Outline Render Hex Color")
-        public int claimOutlineColor = 0x00FFFF80;
+        public String claimOutlineColor = "0x00FFFF80";
+
     }
 
     /* ---------------- Technical ---------------- */

@@ -60,8 +60,9 @@ public abstract class Tongs extends Item implements CraftmanAnvilHelper {
     }
 
     public static ItemStack getTargetStack(ItemStack stack) {
-        if (stack.hasTag() && stack.getTag().contains(STACK_KEY)) {
-            CompoundTag stackNbt = stack.getTag().getCompound(STACK_KEY);
+        CompoundTag tag = stack.getTag();
+        if (tag != null && tag.contains(STACK_KEY)) {
+            CompoundTag stackNbt = tag.getCompound(STACK_KEY);
             return ItemStack.of(stackNbt);
         }
         return ItemStack.EMPTY;
@@ -70,10 +71,8 @@ public abstract class Tongs extends Item implements CraftmanAnvilHelper {
     @Override
     public Component getName(ItemStack stack) {
         ItemStack target = getTargetStack(stack);
-        if (!target.isEmpty() && target.getItem() instanceof HotIron)
-            return Component.translatable("item.stoneycore.tongs_hot_iron");
         if (!target.isEmpty())
-            return Component.translatable("item.stoneycore.tongs_hot_iron_finished");
+            return Component.translatable("item.stoneycore.tongs_with_item", target.getHoverName());
         return super.getName(stack);
     }
 
@@ -90,7 +89,6 @@ public abstract class Tongs extends Item implements CraftmanAnvilHelper {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player user, InteractionHand hand) {
-        super.use(level, user, hand);
 
         ItemStack itemStack = user.getItemInHand(hand);
 
@@ -142,6 +140,8 @@ public abstract class Tongs extends Item implements CraftmanAnvilHelper {
 
                 if (target.isEmpty()) {
                     removeTargetStack(itemStack);
+                } else {
+                    setTargetStack(itemStack, target);
                 }
             }
         }

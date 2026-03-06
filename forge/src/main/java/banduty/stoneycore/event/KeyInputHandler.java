@@ -29,13 +29,16 @@ public class KeyInputHandler {
     public static final String STONEYCORE = "key.category.stoneycore";
     public static final String KEY_RELOAD = "key.stoneycore.reload";
     public static final String KEY_TOGGLE_VISOR = "key.stoneycore.toggle_visor";
+    public static final String KEY_HIDE_VISOR = "key.stoneycore.hide_visor";
 
     public static KeyMapping reload;
     public static KeyMapping toggleVisor;
+    public static KeyMapping hideVisor;
     public static long toggleVisorTicks = 0;
     public static boolean isTogglingVisor = false;
     public static float toggleProgress = 0.0f;
     public static boolean visorToggled = false;
+    public static boolean visorHidden = false;
 
     @SubscribeEvent
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
@@ -54,9 +57,16 @@ public class KeyInputHandler {
                 GLFW.GLFW_KEY_LEFT_ALT,
                 STONEYCORE
         );
+        hideVisor = new KeyMapping(
+                KEY_HIDE_VISOR,
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_V,
+                STONEYCORE
+        );
 
         event.register(reload);
         event.register(toggleVisor);
+        event.register(hideVisor);
     }
 
     @Mod.EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -66,9 +76,11 @@ public class KeyInputHandler {
             if (reload.isDown()) {
                 ModMessages.CHANNEL.send(PacketDistributor.SERVER.noArg(), new ReloadC2SPacket());
             }
-
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
+                if (hideVisor.isDown()) {
+                    visorHidden = hideVisor.isDown();
+                } else visorHidden = false;
                 if (toggleVisor.isDown()) {
                     if (!isTogglingVisor) {
                         if (AccessoriesCapability.getOptionally(localPlayer).isPresent()) {

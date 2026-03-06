@@ -5,11 +5,11 @@ import banduty.stoneycore.block.ModBlocks;
 import banduty.stoneycore.commands.FabricSCCommandsHandler;
 import banduty.stoneycore.entity.ModEntities;
 import banduty.stoneycore.event.*;
-import banduty.stoneycore.event.custom.CraftingPreviewCallback;
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
+import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.recipes.ModRecipes;
 import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.sounds.ModSounds;
@@ -40,6 +40,7 @@ public class StoneyCoreFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        Services.PLATFORM.getConfig();
         SCAttributes.registerAttributes();
         ModSounds.registerSounds();
         ModRecipes.registerRecipes();
@@ -60,7 +61,6 @@ public class StoneyCoreFabric implements ModInitializer {
         UseEntityCallback.EVENT.register(new UseEntityHandler());
         PlayerNameTagEvents.EVENT.register(new PlayerNameTagHandler());
         CommandRegistrationCallback.EVENT.register(new FabricSCCommandsHandler());
-        CraftingPreviewCallback.EVENT.register(new CraftingPreviewHandler());
         TongsPickupHandler.register();
 
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new WeaponDefinitionsLoader());

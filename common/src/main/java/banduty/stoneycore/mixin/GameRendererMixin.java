@@ -42,8 +42,8 @@ public class GameRendererMixin {
     )
     private void renderSCThings(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         GameRenderer gameRenderer = (GameRenderer) (Object) this;
-
         if (!tick || gameRenderer.getMinecraft().level == null) return;
+        if (ClientPlatform.getKeyInputHelper().isHidingVisor()) return;
 
         RenderBuffers buffers = ((GameRendererAccessor) gameRenderer).getBuffers();
         GuiGraphics guiGraphics = new GuiGraphics(gameRenderer.getMinecraft(), buffers.bufferSource());
@@ -76,9 +76,9 @@ public class GameRendererMixin {
         LocalPlayer player = client.player;
 
         if (player == null || player.isSpectator()) return;
-
-        // ✅ Only render in first person
-        if (!client.options.getCameraType().isFirstPerson()) return;
+        if (client.options.hideGui) return;
+        if (!client.options.getCameraType().isFirstPerson() && !StoneyCore.getConfig().visualOptions().overlayThirdPerson())
+            return;
 
         int width = guiGraphics.guiWidth();
         int height = guiGraphics.guiHeight();

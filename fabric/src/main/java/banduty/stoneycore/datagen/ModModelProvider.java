@@ -1,6 +1,5 @@
 package banduty.stoneycore.datagen;
 
-import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.block.ModBlocks;
 import banduty.stoneycore.items.SCItems;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -66,10 +65,10 @@ public class ModModelProvider extends FabricModelProviderPlus {
         itemModelGenerator.generateFlatItem(SCItems.MANUSCRIPT, ModelTemplates.FLAT_ITEM);
 
         registerItemWConditions(SCItems.TONGS, ModelTemplates.FLAT_ITEM, itemModelGenerator, false,
-                new OverrideCondition(new ResourceLocation(StoneyCore.MOD_ID, "hotiron"), 1),
-                new OverrideCondition(new ResourceLocation(StoneyCore.MOD_ID,"finished"), 1));
+                new OverrideCondition(new ResourceLocation("hotiron"), 1),
+                new OverrideCondition(new ResourceLocation("finished"), 1));
 
         registerItemWConditions(SCItems.HOT_IRON, ModelTemplates.FLAT_ITEM, itemModelGenerator,
-                new OverrideCondition(new ResourceLocation(StoneyCore.MOD_ID,"finished"), 1));
+                new OverrideCondition(new ResourceLocation("finished"), 1));
     }
 }

@@ -58,12 +58,12 @@ public class ModItemModelProvider extends ItemModelProvider {
 
         // Add overrides
         tongsBuilder.override()
-                .predicate(new ResourceLocation(StoneyCore.MOD_ID, "hotiron"), 1.0f)
+                .predicate(new ResourceLocation("hotiron"), 1.0f)
                 .model(getExistingFile(modLoc("item/tongs_hotiron")))
                 .end();
 
         tongsBuilder.override()
-                .predicate(new ResourceLocation(StoneyCore.MOD_ID, "finished"), 1.0f)
+                .predicate(new ResourceLocation("finished"), 1.0f)
                 .model(getExistingFile(modLoc("item/tongs_finished")))
                 .end();
     }
@@ -82,7 +82,7 @@ public class ModItemModelProvider extends ItemModelProvider {
                 .parent(getExistingFile(mcLoc("item/generated")))
                 .texture("layer0", modLoc("item/" + hotIronPath))
                 .override()
-                .predicate(new ResourceLocation(StoneyCore.MOD_ID, "finished"), 1.0f)
+                .predicate(new ResourceLocation("finished"), 1.0f)
                 .model(getExistingFile(modLoc("item/hot_iron_finished")))
                 .end();
     }

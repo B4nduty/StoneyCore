@@ -23,20 +23,26 @@ public class KeyInputHandler {
     public static final String STONEYCORE = "key.category.stoneycore";
     public static final String KEY_RELOAD = "key.stoneycore.reload";
     public static final String KEY_TOGGLE_VISOR = "key.stoneycore.toggle_visor";
+    public static final String KEY_HIDE_VISOR = "key.stoneycore.hide_visor";
 
     public static KeyMapping reload;
     public static KeyMapping toggleVisor;
+    public static KeyMapping hideVisor;
     public static long toggleVisorTicks = 0;
     public static boolean isTogglingVisor = false;
     public static float toggleProgress = 0.0f;
     public static boolean visorToggled = false;
+    public static boolean visorHidden = false;
 
     public static void registerKeyInputs() {
+
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (reload.isDown()) {
                 ClientPlayNetworking.send(ModMessages.RELOAD_PACKET_ID, PacketByteBufs.empty());
             }
-
+            if (hideVisor.isDown()) {
+                visorHidden = hideVisor.isDown();
+            } else visorHidden = false;
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
                 if (toggleVisor.isDown()) {
@@ -114,6 +120,12 @@ public class KeyInputHandler {
                 STONEYCORE
         ));
 
+        hideVisor = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                KEY_HIDE_VISOR,
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_V,
+                STONEYCORE
+        ));
         registerKeyInputs();
     }
 }

@@ -1,8 +1,8 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.SCBetterCombat;
+import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.render.TextureData;
@@ -77,6 +77,9 @@ public class GuiMixin {
 
     @Unique
     private void stoneyCore$renderCrosshairTexture(GuiGraphics guiGraphics, ResourceLocation tex, int centerX, int centerY, int hexColor) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.options.hideGui) return;
+
         TextureData texData = stoneyCore$getTextureData(tex);
         float[] rgb = stoneyCore$hexToRGB(hexColor);
 
@@ -99,7 +102,7 @@ public class GuiMixin {
 
     @Unique
     private float[] stoneyCore$hexToRGB(int hex) {
-        return new float[] {
+        return new float[]{
                 ((hex >> 16) & 0xFF) / 255.0f,
                 ((hex >> 8) & 0xFF) / 255.0f,
                 (hex & 0xFF) / 255.0f

@@ -9,7 +9,7 @@ public class SCInventoryItemFinder {
         return player.getInventory().items.stream()
                 .filter(stack -> java.util.Arrays.stream(items).anyMatch(item -> stack.getItem() == item))
                 .findFirst()
-                .orElse(null);
+                .orElse(ItemStack.EMPTY);
     }
 
     public static int getItemSlot(ServerPlayer player, ItemStack itemStack) {
@@ -29,11 +29,26 @@ public class SCInventoryItemFinder {
             ItemStack itemStack = itemStacks[i];
             int necessaryAmount = necessaryAmounts[i];
 
-            if (itemStack == null || itemStack.getCount() < necessaryAmount) {
+            if (itemStack.isEmpty() || itemStack.getCount() < necessaryAmount) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    public static int countItem(ServerPlayer player, Item... items) {
+        int count = 0;
+
+        for (ItemStack stack : player.getInventory().items) {
+            for (Item item : items) {
+                if (stack.getItem() == item) {
+                    count += stack.getCount();
+                    break;
+                }
+            }
+        }
+
+        return count;
     }
 }

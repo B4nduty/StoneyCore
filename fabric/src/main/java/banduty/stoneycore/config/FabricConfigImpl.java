@@ -1,12 +1,10 @@
 package banduty.stoneycore.config;
 
-import banduty.stoneycore.config.StoneyCoreConfig;
-
 public class FabricConfigImpl extends ConfigImpl {
-    private final StoneyCoreConfig config;
+    private final banduty.stoneycore.config.StoneyCoreConfig config;
 
     public FabricConfigImpl() {
-        this.config = StoneyCoreConfig.createAndLoad();
+        this.config = banduty.stoneycore.config.StoneyCoreConfig.createAndLoad();
     }
 
     @Override
@@ -103,6 +101,11 @@ public class FabricConfigImpl extends ConfigImpl {
             }
 
             @Override
+            public boolean overlayThirdPerson() {
+                return config.visualOptions.getOverlayThirdPerson();
+            }
+
+            @Override
             public boolean getLowStaminaIndicator() {
                 return config.visualOptions.getLowStaminaIndicator();
             }
@@ -124,22 +127,22 @@ public class FabricConfigImpl extends ConfigImpl {
 
             @Override
             public int hexColorTooFarClose() {
-                return config.visualOptions.hexColorTooFarClose();
+                return hexToInt(config.visualOptions.hexColorTooFarClose());
             }
 
             @Override
             public int hexColorEffective() {
-                return config.visualOptions.hexColorEffective();
+                return hexToInt(config.visualOptions.hexColorEffective());
             }
 
             @Override
             public int hexColorCritical() {
-                return config.visualOptions.hexColorCritical();
+                return hexToInt(config.visualOptions.hexColorCritical());
             }
 
             @Override
             public int hexColorMaximum() {
-                return config.visualOptions.hexColorMaximum();
+                return hexToInt(config.visualOptions.hexColorMaximum());
             }
 
             @Override
@@ -149,9 +152,26 @@ public class FabricConfigImpl extends ConfigImpl {
 
             @Override
             public int claimOutlineColor() {
-                return config.visualOptions.claimOutlineColor();
+                return hexToInt(config.visualOptions.claimOutlineColor());
             }
         };
+    }
+
+    public static int hexToInt(String hex) {
+        if (hex == null) {
+            throw new IllegalArgumentException("Hex string cannot be null");
+        }
+
+        hex = hex.trim();
+
+        // Remove optional prefixes
+        if (hex.startsWith("0x") || hex.startsWith("0X")) {
+            hex = hex.substring(2);
+        } else if (hex.startsWith("#")) {
+            hex = hex.substring(1);
+        }
+
+        return Integer.parseUnsignedInt(hex, 16);
     }
 
     @Override

@@ -1,5 +1,5 @@
-[22:40:13] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.16.9
-[22:40:13] [main/INFO] (FabricLoader) Loading 53 mods:
+[22:15:54] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.16.9
+[22:15:55] [main/INFO] (FabricLoader) Loading 53 mods:
 	- accessories 1.0.0-beta.47+1.20.1
 	- cloth-basic-math 0.6.1
 	- cloth-config 11.1.118
@@ -45,47 +45,42 @@
 	- fabric-transfer-api-v1 3.3.5+8dd72ea377
 	- fabric-transitive-access-wideners-v1 4.3.1+1802ada577
 	- fabricloader 0.16.9
-	- java 21
+	- java 17
 	- jei 15.20.0.118
 	- minecraft 1.20.1
 	- mixinextras 0.4.1
 	- mod_id 1.1.0
 	- owo 0.11.2+1.20
 	- reach-entity-attributes 2.4.0
-	- stoneycore 0.7.1.42
-[22:40:13] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/regan/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.4+mixin.0.8.7/6a12aacc794f1078458433116e9ed42c1cc98096/sponge-mixin-0.15.4+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:40:13] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[22:40:13] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_16
-[22:40:13] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
-[22:40:13] [main/WARN] (FabricLoader/Mixin) Error loading class: fr/catcore/server/translations/api/resource/language/SystemDelegatedLanguage (java.lang.ClassNotFoundException: fr/catcore/server/translations/api/resource/language/SystemDelegatedLanguage)
-[22:40:13] [main/WARN] (FabricLoader/Mixin) Error loading class: net/minecraft/client/renderer/LevelRenderer (java.lang.RuntimeException: Cannot load class net.minecraft.client.renderer.LevelRenderer in environment type SERVER)
-[22:40:13] [main/WARN] (FabricLoader/Mixin) @Mixin target net.minecraft.client.renderer.LevelRenderer was not found accessories-common.mixins.json:LevelRendererAccessor from mod accessories
-[22:40:14] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
-[22:40:14] [main/WARN] (FabricLoader/Mixin) Error loading class: org/quiltmc/loader/impl/game/minecraft/Hooks (java.lang.ClassNotFoundException: org/quiltmc/loader/impl/game/minecraft/Hooks)
-[22:40:15] [main/WARN] (PerfDataUtil) Failed to add PDH Counter: \Paging File(_Total)\% Usage, Error code: 0xC0000BB8
-[22:40:15] [main/WARN] (PerfCounterQueryHandler) Failed to add counter for PDH counter: \Paging File(_Total)\% Usage
-[22:40:15] [main/WARN] (PerfCounterQuery) Disabling further attempts to query Paging File.
-[22:40:16] [main/WARN] (WmiQueryHandler) COM exception: Invalid Query: SELECT PERCENTUSAGE FROM Win32_PerfRawData_PerfOS_PagingFile
-[22:40:16] [main/WARN] (FabricLoader/Mixin) @ModifyVariable(@At("INVOKE")) Shift.BY=2 on accessories-fabric.mixins.json:LivingEntityMixin from mod accessories::localvar$zdh000$accessories$adjustLooting exceeds the maximum allowed value: 0. Increase the value of maxShiftBy to suppress this warning.
-[22:40:17] [main/WARN] (FabricLoader/Mixin) @Inject(@At("INVOKE")) Shift.BY=2 on accessories-common.mixins.json:NbtCompoundMixin from mod accessories::handler$zec000$accessories$adjustCheckForListVariants exceeds the maximum allowed value: 0. Increase the value of maxShiftBy to suppress this warning.
-[22:40:19] [main/INFO] (StoneyCore) Registered attributes for stoneycore
-[22:40:19] [main/INFO] (StoneyCore) Registering Sounds for stoneycore
-[22:40:19] [main/INFO] (StoneyCore) Registering ModRecipes for stoneycore
-[22:40:19] [main/INFO] (StoneyCore) Registering Mod Items for stoneycore
-[22:40:19] [main/INFO] (StoneyCore) Registering Entities for stoneycore
-[22:40:19] [main/INFO] (StoneyCore) Registering Menu for stoneycore
-[22:40:19] [main/INFO] (StoneyCore) Registering Mod Blocks for stoneycore
-[22:40:19] [main/INFO] (StoneyCore) Registering Mod Block Entities for stoneycore
-[22:40:19] [main/INFO] (StoneyCore) Registering Particles for stoneycore
-[22:40:19] [main/INFO] (StoneyCore) Hello Fabric world!
-[22:40:19] [main/INFO] (StoneyCore) Hello to stoneycore
-[22:40:19] [main/INFO] (owo) We don't have to worry about people re-inventing Venezuela glisco, that's their problem for integrating the Bourgeoisie into their pack
-[22:40:20] [main/INFO] (DataLoaderBase) Registering Listeners!
-[22:40:20] [main/INFO] (owo) Services frozen by 'net.minecraft.server.Main'
-[22:40:20] [main/INFO] (FabricDataGenHelper) Running data generator for stoneycore
-[22:40:20] [main/INFO] (Minecraft) Starting provider: StoneyCore/Model Definitions
-[22:40:20] [main/INFO] (Minecraft) StoneyCore/Model Definitions finished after 49 ms
-[22:40:20] [main/INFO] (Minecraft) Starting provider: StoneyCore/Recipes
-[22:40:20] [main/INFO] (Minecraft) StoneyCore/Recipes finished after 16 ms
-[22:40:20] [main/INFO] (Minecraft) All providers took: 66 ms
-[22:40:20] [main/INFO] (Minecraft) Caching: total files: 19, old count: 0, new count: 20, removed stale: 0, written: 19
+	- stoneycore 0.7.1.53
+[22:15:55] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/Administrator/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.4+mixin.0.8.7/6a12aacc794f1078458433116e9ed42c1cc98096/sponge-mixin-0.15.4+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[22:15:55] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[22:15:56] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
+[22:15:56] [main/WARN] (FabricLoader/Mixin) Error loading class: net/minecraft/client/renderer/LevelRenderer (java.lang.RuntimeException: Cannot load class net.minecraft.client.renderer.LevelRenderer in environment type SERVER)
+[22:15:56] [main/WARN] (FabricLoader/Mixin) @Mixin target net.minecraft.client.renderer.LevelRenderer was not found accessories-common.mixins.json:LevelRendererAccessor from mod accessories
+[22:15:56] [main/WARN] (FabricLoader/Mixin) Error loading class: fr/catcore/server/translations/api/resource/language/SystemDelegatedLanguage (java.lang.ClassNotFoundException: fr/catcore/server/translations/api/resource/language/SystemDelegatedLanguage)
+[22:15:56] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
+[22:15:57] [main/WARN] (FabricLoader/Mixin) Error loading class: org/quiltmc/loader/impl/game/minecraft/Hooks (java.lang.ClassNotFoundException: org/quiltmc/loader/impl/game/minecraft/Hooks)
+[22:16:00] [main/WARN] (FabricLoader/Mixin) @ModifyVariable(@At("INVOKE")) Shift.BY=2 on accessories-fabric.mixins.json:LivingEntityMixin from mod accessories::localvar$zfb000$accessories$adjustLooting exceeds the maximum allowed value: 0. Increase the value of maxShiftBy to suppress this warning.
+[22:16:03] [main/WARN] (FabricLoader/Mixin) @Inject(@At("INVOKE")) Shift.BY=2 on accessories-common.mixins.json:NbtCompoundMixin from mod accessories::handler$zfm000$accessories$adjustCheckForListVariants exceeds the maximum allowed value: 0. Increase the value of maxShiftBy to suppress this warning.
+[22:16:08] [main/INFO] (StoneyCore) Registered attributes for stoneycore
+[22:16:08] [main/INFO] (StoneyCore) Registering Sounds for stoneycore
+[22:16:08] [main/INFO] (StoneyCore) Registering ModRecipes for stoneycore
+[22:16:08] [main/INFO] (StoneyCore) Registering Mod Items for stoneycore
+[22:16:08] [main/INFO] (StoneyCore) Registering Entities for stoneycore
+[22:16:08] [main/INFO] (StoneyCore) Registering Menu for stoneycore
+[22:16:08] [main/INFO] (StoneyCore) Registering Mod Blocks for stoneycore
+[22:16:08] [main/INFO] (StoneyCore) Registering Mod Block Entities for stoneycore
+[22:16:08] [main/INFO] (StoneyCore) Registering Particles for stoneycore
+[22:16:08] [main/INFO] (StoneyCore) Hello Fabric world!
+[22:16:08] [main/INFO] (StoneyCore) Hello to stoneycore
+[22:16:08] [main/INFO] (DataLoaderBase) Registering Listeners!
+[22:16:08] [main/INFO] (owo) chyzman: No sound or Ender Dragon leakage. Although Ender Dragon sound leakage is still a thing
+[22:16:08] [main/INFO] (owo) Services frozen by 'net.minecraft.server.Main'
+[22:16:08] [main/INFO] (FabricDataGenHelper) Running data generator for stoneycore
+[22:16:08] [main/INFO] (Minecraft) Starting provider: StoneyCore/Model Definitions
+[22:16:08] [main/INFO] (Minecraft) StoneyCore/Model Definitions finished after 92 ms
+[22:16:08] [main/INFO] (Minecraft) Starting provider: StoneyCore/Recipes
+[22:16:08] [main/INFO] (Minecraft) StoneyCore/Recipes finished after 33 ms
+[22:16:08] [main/INFO] (Minecraft) All providers took: 128 ms
+[22:16:08] [main/INFO] (Minecraft) Caching: total files: 19, old count: 19, new count: 20, removed stale: 0, written: 2

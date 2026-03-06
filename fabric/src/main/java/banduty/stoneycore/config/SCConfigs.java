@@ -89,6 +89,9 @@ public class SCConfigs {
         @RangeConstraint(min = 0f, max = 1f)
         public float getVisoredHelmetAlphaSurvival = 1.0f;
 
+        @Comment("Visor Overlay being visible in Third Person")
+        public boolean getOverlayThirdPerson = true;
+
         @Comment("Low Stamina Indicator")
         @Sync(Option.SyncMode.INFORM_SERVER)
         public boolean getLowStaminaIndicator = true;
@@ -106,19 +109,19 @@ public class SCConfigs {
 
         @Sync(Option.SyncMode.NONE)
         @Comment("Hex Color Too/Far Close")
-        public int hexColorTooFarClose = 0xFFFFFF;
+        public String hexColorTooFarClose = "0xFFFFFF";
 
         @Sync(Option.SyncMode.NONE)
         @Comment("Hex Color Effective")
-        public int hexColorEffective = 0xcbbd63;
+        public String hexColorEffective = "0xcbbd63";
 
         @Sync(Option.SyncMode.NONE)
         @Comment("Hex Color Critical")
-        public int hexColorCritical = 0xff4949;
+        public String hexColorCritical = "0xff4949";
 
         @Sync(Option.SyncMode.NONE)
         @Comment("Hex Color Maximum")
-        public int hexColorMaximum = 0xFFFFFF;
+        public String hexColorMaximum = "0xFFFFFF";
 
         @Sync(Option.SyncMode.NONE)
         @Comment("Player waves arms when in land under siege and not participant")
@@ -126,13 +129,13 @@ public class SCConfigs {
 
         @Sync(Option.SyncMode.NONE)
         @Comment("Claim Outline Render Hex Color")
-        public int claimOutlineColor = 0x00FFFF80;
+        public String claimOutlineColor = "0x00FFFF80";
     }
 
     @Nest
     @SectionHeader("technicalOptions")
     public TechnicalOptions technicalOptions = new TechnicalOptions();
-    
+
     public static class TechnicalOptions {
         @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("""
@@ -145,13 +148,13 @@ public class SCConfigs {
         @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Max Land Expand Radius")
         public int maxLandExpandRadius = -1;
-        
+
         @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("""
-            Break or Remove Blocks on destroy with siege engines
-            Break = False
-            Remove = True
-            """)
+                Break or Remove Blocks on destroy with siege engines
+                Break = False
+                Remove = True
+                """)
         public boolean breakOrRemoveSiegeDestroy = false;
     }
 

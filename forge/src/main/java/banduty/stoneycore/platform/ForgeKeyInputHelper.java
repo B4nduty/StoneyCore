@@ -16,6 +16,11 @@ public class ForgeKeyInputHelper implements KeyInputHelper {
     }
 
     @Override
+    public boolean isHidingVisor() {
+        return KeyInputHandler.visorHidden;
+    }
+
+    @Override
     public long toggleVisorTicks() {
         return KeyInputHandler.toggleVisorTicks;
     }

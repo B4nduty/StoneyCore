@@ -9,7 +9,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 public class MusketHandler implements IRangedWeaponHandler {
-    @Override public String getTypeId() { return "musket"; }
+    @Override
+    public String getTypeId() {
+        return "musket";
+    }
 
     @Override
     public void shoot(Level level, Player player, ItemStack weapon) {
@@ -30,19 +33,16 @@ public class MusketHandler implements IRangedWeaponHandler {
 
     }
 
-    private static boolean hasRequiredAmmo(ServerPlayer player, ItemStack itemStack) {
-        var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(itemStack);
-        ItemStack[] foundItems = {
-                SCInventoryItemFinder.getItemFromInventory(player, ammoReq.firstItem(), ammoReq.firstItem2nOption()),
-                SCInventoryItemFinder.getItemFromInventory(player, ammoReq.secondItem(), ammoReq.secondItem2nOption()),
-                SCInventoryItemFinder.getItemFromInventory(player, ammoReq.thirdItem(), ammoReq.thirdItem2nOption())
-        };
-        int[] requiredAmounts = {
-                ammoReq.amountFirstItem(),
-                ammoReq.amountSecondItem(),
-                ammoReq.amountThirdItem()
-        };
-        return SCInventoryItemFinder.areItemsInInventory(foundItems, requiredAmounts);
+    private static boolean hasRequiredAmmo(ServerPlayer player, ItemStack weapon) {
+        var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(weapon);
+
+        if (SCInventoryItemFinder.countItem(player, ammoReq.firstItem(), ammoReq.firstItem2nOption())
+                < ammoReq.amountFirstItem()) return false;
+
+        if (SCInventoryItemFinder.countItem(player, ammoReq.secondItem(), ammoReq.secondItem2nOption())
+                < ammoReq.amountSecondItem()) return false;
+
+        return SCInventoryItemFinder.countItem(player, ammoReq.thirdItem(), ammoReq.thirdItem2nOption()) >= ammoReq.amountThirdItem();
     }
 
     private static void startReload(ServerPlayer player, ItemStack itemStack) {

@@ -97,6 +97,11 @@ public class ForgeConfigImpl extends ConfigImpl {
             }
 
             @Override
+            public boolean overlayThirdPerson() {
+                return StoneyCoreForge.CONFIG.visual.overlayThirdPerson;
+            }
+
+            @Override
             public boolean getLowStaminaIndicator() {
                 return StoneyCoreForge.CONFIG.visual.lowStaminaIndicator;
             }
@@ -118,22 +123,22 @@ public class ForgeConfigImpl extends ConfigImpl {
 
             @Override
             public int hexColorTooFarClose() {
-                return StoneyCoreForge.CONFIG.visual.hexColorTooFarClose;
+                return hexToInt(StoneyCoreForge.CONFIG.visual.hexColorTooFarClose);
             }
 
             @Override
             public int hexColorEffective() {
-                return StoneyCoreForge.CONFIG.visual.hexColorEffective;
+                return hexToInt(StoneyCoreForge.CONFIG.visual.hexColorEffective);
             }
 
             @Override
             public int hexColorCritical() {
-                return StoneyCoreForge.CONFIG.visual.hexColorCritical;
+                return hexToInt(StoneyCoreForge.CONFIG.visual.hexColorCritical);
             }
 
             @Override
             public int hexColorMaximum() {
-                return StoneyCoreForge.CONFIG.visual.hexColorMaximum;
+                return hexToInt(StoneyCoreForge.CONFIG.visual.hexColorMaximum);
             }
 
             @Override
@@ -143,9 +148,26 @@ public class ForgeConfigImpl extends ConfigImpl {
 
             @Override
             public int claimOutlineColor() {
-                return StoneyCoreForge.CONFIG.visual.claimOutlineColor;
+                return hexToInt(StoneyCoreForge.CONFIG.visual.claimOutlineColor);
             }
         };
+    }
+
+    public static int hexToInt(String hex) {
+        if (hex == null) {
+            throw new IllegalArgumentException("Hex string cannot be null");
+        }
+
+        hex = hex.trim();
+
+        // Remove optional prefixes
+        if (hex.startsWith("0x") || hex.startsWith("0X")) {
+            hex = hex.substring(2);
+        } else if (hex.startsWith("#")) {
+            hex = hex.substring(1);
+        }
+
+        return Integer.parseUnsignedInt(hex, 16);
     }
 
     @Override
