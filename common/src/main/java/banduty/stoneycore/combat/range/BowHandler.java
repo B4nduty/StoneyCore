@@ -24,10 +24,10 @@ public class BowHandler implements IRangedWeaponHandler {
     public void handleRelease(ItemStack stack, Level level, Player player, int useTime, ItemStack arrowStack) {
         if (level == null || player == null || stack == null) return;
         if (level.isClientSide) return;
-        float pullProgress = SCRangeWeaponUtil.getBowPullProgress(useTime);
-        if (pullProgress < 0.1f) return;
         Optional<ItemStack> arrow = SCRangeWeaponUtil.getArrowFromInventory(player);
         if (arrow.isEmpty()) return;
+        float pullProgress = SCRangeWeaponUtil.getBowPullProgress(useTime);
+        if (pullProgress < 0.1f) return;
         SCRangeWeaponUtil.shootArrow(level, stack, player, arrow.get(), pullProgress);
         if (!player.isCreative()) arrow.get().shrink(1);
     }

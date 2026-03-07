@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public class StaminaData {
     private static final UUID GENERIC_STAMINA_MODIFIER_ID =
-            UUID.fromString("9e6b3f6e-4c3d-4b5b-9a2e-1d7a4e6f8abc");
+            UUID.randomUUID();
 
     public static void setStamina(LivingEntity livingEntity, double stamina) {
         ModifiersHelper.updateModifier(livingEntity.getAttribute(Services.ATTRIBUTES.getStamina()),
