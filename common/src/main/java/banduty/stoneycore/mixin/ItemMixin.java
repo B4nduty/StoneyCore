@@ -50,7 +50,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.IntFunction;
 
 import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
@@ -210,12 +209,6 @@ public abstract class ItemMixin {
 
     @Unique
     private void stoneyCore$handleProjectileWeapon(InteractionHand hand, Player player, ItemStack stack, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
-        boolean hasAmmo = SCRangeWeaponUtil.getArrowFromInventory(player).isPresent();
-        if (!hasAmmo) {
-            cir.setReturnValue(InteractionResultHolder.fail(stack));
-            return;
-        }
-
         player.startUsingItem(hand);
 
         if (WeaponDefinitionsStorage.getData(stack).ranged().useAnim() == UseAnim.CROSSBOW) {
@@ -237,7 +230,7 @@ public abstract class ItemMixin {
         int useTime = WeaponDefinitionsStorage.getData(stack).ranged().maxUseTime() - remainingUseTicks;
         SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack ->
                 RangedWeaponHandlers.get(type).ifPresent(h -> h.handleRelease(stack, level, player, useTime, arrowStack)
-        ));
+                ));
     }
 
     @Inject(method = "appendHoverText", at = @At("HEAD"))
@@ -262,13 +255,18 @@ public abstract class ItemMixin {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.right_click-replant"));
             }
 
-            if (stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f){
-                slashing *= 0.25f; bludgeoning *= 0.25f; piercing *= 0.25f;
+            if (stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
+                slashing *= 0.25f;
+                bludgeoning *= 0.25f;
+                piercing *= 0.25f;
             }
 
-            if (slashing != 0) tooltip.add(Component.translatable("component.tooltip.stoneycore.slashingDamage", slashing).withStyle(ChatFormatting.GREEN));
-            if (bludgeoning != 0) tooltip.add(Component.translatable("component.tooltip.stoneycore.bludgeoningDamage", bludgeoning).withStyle(ChatFormatting.GREEN));
-            if (piercing != 0) tooltip.add(Component.translatable("component.tooltip.stoneycore.piercingDamage", piercing).withStyle(ChatFormatting.GREEN));
+            if (slashing != 0)
+                tooltip.add(Component.translatable("component.tooltip.stoneycore.slashingDamage", slashing).withStyle(ChatFormatting.GREEN));
+            if (bludgeoning != 0)
+                tooltip.add(Component.translatable("component.tooltip.stoneycore.bludgeoningDamage", bludgeoning).withStyle(ChatFormatting.GREEN));
+            if (piercing != 0)
+                tooltip.add(Component.translatable("component.tooltip.stoneycore.piercingDamage", piercing).withStyle(ChatFormatting.GREEN));
         }
 
         if (level.isClientSide()) {
@@ -323,7 +321,8 @@ public abstract class ItemMixin {
             }
         }
 
-        if (bannerStack.isEmpty() || !(resultStack.getItem() instanceof SCAccessoryItem) || !resultStack.is(SCTags.BANNER_COMPATIBLE.getTag())) return;
+        if (bannerStack.isEmpty() || !(resultStack.getItem() instanceof SCAccessoryItem) || !resultStack.is(SCTags.BANNER_COMPATIBLE.getTag()))
+            return;
 
         List<Tuple<ResourceLocation, DyeColor>> bannerPatterns = stoneyCore$getBannerPatterns(bannerStack, resultStack.getItem());
         PatternHelper.setBannerPatterns(resultStack, bannerPatterns);

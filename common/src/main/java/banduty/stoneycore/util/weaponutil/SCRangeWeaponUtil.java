@@ -33,7 +33,9 @@ import java.util.Optional;
 import java.util.Set;
 
 public final class SCRangeWeaponUtil {
-    private SCRangeWeaponUtil() { throw new UnsupportedOperationException("Utility class"); }
+    private SCRangeWeaponUtil() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     private static final String KEY_RELOAD = "reload";
     private static final String KEY_CHARGED = "charged";
@@ -53,12 +55,9 @@ public final class SCRangeWeaponUtil {
         var def = WeaponDefinitionsStorage.getData(weapon);
         if (def == null || def.ranged() == null) return;
         String type = def.ranged().id();
-        RangedWeaponHandlers.get(type).ifPresentOrElse(
-                handler -> {
-                    if (handler.canShoot(weapon)) handler.shoot(level, player, weapon);
-                },
-                () -> shootBullet(level, weapon, player)
-        );
+        RangedWeaponHandlers.get(type).ifPresent(handler -> {
+            if (handler.canShoot(weapon)) handler.shoot(level, player, weapon);
+        });
     }
 
     public static void handleReload(Level level, Player player, ItemStack weapon) {
@@ -69,14 +68,19 @@ public final class SCRangeWeaponUtil {
     }
 
     public static void shootArrow(Level level, ItemStack stack, Player player, ItemStack arrowStack, float pullProgress) {
-        if (level == null || level.isClientSide() || player == null || arrowStack == null || arrowStack.isEmpty()) return;
+        if (level == null || level.isClientSide() || player == null || arrowStack == null || arrowStack.isEmpty())
+            return;
         if (!(arrowStack.getItem() instanceof ArrowItem arrowItem)) return;
-        NBTDataHelper.set(arrowStack, INBTKeys.FROM_RANGED_WEAPON, true);
+
+        var definitionData = WeaponDefinitionsStorage.getData(stack);
+        if (definitionData == null || definitionData.ranged() == null) return;
 
         AbstractArrow arrowEntity = arrowItem.createArrow(level, arrowStack, player);
-        arrowEntity.setBaseDamage(WeaponDefinitionsStorage.getData(stack).ranged().baseDamage() / WeaponDefinitionsStorage.getData(stack).ranged().speed());
+        arrowEntity.setBaseDamage(definitionData.ranged().baseDamage() / definitionData.ranged().speed());
+
         if (arrowEntity instanceof SCArrowEntity scArrowEntity)
-            scArrowEntity.setDamageType(WeaponDefinitionsStorage.getData(stack).ranged().damageType());
+            scArrowEntity.setDamageType(definitionData.ranged().damageType());
+
         arrowEntity.setOwner(player);
 
         if (NBTDataHelper.get(arrowStack, INBTKeys.IGNITED, false)) {
@@ -85,8 +89,8 @@ public final class SCRangeWeaponUtil {
         }
 
         arrowEntity.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F,
-                pullProgress * WeaponDefinitionsStorage.getData(stack).ranged().speed(),
-                WeaponDefinitionsStorage.getData(stack).ranged().divergence());
+                pullProgress * definitionData.ranged().speed(),
+                definitionData.ranged().divergence());
 
         if (player.isCreative()) {
             arrowEntity.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
@@ -99,14 +103,17 @@ public final class SCRangeWeaponUtil {
     }
 
     public static void shootBullet(Level level, ItemStack stack, Player player) {
+        var definitionData = WeaponDefinitionsStorage.getData(stack);
+        if (definitionData == null || definitionData.ranged() == null) return;
+
         SCBulletEntity bulletEntity = new SCBulletEntity(player, level);
-        bulletEntity.setDamageAmount(WeaponDefinitionsStorage.getData(stack).ranged().baseDamage());
-        bulletEntity.setDamageType(WeaponDefinitionsStorage.getData(stack).ranged().damageType());
+        bulletEntity.setDamageAmount(definitionData.ranged().baseDamage());
+        bulletEntity.setDamageType(definitionData.ranged().damageType());
         bulletEntity.setOwner(player);
 
         bulletEntity.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F,
-                WeaponDefinitionsStorage.getData(stack).ranged().speed(),
-                WeaponDefinitionsStorage.getData(stack).ranged().divergence());
+                definitionData.ranged().speed(),
+                definitionData.ranged().divergence());
 
         level.addFreshEntity(bulletEntity);
         playSoundForPlayers(level, stack, player);
@@ -132,7 +139,8 @@ public final class SCRangeWeaponUtil {
             Vec3 hearPos = playerEntity.position();
             double distance = player.position().distanceTo(hearPos);
             float volume = (float) Math.max(0, 1 - (distance * 0.01));
-            if (volume > 0) playerEntity.playNotifySound(definitionData.ranged().soundEvent(), SoundSource.BLOCKS, volume, 1.0F);
+            if (volume > 0)
+                playerEntity.playNotifySound(definitionData.ranged().soundEvent(), SoundSource.BLOCKS, volume, 1.0F);
         }
     }
 
@@ -160,6 +168,9 @@ public final class SCRangeWeaponUtil {
     }
 
     public static Optional<ItemStack> getArrowFromInventory(Player player) {
+        ItemStack offhand = player.getOffhandItem();
+        if (offhand.getItem() instanceof ArrowItem) return Optional.of(offhand);
+
         return player.getInventory().items.stream()
                 .filter(stack -> !stack.isEmpty() && stack.getItem() instanceof ArrowItem)
                 .findFirst();
@@ -181,8 +192,9 @@ public final class SCRangeWeaponUtil {
     }
 
     public static float getCrossbowPullProgress(int useTicks, ItemStack itemStack) {
-        if (WeaponDefinitionsStorage.getData(itemStack).ranged() == null) return 0;
-        int chargeTime = WeaponDefinitionsStorage.getData(itemStack).ranged().rechargeTime() * 20;
+        var definitionData = WeaponDefinitionsStorage.getData(itemStack);
+        if (definitionData == null || definitionData.ranged() == null) return 0;
+        int chargeTime = Math.max(1, definitionData.ranged().rechargeTime() * 20);
         float progress = (float) useTicks / (float) chargeTime;
         return Math.min(progress, 1.0F);
     }
@@ -234,64 +246,57 @@ public final class SCRangeWeaponUtil {
 
     public static @NotNull AmmoRequirement getAmmoRequirement(ItemStack itemStack) {
         WeaponDefinitionData definitionData = WeaponDefinitionsStorage.getData(itemStack);
-        if (definitionData.ranged() == null) return AmmoRequirement.EMPTY;
+        if (definitionData == null || definitionData.ranged() == null) return AmmoRequirement.EMPTY;
+
         Map<String, WeaponDefinitionData.AmmoRequirementData> ammoRequirementMap = definitionData.ranged().ammoRequirement();
+        if (!ammoRequirementMap.containsKey("item1")) return AmmoRequirement.EMPTY;
 
-        int amountFirstItem = 0;
-        Item[] firstItems = null;
+        Item[] firstItems = getItemsFromIds(ammoRequirementMap.get("item1").itemIds());
+        if (firstItems.length == 0) return AmmoRequirement.EMPTY;
 
-        int amountSecondItem = 0;
-        Item[] secondItems = null;
+        Item[] secondItems = ammoRequirementMap.containsKey("item2")
+                ? getItemsFromIds(ammoRequirementMap.get("item2").itemIds())
+                : new Item[0];
 
-        int amountThirdItem = 0;
-        Item[] thirdItems = null;
+        Item[] thirdItems = ammoRequirementMap.containsKey("item3")
+                ? getItemsFromIds(ammoRequirementMap.get("item3").itemIds())
+                : new Item[0];
 
-        if (ammoRequirementMap.containsKey("item1")) {
-            WeaponDefinitionData.AmmoRequirementData item1Data = ammoRequirementMap.get("item1");
-            amountFirstItem = item1Data.amount();
-            firstItems = getItemsFromIds(item1Data.itemIds());
-        }
+        return new AmmoRequirement(
+                ammoRequirementMap.get("item1").amount(),
+                firstItems[0],
+                firstItems.length > 1 ? firstItems[1] : Items.AIR,
 
-        if (ammoRequirementMap.containsKey("item2")) {
-            WeaponDefinitionData.AmmoRequirementData item2Data = ammoRequirementMap.get("item2");
-            amountSecondItem = item2Data.amount();
-            secondItems = getItemsFromIds(item2Data.itemIds());
-        }
+                ammoRequirementMap.containsKey("item2") ? ammoRequirementMap.get("item2").amount() : 0,
+                secondItems.length > 0 ? secondItems[0] : Items.AIR,
+                secondItems.length > 1 ? secondItems[1] : Items.AIR,
 
-        if (ammoRequirementMap.containsKey("item3")) {
-            WeaponDefinitionData.AmmoRequirementData item3Data = ammoRequirementMap.get("item3");
-            amountThirdItem = item3Data.amount();
-            thirdItems = getItemsFromIds(item3Data.itemIds());
-        }
-
-        return amountFirstItem >= 1
-                ? new AmmoRequirement(
-                amountFirstItem, firstItems[0], firstItems.length > 1 ? firstItems[1] : Items.AIR,
-                amountSecondItem, secondItems != null ? secondItems[0] : Items.AIR, secondItems != null && secondItems.length > 1 ? secondItems[1] : Items.AIR,
-                amountThirdItem, thirdItems != null ? thirdItems[0] : Items.AIR, thirdItems != null && thirdItems.length > 1 ? thirdItems[1] : Items.AIR
-        )
-                : AmmoRequirement.EMPTY;
+                ammoRequirementMap.containsKey("item3") ? ammoRequirementMap.get("item3").amount() : 0,
+                thirdItems.length > 0 ? thirdItems[0] : Items.AIR,
+                thirdItems.length > 1 ? thirdItems[1] : Items.AIR
+        );
     }
 
     private static Item[] getItemsFromIds(Set<String> itemIds) {
         return itemIds.stream()
                 .map(ResourceLocation::new)
                 .map(BuiltInRegistries.ITEM::get)
+                .filter(i -> i != Items.AIR)
                 .toArray(Item[]::new);
     }
 
     public record WeaponState(boolean isReloading, boolean isCharged, boolean isShooting) {
 
         public static WeaponState fromNbt(CompoundTag tag) {
-                if (tag == null) return new WeaponState(false, false, false);
-                return new WeaponState(tag.getBoolean(KEY_RELOAD), tag.getBoolean(KEY_CHARGED), tag.getBoolean(KEY_SHOOT));
-            }
-
-            public void applyToNbt(CompoundTag tag) {
-                if (tag == null) return;
-                tag.putBoolean(KEY_RELOAD, isReloading);
-                tag.putBoolean(KEY_CHARGED, isCharged);
-                tag.putBoolean(KEY_SHOOT, isShooting);
-            }
+            if (tag == null) return new WeaponState(false, false, false);
+            return new WeaponState(tag.getBoolean(KEY_RELOAD), tag.getBoolean(KEY_CHARGED), tag.getBoolean(KEY_SHOOT));
         }
+
+        public void applyToNbt(CompoundTag tag) {
+            if (tag == null) return;
+            tag.putBoolean(KEY_RELOAD, isReloading);
+            tag.putBoolean(KEY_CHARGED, isCharged);
+            tag.putBoolean(KEY_SHOOT, isShooting);
+        }
+    }
 }
