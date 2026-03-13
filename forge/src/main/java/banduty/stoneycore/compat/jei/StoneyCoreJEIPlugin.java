@@ -2,6 +2,7 @@ package banduty.stoneycore.compat.jei;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.block.ModBlocks;
+import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.recipes.AnvilRecipe;
 import mezz.jei.api.IModPlugin;
@@ -9,6 +10,7 @@ import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.ISubtypeRegistration;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -28,6 +30,11 @@ public class StoneyCoreJEIPlugin implements IModPlugin {
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
         registration.addRecipeCategories(new CraftmanAnvilCategoryJEI(registration.getJeiHelpers().getGuiHelper()));
+    }
+
+    @Override
+    public void registerItemSubtypes(ISubtypeRegistration registration) {
+        registration.useNbtForSubtypes(SCItems.MANUSCRIPT.get());
     }
 
     @Override

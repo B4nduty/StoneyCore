@@ -8,8 +8,8 @@ import banduty.stoneycore.event.AdjustAttributeModifierEvent;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
-import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.recipes.ModRecipes;
+import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.sounds.ModSounds;
 import banduty.stoneycore.util.data.playerdata.SCAttributes;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
@@ -43,8 +43,9 @@ public class StoneyCoreForge {
 
         AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
 
+
         StoneyCore.LOG.info("Hello Forge world!");
         StoneyCore.init();
-        
+
     }
 }

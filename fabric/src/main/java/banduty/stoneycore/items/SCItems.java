@@ -30,6 +30,7 @@ public interface SCItems {
     private static void addItemsToToolsItemGroup(FabricItemGroupEntries entries) {
         entries.accept(SMITHING_HAMMER);
         entries.accept(TONGS);
+        entries.accept(MANUSCRIPT);
     }
 
     private static void addItemsToIngredientItemGroup(FabricItemGroupEntries entries) {

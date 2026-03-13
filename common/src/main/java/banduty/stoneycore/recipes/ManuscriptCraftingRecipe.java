@@ -2,84 +2,57 @@ package banduty.stoneycore.recipes;
 
 import banduty.stoneycore.items.SmithingHammer;
 import banduty.stoneycore.items.manuscript.Manuscript;
-import banduty.stoneycore.platform.Services;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.item.crafting.ShapelessRecipe;
 
-public class ManuscriptCraftingRecipe extends CustomRecipe {
-    private final Ingredient input;
+public class ManuscriptCraftingRecipe extends ShapelessRecipe {
 
-    public ManuscriptCraftingRecipe(ResourceLocation id, CraftingBookCategory category, Ingredient input) {
-        super(id, category);
-        this.input = input;
-    }
-
-    public Ingredient getInput() {
-        return this.input;
-    }
-
-    @Override
-    public boolean matches(CraftingContainer container, Level level) {
-        ItemStack paper = ItemStack.EMPTY;
-        ItemStack hammer = ItemStack.EMPTY;
-        ItemStack itemInput = ItemStack.EMPTY;
-        int count = 0;
-
-        for (int i = 0; i < container.getContainerSize(); i++) {
-            ItemStack stack = container.getItem(i);
-            if (!stack.isEmpty()) {
-                count++;
-                if (stack.is(Items.PAPER)) paper = stack;
-                else if (stack.getItem() instanceof SmithingHammer) hammer = stack;
-                else itemInput = stack;
-            }
-        }
-
-        if (count != 3 || paper.isEmpty() || hammer.isEmpty() || itemInput.isEmpty()) {
-            return false;
-        }
-
-        return this.input.test(itemInput);
+    public ManuscriptCraftingRecipe(ResourceLocation id,
+                                    CraftingBookCategory category,
+                                    ItemStack result,
+                                    NonNullList<Ingredient> ingredients) {
+        super(id, "", category, result, ingredients);
     }
 
     @Override
     public ItemStack assemble(CraftingContainer container, RegistryAccess registry) {
         ItemStack itemInput = ItemStack.EMPTY;
+
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
-            if (!stack.isEmpty() && !stack.is(Items.PAPER) && !(stack.getItem() instanceof SmithingHammer)) {
+
+            if (!stack.isEmpty()
+                    && !(stack.getItem() instanceof SmithingHammer)
+                    && !stack.is(net.minecraft.world.item.Items.PAPER)) {
                 itemInput = stack;
                 break;
             }
         }
+
         return Manuscript.createForStack(itemInput);
     }
 
     @Override
     public NonNullList<ItemStack> getRemainingItems(CraftingContainer container) {
-        NonNullList<ItemStack> remaining = NonNullList.withSize(container.getContainerSize(), ItemStack.EMPTY);
+        NonNullList<ItemStack> remaining =
+                NonNullList.withSize(container.getContainerSize(), ItemStack.EMPTY);
 
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
 
-            if (stack.isEmpty()) continue;
-
             if (stack.getItem() instanceof SmithingHammer) {
                 ItemStack hammerCopy = stack.copy();
 
-                int newDamage = hammerCopy.getDamageValue() + 1;
-
-                if (newDamage < hammerCopy.getMaxDamage()) {
-                    hammerCopy.setDamageValue(newDamage);
+                int dmg = hammerCopy.getDamageValue() + 1;
+                if (dmg < hammerCopy.getMaxDamage()) {
+                    hammerCopy.setDamageValue(dmg);
                     remaining.set(i, hammerCopy);
                 }
             }
@@ -89,12 +62,7 @@ public class ManuscriptCraftingRecipe extends CustomRecipe {
     }
 
     @Override
-    public boolean canCraftInDimensions(int width, int height) {
-        return width * height >= 3;
-    }
-
-    @Override
     public RecipeSerializer<?> getSerializer() {
-        return Services.PLATFORM.getManuscriptRecipeSerializer();
+        return ManuscriptSerializer.INSTANCE;
     }
 }

@@ -93,14 +93,15 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<AnvilRecipe> {
                         .addIngredients(VanillaTypes.ITEM_STACK, ing.asItemStacks());
             }
         }
-        
+
         ItemStack output = recipe.output();
 
         ItemStack target = HotIron.getTargetStack(output);
         if (target.isEmpty()) target = Manuscript.getTargetStack(output);
         if (target.isEmpty()) target = output;
 
-        builder.addSlot(RecipeIngredientRole.OUTPUT).addItemStack(target);
+        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(target);
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 120, 20).addItemStack(output);
     }
 
     @Override
@@ -122,19 +123,13 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<AnvilRecipe> {
 
         if (!target.isEmpty()) {
             guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(128, 28, 0);
+            guiGraphics.pose().translate(136, 28, 0);
             float scale = 0.5f;
             guiGraphics.pose().scale(scale, scale, scale);
             guiGraphics.renderItem(target, 0, 0);
             guiGraphics.renderItemDecorations(Minecraft.getInstance().font, target, 0, 0);
             guiGraphics.pose().popPose();
         }
-
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(120, 20, 0);
-        guiGraphics.renderItem(output, 0, 0);
-        guiGraphics.renderItemDecorations(Minecraft.getInstance().font, output, 0, 0);
-        guiGraphics.pose().popPose();
 
         guiGraphics.pose().popPose();
     }

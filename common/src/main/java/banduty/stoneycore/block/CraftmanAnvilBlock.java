@@ -7,14 +7,15 @@ import banduty.stoneycore.items.tongs.Tongs;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.*;
+import net.minecraft.world.Containers;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -110,8 +111,10 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
                     NonNullList<ItemStack> itemStacks = anvilEntity.getItems();
                     for (ItemStack itemStack : itemStacks) {
                         Optional<ItemStack> tongs = getTongsFromInventory(player);
-                        if (tongs.isEmpty() && player.getMainHandItem().getItem() instanceof Tongs) tongs = Optional.of(player.getMainHandItem());
-                        if (tongs.isEmpty() && player.getOffhandItem().getItem() instanceof Tongs) tongs = Optional.of(player.getOffhandItem());
+                        if (tongs.isEmpty() && player.getMainHandItem().getItem() instanceof Tongs)
+                            tongs = Optional.of(player.getMainHandItem());
+                        if (tongs.isEmpty() && player.getOffhandItem().getItem() instanceof Tongs)
+                            tongs = Optional.of(player.getOffhandItem());
                         if (tongs.isEmpty()) continue;
                         if (!Tongs.getTargetStack(tongs.get()).isEmpty()) continue;
                         if (itemStack.isEmpty()) continue;
@@ -138,21 +141,11 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
                 if (wasAdded) {
                     level.playSound(null, pos, SoundEvents.METAL_PLACE, SoundSource.BLOCKS, 0.5f, 1.0f);
                     anvilEntity.checkAndSpawnRecipeParticles();
-                    // If we added an item from a stack that had more than 1, we need to handle it properly
-                    if (!stack.isEmpty() && stack.getCount() > 1) {
-                        stack.shrink(1);
-                    } else if (!stack.isEmpty() && !(stack.getItem() instanceof CraftmanAnvilHelper)) {
-                        player.setItemInHand(hand, ItemStack.EMPTY);
-                    }
                 }
-
-                return InteractionResult.SUCCESS;
             }
-        } else {
-            return InteractionResult.SUCCESS;
         }
 
-        return InteractionResult.SUCCESS;
+        return InteractionResult.sidedSuccess(level.isClientSide());
     }
 
     public static Optional<ItemStack> getTongsFromInventory(Player player) {

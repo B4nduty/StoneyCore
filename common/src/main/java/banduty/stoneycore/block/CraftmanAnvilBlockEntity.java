@@ -335,16 +335,25 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         }
 
         hitCount = 0;
+        boolean itemsRemoved = false;
 
         for (int i = 0; i < 6; i++) {
-            if (!items.get(i).isEmpty()) {
-                playerEntity.addItem(items.get(i));
+            ItemStack stack = items.get(i);
+            if (!stack.isEmpty()) {
+                // Try to add to player inventory with proper stacking
+                if (!playerEntity.getInventory().add(stack)) {
+                    // If inventory is full, drop the item at the player's feet
+                    playerEntity.drop(stack, false);
+                }
                 items.set(i, ItemStack.EMPTY);
+                itemsRemoved = true;
             }
         }
 
-        checkAndSpawnRecipeParticles();
-        setChanged();
+        if (itemsRemoved) {
+            checkAndSpawnRecipeParticles();
+            setChanged();
+        }
     }
 
     // Override WorldlyContainer methods for specific slot access if needed

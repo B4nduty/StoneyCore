@@ -51,6 +51,7 @@ public class StoneyCoreFabric implements ModInitializer {
         ModBlocks.registerBlocks();
         ModBlockEntities.registerBlockEntities();
         ModParticles.registerParticles();
+        HotIronCoolingHandler.init();
 
         ServerTickEvents.START_SERVER_TICK.register(new StartTickHandler());
         PlayerBlockBreakEvents.AFTER.register(new PlayerBlockBreakAfterHandler());

@@ -74,13 +74,15 @@ public abstract class Manuscript extends Item {
     }
 
     @Override
-    public Component getName(ItemStack manuscript) {
-        ItemStack target = getTargetStack(manuscript);
+    public Component getName(ItemStack stack) {
+        ItemStack target = getTargetStack(stack);
         if (!target.isEmpty()) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(target.getItem());
-            return Component.translatable("item." + id.getNamespace() + ".manuscript_" + id.getPath());
+            // Get the original item's display name
+            Component originalName = target.getHoverName();
+            // Return a translatable component with the original name as an argument
+            return Component.translatable("item.stoneycore.manuscript.with_item", originalName);
         }
-        return super.getName(manuscript);
+        return super.getName(stack);
     }
 
     @Override

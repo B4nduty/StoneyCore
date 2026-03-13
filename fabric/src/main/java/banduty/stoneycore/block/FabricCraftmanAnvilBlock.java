@@ -33,7 +33,7 @@ public class FabricCraftmanAnvilBlock extends CraftmanAnvilBlock {
         if (!level.isClientSide()) {
             return super.use(state, level, pos, player, hand, hit);
         } else {
-            return InteractionResult.SUCCESS;
+            return InteractionResult.sidedSuccess(level.isClientSide());
         }
     }
 }
