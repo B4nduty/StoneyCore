@@ -12,25 +12,35 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class SiegeSpawnerItem extends Item {
     public static final Map<EntityType<?>, SiegeSpawnerItem> SIEGE_SPAWNERS = Maps.newIdentityHashMap();
-    private final EntityType<?> type;
+    private final Supplier<? extends EntityType<?>> typeSupplier;
+
+    public SiegeSpawnerItem(Supplier<? extends EntityType<?>> typeSupplier, Properties properties) {
+        super(properties);
+        this.typeSupplier = typeSupplier;
+    }
 
     public SiegeSpawnerItem(EntityType<?> type, Properties properties) {
-        super(properties);
-        this.type = type;
+        this(() -> type, properties);
         SIEGE_SPAWNERS.put(type, this);
     }
 
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
-        if (level instanceof ServerLevel serverLevel) {
+        EntityType<?> type = typeSupplier.get();
+        if (level instanceof ServerLevel serverLevel && type != null) {
             BlockPos pos = context.getClickedPos().above();
             Entity entity = type.create(level);
 
             if (entity != null) {
+                if (!SIEGE_SPAWNERS.containsKey(type)) {
+                    SIEGE_SPAWNERS.put(type, this);
+                }
+
                 LandState landState = LandState.get(serverLevel);
 
                 boolean isClaimed = landState.isClaimed(pos);
@@ -52,13 +62,7 @@ public class SiegeSpawnerItem extends Item {
         return InteractionResult.PASS;
     }
 
-
     public static SiegeSpawnerItem forEntity(EntityType<?> type) {
-        for (Map.Entry<EntityType<?>, SiegeSpawnerItem> entry : SIEGE_SPAWNERS.entrySet()) {
-            if (entry.getKey() == type) {
-                return entry.getValue();
-            }
-        }
-        return null;
+        return SIEGE_SPAWNERS.get(type);
     }
 }
