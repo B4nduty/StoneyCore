@@ -90,7 +90,7 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 dependencies {
     modApi "dev.architectury:architectury-forge:${architectury}"
 
-    modImplementation "io.wispforest:accessories-neoforge:${accessories}"
+    compileOnly "io.wispforest:accessories-neoforge:${accessories}"
     compileOnly "io.wispforest:accessories-neoforge:${accessories}"
 
     modImplementation "dev.kosmx.player-anim:player-animation-lib-forge:${player_anim}"

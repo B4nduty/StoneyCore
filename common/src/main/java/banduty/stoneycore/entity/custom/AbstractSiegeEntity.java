@@ -209,6 +209,10 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
                 );
                 return false;
             }
+            if (player.isCreative()) {
+                this.discard();     // instantly remove entity
+                return true;
+            }
         }
 
         String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(attacker.getType()).toString();
@@ -245,19 +249,49 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     }
 
     // Equipment handling
-    @Override public Iterable<ItemStack> getArmorSlots() { return List.of(); }
-    @Override public ItemStack getItemBySlot(EquipmentSlot slot) { return ItemStack.EMPTY; }
-    @Override public void setItemSlot(EquipmentSlot slot, ItemStack stack) {}
-    @Override public HumanoidArm getMainArm() {return HumanoidArm.RIGHT;}
+    @Override
+    public Iterable<ItemStack> getArmorSlots() {
+        return List.of();
+    }
+
+    @Override
+    public ItemStack getItemBySlot(EquipmentSlot slot) {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public void setItemSlot(EquipmentSlot slot, ItemStack stack) {
+    }
+
+    @Override
+    public HumanoidArm getMainArm() {
+        return HumanoidArm.RIGHT;
+    }
 
     // Mounting logic
-    @Override public double getPassengersRidingOffset() { return 1.0D; }
-    @Override public boolean dismountsUnderwater() { return true; }
-    @Override public abstract boolean canAddPassenger(Entity passenger);
+    @Override
+    public double getPassengersRidingOffset() {
+        return 1.0D;
+    }
+
+    @Override
+    public boolean dismountsUnderwater() {
+        return true;
+    }
+
+    @Override
+    public abstract boolean canAddPassenger(Entity passenger);
 
     // Movement logic
-    @Override public boolean isPushable() { return false; }
-    @Override public boolean isEffectiveAi() { return false; }
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    public boolean isEffectiveAi() {
+        return false;
+    }
 
     @Override
     public Vec3 getDismountLocationForPassenger(LivingEntity passenger) {
@@ -267,10 +301,10 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         double backOffset = offset.z;
 
         double forwardX = -Math.sin(yawRadians);
-        double forwardZ =  Math.cos(yawRadians);
+        double forwardZ = Math.cos(yawRadians);
 
-        double rightX =  Math.cos(yawRadians);
-        double rightZ =  Math.sin(yawRadians);
+        double rightX = Math.cos(yawRadians);
+        double rightZ = Math.sin(yawRadians);
 
         double offsetX = rightX * leftOffset - forwardX * backOffset;
         double offsetZ = rightZ * leftOffset - forwardZ * backOffset;
@@ -284,7 +318,8 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
 
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
-        if (!(this.level() instanceof ServerLevel serverLevel) || hand != InteractionHand.MAIN_HAND || this.wasEyeInWater) return super.interact(player, hand);
+        if (!(this.level() instanceof ServerLevel serverLevel) || hand != InteractionHand.MAIN_HAND || this.wasEyeInWater)
+            return super.interact(player, hand);
 
         UUID playerId = player.getUUID();
         Optional<SiegeManager.Siege> siegeOpt = SiegeManager.getPlayerSiege(serverLevel, playerId);

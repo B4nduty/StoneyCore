@@ -1,6 +1,7 @@
 package banduty.stoneycore.recipes;
 
 import banduty.stoneycore.block.CraftmanAnvilBlockEntity;
+import banduty.stoneycore.items.hotiron.HotIron;
 import banduty.stoneycore.platform.Services;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
@@ -18,6 +19,18 @@ public record AnvilRecipe(ResourceLocation id, List<StackIngredient> ingredients
 
     @Override
     public boolean matches(CraftmanAnvilBlockEntity inventory, Level level) {
+        for (int i = 0; i < 6; i++) {
+            ItemStack stack = inventory.getItem(i);
+
+            if (!stack.isEmpty() && stack.getItem() instanceof HotIron) {
+                ItemStack target = HotIron.getTargetStack(stack);
+
+                if (!target.isEmpty()) {
+                    return false;
+                }
+            }
+        }
+
         List<ItemStack> inputItems = new ArrayList<>();
         for (int i = 0; i < 6; i++) inputItems.add(inventory.getItem(i));
 

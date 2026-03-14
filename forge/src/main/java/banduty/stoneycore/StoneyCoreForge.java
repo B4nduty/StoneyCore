@@ -17,6 +17,7 @@ import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import me.shedaniel.autoconfig.serializer.PartitioningSerializer;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
@@ -41,9 +42,10 @@ public class StoneyCoreForge {
         ModBlockEntities.registerBlockEntities(modEventBus);
         ModParticles.registerParticles(modEventBus);
 
-        AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
-
-
+        if (ModList.get().isLoaded("accessories")) {
+            AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
+        }
+        
         StoneyCore.LOG.info("Hello Forge world!");
         StoneyCore.init();
 

@@ -58,7 +58,11 @@ public class StoneyCoreFabric implements ModInitializer {
         PlayerBlockBreakEvents.BEFORE.register(new PlayerBlockBreakBeforeHandler());
         UseBlockCallback.EVENT.register(new UseBlockHandler());
         if (FabricLoader.getInstance().isModLoaded("bettercombat")) BetterCombatEvents.registerEvents();
-        AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
+
+        if (FabricLoader.getInstance().isModLoaded("accessories")) {
+            AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
+        }
+
         UseEntityCallback.EVENT.register(new UseEntityHandler());
         PlayerNameTagEvents.EVENT.register(new PlayerNameTagHandler());
         CommandRegistrationCallback.EVENT.register(new FabricSCCommandsHandler());

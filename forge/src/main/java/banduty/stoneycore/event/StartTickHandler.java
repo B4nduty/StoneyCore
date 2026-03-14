@@ -20,6 +20,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.*;
@@ -86,6 +87,9 @@ public class StartTickHandler {
     }
 
     private static void handleFreezeImmunity(ServerPlayer player) {
+        if (!ModList.get().isLoaded("accessories")) {
+            return;
+        }
         if (AccessoriesCapability.getOptionally(player).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                 ItemStack equippedStack = equipped.stack();

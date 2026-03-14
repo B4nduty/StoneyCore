@@ -146,6 +146,9 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public List<ItemStack> getEquippedAccessories(LivingEntity livingEntity) {
         List<ItemStack> itemStacks = new ArrayList<>();
+        if (!FabricLoader.getInstance().isModLoaded("accessories")) {
+            return itemStacks;
+        }
         if (AccessoriesCapability.getOptionally(livingEntity).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(livingEntity).getAllEquipped()) {
                 ItemStack itemStack = equipped.stack();

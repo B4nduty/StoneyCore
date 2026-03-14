@@ -145,6 +145,11 @@ public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public List<ItemStack> getEquippedAccessories(LivingEntity livingEntity) {
         List<ItemStack> itemStacks = new ArrayList<>();
+        
+        if (!ModList.get().isLoaded("accessories")) {
+            return itemStacks;
+        }
+
         if (AccessoriesCapability.getOptionally(livingEntity).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(livingEntity).getAllEquipped()) {
                 ItemStack itemStack = equipped.stack();

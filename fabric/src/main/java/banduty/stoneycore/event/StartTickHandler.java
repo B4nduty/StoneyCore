@@ -11,6 +11,7 @@ import banduty.stoneycore.util.servertick.*;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -81,6 +82,9 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
     }
 
     private static void handleFreezeImmunity(ServerPlayer player) {
+        if (!FabricLoader.getInstance().isModLoaded("accessories")) {
+            return;
+        }
         if (AccessoriesCapability.getOptionally(player).isPresent()) {
             for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                 ItemStack equippedStack = equipped.stack();
