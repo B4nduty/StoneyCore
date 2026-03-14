@@ -123,7 +123,7 @@ public final class SCRangeWeaponUtil {
         }
 
         if (level instanceof ServerLevel serverLevel) {
-            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), Services.PARTICLE.getMuzzlesSmokeParticle(), 100, 0.2f, 0.0005f, 5);
+            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), Services.PARTICLE.getMuzzlesSmokeParticle(), 50, 0.2f, 0.0005f, 5);
             spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), Services.PARTICLE.getMuzzlesFlashParticle(), 1, 0f, 0.1f, 6);
         }
     }
@@ -147,10 +147,20 @@ public final class SCRangeWeaponUtil {
     private static void spawnParticleTrail(ServerLevel serverLevel, Player player, InteractionHand hand, ParticleOptions particle, int count, float delta, float spread, int distance) {
         Vec3 handPos = getHandPosition(player, hand);
         Vec3 lookDir = player.getViewVector(1.0F);
+        for (ServerPlayer otherPlayer : serverLevel.players()) {
+            double distToPlayer = otherPlayer.distanceTo(player);
+            int adjustedCount = count;
 
-        for (int i = 0; i < distance; i++) {
-            Vec3 pos = handPos.add(lookDir.scale(i));
-            serverLevel.sendParticles(particle, pos.x, pos.y, pos.z, count, delta, delta, delta, spread);
+            if (distToPlayer > 32) {
+                adjustedCount = Math.max(1, count / 4); // 25% at far distance
+            } else if (distToPlayer > 16) {
+                adjustedCount = Math.max(1, count / 2); // 50% at medium distance
+            }
+
+            for (int i = 0; i < distance; i++) {
+                Vec3 pos = handPos.add(lookDir.scale(i));
+                serverLevel.sendParticles(particle, pos.x, pos.y, pos.z, adjustedCount, delta, delta, delta, spread);
+            }
         }
     }
 

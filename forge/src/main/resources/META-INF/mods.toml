@@ -12,39 +12,33 @@ logoFile = "${mod_id}.png" #optional (needs to be in the root of your mod jar (r
 credits = "Thanks for this example mod goes to Java" #optional
 authors = "${mod_author}" #optional
 description = '''${description}''' #mandatory (Supports multiline text)
-[[dependencies.${mod_id}]] #optional
+[[dependencies.${ mod_id }]] #optional
 modId = "forge" #mandatory
 mandatory = true #mandatory
 versionRange = "[${forge_version},)" #mandatory
 ordering = "NONE" # The order that this dependency should load in relation to your mod, required to be either 'BEFORE' or 'AFTER' if the dependency is not mandatory
 side = "BOTH" # Side this dependency is applied on - 'BOTH', 'CLIENT' or 'SERVER'
-[[dependencies.${mod_id}]]
+[[dependencies.${ mod_id }]]
 modId = "minecraft"
 mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
-[[dependencies.${mod_id}]]
+[[dependencies.${ mod_id }]]
 modId = "accessories"
 mandatory = true
 versionRange = "[1.0.0-beta47,)"
 ordering = "AFTER"
 side = "BOTH"
-[[dependencies.${mod_id}]]
+[[dependencies.${ mod_id }]]
 modId = "cloth_config"
 mandatory = true
 versionRange = "[11.1,)"
 ordering = "AFTER"
 side = "BOTH"
-[[dependencies.${mod_id}]]
+[[dependencies.${ mod_id }]]
 modId = "architectury"
 mandatory = true
 versionRange = "[9.2,)"
-ordering = "AFTER"
-side = "BOTH"
-[[dependencies.${mod_id}]]
-modId = "playeranimator"
-mandatory = true
-versionRange = "[1.0.2-rc1,)"
 ordering = "AFTER"
 side = "BOTH"
