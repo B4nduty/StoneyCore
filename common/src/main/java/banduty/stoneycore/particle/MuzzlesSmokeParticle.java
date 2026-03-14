@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class MuzzlesSmokeParticle extends TextureSheetParticle {
     private final SpriteSet spriteSet;
+    private final float baseQuad = this.quadSize * 2;
 
     public MuzzlesSmokeParticle(ClientLevel clientLevel, double xCoord, double yCoord, double zCoord,
                                 SpriteSet spriteSet, double xd, double yd, double zd) {
@@ -35,7 +36,15 @@ public class MuzzlesSmokeParticle extends TextureSheetParticle {
     @Override
     public void tick() {
         super.tick();
-        this.alpha = 1f - ((float) this.age / (float) this.lifetime);
+
+        float t = (float) this.age / this.lifetime;
+
+        this.alpha = 1 - t;
+
+        float scaleFactor;
+        scaleFactor = 1f + (float) (Math.sin(t * Math.PI * 0.8f) * Math.pow(1f - t, 0.3f)) * 0.7f;
+
+        this.quadSize = Math.min(this.baseQuad * 2, this.baseQuad * scaleFactor);
 
         if (!this.removed) {
             this.setSpriteFromAge(this.spriteSet);
