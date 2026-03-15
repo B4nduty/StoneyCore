@@ -11,6 +11,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.List;
@@ -34,12 +35,14 @@ public class ForgeOutlineClaimRenderer implements OutlineClaimRendererHelper {
             shouldRender = true;
         }
 
-        if (AccessoriesCapability.getOptionally(player).isPresent()) {
-            for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
-                ItemStack equippedStack = equipped.stack();
-                if (equippedStack.getTag() != null && equippedStack.getTag().getBoolean(
-                        BuiltInRegistries.ITEM.getKey(land.getLandType().coreItem()).getPath())) {
-                    shouldRender = true;
+        if (ModList.get().isLoaded("accessories")) {
+            if (AccessoriesCapability.getOptionally(player).isPresent()) {
+                for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
+                    ItemStack equippedStack = equipped.stack();
+                    if (equippedStack.getTag() != null && equippedStack.getTag().getBoolean(
+                            BuiltInRegistries.ITEM.getKey(land.getLandType().coreItem()).getPath())) {
+                        shouldRender = true;
+                    }
                 }
             }
         }

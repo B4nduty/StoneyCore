@@ -7,6 +7,7 @@ import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -34,12 +35,14 @@ public class FabricOutlineClaimRenderer implements OutlineClaimRendererHelper {
             shouldRender = true;
         }
 
-        if (AccessoriesCapability.getOptionally(player).isPresent()) {
-            for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
-                ItemStack equippedStack = equipped.stack();
-                if (equippedStack.getTag() != null && equippedStack.getTag().getBoolean(
-                        BuiltInRegistries.ITEM.getKey(land.getLandType().coreItem()).getPath())) {
-                    shouldRender = true;
+        if (FabricLoader.getInstance().isModLoaded("accessories")) {
+            if (AccessoriesCapability.getOptionally(player).isPresent()) {
+                for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
+                    ItemStack equippedStack = equipped.stack();
+                    if (equippedStack.getTag() != null && equippedStack.getTag().getBoolean(
+                            BuiltInRegistries.ITEM.getKey(land.getLandType().coreItem()).getPath())) {
+                        shouldRender = true;
+                    }
                 }
             }
         }

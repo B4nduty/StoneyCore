@@ -13,7 +13,6 @@ import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.recipes.ModRecipes;
 import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.sounds.ModSounds;
-import banduty.stoneycore.util.BetterCombatEvents;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.data.playerdata.PDKeys;
@@ -21,6 +20,7 @@ import banduty.stoneycore.util.data.playerdata.SCAttributes;
 import banduty.stoneycore.util.data.playerdata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.*;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
+import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -57,7 +57,9 @@ public class StoneyCoreFabric implements ModInitializer {
         PlayerBlockBreakEvents.AFTER.register(new PlayerBlockBreakAfterHandler());
         PlayerBlockBreakEvents.BEFORE.register(new PlayerBlockBreakBeforeHandler());
         UseBlockCallback.EVENT.register(new UseBlockHandler());
-        if (FabricLoader.getInstance().isModLoaded("bettercombat")) BetterCombatEvents.registerEvents();
+        if (FabricLoader.getInstance().isModLoaded("bettercombat")) {
+            BetterCombatClientEvents.ATTACK_HIT.register(new PlayerAttackHitHandler());
+        }
 
         if (FabricLoader.getInstance().isModLoaded("accessories")) {
             AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
