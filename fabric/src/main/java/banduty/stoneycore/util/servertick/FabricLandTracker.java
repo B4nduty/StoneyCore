@@ -16,6 +16,7 @@ public class FabricLandTracker implements LandTrackerHelper {
         FriendlyByteBuf buf = PacketByteBufs.create();
         buf.writeUUID(player.getUUID());
         buf.writeBoolean(landPresent);
+        buf.writeBlockPos(blockPos);
         buf.writeBoolean(SiegeManager.isPlayerInLandUnderSiege(player.serverLevel(), player));
         buf.writeBoolean(SiegeManager.getPlayerSiege(player.serverLevel(), player.getUUID())
                 .map(siege -> !siege.disabledPlayers.contains(player.getUUID()))
