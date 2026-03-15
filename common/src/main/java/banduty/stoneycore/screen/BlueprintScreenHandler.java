@@ -1,4 +1,3 @@
-
 package banduty.stoneycore.screen;
 
 import banduty.stoneycore.platform.Services;
@@ -12,6 +11,10 @@ import net.minecraft.world.item.ItemStack;
 public class BlueprintScreenHandler extends AbstractContainerMenu {
     private final ItemStack itemStack;
     private final ResourceLocation structureId;
+
+    public BlueprintScreenHandler(int id, Inventory inv) {
+        this(id, inv, ItemStack.EMPTY, null);
+    }
 
     public BlueprintScreenHandler(int syncId, Inventory inventory, FriendlyByteBuf buf) {
         this(syncId, inventory, buf.readItem(), buf.readResourceLocation());

@@ -17,9 +17,12 @@ import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
 import banduty.stoneycore.platform.*;
+import banduty.stoneycore.screen.BlueprintScreen;
+import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.render.ForgeRenderTypeHelper;
 import io.wispforest.accessories.api.client.AccessoriesRendererRegistry;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -49,6 +52,11 @@ public class StoneyCoreForgeClient {
                     ModBlockEntities.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(),
                     CraftmanAnvilBlockRenderer::new
             );
+            MenuScreens.register(
+                    ModScreenHandlers.BLUEPRINT_SCREEN_HANDLER.get(),
+                    BlueprintScreen::new
+            );
+
             BuiltInRegistries.ITEM.stream()
                     .filter(item -> item instanceof SCAccessoryItem)
                     .forEach(item -> AccessoriesRendererRegistry.registerRenderer(item, SCAccessoryItemRenderer::new));

@@ -42,6 +42,14 @@ public class BlueprintItem extends Item {
     }
 
     @Override
+    public Component getName(ItemStack stack) {
+        ResourceLocation id = StructureSpawnRegistry.getId(getStructureSpawner());
+        if (id != null)
+            return Component.translatable("item." + id.getNamespace() + ".blueprint");
+        return super.getName(stack);
+    }
+
+    @Override
     public void appendHoverText(ItemStack stack, Level level, List<Component> tooltip, TooltipFlag tooltipFlag) {
         ResourceLocation id = StructureSpawnRegistry.getId(getStructureSpawner());
         if (id != null) {
@@ -63,7 +71,7 @@ public class BlueprintItem extends Item {
             ResourceLocation structureId = StructureSpawnRegistry.getId(getStructureSpawner());
 
             Services.BLUEPRINT.openBlueprintScreen(serverPlayer, itemStack, structureId);
-            
+
             // user.playSound(sound, 1f, 1f);
         }
         return InteractionResultHolder.success(user.getItemInHand(hand));

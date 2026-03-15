@@ -1,4 +1,3 @@
-
 package banduty.stoneycore.screen;
 
 import banduty.stoneycore.StoneyCore;
@@ -14,8 +13,10 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.level.block.Block;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -53,11 +54,7 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
         String namespace = this.menu.getStructureId().getNamespace();
         String originalBasePath = blueprintItem.getBackgroundTexture();
         String basePath = originalBasePath.isEmpty() ? "manuscript" : originalBasePath;
-        ResourceLocation textureButton = new ResourceLocation(originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace, "textures/gui/blueprint/" + basePath + "_legend_button.png");
-        ResourceLocation textureButtonOverlay = new ResourceLocation(originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace, "textures/gui/blueprint/" + basePath + "_legend_button_overlay.png");
-
-        TexturedButton legendButton = new TexturedButton(this.getX() + this.imageWidth - 21, this.getY() + 5, 16, 16,
-                button -> this.showLegend = !this.showLegend, textureButton, textureButtonOverlay);
+        TexturedButton legendButton = getTexturedButton(originalBasePath, namespace, basePath);
 
         this.addRenderableWidget(legendButton);
 
@@ -87,41 +84,71 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
         RenderSystem.disableBlend();
     }
 
+    private @NotNull TexturedButton getTexturedButton(String originalBasePath, String namespace, String basePath) {
+        ResourceLocation textureButton = new ResourceLocation(originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace, "textures/gui/blueprint/" + basePath + "_legend_button.png");
+        ResourceLocation textureButtonOverlay = new ResourceLocation(originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace, "textures/gui/blueprint/" + basePath + "_legend_button_overlay.png");
+
+        return new TexturedButton(this.getX() + this.imageWidth - 21, this.getY() + 5, 16, 16,
+                button -> this.showLegend = !this.showLegend, textureButton, textureButtonOverlay);
+    }
+
     private void renderBlockFinderList(GuiGraphics guiGraphics) {
+
         ResourceLocation structureId = this.menu.getStructureId();
         StructureSpawner spawner = StructureSpawnRegistry.get(structureId);
         if (spawner == null) return;
 
         List<Block> blocks = spawner.getBlockFinders();
 
-        int maxTextWidth = this.imageWidth / 2 - 75;
+        float textScale = 1.0f;
+        int baseLineHeight = 10;
+        int lineHeight = (int) (baseLineHeight * textScale);
+
+        int maxTextWidth = (int) (65 / textScale);
+
         int startX = this.getX() - this.imageWidth / 2 + 30;
         int startY = this.getY() + 10;
-        int lineHeight = 10;
+
+        int yOffset = 0;
 
         Font font = this.font;
 
-        int maxWidth = 0;
         for (int i = 0; i < Math.min(blocks.size(), 10); i++) {
+
             Block block = blocks.get(i);
-            String name = (i + 1) + ". " + block.getName().getString();
-            int width = font.width(name);
-            if (width > maxWidth) maxWidth = width;
-        }
 
-        float textScale = maxWidth > maxTextWidth
-                ? ((float) maxTextWidth / (float) maxWidth) * 4
-                : 1.0f;
+            Component text = Component.literal((i + 1) + ". ")
+                    .append(block.getName());
 
-        for (int i = 0; i < Math.min(blocks.size(), 10); i++) {
-            Block block = blocks.get(i);
-            String name = (i + 1) + ". " + block.getName().getString();
+            List<FormattedCharSequence> lines = font.split(text, maxTextWidth);
 
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(startX, startY + i * lineHeight, 0);
-            guiGraphics.pose().scale(textScale, textScale, 1.0f);
-            guiGraphics.drawString(font, name, 0, 0, 0x000000, false);
-            guiGraphics.pose().popPose();
+            for (FormattedCharSequence line : lines) {
+
+                guiGraphics.pose().pushPose();
+
+                guiGraphics.pose().translate(
+                        startX,
+                        startY + yOffset,
+                        0
+                );
+
+                guiGraphics.pose().scale(textScale, textScale, 1f);
+
+                guiGraphics.drawString(
+                        font,
+                        line,
+                        0,
+                        0,
+                        0x000000,
+                        false
+                );
+
+                guiGraphics.pose().popPose();
+
+                yOffset += lineHeight;
+            }
+
+            yOffset += (int) (3 * textScale);   // spacing between block entries
         }
     }
 
