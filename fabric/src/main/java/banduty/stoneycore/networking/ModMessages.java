@@ -21,7 +21,7 @@ public interface ModMessages {
         ServerPlayNetworking.registerGlobalReceiver(ATTACK_ID, AttackC2SPacket::receive);
         ServerPlayNetworking.registerGlobalReceiver(RELOAD_PACKET_ID, ReloadC2SPacket::receive);
         ServerPlayNetworking.registerGlobalReceiver(SIEGE_YAW_PITCH_C2S_ID, SiegeYawC2SPacket::receive);
-        ServerPlayNetworking.registerGlobalReceiver(TOGGLE_VISOR_ID, ToogleVisorC2SPacket::receive);
+        ServerPlayNetworking.registerGlobalReceiver(TOGGLE_VISOR_ID, ToggleVisorC2SPacket::receive);
     }
 
     static void registerS2CPackets() {

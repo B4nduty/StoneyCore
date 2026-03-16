@@ -20,6 +20,7 @@ import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
@@ -82,53 +83,55 @@ public class KeyInputHandler {
                     visorHidden = hideVisor.isDown();
                 } else visorHidden = false;
                 if (toggleVisor.isDown()) {
-                    if (!isTogglingVisor) {
-                        if (AccessoriesCapability.getOptionally(localPlayer).isPresent()) {
-                            for (SlotEntryReference equipped : AccessoriesCapability.get(localPlayer).getAllEquipped()) {
-                                ItemStack itemStack = equipped.stack();
-                                if (!itemStack.isEmpty() && itemStack.getItem() instanceof SCAccessoryItem scAccessoryItem &&
-                                        scAccessoryItem.hasOpenVisor(itemStack)) {
-                                    isTogglingVisor = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!isTogglingVisor) return;
-                    }
-
-                    toggleVisorTicks++;
-
-                    toggleProgress = Math.min(1.0f, (float) toggleVisorTicks / (StoneyCore.getConfig().combatOptions().getToggleVisorTime() - 1));
-
-                    if (!visorToggled && toggleVisorTicks >= StoneyCore.getConfig().combatOptions().getToggleVisorTime()) {
-
-                        // Determine visor state BEFORE toggle
-                        boolean isCurrentlyOpen = false;
-
-                        if (AccessoriesCapability.getOptionally(localPlayer).isPresent()) {
-                            for (SlotEntryReference equipped : AccessoriesCapability.get(localPlayer).getAllEquipped()) {
-                                ItemStack stack = equipped.stack();
-                                if (!stack.isEmpty() && stack.getItem() instanceof SCAccessoryItem accessory) {
-                                    if (accessory.hasOpenVisor(stack)) {
-                                        isCurrentlyOpen = NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false);
+                    if (ModList.get().isLoaded("accessories")) {
+                        if (!isTogglingVisor) {
+                            if (AccessoriesCapability.getOptionally(localPlayer).isPresent()) {
+                                for (SlotEntryReference equipped : AccessoriesCapability.get(localPlayer).getAllEquipped()) {
+                                    ItemStack itemStack = equipped.stack();
+                                    if (!itemStack.isEmpty() && itemStack.getItem() instanceof SCAccessoryItem scAccessoryItem &&
+                                            scAccessoryItem.hasOpenVisor(itemStack)) {
+                                        isTogglingVisor = true;
                                         break;
                                     }
                                 }
                             }
+
+                            if (!isTogglingVisor) return;
                         }
 
-                        // Play appropriate sound
-                        if (isCurrentlyOpen) {
-                            localPlayer.playSound(ModSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
-                        } else {
-                            localPlayer.playSound(ModSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
-                        }
+                        toggleVisorTicks++;
 
-                        ModMessages.CHANNEL.send(PacketDistributor.SERVER.noArg(), new ToggleVisorC2SPacket());
-                        visorToggled = true;
-                        isTogglingVisor = false;
-                        toggleProgress = 0.0f;
+                        toggleProgress = Math.min(1.0f, (float) toggleVisorTicks / (StoneyCore.getConfig().combatOptions().getToggleVisorTime() - 1));
+
+                        if (!visorToggled && toggleVisorTicks >= StoneyCore.getConfig().combatOptions().getToggleVisorTime()) {
+
+                            // Determine visor state BEFORE toggle
+                            boolean isCurrentlyOpen = false;
+
+                            if (AccessoriesCapability.getOptionally(localPlayer).isPresent()) {
+                                for (SlotEntryReference equipped : AccessoriesCapability.get(localPlayer).getAllEquipped()) {
+                                    ItemStack stack = equipped.stack();
+                                    if (!stack.isEmpty() && stack.getItem() instanceof SCAccessoryItem accessory) {
+                                        if (accessory.hasOpenVisor(stack)) {
+                                            isCurrentlyOpen = NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Play appropriate sound
+                            if (isCurrentlyOpen) {
+                                localPlayer.playSound(ModSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
+                            } else {
+                                localPlayer.playSound(ModSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
+                            }
+
+                            ModMessages.CHANNEL.send(PacketDistributor.SERVER.noArg(), new ToggleVisorC2SPacket());
+                            visorToggled = true;
+                            isTogglingVisor = false;
+                            toggleProgress = 0.0f;
+                        }
                     }
                 } else {
                     isTogglingVisor = false;
