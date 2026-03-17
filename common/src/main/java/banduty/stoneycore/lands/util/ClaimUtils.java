@@ -4,7 +4,6 @@ import banduty.stoneycore.lands.LandType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
@@ -19,19 +18,19 @@ public class ClaimUtils {
      * <p>
      * Terrain validity rules:
      * <p>
-     *  - GROUND: only solid land blocks (not water or lava) are valid.
+     * - GROUND: only solid land blocks (not water or lava) are valid.
      * <p>
-     *  - WATER: only water is valid.
+     * - WATER: only water is valid.
      * <p>
-     *  - LAVA: only lava is valid.
+     * - LAVA: only lava is valid.
      * <p>
-     *  - GW: ground or water is valid.
+     * - GW: ground or water is valid.
      * <p>
-     *  - GL: ground or lava is valid.
+     * - GL: ground or lava is valid.
      * <p>
-     *  - WL: water or lava is valid.
+     * - WL: water or lava is valid.
      * <p>
-     *  - GWL: all terrain types are valid (always returns false).
+     * - GWL: all terrain types are valid (always returns false).
      */
     public static boolean isInvalidClaimColumn(ServerLevel level, BlockPos pos, LandType landType) {
         LandType.TerrainType terrain = landType.terrainType();
@@ -54,17 +53,18 @@ public class ClaimUtils {
         }
 
         boolean isWater = state.getFluidState().is(FluidTags.WATER);
-        boolean isLava  = state.is(Blocks.LAVA);
+        boolean isLava = state.getFluidState().is(FluidTags.LAVA);
+
         boolean isGround = !isWater && !isLava;
 
         return switch (terrain) {
             case GROUND -> !isGround;
             case WATER -> !isWater;
-            case LAVA  -> !isLava;
-            case GW    -> !(isGround || isWater);
-            case GL    -> !(isGround || isLava);
-            case WL    -> !(isWater  || isLava);
-            default    -> true;
+            case LAVA -> !isLava;
+            case GW -> !(isGround || isWater);
+            case GL -> !(isGround || isLava);
+            case WL -> !(isWater || isLava);
+            default -> true;
         };
     }
 
@@ -73,7 +73,7 @@ public class ClaimUtils {
      */
     public static boolean pathContainsInvalidBlock(ServerLevel level, BlockPos start, BlockPos end, LandType landType) {
         int x0 = start.getX(), z0 = start.getZ();
-        int x1 = end.getX(),   z1 = end.getZ();
+        int x1 = end.getX(), z1 = end.getZ();
 
         int dx = Math.abs(x1 - x0);
         int dz = Math.abs(z1 - z0);
@@ -96,8 +96,14 @@ public class ClaimUtils {
 
             int e2 = err << 1;
 
-            if (e2 > -dz) { err -= dz; x0 += sx; }
-            if (e2 < dx)  { err += dx; z0 += sz; }
+            if (e2 > -dz) {
+                err -= dz;
+                x0 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                z0 += sz;
+            }
         }
 
         return false;
