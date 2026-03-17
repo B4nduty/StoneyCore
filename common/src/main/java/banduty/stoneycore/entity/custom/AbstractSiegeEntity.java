@@ -327,7 +327,7 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
 
         LandState stateManager = LandState.get(serverLevel);
         Optional<Land> maybeLand = stateManager.getLandAt(this.getOnPos());
-        if (maybeLand.isPresent() && !(maybeLand.get().getOwnerUUID().equals(player.getUUID()) || maybeLand.get().isAlly(player.getUUID()) || player.isCreative())) {
+        if (siegeOpt.isEmpty() && maybeLand.isPresent() && !(maybeLand.get().getOwnerUUID().equals(player.getUUID()) || maybeLand.get().isAlly(player.getUUID()) || player.isCreative())) {
             return InteractionResult.FAIL;
         }
 

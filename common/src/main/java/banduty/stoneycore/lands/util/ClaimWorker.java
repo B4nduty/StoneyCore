@@ -52,35 +52,37 @@ public class ClaimWorker {
         this.radiusSquared = (long) radius * radius;
 
         long coreKey = corePos.asLong();
-        if (!land.isAlreadyClaimed(coreKey) && isWithinRadius(corePos)) {
-            acceptedKeys.add(coreKey);
-            acceptedSet.add(coreKey);
-            totalAccepted++;
-            addNeighborsToQueue(coreKey);
-        }
-
-        for (BlockPos claimedPos : land.getClaimed()) {
-            long key = claimedPos.asLong();
-            if (!processed.contains(key) && !acceptedSet.contains(key) && isWithinRadius(claimedPos)) {
-                priorityQueue.enqueue(key);
-                processed.add(key);
-                acceptedSet.add(key);
+        for (Land otherLand : LandState.get(serverLevel).getAllLands()) {
+            if (!otherLand.isAlreadyClaimed(coreKey) && isWithinRadius(corePos)) {
+                acceptedKeys.add(coreKey);
+                acceptedSet.add(coreKey);
                 totalAccepted++;
+                addNeighborsToQueue(coreKey);
             }
-        }
 
-        if (!acceptedKeys.isEmpty()) {
-            commitAcceptedClaims();
-        }
-
-        for (BlockPos pos : candidates) {
-            long key = pos.asLong();
-            if (!land.isAlreadyClaimed(key) && !processed.contains(key) && !acceptedSet.contains(key) && isWithinRadius(pos)) {
-                if (ClaimUtils.isInvalidClaimColumn(serverLevel, pos, land.getLandType())) {
-                    invalid.add(key);
-                } else {
-                    queue.enqueue(key);
+            for (BlockPos claimedPos : otherLand.getClaimed()) {
+                long key = claimedPos.asLong();
+                if (!processed.contains(key) && !acceptedSet.contains(key) && isWithinRadius(claimedPos)) {
+                    priorityQueue.enqueue(key);
                     processed.add(key);
+                    acceptedSet.add(key);
+                    totalAccepted++;
+                }
+            }
+
+            if (!acceptedKeys.isEmpty()) {
+                commitAcceptedClaims();
+            }
+
+            for (BlockPos pos : candidates) {
+                long key = pos.asLong();
+                if (!otherLand.isAlreadyClaimed(key) && !processed.contains(key) && !acceptedSet.contains(key) && isWithinRadius(pos)) {
+                    if (ClaimUtils.isInvalidClaimColumn(serverLevel, pos, otherLand.getLandType())) {
+                        invalid.add(key);
+                    } else {
+                        queue.enqueue(key);
+                        processed.add(key);
+                    }
                 }
             }
         }

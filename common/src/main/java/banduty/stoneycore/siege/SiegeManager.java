@@ -116,9 +116,9 @@ public class SiegeManager {
             float defendersRatio = totalDefenders == 0 ? 0f : (float) aliveDefenders / totalDefenders;
             float attackersRatio = totalAttackers == 0 ? 0f : (float) aliveAttackers / totalAttackers;
 
-            attackerBar.setName(Component.translatable("Component.land." + attackingLand.getLandType().id().getNamespace() + ".defenders_remaining",
+            attackerBar.setName(Component.translatable("component.land." + attackingLand.getLandType().id().getNamespace() + ".defenders_remaining",
                     attackingLand.getLandTitle(serverLevel).getString(), defendingLand.getLandTitle(serverLevel).getString(), aliveDefenders, totalDefenders));
-            defenderBar.setName(Component.translatable("Component.land." + defendingLand.getLandType().id().getNamespace() + ".attackers_remaining",
+            defenderBar.setName(Component.translatable("component.land." + defendingLand.getLandType().id().getNamespace() + ".attackers_remaining",
                     attackingLand.getLandTitle(serverLevel).getString(), defendingLand.getLandTitle(serverLevel).getString(), aliveAttackers, totalAttackers));
 
             attackerBar.setProgress(defendersRatio);
