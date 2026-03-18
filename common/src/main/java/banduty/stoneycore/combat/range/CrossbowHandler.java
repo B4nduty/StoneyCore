@@ -58,33 +58,40 @@ public class CrossbowHandler implements IRangedWeaponHandler {
 
     @Override
     public void handleUsageTick(Level level, ItemStack stack, Player player, int useTime) {
+
         float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack);
-        SCRangeWeaponUtil.WeaponState weaponState = SCRangeWeaponUtil.getWeaponState(stack);
+        SCRangeWeaponUtil.WeaponState state = SCRangeWeaponUtil.getWeaponState(stack);
+
+        boolean hasAmmo = SCRangeWeaponUtil.getArrowFromInventory(player).isPresent();
+
+        if (player.isCreative()) hasAmmo = true;
 
         if (pullProgress < 1.0F) {
-            if (weaponState.isCharged()) {
+            if (state.isCharged()) {
                 shoot(level, player, stack);
-                SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(false, false, true));
-            } else if (SCRangeWeaponUtil.getArrowFromInventory(player).isPresent())
-                SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(true, false, false));
-            else
-                SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(false, false, false));
+                SCRangeWeaponUtil.setWeaponState(stack,
+                        new SCRangeWeaponUtil.WeaponState(false, false, true));
+            } else if (hasAmmo) {
+                SCRangeWeaponUtil.setWeaponState(stack,
+                        new SCRangeWeaponUtil.WeaponState(true, false, false));
+            } else {
+                SCRangeWeaponUtil.setWeaponState(stack,
+                        new SCRangeWeaponUtil.WeaponState(false, false, false));
+            }
         }
+
         if (pullProgress >= 1.0F) {
-            if (!weaponState.isCharged()) {
-                SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack -> {
-                    if (arrowStack.getItem() instanceof ArrowItem) {
-                        if (!player.isCreative()) {
-                            int slot = SCRangeWeaponUtil.getArrowSlot(player);
-                            if (slot >= 0) player.getInventory().removeItem(slot, 1);
-                        }
-
-                        CompoundTag nbt = stack.getOrCreateTag();
-                        nbt.putString("loaded_arrow", BuiltInRegistries.ITEM.getKey(arrowStack.getItem()).toString());
-
-                        SCRangeWeaponUtil.loadAndPlayCrossbowSound(level, stack, player);
-                    }
-                });
+            if (!state.isCharged() && hasAmmo) {
+                ItemStack ammoStack = SCRangeWeaponUtil
+                        .getArrowFromInventory(player)
+                        .orElseGet(() -> new ItemStack(net.minecraft.world.item.Items.ARROW));
+                if (!player.isCreative()) {
+                    int slot = SCRangeWeaponUtil.getArrowSlot(player);
+                    if (slot >= 0) player.getInventory().removeItem(slot, 1);
+                }
+                CompoundTag nbt = stack.getOrCreateTag();
+                nbt.putString("loaded_arrow", BuiltInRegistries.ITEM.getKey(ammoStack.getItem()).toString());
+                SCRangeWeaponUtil.loadAndPlayCrossbowSound(level, stack, player);
             }
         }
     }
