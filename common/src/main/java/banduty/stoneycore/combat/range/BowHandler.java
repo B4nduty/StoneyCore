@@ -3,9 +3,8 @@ package banduty.stoneycore.combat.range;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-
-import java.util.Optional;
 
 public class BowHandler implements IRangedWeaponHandler {
     @Override
@@ -22,23 +21,31 @@ public class BowHandler implements IRangedWeaponHandler {
 
     @Override
     public void handleRelease(ItemStack stack, Level level, Player player, int useTime, ItemStack arrowStack) {
-        if (level == null || player == null || stack == null) return;
         if (level.isClientSide) return;
-        Optional<ItemStack> arrow = SCRangeWeaponUtil.getArrowFromInventory(player);
-        if (arrow.isEmpty()) return;
-        float pullProgress = SCRangeWeaponUtil.getBowPullProgress(useTime);
-        if (pullProgress < 0.1f) return;
-        SCRangeWeaponUtil.shootArrow(level, stack, player, arrow.get(), pullProgress);
-        if (!player.isCreative()) arrow.get().shrink(1);
+
+        ItemStack ammo = arrowStack;
+
+        if (ammo.isEmpty()) {
+            if (!player.isCreative()) return;
+            ammo = new ItemStack(Items.ARROW);
+        }
+
+        float pull = SCRangeWeaponUtil.getBowPullProgress(useTime);
+        if (pull < 0.1f) return;
+
+        SCRangeWeaponUtil.shootArrow(level, stack, player, ammo, pull);
+
+        if (!player.isCreative()) {
+            arrowStack.shrink(1);
+        }
     }
 
     @Override
     public boolean canShoot(ItemStack weapon) {
-        return !SCRangeWeaponUtil.getWeaponState(weapon).isReloading();
+        return true;
     }
 
     @Override
     public void handleUsageTick(Level level, ItemStack stack, Player player, int useTime) {
-
     }
 }

@@ -209,14 +209,21 @@ public abstract class ItemMixin {
 
     @Unique
     private void stoneyCore$handleProjectileWeapon(InteractionHand hand, Player player, ItemStack stack, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
-        player.startUsingItem(hand);
-
         if (WeaponDefinitionsStorage.getData(stack).ranged().useAnim() == UseAnim.CROSSBOW) {
+            player.startUsingItem(hand);
             cir.setReturnValue(SCRangeWeaponUtil.handleCrossbowUse(player.level(), player, hand, stack));
-        } else {
-            cir.setReturnValue(InteractionResultHolder.consume(stack));
+        } else if (WeaponDefinitionsStorage.getData(stack).ranged().useAnim() == UseAnim.BOW) {
+            if (!player.isCreative())
+                if (SCRangeWeaponUtil.getArrowFromInventory(player).isEmpty()) {
+                    cir.setReturnValue(InteractionResultHolder.fail(stack));
+                    cir.cancel();
+                    return;
+                }
         }
+        player.startUsingItem(hand);
+        cir.setReturnValue(InteractionResultHolder.consume(stack));
     }
+
 
     @Inject(method = "releaseUsing", at = @At("HEAD"))
     public void stoneycore$releaseUsing(ItemStack stack, Level level, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
@@ -228,9 +235,15 @@ public abstract class ItemMixin {
         String type = def.ranged().id();
 
         int useTime = WeaponDefinitionsStorage.getData(stack).ranged().maxUseTime() - remainingUseTicks;
-        SCRangeWeaponUtil.getArrowFromInventory(player).ifPresent(arrowStack ->
-                RangedWeaponHandlers.get(type).ifPresent(h -> h.handleRelease(stack, level, player, useTime, arrowStack)
-                ));
+
+        ItemStack ammo = SCRangeWeaponUtil
+                .getArrowFromInventory(player)
+                .orElse(ItemStack.EMPTY);
+        if (!player.isCreative() && ammo.isEmpty()) {
+            return;
+        }
+        RangedWeaponHandlers.get(type)
+                .ifPresent(h -> h.handleRelease(stack, level, player, useTime, ammo));
     }
 
     @Inject(method = "appendHoverText", at = @At("HEAD"))
