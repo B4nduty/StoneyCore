@@ -1,74 +1,72 @@
 package banduty.stoneycore.config;
 
-import banduty.stoneycore.StoneyCoreForge;
-
 public class ForgeConfigImpl extends ConfigImpl {
     @Override
     public CombatOptions combatOptions() {
         return new CombatOptions() {
             @Override
             public boolean getRealisticCombat() {
-                return StoneyCoreForge.CONFIG.combat.realisticCombat;
+                return SCConfigs.realisticCombat.get();
             }
 
             @Override
             public int getToggleVisorTime() {
-                return StoneyCoreForge.CONFIG.combat.toggleVisorTime;
+                return SCConfigs.toggleVisorTime.get();
             }
 
             @Override
             public boolean getParry() {
-                return StoneyCoreForge.CONFIG.combat.parry;
+                return SCConfigs.parry.get();
             }
 
             @Override
             public float maxBaseStamina() {
-                return StoneyCoreForge.CONFIG.combat.maxBaseStamina;
+                return SCConfigs.maxBaseStamina.get().floatValue();
             }
 
             @Override
             public String staminaRecoveryFormula() {
-                return StoneyCoreForge.CONFIG.combat.staminaRecoveryFormula;
+                return SCConfigs.staminaRecoveryFormula.get();
             }
 
             @Override
             public double blockingStaminaConstant() {
-                return StoneyCoreForge.CONFIG.combat.blockingStaminaConstant;
+                return SCConfigs.blockingStaminaConstant.get();
             }
 
             @Override
             public double onBlockStaminaConstant() {
-                return StoneyCoreForge.CONFIG.combat.onBlockStaminaConstant;
+                return SCConfigs.onBlockStaminaConstant.get();
             }
 
             @Override
             public double onParryStaminaConstant() {
-                return StoneyCoreForge.CONFIG.combat.onParryStaminaConstant;
+                return SCConfigs.onParryStaminaConstant.get();
             }
 
             @Override
             public double sprintingStaminaConstant() {
-                return StoneyCoreForge.CONFIG.combat.sprintingStaminaConstant;
+                return SCConfigs.sprintingStaminaConstant.get();
             }
 
             @Override
             public double jumpingStaminaConstant() {
-                return StoneyCoreForge.CONFIG.combat.jumpingStaminaConstant;
+                return SCConfigs.jumpingStaminaConstant.get();
             }
 
             @Override
             public double swimmingStaminaConstant() {
-                return StoneyCoreForge.CONFIG.combat.swimmingStaminaConstant;
+                return SCConfigs.swimmingStaminaConstant.get();
             }
 
             @Override
             public double attackStaminaConstant() {
-                return StoneyCoreForge.CONFIG.combat.attackStaminaConstant;
+                return SCConfigs.attackStaminaConstant.get();
             }
 
             @Override
             public int getStaminaRecoverTime() {
-                return StoneyCoreForge.CONFIG.combat.staminaRecoverTime;
+                return SCConfigs.staminaRecoverTime.get();
             }
         };
     }
@@ -78,77 +76,77 @@ public class ForgeConfigImpl extends ConfigImpl {
         return new VisualOptions() {
             @Override
             public boolean getDamageIndicator() {
-                return StoneyCoreForge.CONFIG.visual.damageIndicator;
+                return SCConfigs.damageIndicator.get();
             }
 
             @Override
             public boolean getVisoredHelmet() {
-                return StoneyCoreForge.CONFIG.visual.visoredHelmet;
+                return SCConfigs.visoredHelmet.get();
             }
 
             @Override
             public float getVisoredHelmetAlphaCreative() {
-                return StoneyCoreForge.CONFIG.visual.visoredHelmetAlphaCreative;
+                return SCConfigs.visoredHelmetAlphaCreative.get().floatValue();
             }
 
             @Override
             public float getVisoredHelmetAlphaSurvival() {
-                return StoneyCoreForge.CONFIG.visual.visoredHelmetAlphaSurvival;
+                return SCConfigs.visoredHelmetAlphaSurvival.get().floatValue();
             }
 
             @Override
             public boolean overlayThirdPerson() {
-                return StoneyCoreForge.CONFIG.visual.overlayThirdPerson;
+                return SCConfigs.overlayThirdPerson.get();
             }
 
             @Override
             public boolean getLowStaminaIndicator() {
-                return StoneyCoreForge.CONFIG.visual.lowStaminaIndicator;
+                return SCConfigs.lowStaminaIndicator.get();
             }
 
             @Override
             public boolean getNoiseEffect() {
-                return StoneyCoreForge.CONFIG.visual.noiseEffect;
+                return SCConfigs.noiseEffect.get();
             }
 
             @Override
             public int getMuzzlesSmokeParticlesTime() {
-                return StoneyCoreForge.CONFIG.visual.muzzlesSmokeParticlesTime;
+                return SCConfigs.muzzlesSmokeParticlesTime.get();
             }
 
             @Override
             public int getStaminaBarYOffset() {
-                return StoneyCoreForge.CONFIG.visual.staminaBarYOffset;
+                return SCConfigs.staminaBarYOffset.get();
             }
 
             @Override
             public int hexColorTooFarClose() {
-                return hexToInt(StoneyCoreForge.CONFIG.visual.hexColorTooFarClose);
+                return hexToInt(SCConfigs.hexColorTooFarClose.get());
             }
 
             @Override
             public int hexColorEffective() {
-                return hexToInt(StoneyCoreForge.CONFIG.visual.hexColorEffective);
+                return hexToInt(SCConfigs.hexColorEffective.get());
             }
 
             @Override
             public int hexColorCritical() {
-                return hexToInt(StoneyCoreForge.CONFIG.visual.hexColorCritical);
+                return hexToInt(SCConfigs.hexColorCritical.get());
             }
 
             @Override
             public int hexColorMaximum() {
-                return hexToInt(StoneyCoreForge.CONFIG.visual.hexColorMaximum);
+                return hexToInt(SCConfigs.hexColorMaximum.get());
             }
 
             @Override
             public boolean armWave() {
-                return StoneyCoreForge.CONFIG.visual.armWave;
+                return SCConfigs.armWave.get();
             }
 
             @Override
             public int claimOutlineColor() {
-                return hexToInt(StoneyCoreForge.CONFIG.visual.claimOutlineColor);
+                return hexToInt(SCConfigs.claimOutlineColor.get());
             }
         };
     }
@@ -175,17 +173,17 @@ public class ForgeConfigImpl extends ConfigImpl {
         return new TechnicalOptions() {
             @Override
             public int maxWorkPerTick() {
-                return StoneyCoreForge.CONFIG.technical.maxWorkPerTick;
+                return SCConfigs.maxWorkPerTick.get();
             }
 
             @Override
             public int maxLandExpandRadius() {
-                return StoneyCoreForge.CONFIG.technical.maxLandExpandRadius;
+                return SCConfigs.maxLandExpandRadius.get();
             }
 
             @Override
             public boolean breakOrRemoveSiegeDestroy() {
-                return StoneyCoreForge.CONFIG.technical.breakOrRemoveSiegeDestroy;
+                return SCConfigs.breakOrRemoveSiegeDestroy.get();
             }
         };
     }
@@ -195,17 +193,17 @@ public class ForgeConfigImpl extends ConfigImpl {
         return new LandOptions() {
             @Override
             public boolean claimLand() {
-                return StoneyCoreForge.CONFIG.land.claimLand;
+                return SCConfigs.claimLand.get();
             }
 
             @Override
             public boolean removeClaimedSiege() {
-                return StoneyCoreForge.CONFIG.land.removeClaimedSiege;
+                return SCConfigs.removeClaimedSiege.get();
             }
 
             @Override
             public boolean hungerSiege() {
-                return StoneyCoreForge.CONFIG.land.hungerSiege;
+                return SCConfigs.hungerSiege.get();
             }
         };
     }
