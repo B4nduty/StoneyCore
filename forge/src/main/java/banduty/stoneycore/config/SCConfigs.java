@@ -1,7 +1,6 @@
 package banduty.stoneycore.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.electronwill.nightconfig.toml.TomlFormat;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.nio.file.Path;
@@ -225,7 +224,6 @@ public class SCConfigs {
     }
 
     public static void loadConfig(ForgeConfigSpec spec, Path path) {
-        TomlFormat.instance().createConfig();
         final CommentedFileConfig configData = CommentedFileConfig.builder(path)
                 .sync()
                 .autosave()
