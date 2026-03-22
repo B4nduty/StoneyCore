@@ -2,9 +2,11 @@ package banduty.stoneycore.items.armor.underarmor;
 
 import banduty.stoneycore.client.SCUnderArmourRenderer;
 import banduty.stoneycore.items.armor.ISCUnderArmor;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
@@ -19,7 +21,18 @@ public class SCUnderArmor extends ArmorItem implements ISCUnderArmor {
 
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-        consumer.accept(new SCUnderArmourRenderer());
+        consumer.accept(new IClientItemExtensions() {
+            @Override
+            public HumanoidModel<?> getHumanoidArmorModel(
+                    LivingEntity entity,
+                    ItemStack stack,
+                    EquipmentSlot slot,
+                    HumanoidModel<?> defaultModel
+            ) {
+                return new SCUnderArmourRenderer()
+                        .getHumanoidArmorModel(entity, stack, slot, defaultModel);
+            }
+        });
     }
 
     @Override
