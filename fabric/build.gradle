@@ -17,6 +17,7 @@ repositories {
     maven { url 'https://dvs1.progwml6.com/files/maven/' }
     maven { url 'https://maven.blamejared.com/' }
     maven { url 'https://modmaven.dev' }
+    maven { url 'https://jitpack.io' }
 
     exclusiveContent {
         forRepository {
@@ -76,7 +77,7 @@ dependencies {
     compileOnly project(":common")
     runtimeOnly project(":common")
 
-    include modImplementation("maven.modrinth:streq:${streq}")
+    include implementation("com.github.B4nduty:streq:v${streq}")
 }
 
 sourceSets {

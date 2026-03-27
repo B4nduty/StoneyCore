@@ -19,6 +19,7 @@ repositories {
     maven { url 'https://dvs1.progwml6.com/files/maven/' }
     maven { url 'https://maven.blamejared.com/' }
     maven { url 'https://modmaven.dev' }
+    maven { url 'https://jitpack.io' }
 
     exclusiveContent {
         forRepository {
@@ -112,10 +113,8 @@ dependencies {
     modImplementation "blue.endless:jankson:1.2.3"
     compileOnly "org.jetbrains:annotations:24.0.1"
 
-
-    implementation "maven.modrinth:streq:${streq}"
-    modRuntimeOnly "maven.modrinth:streq:${streq}"
-    jarJar("maven.modrinth:streq:${streq}") {
+    implementation "com.github.B4nduty:streq:v${streq}"
+    jarJar("com.github.B4nduty:streq:v${streq}") {
         transitive = false
     }
 }
