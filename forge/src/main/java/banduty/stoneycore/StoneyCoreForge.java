@@ -21,11 +21,10 @@ import net.minecraftforge.fml.loading.FMLPaths;
 
 @Mod(StoneyCore.MOD_ID)
 public class StoneyCoreForge {
-    public static SCConfigs CONFIG;
 
     public StoneyCoreForge() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        
+
         SCConfigs.loadConfig(SCConfigs.SPEC, FMLPaths.GAMEDIR.get().resolve(FMLPaths.CONFIGDIR.get()).resolve(StoneyCore.MOD_ID + "-common.toml"));
 
         SCAttributes.register(modEventBus);

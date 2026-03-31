@@ -20,25 +20,29 @@ public class PlayerBlockBreakBeforeHandler implements PlayerBlockBreakEvents.Bef
 
     @Override
     public boolean beforeBlockBreak(Level world, Player playerEntity, BlockPos blockPos, BlockState blockState, @Nullable BlockEntity blockEntity) {
-        if (!(playerEntity instanceof ServerPlayer serverPlayer) || !(world instanceof ServerLevel serverLevel)) return true;
+        if (!(playerEntity instanceof ServerPlayer serverPlayer) || !(world instanceof ServerLevel serverLevel)) {
+            return true;
+        }
 
-        if (SiegeManager.isPlayerInLandUnderSiege(serverLevel, serverPlayer) && !(SiegeManager.getPlayerSiege(serverLevel, serverPlayer.getUUID())
-                .map(siege -> !siege.disabledPlayers.contains(serverPlayer.getUUID())).orElse(false))) {
+        Optional<SiegeManager.Siege> siegeOpt = SiegeManager.getPlayerSiege(serverLevel, serverPlayer.getUUID());
+        if (siegeOpt.isPresent() && siegeOpt.get().disabledPlayers.contains(serverPlayer.getUUID())) {
             return false;
         }
 
-        if (LandManager.isBlockInAnyClaim(serverLevel, blockPos)) {
-            Optional<Land> maybeLand = LandState.get(serverLevel).getLandAt(blockPos);
-            boolean isLandCore = false;
-            if (maybeLand.isPresent()) {
-                Land land = maybeLand.get();
-                isLandCore = land.getCorePos().equals(blockPos);
-            }
+        Optional<Land> maybeLand = LandState.get(serverLevel).getLandAt(blockPos);
+        if (maybeLand.isEmpty()) return true;
 
-            return playerEntity.isCreative() || LandManager.isOwnerOfClaim(serverPlayer, blockPos) ||
-                    LandManager.isAllayOfClaim(serverPlayer, blockPos) || isLandCore;
-        }
+        Land land = maybeLand.get();
+        boolean isLandCore = land.getCorePos().equals(blockPos);
 
-        return true;
+        boolean isInSiege = siegeOpt
+                .map(siege -> siege.defendingLand.equals(land) || siege.attackingLand.equals(land))
+                .orElse(false);
+
+        return playerEntity.isCreative() ||
+                LandManager.isOwnerOfClaim(serverPlayer, blockPos) ||
+                LandManager.isAllayOfClaim(serverPlayer, blockPos) ||
+                isLandCore ||
+                isInSiege;
     }
 }

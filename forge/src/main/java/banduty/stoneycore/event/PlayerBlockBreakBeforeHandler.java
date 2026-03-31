@@ -29,33 +29,32 @@ public class PlayerBlockBreakBeforeHandler {
 
         BlockPos blockPos = event.getPos();
 
-        // Check siege restrictions
-        if (SiegeManager.isPlayerInLandUnderSiege(serverLevel, serverPlayer) &&
-                !(SiegeManager.getPlayerSiege(serverLevel, serverPlayer.getUUID())
-                        .map(siege -> !siege.disabledPlayers.contains(serverPlayer.getUUID()))
-                        .orElse(false))) {
+        Optional<SiegeManager.Siege> siegeOpt =
+                SiegeManager.getPlayerSiege(serverLevel, serverPlayer.getUUID());
+
+        if (siegeOpt.isPresent() && siegeOpt.get().disabledPlayers.contains(serverPlayer.getUUID())) {
             event.setCanceled(true);
             return;
         }
 
-        // Check land claim restrictions
-        if (LandManager.isBlockInAnyClaim(serverLevel, blockPos)) {
-            Optional<Land> maybeLand = LandState.get(serverLevel).getLandAt(blockPos);
-            boolean isLandCore = false;
-            if (maybeLand.isPresent()) {
-                Land land = maybeLand.get();
-                isLandCore = land.getCorePos().equals(blockPos);
-            }
+        Optional<Land> maybeLand = LandState.get(serverLevel).getLandAt(blockPos);
+        if (maybeLand.isEmpty()) return;
 
-            // Allow breaking if: creative mode, owner, allay, or land core
-            boolean canBreak = serverPlayer.isCreative() ||
-                    LandManager.isOwnerOfClaim(serverPlayer, blockPos) ||
-                    LandManager.isAllayOfClaim(serverPlayer, blockPos) ||
-                    isLandCore;
+        Land land = maybeLand.get();
+        boolean isLandCore = land.getCorePos().equals(blockPos);
 
-            if (!canBreak) {
-                event.setCanceled(true);
-            }
+        boolean isInSiege = siegeOpt
+                .map(siege -> siege.defendingLand.equals(land) || siege.attackingLand.equals(land))
+                .orElse(false);
+
+        boolean canBreak = serverPlayer.isCreative() ||
+                LandManager.isOwnerOfClaim(serverPlayer, blockPos) ||
+                LandManager.isAllayOfClaim(serverPlayer, blockPos) ||
+                isLandCore ||
+                isInSiege;
+
+        if (!canBreak) {
+            event.setCanceled(true);
         }
     }
 }

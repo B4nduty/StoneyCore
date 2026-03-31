@@ -133,6 +133,11 @@ public class ClaimWorker {
             return false;
         }
 
+        if (LandState.get(serverLevel).isClaimed(claimPos)) {
+            invalid.add(key);
+            return false;
+        }
+
         boolean hasAcceptedNeighbor = hasAcceptedNeighbor(key);
         boolean blockedPath = ClaimUtils.pathContainsInvalidBlock(serverLevel, corePos, claimPos, land.getLandType());
 
@@ -177,6 +182,11 @@ public class ClaimWorker {
             BlockPos neighborPos = BlockPos.of(neighborKey);
 
             if (!isWithinRadius(neighborPos)) continue;
+
+            if (LandState.get(serverLevel).isClaimed(neighborPos)) {
+                invalid.add(neighborKey);
+                continue;
+            }
 
             if (ClaimUtils.isInvalidClaimColumn(serverLevel, neighborPos, land.getLandType())) {
                 invalid.add(neighborKey);

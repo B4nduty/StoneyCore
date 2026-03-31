@@ -34,9 +34,9 @@ public class Land {
     private final LongSet claimed = new LongOpenHashSet();
 
     public Land(UUID owner, BlockPos coreBlock, int radius, LandType landType, String name, int maxAllies) {
-        this.owner    = owner;
+        this.owner = owner;
         this.corePos = coreBlock;
-        this.radius   = radius;
+        this.radius = radius;
         this.landType = landType;
         this.name = name;
         this.maxAllies = maxAllies;
@@ -67,7 +67,7 @@ public class Land {
                 for (int dx = chunkX; dx < Math.min(chunkX + 16, radius + 1); dx++) {
                     for (int dz = chunkZ; dz < Math.min(chunkZ + 16, radius + 1); dz++) {
                         if ((long) dx * dx + (long) dz * dz <= (long) radius * radius) {
-                            BlockPos pos = new BlockPos((int)(coreX + dx), 0, (int)(coreZ + dz));
+                            BlockPos pos = new BlockPos((int) (coreX + dx), 0, (int) (coreZ + dz));
                             if (state.getLandAt(pos).map(l -> l.owner.equals(owner)).orElse(true)) {
                                 candidates.add(pos);
                             }
@@ -82,7 +82,8 @@ public class Land {
 
 
     private ClaimWorker getClaimWorker(ServerLevel serverLevel, List<BlockPos> candidates, int radius) {
-        return new ClaimWorker(serverLevel, this, candidates, radius, success -> {});
+        return new ClaimWorker(serverLevel, this, candidates, radius, success -> {
+        });
     }
 
     public void depositExpandItem(Player player, ServerLevel serverLevel, int amount) {
@@ -303,12 +304,12 @@ public class Land {
     }
 
     public static Land fromNbt(CompoundTag nbt) {
-        UUID owner   = nbt.getUUID("Owner");
-        int radius   = nbt.getInt("Radius");
-        String name   = nbt.getString("CustomName");
+        UUID owner = nbt.getUUID("Owner");
+        int radius = nbt.getInt("Radius");
+        String name = nbt.getString("CustomName");
         BlockPos corePos = BlockPos.of(nbt.getLong("CorePos"));
         ResourceLocation landTypeId = new ResourceLocation(nbt.getString("LandType"));
-        int maxAllies   = nbt.getInt("MaxAllies");
+        int maxAllies = nbt.getInt("MaxAllies");
         LandType landType = LandTypeRegistry.getById(landTypeId)
                 .orElseThrow(() -> new IllegalStateException("Unknown LandType: " + landTypeId));
 
@@ -333,5 +334,21 @@ public class Land {
         }
 
         return k;
+    }
+
+    public void clearClaims(ServerLevel serverLevel) {
+        if (claimed.isEmpty()) return;
+
+        List<Long> toRemove = new ArrayList<>(claimed);
+
+        claimed.clear();
+        LandState.get(serverLevel).unmarkClaimed(toRemove);
+    }
+
+    public void recalculateClaims(ServerLevel serverLevel) {
+        clearClaims(serverLevel);
+
+        // Re-run claim worker using current radius
+        initializeClaim(serverLevel, this.radius, Services.PLATFORM.getClaimTasks());
     }
 }

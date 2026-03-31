@@ -201,6 +201,8 @@ public class SiegeManager {
                 sendVictoryTitles(losers, playerManager, loser, false);
 
                 siege.clearBossEvents();
+                siege.attackingLand.recalculateClaims(serverLevel);
+                siege.defendingLand.recalculateClaims(serverLevel);
                 iterator.remove();
             } else {
                 siege.updateBossEvent(serverLevel);
@@ -213,7 +215,7 @@ public class SiegeManager {
             ServerPlayer player = playerManager.getPlayer(uuid);
             if (player != null) {
                 String namespace = land.getLandType().id().getNamespace();
-                Component victoryLoseKey = Component.translatable("Component.land." + namespace + (won ? ".winner" : ".loser"));
+                Component victoryLoseKey = Component.translatable("component.land." + namespace + (won ? ".winner" : ".loser"));
                 Services.PLATFORM.sendTitle(player, victoryLoseKey);
             }
         }
