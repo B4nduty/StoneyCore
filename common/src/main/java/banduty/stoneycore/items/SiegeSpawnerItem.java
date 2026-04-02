@@ -10,37 +10,40 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.function.Supplier;
 
 public class SiegeSpawnerItem extends Item {
-    public static final Map<EntityType<?>, SiegeSpawnerItem> SIEGE_SPAWNERS = Maps.newIdentityHashMap();
+    private static final Map<EntityType<?>, SiegeSpawnerItem> BY_ID = Maps.newIdentityHashMap();
+
     private final Supplier<? extends EntityType<?>> typeSupplier;
+    private final EntityType<?> defaultType;
+
+    public SiegeSpawnerItem(EntityType<?> defaultType, Properties properties) {
+        super(properties);
+        this.defaultType = defaultType;
+        this.typeSupplier = () -> defaultType;
+        BY_ID.put(defaultType, this);
+    }
 
     public SiegeSpawnerItem(Supplier<? extends EntityType<?>> typeSupplier, Properties properties) {
         super(properties);
         this.typeSupplier = typeSupplier;
-    }
-
-    public SiegeSpawnerItem(EntityType<?> type, Properties properties) {
-        this(() -> type, properties);
-        SIEGE_SPAWNERS.put(type, this);
+        this.defaultType = null;
     }
 
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
-        EntityType<?> type = typeSupplier.get();
+        EntityType<?> type = getType();
+
         if (level instanceof ServerLevel serverLevel && type != null) {
             BlockPos pos = context.getClickedPos().above();
             Entity entity = type.create(level);
 
             if (entity != null) {
-                if (!SIEGE_SPAWNERS.containsKey(type)) {
-                    SIEGE_SPAWNERS.put(type, this);
-                }
-
                 LandState landState = LandState.get(serverLevel);
 
                 boolean isClaimed = landState.isClaimed(pos);
@@ -62,7 +65,23 @@ public class SiegeSpawnerItem extends Item {
         return InteractionResult.PASS;
     }
 
+    @Nullable
+    public static SiegeSpawnerItem byId(@Nullable EntityType<?> type) {
+        return BY_ID.get(type);
+    }
+
     public static SiegeSpawnerItem forEntity(EntityType<?> type) {
-        return SIEGE_SPAWNERS.get(type);
+        return byId(type);
+    }
+
+    public EntityType<?> getType() {
+        if (defaultType != null) {
+            return defaultType;
+        }
+        return typeSupplier != null ? typeSupplier.get() : null;
+    }
+
+    public static void register(EntityType<?> type, SiegeSpawnerItem item) {
+        BY_ID.put(type, item);
     }
 }

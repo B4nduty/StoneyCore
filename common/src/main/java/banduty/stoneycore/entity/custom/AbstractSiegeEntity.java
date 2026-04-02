@@ -424,7 +424,7 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     @Override
     public ItemStack getPickResult() {
         SiegeSpawnerItem siegeSpawnerItem = SiegeSpawnerItem.forEntity(this.getType());
-        return siegeSpawnerItem == null ? null : new ItemStack(siegeSpawnerItem);
+        return siegeSpawnerItem == null ? ItemStack.EMPTY : new ItemStack(siegeSpawnerItem);
     }
 
     public double getKnockback() {
