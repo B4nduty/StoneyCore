@@ -19,30 +19,32 @@ public class SCUnderArmor extends ArmorItem implements ISCUnderArmor {
         super(material, type, settings);
     }
 
+    private static final SCUnderArmourRenderer RENDERER = new SCUnderArmourRenderer();
+
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
             @Override
-            public HumanoidModel<?> getHumanoidArmorModel(
+            public HumanoidModel<?> getGenericArmorModel(
                     LivingEntity entity,
                     ItemStack stack,
                     EquipmentSlot slot,
                     HumanoidModel<?> defaultModel
             ) {
-                return new SCUnderArmourRenderer()
-                        .getHumanoidArmorModel(entity, stack, slot, defaultModel);
+                return RENDERER.getGenericArmorModel(entity, stack, slot, defaultModel);
             }
         });
     }
 
     @Override
     public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
+        String namespace = BuiltInRegistries.ITEM.getKey(this).getNamespace();
         String materialName = this.getMaterial().toString().toLowerCase();
 
         if (type == null) {
-            return BuiltInRegistries.ITEM.getKey(this).getNamespace() + ":textures/models/armor/" + materialName + ".png";
+            return namespace + ":textures/models/armor/" + materialName + ".png";
         } else {
-            return BuiltInRegistries.ITEM.getKey(this).getNamespace() + ":textures/models/armor/" + materialName + "_" + type + ".png";
+            return namespace + ":textures/models/armor/" + materialName + "_" + type + ".png";
         }
     }
 }

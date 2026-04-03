@@ -11,28 +11,26 @@ import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import org.jetbrains.annotations.NotNull;
 
 public class SCUnderArmourRenderer implements IClientItemExtensions {
-
-    private HumanoidModel<LivingEntity> helmet;
-    private HumanoidModel<LivingEntity> chest;
-    private HumanoidModel<LivingEntity> legs;
-    private HumanoidModel<LivingEntity> boots;
+    private static UnderArmourHelmetModel HELMET_MODEL;
+    private static UnderArmourChestplateModel CHEST_MODEL;
+    private static UnderArmourLeggingsModel LEGGINGS_MODEL;
+    private static UnderArmourBootsModel BOOTS_MODEL;
 
     @Override
     public @NotNull HumanoidModel<?> getGenericArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, HumanoidModel<?> _default) {
-        if (helmet == null) {
-            EntityModelSet models = Minecraft.getInstance().getEntityModels();
-            helmet = new UnderArmourHelmetModel(models.bakeLayer(UnderArmourHelmetModel.LAYER_LOCATION));
-            chest = new UnderArmourChestplateModel(models.bakeLayer(UnderArmourChestplateModel.LAYER_LOCATION));
-            legs = new UnderArmourLeggingsModel(models.bakeLayer(UnderArmourLeggingsModel.LAYER_LOCATION));
-            boots = new UnderArmourBootsModel(models.bakeLayer(UnderArmourBootsModel.LAYER_LOCATION));
-        }
+        EntityModelSet models = Minecraft.getInstance().getEntityModels();
 
-        HumanoidModel<LivingEntity> model = switch (armorSlot) {
-            case FEET -> boots;
-            case LEGS -> legs;
-            case CHEST -> chest;
-            case HEAD -> helmet;
-            default -> null;
+        if (HELMET_MODEL == null) HELMET_MODEL = new UnderArmourHelmetModel(models.bakeLayer(UnderArmourHelmetModel.LAYER_LOCATION));
+        if (CHEST_MODEL == null) CHEST_MODEL = new UnderArmourChestplateModel(models.bakeLayer(UnderArmourChestplateModel.LAYER_LOCATION));
+        if (LEGGINGS_MODEL == null) LEGGINGS_MODEL = new UnderArmourLeggingsModel(models.bakeLayer(UnderArmourLeggingsModel.LAYER_LOCATION));
+        if (BOOTS_MODEL == null) BOOTS_MODEL = new UnderArmourBootsModel(models.bakeLayer(UnderArmourBootsModel.LAYER_LOCATION));
+
+        HumanoidModel<?> model = switch (armorSlot) {
+            case HEAD -> HELMET_MODEL;
+            case CHEST -> CHEST_MODEL;
+            case LEGS -> LEGGINGS_MODEL;
+            case FEET -> BOOTS_MODEL;
+            default -> _default;
         };
 
         if (model != null) {
