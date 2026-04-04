@@ -8,8 +8,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public class TexturedButton extends Button {
-    private final ResourceLocation buttonTexture;
-    private final ResourceLocation hoverTexture;
+    private ResourceLocation buttonTexture;
+    private ResourceLocation hoverTexture;
 
     public TexturedButton(int x, int y, int width, int height, OnPress onPress, ResourceLocation buttonTexture, ResourceLocation hoverTexture) {
         super(x, y, width, height, Component.literal(""), onPress, Button.DEFAULT_NARRATION);
@@ -22,5 +22,17 @@ public class TexturedButton extends Button {
         ResourceLocation texture = this.isHovered() ? hoverTexture : buttonTexture;
         Minecraft.getInstance().getTextureManager().bindForSetup(texture);
         guiGraphics.blit(texture, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
+    }
+
+    public void setButtonTexture(ResourceLocation buttonTexture) {
+        this.buttonTexture = buttonTexture;
+    }
+
+    public void setHoverTexture(ResourceLocation hoverTexture) {
+        this.hoverTexture = hoverTexture;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 }
