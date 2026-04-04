@@ -19,11 +19,18 @@ public class SCUnderArmor extends ArmorItem implements ISCUnderArmor {
         super(material, type, settings);
     }
 
-    private static final SCUnderArmourRenderer RENDERER = new SCUnderArmourRenderer();
+    private SCUnderArmourRenderer RENDERER;
 
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
+            private SCUnderArmourRenderer getRenderer() {
+                if (RENDERER == null) {
+                    RENDERER = new SCUnderArmourRenderer();
+                }
+                return RENDERER;
+            }
+
             @Override
             public HumanoidModel<?> getGenericArmorModel(
                     LivingEntity entity,
@@ -31,7 +38,7 @@ public class SCUnderArmor extends ArmorItem implements ISCUnderArmor {
                     EquipmentSlot slot,
                     HumanoidModel<?> defaultModel
             ) {
-                return RENDERER.getGenericArmorModel(entity, stack, slot, defaultModel);
+                return getRenderer().getGenericArmorModel(entity, stack, slot, defaultModel);
             }
         });
     }

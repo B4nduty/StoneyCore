@@ -31,6 +31,7 @@ import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -87,56 +88,127 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     public void setTrackedYaw(float yaw) {
         this.entityData.set(TRACKED_YAW, normalizeYaw(yaw));
     }
-    public float getTrackedYaw() { return this.entityData.get(TRACKED_YAW); }
+
+    public float getTrackedYaw() {
+        return this.entityData.get(TRACKED_YAW);
+    }
 
     public void setTrackedPitch(float pitch) {
         this.entityData.set(TRACKED_PITCH, Math.min(10, Math.max(pitch, -20)));
     }
-    public float getTrackedPitch() { return this.entityData.get(TRACKED_PITCH); }
 
-    public void setCooldown(int cooldown) { this.entityData.set(COOLDOWN, Math.max(0, cooldown)); }
-    public int getCooldown() { return this.entityData.get(COOLDOWN); }
+    public float getTrackedPitch() {
+        return this.entityData.get(TRACKED_PITCH);
+    }
 
-    public void setLoadStage(int stage) { this.entityData.set(LOAD_STAGE, Math.max(0, stage)); }
-    public int getLoadStage() { return this.entityData.get(LOAD_STAGE); }
+    public void setCooldown(int cooldown) {
+        this.entityData.set(COOLDOWN, Math.max(0, cooldown));
+    }
 
-    public void setAmmoLoaded(String ammo) { this.entityData.set(AMMO_LOADED, ammo == null ? "" : ammo); }
-    public String getAmmoLoaded() { return this.entityData.get(AMMO_LOADED); }
-    public boolean hasAmmoLoaded() { return !getAmmoLoaded().isEmpty(); }
+    public int getCooldown() {
+        return this.entityData.get(COOLDOWN);
+    }
 
-    public void setReloadTime(int time) { this.entityData.set(RELOAD_TIME, Math.max(0, time)); }
-    public int getReloadTime() { return this.entityData.get(RELOAD_TIME); }
-    public boolean isReloadComplete() { return getReloadTime() <= 0; }
+    public void setLoadStage(int stage) {
+        this.entityData.set(LOAD_STAGE, Math.max(0, stage));
+    }
 
-    public void setPicked(boolean picked) { this.entityData.set(IS_PICKED, picked); }
-    public boolean isPicked() { return this.entityData.get(IS_PICKED); }
+    public int getLoadStage() {
+        return this.entityData.get(LOAD_STAGE);
+    }
 
-    public void setAttackHappened(boolean happened) { this.entityData.set(ATTACK_HAPPENED, happened); }
-    public boolean hasAttackHappened() { return this.entityData.get(ATTACK_HAPPENED); }
+    public void setAmmoLoaded(String ammo) {
+        this.entityData.set(AMMO_LOADED, ammo == null ? "" : ammo);
+    }
 
-    public Entity getOwner() { return owner; }
-    public void setOwner(Entity owner) { this.owner = owner; }
-    public float getWheelRotation() { return wheelRotation; }
+    public String getAmmoLoaded() {
+        return this.entityData.get(AMMO_LOADED);
+    }
+
+    public boolean hasAmmoLoaded() {
+        return !getAmmoLoaded().isEmpty();
+    }
+
+    public void setReloadTime(int time) {
+        this.entityData.set(RELOAD_TIME, Math.max(0, time));
+    }
+
+    public int getReloadTime() {
+        return this.entityData.get(RELOAD_TIME);
+    }
+
+    public boolean isReloadComplete() {
+        return getReloadTime() <= 0;
+    }
+
+    public void setPicked(boolean picked) {
+        this.entityData.set(IS_PICKED, picked);
+    }
+
+    public boolean isPicked() {
+        return this.entityData.get(IS_PICKED);
+    }
+
+    public void setAttackHappened(boolean happened) {
+        this.entityData.set(ATTACK_HAPPENED, happened);
+    }
+
+    public boolean hasAttackHappened() {
+        return this.entityData.get(ATTACK_HAPPENED);
+    }
+
+    public Entity getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Entity owner) {
+        this.owner = owner;
+    }
+
+    public float getWheelRotation() {
+        return wheelRotation;
+    }
 
     public abstract SiegeProperties getProperties();
+
     public abstract Vec3 getPassengerOffset(Entity entity);
+
     public abstract Vec3 getPlayerPOV();
 
     public boolean canAddPassenger(Entity entity) {
         return getPassengers().isEmpty() && (entity instanceof Player || entity instanceof Horse);
     }
 
-    public void onSiegeTick(ServerLevel serverLevel) {}
-    public void onAttack(ServerLevel serverLevel) {}
-    public void onReloadStart(ServerLevel serverLevel) {}
-    public void onLoadComplete(ServerLevel serverLevel) {}
+    public void onSiegeTick(ServerLevel serverLevel) {
+    }
 
-    public SoundEvent getMoveSound() { return getProperties().moveSound(); }
-    public SoundEvent getReloadSound() { return getProperties().reloadSound(); }
-    public SoundEvent getShootSound() { return getProperties().shootSound(); }
-    public SoundEvent getAttackSound() { return getProperties().attackSound(); }
+    public void onAttack(ServerLevel serverLevel) {
+    }
+
+    public void onReloadStart(ServerLevel serverLevel) {
+    }
+
+    public void onLoadComplete(ServerLevel serverLevel) {
+    }
+
+    public SoundEvent getMoveSound() {
+        return getProperties().moveSound();
+    }
+
+    public SoundEvent getReloadSound() {
+        return getProperties().reloadSound();
+    }
+
+    public SoundEvent getShootSound() {
+        return getProperties().shootSound();
+    }
+
+    public SoundEvent getAttackSound() {
+        return getProperties().attackSound();
+    }
 
     public abstract void triggerAnimation(String animationName);
+
     public abstract void stopAnimation(String animationName);
 
     @Override
@@ -335,7 +407,7 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
             ItemStack heldItem = livingAttacker.getMainHandItem();
             if (!heldItem.isEmpty()) {
                 String itemId = BuiltInRegistries.ITEM.getKey(heldItem.getItem()).toString();
-                if (damageConfig.canItemDamage(itemId)) return true;
+                return damageConfig.canItemDamage(itemId);
             }
         }
 
@@ -414,8 +486,7 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
 
     private boolean canAttachHorse(Mob mob) {
         if (mob instanceof TamableAnimal tameable && !tameable.isTame()) return false;
-        if (mob instanceof Saddleable saddleable && !saddleable.isSaddled()) return false;
-        return true;
+        return !(mob instanceof Saddleable saddleable) || saddleable.isSaddled();
     }
 
     protected double[] calculateHorseDismountOffset(Entity passenger) {
@@ -438,32 +509,47 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     protected abstract InteractionResult handleSiegeInteraction(Player player, InteractionHand hand, ServerLevel serverLevel);
 
     @Override
-    public double getPassengersRidingOffset() { return 1.0D; }
+    public double getPassengersRidingOffset() {
+        return 1.0D;
+    }
 
     @Override
-    public boolean dismountsUnderwater() { return true; }
+    public boolean dismountsUnderwater() {
+        return true;
+    }
 
     @Override
-    public boolean isPushable() { return false; }
+    public boolean isPushable() {
+        return false;
+    }
 
     @Override
-    public boolean isEffectiveAi() { return false; }
+    public boolean isEffectiveAi() {
+        return false;
+    }
 
     @Override
-    public Iterable<ItemStack> getArmorSlots() { return List.of(); }
+    public Iterable<ItemStack> getArmorSlots() {
+        return List.of();
+    }
 
     @Override
-    public ItemStack getItemBySlot(EquipmentSlot slot) { return ItemStack.EMPTY; }
+    public ItemStack getItemBySlot(EquipmentSlot slot) {
+        return ItemStack.EMPTY;
+    }
 
     @Override
-    public void setItemSlot(EquipmentSlot slot, ItemStack stack) {}
+    public void setItemSlot(EquipmentSlot slot, ItemStack stack) {
+    }
 
     @Override
-    public HumanoidArm getMainArm() { return HumanoidArm.RIGHT; }
+    public HumanoidArm getMainArm() {
+        return HumanoidArm.RIGHT;
+    }
 
     @Override
     public ItemStack getPickResult() {
-        SiegeSpawnerItem siegeSpawnerItem = SiegeSpawnerItem.forEntity(this.getType());
+        Item siegeSpawnerItem = SiegeSpawnerItem.byId(this.getType());
         return siegeSpawnerItem == null ? ItemStack.EMPTY : new ItemStack(siegeSpawnerItem);
     }
 
@@ -488,9 +574,23 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         return entity instanceof Horse ? data.horseSpeed() : data.playerSpeed();
     }
 
-    public double getKnockback() { return SiegeEngineDefinitionsStorage.getData(this.getType()).knockback(); }
-    public double getBaseDamage() { return SiegeEngineDefinitionsStorage.getData(this.getType()).baseDamage(); }
-    public int getBaseReload() { return SiegeEngineDefinitionsStorage.getData(this.getType()).baseReload(); }
-    public float getProjectileSpeed() { return SiegeEngineDefinitionsStorage.getData(this.getType()).projectileSpeed(); }
-    public float getAccuracyMultiplier() { return SiegeEngineDefinitionsStorage.getData(this.getType()).accuracyMultiplier(); }
+    public double getKnockback() {
+        return SiegeEngineDefinitionsStorage.getData(this.getType()).knockback();
+    }
+
+    public double getBaseDamage() {
+        return SiegeEngineDefinitionsStorage.getData(this.getType()).baseDamage();
+    }
+
+    public int getBaseReload() {
+        return SiegeEngineDefinitionsStorage.getData(this.getType()).baseReload();
+    }
+
+    public float getProjectileSpeed() {
+        return SiegeEngineDefinitionsStorage.getData(this.getType()).projectileSpeed();
+    }
+
+    public float getAccuracyMultiplier() {
+        return SiegeEngineDefinitionsStorage.getData(this.getType()).accuracyMultiplier();
+    }
 }

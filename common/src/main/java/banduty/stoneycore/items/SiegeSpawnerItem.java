@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class SiegeSpawnerItem extends Item {
-    private static final Map<EntityType<?>, SiegeSpawnerItem> BY_ID = Maps.newIdentityHashMap();
+    private static final Map<EntityType<?>, Item> BY_ID = Maps.newIdentityHashMap();
 
     private final Supplier<? extends EntityType<?>> typeSupplier;
     private final EntityType<?> defaultType;
@@ -39,7 +39,11 @@ public class SiegeSpawnerItem extends Item {
         Level level = context.getLevel();
         EntityType<?> type = getType();
 
-        if (level instanceof ServerLevel serverLevel && type != null) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return InteractionResult.SUCCESS;
+        }
+
+        if (type != null) {
             BlockPos pos = context.getClickedPos().above();
             Entity entity = type.create(level);
 
@@ -66,12 +70,8 @@ public class SiegeSpawnerItem extends Item {
     }
 
     @Nullable
-    public static SiegeSpawnerItem byId(@Nullable EntityType<?> type) {
+    public static Item byId(@Nullable EntityType<?> type) {
         return BY_ID.get(type);
-    }
-
-    public static SiegeSpawnerItem forEntity(EntityType<?> type) {
-        return byId(type);
     }
 
     public EntityType<?> getType() {
@@ -81,7 +81,7 @@ public class SiegeSpawnerItem extends Item {
         return typeSupplier != null ? typeSupplier.get() : null;
     }
 
-    public static void register(EntityType<?> type, SiegeSpawnerItem item) {
+    public static void register(EntityType<?> type, Item item) {
         BY_ID.put(type, item);
     }
 }
