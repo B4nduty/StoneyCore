@@ -57,7 +57,19 @@ public class SiegeSpawnerItem extends Item {
                 );
 
                 if (!isClaimed || isOwnerOrAllie) {
-                    entity.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+                    float yaw = context.getPlayer() != null ? context.getPlayer().getYRot() : 0f;
+
+                    entity.moveTo(
+                            pos.getX() + 0.5,
+                            pos.getY(),
+                            pos.getZ() + 0.5,
+                            yaw,
+                            0f
+                    );
+
+                    entity.setYHeadRot(yaw);
+                    entity.setYBodyRot(yaw);
+
                     level.addFreshEntity(entity);
                     context.getItemInHand().shrink(1);
                     return InteractionResult.SUCCESS;

@@ -14,7 +14,7 @@ public abstract class StructureSpawner {
 
     public abstract void applyKeyMatcher(BlockPatternBuilder builder, Direction dir);
 
-    public abstract Entity createEntity(Level level);
+    public abstract Entity createEntity(Level level, Direction dir);
 
     public abstract List<Block> getBlockFinders();
 }

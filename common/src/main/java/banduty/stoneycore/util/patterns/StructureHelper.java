@@ -54,7 +54,7 @@ public class StructureHelper {
                 if (match != null) {
                     BlockPattern.BlockPatternMatch result = match.result();
 
-                    Entity entity = spawner.createEntity(level);
+                    Entity entity = spawner.createEntity(level, match.forward());
                     if (entity != null) {
                         spawnEntity(level, result, entity);
                         return;
@@ -124,7 +124,9 @@ public class StructureHelper {
             case WEST -> rotated = rotateAislesY90(baseAisle);
             case NORTH -> rotated = rotateAislesY90(rotateAislesY90(baseAisle));
             case EAST -> rotated = rotateAislesY90(rotateAislesY90(rotateAislesY90(baseAisle)));
-            default -> { rotated = baseAisle; }
+            default -> {
+                rotated = baseAisle;
+            }
         }
 
         BlockPatternBuilder builder = BlockPatternBuilder.start();
@@ -160,5 +162,6 @@ public class StructureHelper {
         return rotated;
     }
 
-    public record MatchResult(BlockPattern.BlockPatternMatch result, Direction forward) {}
+    public record MatchResult(BlockPattern.BlockPatternMatch result, Direction forward) {
+    }
 }
