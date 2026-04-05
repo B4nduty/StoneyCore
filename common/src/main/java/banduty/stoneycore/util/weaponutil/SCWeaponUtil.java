@@ -1,6 +1,6 @@
 package banduty.stoneycore.util.weaponutil;
 
-import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
@@ -27,32 +27,32 @@ public final class SCWeaponUtil {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
 
-    public static double getDamageValues(SCDamageCalculator.DamageType key, Item item) {
+    public static double getDamageValues(SCDamageType key, Item item) {
         WeaponDefinitionData attributeData = WeaponDefinitionsStorage.getData(item);
         Map<String, Float> damageValues = attributeData.melee().damage();
 
         return damageValues.getOrDefault(key.name(), 0f);
     }
 
-    public static SCDamageCalculator.DamageType calculateDamageType(ItemStack stack, int comboCount) {
-        boolean bludgeoningToPiercing = getDamageValues(SCDamageCalculator.DamageType.SLASHING, stack.getItem()) == 0
-                && getDamageValues(SCDamageCalculator.DamageType.PIERCING, stack.getItem()) > 0
-                && getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, stack.getItem()) > 0;
+    public static SCDamageType calculateDamageType(ItemStack stack, int comboCount) {
+        boolean bludgeoningToPiercing = getDamageValues(SCDamageType.SLASHING, stack.getItem()) == 0
+                && getDamageValues(SCDamageType.PIERCING, stack.getItem()) > 0
+                && getDamageValues(SCDamageType.BLUDGEONING, stack.getItem()) > 0;
         boolean isBludgeoning = NBTDataHelper.get(stack, INBTKeys.BLUDGEONING, false);
         boolean isPiercing = isPiercingWeapon(stack.getItem(), comboCount);
 
-        if (isBludgeoning ^ bludgeoningToPiercing || WeaponDefinitionsStorage.getData(stack).melee().onlyDamageType() == SCDamageCalculator.DamageType.BLUDGEONING) {
-            return SCDamageCalculator.DamageType.BLUDGEONING;
+        if (isBludgeoning ^ bludgeoningToPiercing || WeaponDefinitionsStorage.getData(stack).melee().onlyDamageType() == SCDamageType.BLUDGEONING) {
+            return SCDamageType.BLUDGEONING;
         }
         if (isPiercing || bludgeoningToPiercing) {
-            return SCDamageCalculator.DamageType.PIERCING;
+            return SCDamageType.PIERCING;
         }
-        return SCDamageCalculator.DamageType.SLASHING;
+        return SCDamageType.SLASHING;
     }
 
     private static boolean isPiercingWeapon(Item item, int comboCount) {
         return (WeaponDefinitionsStorage.getData(item).melee().animation() > 0 && isComboCountPiercing(item, comboCount)) ||
-                WeaponDefinitionsStorage.getData(item).melee().onlyDamageType() == SCDamageCalculator.DamageType.PIERCING;
+                WeaponDefinitionsStorage.getData(item).melee().onlyDamageType() == SCDamageType.PIERCING;
     }
 
     private static boolean isComboCountPiercing(Item item, int comboCount) {
@@ -102,7 +102,7 @@ public final class SCWeaponUtil {
         return radiusValues.getOrDefault(key, 0.0);
     }
 
-    public static double calculateDamage(Item item, double distance, SCDamageCalculator.DamageType key) {
+    public static double calculateDamage(Item item, double distance, SCDamageType key) {
         for (int i = 0; i <= 4; i++) {
             double radius = getRadius(item, i);
             if (distance < radius + RADIUS_TOLERANCE) {

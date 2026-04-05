@@ -3,7 +3,6 @@ package banduty.stoneycore.client;
 import banduty.stoneycore.event.custom.RenderOverlayAndAdditionsEvents;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.platform.ClientPlatform;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.DyeUtil;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.itemdata.SCTags;

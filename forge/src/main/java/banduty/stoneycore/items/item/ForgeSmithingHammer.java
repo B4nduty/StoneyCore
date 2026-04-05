@@ -1,7 +1,6 @@
 package banduty.stoneycore.items.item;
 
 import banduty.stoneycore.items.SmithingHammer;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class ForgeSmithingHammer extends SmithingHammer {

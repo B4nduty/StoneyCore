@@ -1,10 +1,9 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.platform.Services;
+import banduty.stoneycore.combat.melee.CombatSelect;
 import banduty.stoneycore.util.EntityDamageUtil;
 import banduty.stoneycore.util.WeightUtil;
-import banduty.stoneycore.util.SCBetterCombat;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.playerdata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
@@ -80,8 +79,8 @@ public abstract class PlayerMixin {
     )
     private float stoneycore$modifyDamage(float f, Entity target) {
         if (!(target instanceof LivingEntity living) || living.level().isClientSide()) return f;
-        ItemStack weaponStack = playerEntity.getMainHandItem();
-        if (Services.PLATFORM.isModLoaded("bettercombat")) weaponStack = SCBetterCombat.getWeaponStack(playerEntity, playerEntity.getMainHandItem());
+
+        ItemStack weaponStack = CombatSelect.getWeaponStack(playerEntity, playerEntity.getMainHandItem());
 
         if (!WeaponDefinitionsStorage.isMelee(weaponStack)) return f;
 

@@ -1,10 +1,10 @@
 package banduty.stoneycore.entity.custom;
 
+import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.siege.SiegeManager;
-import banduty.stoneycore.util.SCDamageCalculator;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
@@ -19,7 +19,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import java.util.Optional;
 
 public abstract class AbstractSiegeProjectile extends AbstractArrow {
-    private SCDamageCalculator.DamageType damageType;
+    private SCDamageType damageType;
 
     public AbstractSiegeProjectile(EntityType<? extends AbstractArrow> entityEntityType, Level level) {
         super(entityEntityType, level);
@@ -39,8 +39,8 @@ public abstract class AbstractSiegeProjectile extends AbstractArrow {
         super.onHitEntity(entityHitResult);
         if (entityHitResult.getEntity().level().isClientSide()) return;
         if (entityHitResult.getEntity() instanceof LivingEntity target) {
-            double damage = SCDamageCalculator.getSCDamage(target, (float) this.getBaseDamage(), this.damageType);
-            if (this.getOwner() instanceof AbstractSiegeEntity abstractSiegeEntity) SCDamageCalculator.applyDamage(target, abstractSiegeEntity.getOwner(), ItemStack.EMPTY, damage);
+            double damage = SCDamageType.calculateSCDamage(target, (float) this.getBaseDamage(), this.damageType);
+            if (this.getOwner() instanceof AbstractSiegeEntity abstractSiegeEntity) SCDamageType.apply(target, abstractSiegeEntity.getOwner(), ItemStack.EMPTY, damage);
         }
         setDeltaMovement(getDeltaMovement().scale(-0.9));
         setBaseDamage(getBaseDamage() * 0.9);
@@ -81,7 +81,7 @@ public abstract class AbstractSiegeProjectile extends AbstractArrow {
         return Services.ABSTRACT_SIEGE_ENTITY.getDefaultHitGroundSoundEvent();
     }
 
-    public void setDamageType(SCDamageCalculator.DamageType damageType) {
+    public void setDamageType(SCDamageType damageType) {
         this.damageType = damageType;
     }
 }

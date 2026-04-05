@@ -1,6 +1,6 @@
 package banduty.stoneycore.util.definitionsloader;
 
-import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.combat.melee.SCDamageType;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -14,7 +14,7 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
     public enum Usage { MELEE, RANGED, AMMO }
 
     public record MeleeData(Map<String, Float> damage, Map<String, Double> radius, int[] piercingAnimation,
-                            int animation, SCDamageCalculator.DamageType onlyDamageType, double deflectChance, double bonusKnockback) {
+                            int animation, SCDamageType onlyDamageType, double deflectChance, double bonusKnockback) {
         public static final Codec<MeleeData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.unboundedMap(Codec.STRING, Codec.FLOAT).xmap(
                         map -> {
@@ -32,14 +32,14 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
                         array -> Arrays.stream(array).boxed().toList()
                 ).optionalFieldOf("piercingAnimation", new int[0]).forGetter(MeleeData::piercingAnimation),
                 Codec.INT.optionalFieldOf("animation", 0).forGetter(MeleeData::animation),
-                SCDamageCalculator.DamageType.CODEC.optionalFieldOf("onlyDamageType").forGetter(md -> Optional.ofNullable(md.onlyDamageType)),
+                SCDamageType.CODEC.optionalFieldOf("onlyDamageType").forGetter(md -> Optional.ofNullable(md.onlyDamageType)),
                 Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(MeleeData::deflectChance),
                 Codec.DOUBLE.optionalFieldOf("bonusKnockback", 0.0).forGetter(MeleeData::bonusKnockback)
         ).apply(instance, (damage, radius, piercingAnimation, animation, onlyDamageType, deflectChance, bonusKnockback) ->
                 new MeleeData(damage, radius, piercingAnimation, animation, onlyDamageType.orElse(null), deflectChance, bonusKnockback)));
     }
 
-    public record RangedData(String id, float baseDamage, SCDamageCalculator.DamageType damageType, int maxUseTime,
+    public record RangedData(String id, float baseDamage, SCDamageType damageType, int maxUseTime,
                              float speed, float divergence, int rechargeTime, boolean needsFlintAndSteel, UseAnim useAnim,
                              Map<String, AmmoRequirementData> ammoRequirement, SoundEvent soundEvent) {
 
@@ -52,7 +52,7 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
         public static final Codec<RangedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.STRING.optionalFieldOf("id", "bow").forGetter(RangedData::id),
                 Codec.FLOAT.optionalFieldOf("baseDamage", 0f).forGetter(RangedData::baseDamage),
-                SCDamageCalculator.DamageType.CODEC.optionalFieldOf("damageType").forGetter(rd -> Optional.ofNullable(rd.damageType)),
+                SCDamageType.CODEC.optionalFieldOf("damageType").forGetter(rd -> Optional.ofNullable(rd.damageType)),
                 Codec.INT.optionalFieldOf("maxUseTime", 0).forGetter(RangedData::maxUseTime),
                 Codec.FLOAT.optionalFieldOf("speed", 0f).forGetter(RangedData::speed),
                 Codec.FLOAT.optionalFieldOf("divergence", 0f).forGetter(RangedData::divergence),

@@ -62,7 +62,7 @@ public class ArmorDefinitionsLoader implements IdentifiableResourceReloadListene
                 }
             });
         }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {
-            StoneyCore.LOG.info("Loaded {} armor definitions", ArmorDefinitionsStorage.DEFINITIONS.size());
+            StoneyCore.LOG.debug("Loaded {} armor definitions", ArmorDefinitionsStorage.DEFINITIONS.size());
         }, applyExecutor);
     }
 }

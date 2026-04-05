@@ -82,7 +82,7 @@ public class AccessoriesDefinitionsLoader extends SimplePreparableReloadListener
             }
         });
 
-        StoneyCore.LOG.info("Loaded {} accessory definitions", AccessoriesDefinitionsStorage.DEFINITIONS.size());
+        StoneyCore.LOG.debug("Loaded {} accessory definitions", AccessoriesDefinitionsStorage.DEFINITIONS.size());
     }
 
     private boolean isValidArmorSlot(String slot) {

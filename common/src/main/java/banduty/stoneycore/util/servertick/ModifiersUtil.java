@@ -1,7 +1,7 @@
 package banduty.stoneycore.util.servertick;
 
+import banduty.stoneycore.combat.melee.CombatSelect;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.SCBetterCombat;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,8 +18,7 @@ public class ModifiersUtil {
     public static void updatePlayerReachAttributes(ServerPlayer player) {
         if (player == null) return;
 
-        ItemStack itemStack = player.getMainHandItem();
-        if (Services.PLATFORM.isModLoaded("bettercombat")) itemStack = SCBetterCombat.getWeaponStack(player, player.getMainHandItem());
+        ItemStack itemStack = CombatSelect.getWeaponStack(player, player.getMainHandItem());
 
         var attackRangeAttribute = player.getAttribute(Services.PLATFORM.getAttackRange());
         var rangeAttribute = player.getAttribute(Services.PLATFORM.getReach());

@@ -65,7 +65,7 @@ public class LandDefinitionsLoader implements IdentifiableResourceReloadListener
                 }
             });
         }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {
-            StoneyCore.LOG.info("Loaded {} land definitions", LandDefinitionsStorage.DEFINITIONS.size());
+            StoneyCore.LOG.debug("Loaded {} land definitions", LandDefinitionsStorage.DEFINITIONS.size());
         }, applyExecutor);
     }
 }

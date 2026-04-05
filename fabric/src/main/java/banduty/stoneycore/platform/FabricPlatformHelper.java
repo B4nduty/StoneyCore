@@ -14,22 +14,14 @@ import banduty.stoneycore.recipes.ModRecipes;
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
-import net.bettercombat.api.AttackHand;
-import net.bettercombat.logic.PlayerAttackHelper;
-import net.bettercombat.logic.PlayerAttackProperties;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -76,31 +68,8 @@ public class FabricPlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public BakedModel getBakedModel(ModelManager modelManager, ResourceLocation iModelPath) {
-        return modelManager.getModel(iModelPath);
-    }
-
-    @Override
     public Queue<ClaimWorker> getClaimTasks() {
         return StartTickHandler.CLAIM_TASKS;
-    }
-
-    @Override
-    public int comboCount(Player player) {
-        return ((PlayerAttackProperties) player).getComboCount();
-    }
-
-    @Override
-    public ItemStack getWeaponStack(Entity attacker, ItemStack defaultStack) {
-        AttackHand hand = null;
-        if (attacker instanceof Player player) {
-            if (player instanceof PlayerAttackProperties props) {
-                hand = PlayerAttackHelper.getCurrentAttack(player, props.getComboCount());
-            }
-        }
-        ItemStack itemStack = defaultStack;
-        if (hand != null) itemStack = hand.itemStack();
-        return itemStack;
     }
 
     @Override

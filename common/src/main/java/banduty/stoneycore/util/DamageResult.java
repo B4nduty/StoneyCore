@@ -1,6 +1,7 @@
 package banduty.stoneycore.util;
 
-import banduty.stoneycore.platform.Services;
+import banduty.stoneycore.combat.melee.CombatSelect;
+import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import net.minecraft.world.entity.LivingEntity;
@@ -8,12 +9,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
-public record DamageResult(double damage, SCDamageCalculator.DamageType damageType) {
+public record DamageResult(double damage, SCDamageType damageType) {
     public static DamageResult calculateWeaponDamage(LivingEntity attacker, LivingEntity target, ItemStack stack) {
-        int comboCount = attacker instanceof Player player ?
-                Services.PLATFORM.comboCount(player) : 0;
+        int comboCount = attacker instanceof Player player ? CombatSelect.getComboCount(player) : 0;
 
-        SCDamageCalculator.DamageType damageType = SCWeaponUtil.calculateDamageType(stack, comboCount);
+        SCDamageType damageType = SCWeaponUtil.calculateDamageType(stack, comboCount);
 
         double maxDistance = SCWeaponUtil.getMaxDistance(stack.getItem());
         double actualDistance = attacker.position().distanceTo(target.position());
@@ -30,7 +30,7 @@ public record DamageResult(double damage, SCDamageCalculator.DamageType damageTy
             return new DamageResult(baseDamage, damageType);
         }
 
-        double calculatedDamage = SCDamageCalculator.getSCDamage(target, baseDamage, damageType);
+        double calculatedDamage = SCDamageType.calculateSCDamage(target, baseDamage, damageType);
 
         if (stack.is(SCTags.WEAPONS_DAMAGE_BEHIND.getTag())) {
             calculatedDamage = SCWeaponUtil.adjustDamageForBackstab(target, attacker.position(), calculatedDamage);

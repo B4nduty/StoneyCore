@@ -1,11 +1,12 @@
 package banduty.stoneycore.util;
 
+import banduty.stoneycore.combat.melee.SCDamageType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 
 public class EntityDamageUtil {
-    public static SCDamageCalculator.DamageType damageType;
+    public static SCDamageType damageType;
 
     public static double onDamage(LivingEntity target, LivingEntity attacker, ItemStack weaponStack) {
         if (!(target.level() instanceof ServerLevel)) {

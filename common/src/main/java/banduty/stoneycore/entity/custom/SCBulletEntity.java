@@ -1,7 +1,7 @@
 package banduty.stoneycore.entity.custom;
 
+import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.SCDamageCalculator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -22,7 +22,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class SCBulletEntity extends AbstractArrow {
-    private SCDamageCalculator.DamageType damageType;
+    private SCDamageType damageType;
     private double damage;
 
     public SCBulletEntity(EntityType<? extends AbstractArrow> entityEntityType, Level level) {
@@ -44,8 +44,8 @@ public class SCBulletEntity extends AbstractArrow {
         if (this.level().isClientSide()) return;
 
         if (entityHitResult.getEntity() instanceof LivingEntity target && this.getOwner() instanceof LivingEntity livingEntity) {
-            damage = SCDamageCalculator.getSCDamage(target, this.damage, this.damageType);
-            SCDamageCalculator.applyDamage(target, livingEntity, ItemStack.EMPTY, damage);
+            damage = SCDamageType.calculateSCDamage(target, this.damage, this.damageType);
+            SCDamageType.apply(target, livingEntity, ItemStack.EMPTY, damage);
             if (this.isOnFire()) target.setRemainingFireTicks(5);
         }
         this.discard();
@@ -103,7 +103,7 @@ public class SCBulletEntity extends AbstractArrow {
         this.damage = damage;
     }
 
-    public void setDamageType(SCDamageCalculator.DamageType damageType) {
+    public void setDamageType(SCDamageType damageType) {
         this.damageType = damageType;
     }
 }

@@ -62,7 +62,7 @@ public class SiegeEngineDefinitionsLoader implements IdentifiableResourceReloadL
                 }
             });
         }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {
-            StoneyCore.LOG.info("Loaded {} siege engine definitions", SiegeEngineDefinitionsStorage.DEFINITIONS.size());
+            StoneyCore.LOG.debug("Loaded {} siege engine definitions", SiegeEngineDefinitionsStorage.DEFINITIONS.size());
         }, applyExecutor);
     }
 }

@@ -83,7 +83,7 @@ public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListen
                 }
             });
         }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {
-            StoneyCore.LOG.info("Loaded {} weapon definitions", WeaponDefinitionsStorage.DEFINITIONS.size());
+            StoneyCore.LOG.debug("Loaded {} weapon definitions", WeaponDefinitionsStorage.DEFINITIONS.size());
         }, applyExecutor);
     }
 }

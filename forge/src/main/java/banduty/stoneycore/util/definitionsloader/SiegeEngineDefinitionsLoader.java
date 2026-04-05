@@ -59,6 +59,6 @@ public class SiegeEngineDefinitionsLoader extends SimplePreparableReloadListener
             }
         });
 
-        StoneyCore.LOG.info("Loaded {} siege engine definitions", SiegeEngineDefinitionsStorage.DEFINITIONS.size());
+        StoneyCore.LOG.debug("Loaded {} siege engine definitions", SiegeEngineDefinitionsStorage.DEFINITIONS.size());
     }
 }

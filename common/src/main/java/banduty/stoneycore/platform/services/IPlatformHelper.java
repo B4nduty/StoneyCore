@@ -5,15 +5,10 @@ import banduty.stoneycore.lands.util.ClaimWorker;
 import banduty.stoneycore.recipes.AnvilRecipe;
 import banduty.stoneycore.recipes.BannerPatternRecipe;
 import banduty.stoneycore.recipes.ManuscriptCraftingRecipe;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -60,13 +55,7 @@ public interface IPlatformHelper {
 
     void sendTitle(ServerPlayer player, Component mainTitle);
 
-    BakedModel getBakedModel(ModelManager modelManager, ResourceLocation iModelPath);
-
     Queue<ClaimWorker> getClaimTasks();
-
-    int comboCount(Player player);
-
-    ItemStack getWeaponStack(Entity attacker, ItemStack defaultStack);
 
     Attribute getAttackRange();
 

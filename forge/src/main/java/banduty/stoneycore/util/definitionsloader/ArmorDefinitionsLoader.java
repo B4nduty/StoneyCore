@@ -59,6 +59,6 @@ public class ArmorDefinitionsLoader extends SimplePreparableReloadListener<Void>
             }
         });
 
-        StoneyCore.LOG.info("Loaded {} armor definitions", ArmorDefinitionsStorage.DEFINITIONS.size());
+        StoneyCore.LOG.debug("Loaded {} armor definitions", ArmorDefinitionsStorage.DEFINITIONS.size());
     }
 }

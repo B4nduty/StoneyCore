@@ -85,7 +85,7 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                 }
             });
         }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {
-            StoneyCore.LOG.info("Loaded {} accessory definitions", AccessoriesDefinitionsStorage.DEFINITIONS.size());
+            StoneyCore.LOG.debug("Loaded {} accessory definitions", AccessoriesDefinitionsStorage.DEFINITIONS.size());
         }, applyExecutor);
     }
 

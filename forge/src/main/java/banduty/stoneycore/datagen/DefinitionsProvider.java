@@ -1,7 +1,7 @@
 package banduty.stoneycore.datagen;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.combat.melee.SCDamageType;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -704,7 +704,7 @@ public abstract class DefinitionsProvider implements DataProvider {
             private Map<String, Double> radius = new HashMap<>();
             private int[] piercingAnimation = new int[0];
             private int animation = 0;
-            private SCDamageCalculator.DamageType onlyDamageType = null;
+            private SCDamageType onlyDamageType = null;
             private double deflectChance = 0.0;
             private double bonusKnockback = 0.0;
 
@@ -750,7 +750,7 @@ public abstract class DefinitionsProvider implements DataProvider {
                 return this;
             }
 
-            public MeleeBuilder onlyDamageType(SCDamageCalculator.DamageType damageType) {
+            public MeleeBuilder onlyDamageType(SCDamageType damageType) {
                 this.onlyDamageType = damageType;
                 return this;
             }
@@ -773,7 +773,7 @@ public abstract class DefinitionsProvider implements DataProvider {
         public static final class RangedBuilder {
             private String id = "bow";
             private float baseDamage = 0f;
-            private SCDamageCalculator.DamageType damageType = null;
+            private SCDamageType damageType = null;
             private int maxUseTime = 0;
             private float speed = 0f;
             private float divergence = 0f;
@@ -799,7 +799,7 @@ public abstract class DefinitionsProvider implements DataProvider {
                 return this;
             }
 
-            public RangedBuilder damageType(SCDamageCalculator.DamageType damageType) {
+            public RangedBuilder damageType(SCDamageType damageType) {
                 this.damageType = damageType;
                 return this;
             }
@@ -899,7 +899,7 @@ public abstract class DefinitionsProvider implements DataProvider {
                 Map<String, Double> radius,
                 int[] piercingAnimation,
                 int animation,
-                SCDamageCalculator.DamageType onlyDamageType,
+                SCDamageType onlyDamageType,
                 double deflectChance,
                 double bonusKnockback
         ) {
@@ -921,7 +921,7 @@ public abstract class DefinitionsProvider implements DataProvider {
                                     array -> Arrays.stream(array).boxed().toList()
                             ).optionalFieldOf("piercingAnimation", new int[0]).forGetter(MeleeData::piercingAnimation),
                             Codec.INT.optionalFieldOf("animation", 0).forGetter(MeleeData::animation),
-                            SCDamageCalculator.DamageType.CODEC.optionalFieldOf("onlyDamageType").forGetter(md -> Optional.ofNullable(md.onlyDamageType)),
+                            SCDamageType.CODEC.optionalFieldOf("onlyDamageType").forGetter(md -> Optional.ofNullable(md.onlyDamageType)),
                             Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(MeleeData::deflectChance),
                             Codec.DOUBLE.optionalFieldOf("bonusKnockback", 0.0).forGetter(MeleeData::bonusKnockback)
                     ).apply(instance, (damage, radius, piercingAnimation, animation, onlyDamageType, deflectChance, bonusKnockback) ->
@@ -932,7 +932,7 @@ public abstract class DefinitionsProvider implements DataProvider {
         public record RangedData(
                 String id,
                 float baseDamage,
-                SCDamageCalculator.DamageType damageType,
+                SCDamageType damageType,
                 int maxUseTime,
                 float speed,
                 float divergence,
@@ -952,7 +952,7 @@ public abstract class DefinitionsProvider implements DataProvider {
                     instance -> instance.group(
                             Codec.STRING.optionalFieldOf("id", "bow").forGetter(RangedData::id),
                             Codec.FLOAT.optionalFieldOf("baseDamage", 0f).forGetter(RangedData::baseDamage),
-                            SCDamageCalculator.DamageType.CODEC.optionalFieldOf("damageType").forGetter(rd -> Optional.ofNullable(rd.damageType)),
+                            SCDamageType.CODEC.optionalFieldOf("damageType").forGetter(rd -> Optional.ofNullable(rd.damageType)),
                             Codec.INT.optionalFieldOf("maxUseTime", 0).forGetter(RangedData::maxUseTime),
                             Codec.FLOAT.optionalFieldOf("speed", 0f).forGetter(RangedData::speed),
                             Codec.FLOAT.optionalFieldOf("divergence", 0f).forGetter(RangedData::divergence),

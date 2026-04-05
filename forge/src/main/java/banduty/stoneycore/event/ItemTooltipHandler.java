@@ -1,10 +1,10 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
-import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
@@ -81,9 +81,9 @@ public class ItemTooltipHandler {
         }
 
         if (stack.getItem() instanceof ArmorItem armorItem && ArmorDefinitionsStorage.containsItem(armorItem)) {
-            double slashing = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.SLASHING, armorItem) * 100;
-            double bludgeoning = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.BLUDGEONING, armorItem) * 100;
-            double piercing = SCArmorUtil.getResistance(SCDamageCalculator.DamageType.PIERCING, armorItem) * 100;
+            double slashing = SCArmorUtil.getResistance(SCDamageType.SLASHING, armorItem) * 100;
+            double bludgeoning = SCArmorUtil.getResistance(SCDamageType.BLUDGEONING, armorItem) * 100;
+            double piercing = SCArmorUtil.getResistance(SCDamageType.PIERCING, armorItem) * 100;
 
             if (slashing != 0) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.slashingResistance", slashing).withStyle(ChatFormatting.BLUE));

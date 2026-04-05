@@ -1,8 +1,7 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.util.SCBetterCombat;
-import banduty.stoneycore.util.SCDamageCalculator;
+import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.render.TextureData;
@@ -44,14 +43,14 @@ public class GuiMixin {
 
         WeaponDefinitionData weaponData = WeaponDefinitionsStorage.getData(item);
 
-        SCDamageCalculator.DamageType damageType = SCBetterCombat.determineDamageType(mainHandStack, weaponData, player);
+        SCDamageType damageType = SCDamageType.determine(mainHandStack, weaponData, player);
         stoneyCore$renderCrosshair(item, guiGraphics, distance, damageType);
 
         ci.cancel();
     }
 
     @Unique
-    private void stoneyCore$renderCrosshair(Item item, GuiGraphics guiGraphics, double distance, SCDamageCalculator.DamageType damageType) {
+    private void stoneyCore$renderCrosshair(Item item, GuiGraphics guiGraphics, double distance, SCDamageType damageType) {
         Minecraft client = Minecraft.getInstance();
         int centerX = client.getWindow().getGuiScaledWidth() / 2;
         int centerY = client.getWindow().getGuiScaledHeight() / 2;
@@ -110,7 +109,7 @@ public class GuiMixin {
     }
 
     @Unique
-    private static ResourceLocation stoneyCore$getCrosshair(SCDamageCalculator.DamageType damageType, String crosshairType) {
+    private static ResourceLocation stoneyCore$getCrosshair(SCDamageType damageType, String crosshairType) {
         return new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/" + damageType.name().toLowerCase() + "_" + crosshairType + ".png");
     }
 

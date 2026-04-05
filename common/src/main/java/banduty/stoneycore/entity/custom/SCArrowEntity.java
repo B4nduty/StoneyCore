@@ -1,8 +1,8 @@
 package banduty.stoneycore.entity.custom;
 
+import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.mixin.AbstractArrowAccessor;
 import banduty.stoneycore.util.DeflectChanceHelper;
-import banduty.stoneycore.util.SCDamageCalculator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -20,7 +20,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
 public abstract class SCArrowEntity extends AbstractArrow {
-    private SCDamageCalculator.DamageType damageType;
+    private SCDamageType damageType;
 
     public SCArrowEntity(EntityType<? extends AbstractArrow> type, Level level) {
         super(type, level);
@@ -30,11 +30,11 @@ public abstract class SCArrowEntity extends AbstractArrow {
         super(scArrow, shooter, level);
     }
 
-    public void setDamageType(SCDamageCalculator.DamageType damageType) {
+    public void setDamageType(SCDamageType damageType) {
         this.damageType = damageType;
     }
 
-    public SCDamageCalculator.DamageType getDamageType() {
+    public SCDamageType getDamageType() {
         return this.damageType;
     }
 
@@ -112,8 +112,8 @@ public abstract class SCArrowEntity extends AbstractArrow {
 
         damage *= getDeltaMovement().length();
 
-        damage = SCDamageCalculator.getSCDamage(target, damage, getDamageType());
-        SCDamageCalculator.applyDamage(target, this, stack, damage);
+        damage = SCDamageType.calculateSCDamage(target, damage, getDamageType());
+        SCDamageType.apply(target, this, stack, damage);
         if (this.isOnFire()) target.setRemainingFireTicks(5);
         return true;
     }

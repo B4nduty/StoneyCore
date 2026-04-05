@@ -1,15 +1,15 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.combat.melee.CombatSelect;
+import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.DeflectChanceHelper;
 import banduty.stoneycore.util.EntityDamageUtil;
-import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.WeightUtil;
-import banduty.stoneycore.util.SCBetterCombat;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
@@ -239,8 +239,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         if (stoneycore$currentDamageSource == null) return;
 
         Entity attacker = stoneycore$currentDamageSource.getEntity();
-        ItemStack weaponStack = ItemStack.EMPTY;
-        if (Services.PLATFORM.isModLoaded("bettercombat")) weaponStack = SCBetterCombat.getWeaponStack(attacker, ItemStack.EMPTY);
+        ItemStack weaponStack = CombatSelect.getWeaponStack(attacker, ItemStack.EMPTY);
 
         if (!(attacker instanceof LivingEntity && !weaponStack.isEmpty() && WeaponDefinitionsStorage.isMelee(weaponStack))) {
             return;
@@ -252,7 +251,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
         strength = Math.max(strength, 0.1);
 
-        if (EntityDamageUtil.damageType == SCDamageCalculator.DamageType.BLUDGEONING) {
+        if (EntityDamageUtil.damageType == SCDamageType.BLUDGEONING) {
             strength += 0.3f;
         }
 

@@ -62,6 +62,6 @@ public class LandDefinitionsLoader extends SimplePreparableReloadListener<Void> 
             }
         });
 
-        StoneyCore.LOG.info("Loaded {} land definitions", LandDefinitionsStorage.DEFINITIONS.size());
+        StoneyCore.LOG.debug("Loaded {} land definitions", LandDefinitionsStorage.DEFINITIONS.size());
     }
 }

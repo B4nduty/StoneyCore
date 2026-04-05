@@ -1,7 +1,8 @@
 package banduty.stoneycore.block;
 
 import banduty.stoneycore.recipes.AnvilRecipe;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;

@@ -1,9 +1,9 @@
 package banduty.stoneycore.platform;
 
 import banduty.stoneycore.platform.services.HumanoidModelSetupAnimHelper;
+import banduty.stoneycore.platform.services.IClientPlatformHelper;
 import banduty.stoneycore.platform.services.KeyInputHelper;
 import banduty.stoneycore.platform.services.RenderFirstPersonAccessoryArmorHelper;
-import banduty.stoneycore.platform.services.IClientPlatformHelper;
 import banduty.stoneycore.util.render.SCRenderTypeHelper;
 
 public class ClientPlatform {

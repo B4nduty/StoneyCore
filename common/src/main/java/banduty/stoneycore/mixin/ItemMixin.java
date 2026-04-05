@@ -1,9 +1,9 @@
 package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.SCDamageCalculator;
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.data.keys.NBTDataHelper;
@@ -159,7 +159,7 @@ public abstract class ItemMixin {
 
     @Unique
     private boolean stoneyCore$isBludgeoningWeapon(Item item) {
-        return getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, item) > 0;
+        return getDamageValues(SCDamageType.BLUDGEONING, item) > 0;
     }
 
     @Unique
@@ -252,9 +252,9 @@ public abstract class ItemMixin {
 
         Item item = stack.getItem();
         if (WeaponDefinitionsStorage.isMelee(stack)) {
-            double slashing = getDamageValues(SCDamageCalculator.DamageType.SLASHING, item);
-            double piercing = getDamageValues(SCDamageCalculator.DamageType.PIERCING, item);
-            double bludgeoning = getDamageValues(SCDamageCalculator.DamageType.BLUDGEONING, item);
+            double slashing = getDamageValues(SCDamageType.SLASHING, item);
+            double piercing = getDamageValues(SCDamageType.PIERCING, item);
+            double bludgeoning = getDamageValues(SCDamageType.BLUDGEONING, item);
 
             if (slashing > 0 && bludgeoning > 0) {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.shift-right_click-bludgeoning"));

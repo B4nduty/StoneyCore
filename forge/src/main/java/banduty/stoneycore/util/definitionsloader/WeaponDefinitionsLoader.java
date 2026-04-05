@@ -80,6 +80,6 @@ public class WeaponDefinitionsLoader extends SimplePreparableReloadListener<Void
             }
         });
 
-        StoneyCore.LOG.info("Loaded {} weapon definitions", WeaponDefinitionsStorage.DEFINITIONS.size());
+        StoneyCore.LOG.debug("Loaded {} weapon definitions", WeaponDefinitionsStorage.DEFINITIONS.size());
     }
 }

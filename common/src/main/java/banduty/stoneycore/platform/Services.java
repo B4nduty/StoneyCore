@@ -1,6 +1,7 @@
 package banduty.stoneycore.platform;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.combat.melee.ICombatHelper;
 import banduty.stoneycore.entity.custom.AbstractSiegeHelper;
 import banduty.stoneycore.entity.custom.SCBulletEntityHelper;
 import banduty.stoneycore.items.blueprint.IBlueprintHelper;
@@ -29,6 +30,7 @@ public class Services {
     public static final LandTrackerHelper LAND_TRACKER = load(LandTrackerHelper.class);
     public static final ParticleHelper PARTICLE = load(ParticleHelper.class);
     public static final SCBulletEntityHelper SC_BULLET_ENTITY = load(SCBulletEntityHelper.class);
+    public static final ICombatHelper COMBAT = ServiceLoaderHelper.loadHighestPriority(ICombatHelper.class);
 
     public static <T> T load(Class<T> clazz) {
 

@@ -1,6 +1,9 @@
 package banduty.stoneycore.client;
 
-import banduty.stoneycore.model.*;
+import banduty.stoneycore.model.UnderArmourBootsModel;
+import banduty.stoneycore.model.UnderArmourChestplateModel;
+import banduty.stoneycore.model.UnderArmourHelmetModel;
+import banduty.stoneycore.model.UnderArmourLeggingsModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.EntityModelSet;
