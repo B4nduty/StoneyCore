@@ -59,46 +59,69 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float delta, int mouseX, int mouseY) {
         if (!(this.menu.getItemStack().getItem() instanceof BlueprintItem blueprintItem)) return;
+
         String namespace = this.menu.getStructureId().getNamespace();
         String originalBasePath = blueprintItem.getBackgroundTexture();
         String basePath = originalBasePath.isEmpty() ? "manuscript" : originalBasePath;
 
-        updateLegendButton(originalBasePath, namespace, basePath);
+        int xOffset = 92 / 2 - 7; // move right (+) or left (-)
+        int yOffset = 0;  // move down (+) or up (-)
 
-        ResourceLocation texture = new ResourceLocation(originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace, "textures/gui/blueprint/" + basePath + ".png");
+        ResourceLocation texture = new ResourceLocation(
+                originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace,
+                "textures/gui/blueprint/" + basePath + ".png"
+        );
 
-        if (!this.showLegend) {
-            guiGraphics.setColor(0.1f, 0.1f, 0.1f, 1f);
-            renderLegend(guiGraphics, originalBasePath, namespace, basePath, 74);
-            guiGraphics.setColor(1f, 1f, 1f, 1f);
-        }
-
-        if (this.showLegend) guiGraphics.setColor(0.25f, 0.25f, 0.25f, 1f);
-        else guiGraphics.setColor(1f, 1f, 1f, 1f);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
+
         RenderSystem.setShaderTexture(0, texture);
-        guiGraphics.blit(texture, this.getX(), this.getY(), 0, 0, this.imageWidth, this.imageHeight);
-        texture = new ResourceLocation(this.menu.getStructureId().getNamespace(), "textures/gui/blueprint/" + this.menu.getStructureId().getPath() + ".png");
+        guiGraphics.blit(
+                texture,
+                this.getX() + xOffset,
+                this.getY() + yOffset,
+                0, 0,
+                this.imageWidth,
+                this.imageHeight
+        );
+
+        texture = new ResourceLocation(
+                namespace,
+                "textures/gui/blueprint/" + this.menu.getStructureId().getPath() + ".png"
+        );
+
         RenderSystem.setShaderTexture(0, texture);
-        guiGraphics.blit(texture, this.getX(), this.getY(), 0, 0, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
+        guiGraphics.blit(
+                texture,
+                this.getX() + xOffset,
+                this.getY() + yOffset,
+                0, 0,
+                this.imageWidth,
+                this.imageHeight,
+                this.imageWidth,
+                this.imageHeight
+        );
+
         guiGraphics.setColor(1f, 1f, 1f, 1f);
 
-        if (this.showLegend) {
-            renderLegend(guiGraphics, originalBasePath, namespace, basePath, 20);
-        }
+        renderLegend(guiGraphics, originalBasePath, namespace, basePath, 6 + xOffset);
 
         RenderSystem.disableBlend();
     }
 
-    private void renderLegend(GuiGraphics guiGraphics, String originalBasePath, String namespace, String basePath, int x) {
-        ResourceLocation texture = new ResourceLocation(originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace, "textures/gui/blueprint/" + basePath + "_legend.png");
+    private void renderLegend(GuiGraphics guiGraphics, String originalBasePath, String namespace, String basePath, int xOffset) {
+
+        ResourceLocation texture = new ResourceLocation(
+                originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace,
+                "textures/gui/blueprint/" + basePath + "_legend.png"
+        );
+
 
         RenderSystem.setShaderTexture(0, texture);
-        guiGraphics.blit(texture, this.getX() - this.imageWidth / 2 + x, this.getY(), 0, 0, 87, 174, 87, 174);
+        guiGraphics.blit(texture, this.getX() - this.imageWidth / 2 + xOffset, this.getY(), 0, 0, 87, 174, 87, 174);
 
-        if (this.showLegend) renderBlockFinderList(guiGraphics, x);
+        renderBlockFinderList(guiGraphics, xOffset);
     }
 
     private void updateLegendButton(String originalBasePath, String namespace, String basePath) {
@@ -184,5 +207,13 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
         super.render(guiGraphics, mouseX, mouseY, delta);
         Services.BLUEPRINT.renderBlueprintEvents(guiGraphics, mouseX, mouseY, delta, this);
         renderTooltip(guiGraphics, mouseX, mouseY);
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public int getHeight() {
+        return this.height;
     }
 }

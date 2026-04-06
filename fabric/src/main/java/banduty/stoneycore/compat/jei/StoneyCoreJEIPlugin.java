@@ -5,13 +5,13 @@ import banduty.stoneycore.block.ModBlocks;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.recipes.AnvilRecipe;
+import banduty.stoneycore.screen.BlueprintScreen;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.registration.IRecipeCatalystRegistration;
-import mezz.jei.api.registration.IRecipeCategoryRegistration;
-import mezz.jei.api.registration.IRecipeRegistration;
-import mezz.jei.api.registration.ISubtypeRegistration;
+import mezz.jei.api.gui.handlers.IGuiContainerHandler;
+import mezz.jei.api.registration.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -50,5 +50,21 @@ public class StoneyCoreJEIPlugin implements IModPlugin {
                 new ItemStack(ModBlocks.CRAFTMAN_ANVIL),
                 CraftmanAnvilCategoryJEI.CRAFTMAN_ANVIL_TYPE
         );
+    }
+
+    @Override
+    public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        registration.addGuiContainerHandler(BlueprintScreen.class,
+                new IGuiContainerHandler<>() {
+                    @Override
+                    public List<Rect2i> getGuiExtraAreas(BlueprintScreen screen) {
+                        return List.of(new Rect2i(
+                                screen.getX(),
+                                screen.getY(),
+                                screen.getWidth(),
+                                screen.getHeight()
+                        ));
+                    }
+                });
     }
 }
