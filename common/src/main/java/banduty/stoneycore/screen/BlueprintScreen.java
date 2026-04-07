@@ -25,7 +25,7 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
 
     public BlueprintScreen(BlueprintScreenHandler handler, Inventory inventory, Component title) {
         super(handler, inventory, title);
-        this.imageWidth = 171;
+        this.imageWidth = 256;
         this.imageHeight = 173;
         this.inventoryLabelY = 1000;
         this.titleLabelY = 1000;
@@ -64,8 +64,8 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
         String originalBasePath = blueprintItem.getBackgroundTexture();
         String basePath = originalBasePath.isEmpty() ? "manuscript" : originalBasePath;
 
-        int xOffset = 92 / 2 - 7; // move right (+) or left (-)
-        int yOffset = 0;  // move down (+) or up (-)
+        int xOffset = 170 / 2 - 1; // move right (+) or left (-)
+        int yOffset = 2;  // move down (+) or up (-)
 
         ResourceLocation texture = new ResourceLocation(
                 originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace,
@@ -79,8 +79,8 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
         RenderSystem.setShaderTexture(0, texture);
         guiGraphics.blit(
                 texture,
-                this.getX() + xOffset,
-                this.getY() + yOffset,
+                this.getX(),
+                this.getY(),
                 0, 0,
                 this.imageWidth,
                 this.imageHeight
@@ -97,16 +97,16 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
                 this.getX() + xOffset,
                 this.getY() + yOffset,
                 0, 0,
-                this.imageWidth,
-                this.imageHeight,
-                this.imageWidth,
-                this.imageHeight
+                170,
+                170,
+                170,
+                170
         );
 
         guiGraphics.setColor(1f, 1f, 1f, 1f);
 
-        renderLegend(guiGraphics, originalBasePath, namespace, basePath, 6 + xOffset);
-
+        //renderLegend(guiGraphics, originalBasePath, namespace, basePath, 6 + xOffset);
+        renderBlockFinderList(guiGraphics, 45 + xOffset);
         RenderSystem.disableBlend();
     }
 
@@ -153,7 +153,7 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
         int baseLineHeight = 10;
         int lineHeight = (int) (baseLineHeight * textScale);
 
-        int maxTextWidth = (int) (65 / textScale);
+        int maxTextWidth = (int) (70 / textScale);
 
         int startX = this.getX() - this.imageWidth / 2 + 10 + x;
         int startY = this.getY() + 10;
