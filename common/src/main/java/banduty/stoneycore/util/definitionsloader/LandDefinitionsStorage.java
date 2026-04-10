@@ -25,6 +25,6 @@ public class LandDefinitionsStorage {
     }
 
     private static LandValues getDefaultData() {
-        return new LandValues(0, Map.of(), "", -1);
+        return new LandValues(0, Map.of(), "", -1, 0.15d, 3);
     }
 }

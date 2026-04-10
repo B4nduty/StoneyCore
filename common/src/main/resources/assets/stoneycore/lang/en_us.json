@@ -78,6 +78,7 @@
   "text.config.stoneycore.option.landOptions.claimLand": "Claim Land",
   "text.config.stoneycore.option.landOptions.removeClaimedSiege": "Remove radius claim on defender death",
   "text.config.stoneycore.option.landOptions.hungerSiege": "Hunger inside a Siege",
+  "text.config.stoneycore.option.landOptions.landVisitors": "[Beta] Villagers can spawn on your land",
   "component.land.stoneycore.expansion.increased": "Radius increased: %d → %d",
   "component.warning.stoneycore.armor_needed_for_accessory": "%s requires %s to be equipped!",
   "attribute.name.generic.stoneycore.hunger_drain_multiplier": "Hunger Drain Multiplier",

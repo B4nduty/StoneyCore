@@ -75,6 +75,8 @@ public interface IConfig {
         boolean removeClaimedSiege();
 
         boolean hungerSiege();
+
+        boolean landVisitors();
     }
 
     CombatOptions combatOptions();

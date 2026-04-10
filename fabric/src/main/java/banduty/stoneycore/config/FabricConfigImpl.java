@@ -211,6 +211,11 @@ public class FabricConfigImpl extends ConfigImpl {
             public boolean hungerSiege() {
                 return config.landOptions.hungerSiege();
             }
+
+            @Override
+            public boolean landVisitors() {
+                return config.landOptions.landVisitors();
+            }
         };
     }
 }

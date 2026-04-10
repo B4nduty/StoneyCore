@@ -45,7 +45,6 @@ public class Land {
     public void initializeClaim(ServerLevel serverLevel, int radius, Queue<ClaimWorker> taskQueue) {
         long coreX = corePos.getX();
         long coreZ = corePos.getZ();
-        long radiusSquared = (long) radius * radius;
 
         LandState state = LandState.get(serverLevel);
 

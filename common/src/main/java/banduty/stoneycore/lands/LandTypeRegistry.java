@@ -12,7 +12,8 @@ public class LandTypeRegistry {
     private static final Map<ResourceLocation, LandValues> OVERRIDES = new HashMap<>();
 
     public static LandType register(ResourceLocation id, Block coreBlock, Item coreItem, int baseRadius,
-                                    Map<Item, Integer> itemsToExpand, String expandFormula, LandType.TerrainType terrainType, int maxAllies) {
+                                    Map<Item, Integer> itemsToExpand, String expandFormula, LandType.TerrainType terrainType, int maxAllies,
+                                    double spawnChance, int maxVisitorsPerLand) {
         if (TYPES.containsKey(id)) {
             throw new IllegalArgumentException("LandType with id " + id + " is already registered!");
         }
@@ -22,7 +23,8 @@ public class LandTypeRegistry {
             throw new IllegalArgumentException("A LandType with core block " + coreBlock + " is already registered!");
         }
 
-        LandType type = new LandType(id, coreBlock, coreItem, baseRadius, itemsToExpand, expandFormula, terrainType, maxAllies);
+        LandType type = new LandType(id, coreBlock, coreItem, baseRadius, itemsToExpand, expandFormula, terrainType,
+                maxAllies, spawnChance, maxVisitorsPerLand);
         TYPES.put(id, type);
         return type;
     }
@@ -49,7 +51,9 @@ public class LandTypeRegistry {
                     override.itemsToExpand().isEmpty() ? type.itemsToExpand() : override.itemsToExpand(),
                     override.expandFormula().isEmpty() ? type.expandFormula() : override.expandFormula(),
                     type.terrainType(),
-                    override.maxAllies()
+                    override.maxAllies(),
+                    override.spawnChance(),
+                    override.maxVisitorsPerLand()
             ));
         }
         return Optional.of(type);

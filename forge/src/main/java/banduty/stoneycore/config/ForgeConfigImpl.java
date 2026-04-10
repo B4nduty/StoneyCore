@@ -205,6 +205,11 @@ public class ForgeConfigImpl extends ConfigImpl {
             public boolean hungerSiege() {
                 return SCConfigs.hungerSiege.get();
             }
+
+            @Override
+            public boolean landVisitors() {
+                return SCConfigs.landVisitors.get();
+            }
         };
     }
 }

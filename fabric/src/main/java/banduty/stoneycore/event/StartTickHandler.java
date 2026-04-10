@@ -4,6 +4,7 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.lands.util.ClaimWorker;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.visitor.*;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.render.OutlineClaimRenderer;
@@ -29,9 +30,10 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
 
     @Override
     public void onStartTick(MinecraftServer server) {
-        processClaimTasks();
 
+        processClaimTasks();
         WeightUtil.clearCache();
+        VisitorTracker.tickCooldowns();
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (!player.isSpectator()) {
@@ -39,9 +41,10 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
             }
         }
 
-        for (ServerLevel world : server.getAllLevels()) {
-            checkAndRemoveBrokenLands(world);
-            SiegeManager.tick(world);
+        for (ServerLevel serverLevel : server.getAllLevels()) {
+            checkAndRemoveBrokenLands(serverLevel);
+            SiegeManager.tick(serverLevel);
+            VisitorManager.get(serverLevel).tick(serverLevel);
         }
     }
 

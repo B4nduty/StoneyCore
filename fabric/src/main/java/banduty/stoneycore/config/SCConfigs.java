@@ -174,5 +174,9 @@ public class SCConfigs {
         @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Hunger inside a Siege")
         public boolean hungerSiege = true;
+
+        @Sync(Option.SyncMode.INFORM_SERVER)
+        @Comment("[Beta] Villagers can spawn on your land. Improve their mood so they stay there")
+        public boolean landVisitors = false;
     }
 }

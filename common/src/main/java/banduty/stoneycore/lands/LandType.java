@@ -7,10 +7,13 @@ import net.minecraft.world.level.block.Block;
 import java.util.Map;
 
 public record LandType(ResourceLocation id, Block coreBlock, Item coreItem, int baseRadius,
-                       Map<Item, Integer> itemsToExpand, String expandFormula, TerrainType terrainType, int maxAllies) {
+                       Map<Item, Integer> itemsToExpand, String expandFormula, TerrainType terrainType, int maxAllies,
+                       double spawnChance, int maxVisitorsPerLand) {
     @Override
     public String toString() {
-        return "LandType{id=" + id + ", block=" + coreBlock + ", item=" + coreItem + ", baseRadius=" + baseRadius + ", itemsToExpand=" + itemsToExpand + ", expandFormula=" + expandFormula + ", terrainType=" + terrainType + "}";
+        return "LandType{id=" + id + ", block=" + coreBlock + ", item=" + coreItem + ", baseRadius=" + baseRadius +
+                ", itemsToExpand=" + itemsToExpand + ", expandFormula=" + expandFormula +
+                ", terrainType=" + terrainType + ", spawnChance=" + spawnChance + ", maxVisitorsPerLand=" + maxVisitorsPerLand + "}";
     }
 
     public boolean isOf(TerrainType terrainType) {

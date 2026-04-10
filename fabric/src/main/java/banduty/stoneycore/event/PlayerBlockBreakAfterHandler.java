@@ -1,8 +1,10 @@
 package banduty.stoneycore.event;
 
+import banduty.stoneycore.lands.visitor.*;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -26,6 +28,8 @@ public class PlayerBlockBreakAfterHandler implements PlayerBlockBreakEvents.Afte
                 replantCrop(level, pos, (CropBlock) block, player);
             }
         }
+
+        VisitorTracker.onBlockBreak(player, (ServerLevel) level, state, pos);
     }
 
     private void replantCrop(Level level, BlockPos pos, CropBlock cropBlock, Player player) {

@@ -4,6 +4,7 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.lands.util.ClaimWorker;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.visitor.*;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.render.OutlineClaimRenderer;
@@ -28,7 +29,7 @@ import java.util.*;
 @Mod.EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class StartTickHandler {
     public static final Queue<ClaimWorker> CLAIM_TASKS = new LinkedList<>();
-    private static final UUID POWDER_SNOW_SLOW_ID = UUID.fromString("1eaf83ff-7207-4596-b37a-d7a07b3ec4ce");
+    private static final UUID POWDER_SNOW_SLOW_ID = UUID.randomUUID();
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
@@ -37,6 +38,7 @@ public class StartTickHandler {
         MinecraftServer server = event.getServer();
         processClaimTasks();
         WeightUtil.clearCache();
+        VisitorTracker.tickCooldowns();
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (!player.isSpectator()) {
@@ -44,9 +46,10 @@ public class StartTickHandler {
             }
         }
 
-        for (ServerLevel world : server.getAllLevels()) {
-            checkAndRemoveBrokenLands(world);
-            SiegeManager.tick(world);
+        for (ServerLevel serverLevel : server.getAllLevels()) {
+            checkAndRemoveBrokenLands(serverLevel);
+            SiegeManager.tick(serverLevel);
+            VisitorManager.get(serverLevel).tick(serverLevel);
         }
     }
 

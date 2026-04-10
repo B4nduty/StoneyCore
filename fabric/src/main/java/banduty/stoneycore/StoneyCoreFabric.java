@@ -23,6 +23,7 @@ import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -57,6 +58,8 @@ public class StoneyCoreFabric implements ModInitializer {
         PlayerBlockBreakEvents.AFTER.register(new PlayerBlockBreakAfterHandler());
         PlayerBlockBreakEvents.BEFORE.register(new PlayerBlockBreakBeforeHandler());
         UseBlockCallback.EVENT.register(new UseBlockHandler());
+        UseBlockCallback.EVENT.register(new VisitorUseBlock());
+        ServerLivingEntityEvents.AFTER_DEATH.register(new VisitorDeath());
         if (FabricLoader.getInstance().isModLoaded("bettercombat")) {
             BetterCombatClientEvents.ATTACK_HIT.register(new PlayerAttackHitHandler());
         }

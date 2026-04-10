@@ -54,6 +54,7 @@ public class SCConfigs {
     public static final ForgeConfigSpec.BooleanValue claimLand;
     public static final ForgeConfigSpec.BooleanValue removeClaimedSiege;
     public static final ForgeConfigSpec.BooleanValue hungerSiege;
+    public static final ForgeConfigSpec.BooleanValue landVisitors;
 
     static {
         final ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -218,6 +219,10 @@ public class SCConfigs {
         hungerSiege = builder
                 .comment("Hunger inside a Siege | Default: true")
                 .define("hungerSiege", true);
+
+        landVisitors = builder
+                .comment("[Beta] Villagers can spawn on your land. Improve their mood so they stay there")
+                .define("landVisitors", false);
 
         builder.pop();
         SPEC = builder.build();
