@@ -77,4 +77,8 @@ public class WeaponDefinitionsStorage {
                 null, null, null
         );
     }
+
+    public static Map<ResourceLocation, WeaponDefinitionData> getDefinitions() {
+        return DEFINITIONS;
+    }
 }

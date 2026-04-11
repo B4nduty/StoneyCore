@@ -29,10 +29,13 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
@@ -102,6 +105,8 @@ public class StoneyCoreFabric implements ModInitializer {
             server.execute(() -> {
                 ServerPlayer player = handler.getPlayer();
 
+                sendSyncDefinitions(player);
+
                 if (NBTDataHelper.get((IEntityDataSaver) player, PDKeys.FIRST_JOIN, false)) {
                     StaminaData.loadStamina(player);
                     return;
@@ -120,5 +125,31 @@ public class StoneyCoreFabric implements ModInitializer {
         });
         StoneyCore.LOG.info("Hello Fabric world!");
         StoneyCore.init();
+    }
+
+    public static void sendSyncDefinitions(ServerPlayer player) {
+        FriendlyByteBuf buffer = PacketByteBufs.create();
+
+        buffer.writeMap(ArmorDefinitionsStorage.getDefinitions(),
+                FriendlyByteBuf::writeResourceLocation,
+                (buf, data) -> buf.writeJsonWithCodec(ArmorDefinitionData.CODEC, data));
+
+        buffer.writeMap(AccessoriesDefinitionsStorage.getDefinitions(),
+                FriendlyByteBuf::writeResourceLocation,
+                (buf, data) -> buf.writeJsonWithCodec(AccessoriesDefinitionData.CODEC, data));
+
+        buffer.writeMap(LandDefinitionsStorage.getDefinitions(),
+                FriendlyByteBuf::writeResourceLocation,
+                (buf, data) -> buf.writeJsonWithCodec(LandValues.CODEC, data));
+
+        buffer.writeMap(SiegeEngineDefinitionsStorage.getDefinitions(),
+                FriendlyByteBuf::writeResourceLocation,
+                (buf, data) -> buf.writeJsonWithCodec(SiegeEngineDefinitionData.CODEC, data));
+
+        buffer.writeMap(WeaponDefinitionsStorage.getDefinitions(),
+                FriendlyByteBuf::writeResourceLocation,
+                (buf, data) -> buf.writeJsonWithCodec(WeaponDefinitionData.CODEC, data));
+
+        ServerPlayNetworking.send(player, ModMessages.SYNC_DEFINITIONS, buffer);
     }
 }

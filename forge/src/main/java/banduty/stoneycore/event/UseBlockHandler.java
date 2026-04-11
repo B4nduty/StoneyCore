@@ -100,7 +100,7 @@ public class UseBlockHandler {
         boolean isCoreBlock = LandTypeRegistry.getAll().stream()
                 .anyMatch(type -> type.coreBlock() == state.getBlock());
 
-        // Check siege restrictions
+        // Check siege_engine restrictions
         if (SiegeManager.isPlayerInLandUnderSiege(serverLevel, player) &&
                 !(SiegeManager.getPlayerSiege(serverLevel, player.getUUID())
                         .map(siege -> !siege.disabledPlayers.contains(player.getUUID()))
@@ -128,7 +128,7 @@ public class UseBlockHandler {
             return;
         }
 
-        // Handle surrender during siege
+        // Handle surrender during siege_engine
         if (maybeLand.isPresent()) {
             Land land = maybeLand.get();
 

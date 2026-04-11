@@ -56,7 +56,7 @@ public class UseEntityHandler {
                 .filter(land -> land.getOwnerUUID().equals(playerId) || land.isAlly(playerId))
                 .findFirst();
 
-        // Check if player can interact during siege
+        // Check if player can interact during siege_engine
         if (landOpt.isPresent() &&
                 SiegeManager.isLandDefenseSiege(serverLevel, landOpt.get()) &&
                 !SiegeManager.getAllParticipants(serverLevel).contains(serverPlayer)) {

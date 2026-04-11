@@ -43,6 +43,14 @@ public class ModMessages {
                 StaminaBlockedS2CPacket::encode, StaminaBlockedS2CPacket::decode, StaminaBlockedS2CPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
 
+        CHANNEL.registerMessage(packetId++, StaminaValueS2CPacket.class,
+                StaminaValueS2CPacket::encode, StaminaValueS2CPacket::decode, StaminaValueS2CPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+
+        CHANNEL.registerMessage(packetId++, SyncDefinitionsPacket.class,
+                SyncDefinitionsPacket::encode, SyncDefinitionsPacket::decode, SyncDefinitionsPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+
         CHANNEL.registerMessage(packetId++, LandTitleS2CPacket.class,
                 LandTitleS2CPacket::encode, LandTitleS2CPacket::decode, LandTitleS2CPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));

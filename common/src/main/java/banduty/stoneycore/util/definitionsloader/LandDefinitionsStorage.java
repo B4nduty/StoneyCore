@@ -27,4 +27,8 @@ public class LandDefinitionsStorage {
     private static LandValues getDefaultData() {
         return new LandValues(0, Map.of(), "", -1, 0.15d, 3);
     }
+
+    public static Map<ResourceLocation, LandValues> getDefinitions() {
+        return DEFINITIONS;
+    }
 }

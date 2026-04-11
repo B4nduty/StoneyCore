@@ -27,4 +27,8 @@ public class SiegeEngineDefinitionsStorage {
     public static void addDefinition(ResourceLocation id, SiegeEngineDefinitionData data) {
         DEFINITIONS.put(id, data);
     }
+
+    public static Map<ResourceLocation, SiegeEngineDefinitionData> getDefinitions() {
+        return DEFINITIONS;
+    }
 }

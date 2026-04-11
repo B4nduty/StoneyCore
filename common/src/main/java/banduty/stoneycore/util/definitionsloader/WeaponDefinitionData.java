@@ -13,6 +13,21 @@ import java.util.*;
 public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, RangedData ranged, AmmoData ammo) {
     public enum Usage { MELEE, RANGED, AMMO }
 
+    public static final Codec<WeaponDefinitionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.list(Codec.STRING).xmap(
+                    list -> {
+                        EnumSet<Usage> set = EnumSet.noneOf(Usage.class);
+                        list.forEach(s -> set.add(Usage.valueOf(s.toUpperCase())));
+                        return set;
+                    },
+                    set -> set.stream().map(Enum::name).toList()
+            ).fieldOf("usage").forGetter(WeaponDefinitionData::usage),
+            MeleeData.CODEC.optionalFieldOf("melee").forGetter(wd -> Optional.ofNullable(wd.melee())),
+            RangedData.CODEC.optionalFieldOf("ranged").forGetter(wd -> Optional.ofNullable(wd.ranged())),
+            AmmoData.CODEC.optionalFieldOf("ammo").forGetter(wd -> Optional.ofNullable(wd.ammo()))
+    ).apply(instance, (usage, melee, ranged, ammo) ->
+            new WeaponDefinitionData(usage, melee.orElse(null), ranged.orElse(null), ammo.orElse(null))));
+
     public record MeleeData(Map<String, Float> damage, Map<String, Double> radius, int[] piercingAnimation,
                             int animation, SCDamageType onlyDamageType, double deflectChance, double bonusKnockback) {
         public static final Codec<MeleeData> CODEC = RecordCodecBuilder.create(instance -> instance.group(

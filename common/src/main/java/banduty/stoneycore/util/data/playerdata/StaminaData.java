@@ -15,10 +15,15 @@ public class StaminaData {
             UUID.randomUUID();
 
     public static void setStamina(LivingEntity livingEntity, double stamina) {
+        double clamped = clampStamina(livingEntity, stamina);
         ModifiersHelper.updateModifier(livingEntity.getAttribute(Services.ATTRIBUTES.getStamina()),
                 new AttributeModifier(GENERIC_STAMINA_MODIFIER_ID,
-                        StoneyCore.MOD_ID + ":stamina", clampStamina(livingEntity, stamina), AttributeModifier.Operation.ADDITION)
+                        StoneyCore.MOD_ID + ":stamina", clamped, AttributeModifier.Operation.ADDITION)
         );
+
+        if (livingEntity instanceof ServerPlayer serverPlayer) {
+            Services.STAMINA.syncStaminaValue(clamped, serverPlayer);
+        }
     }
 
     public static void addStamina(LivingEntity livingEntity, double amount) {

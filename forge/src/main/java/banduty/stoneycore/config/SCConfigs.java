@@ -171,7 +171,7 @@ public class SCConfigs {
                 .define("hexColorMaximum", "0xFFFFFF");
 
         armWave = builder
-                .comment("Player waves arms when in land under siege and not participant")
+                .comment("Player waves arms when in land under siege_engine and not participant")
                 .define("armWave", true);
 
         claimOutlineColor = builder
@@ -197,7 +197,7 @@ public class SCConfigs {
 
         breakOrRemoveSiegeDestroy = builder
                 .comment(
-                        "Break or Remove Blocks on siege destroy",
+                        "Break or Remove Blocks on siege_engine destroy",
                         "false = Break",
                         "true = Remove"
                 )

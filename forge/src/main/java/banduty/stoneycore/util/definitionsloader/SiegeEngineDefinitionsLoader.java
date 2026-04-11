@@ -55,10 +55,10 @@ public class SiegeEngineDefinitionsLoader extends SimplePreparableReloadListener
                         });
 
             } catch (Exception e) {
-                StoneyCore.LOG.error("Failed to load siege engine definition from {}: {}", id, e.getMessage(), e);
+                StoneyCore.LOG.error("Failed to load siege_engine engine definition from {}: {}", id, e.getMessage(), e);
             }
         });
 
-        StoneyCore.LOG.debug("Loaded {} siege engine definitions", SiegeEngineDefinitionsStorage.DEFINITIONS.size());
+        StoneyCore.LOG.debug("Loaded {} siege_engine engine definitions", SiegeEngineDefinitionsStorage.DEFINITIONS.size());
     }
 }

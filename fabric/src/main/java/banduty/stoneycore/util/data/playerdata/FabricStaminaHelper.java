@@ -13,4 +13,12 @@ public class FabricStaminaHelper implements StaminaHelper {
         buffer.writeBoolean(blocked);
         ServerPlayNetworking.send(player, ModMessages.STAMINA_BLOCKED_ID, buffer);
     }
+
+    @Override
+    public void syncStaminaValue(double stamina, ServerPlayer player) {
+        FriendlyByteBuf buffer = PacketByteBufs.create();
+        buffer.writeDouble(stamina);
+        ServerPlayNetworking.send(player, ModMessages.STAMINA_VALUE_ID, buffer);
+
+    }
 }
