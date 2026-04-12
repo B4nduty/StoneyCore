@@ -13,11 +13,26 @@ import java.util.Map;
 public class SyncDefinitionsPacket {
     public static void receive(Minecraft client, ClientPacketListener handler,
                                FriendlyByteBuf buf, PacketSender responseSender) {
-        Map<ResourceLocation, ArmorDefinitionData> armor = readMap(buf, ArmorDefinitionData.CODEC);
-        Map<ResourceLocation, AccessoriesDefinitionData> accessories = readMap(buf, AccessoriesDefinitionData.CODEC);
-        Map<ResourceLocation, LandValues> land = readMap(buf, LandValues.CODEC);
-        Map<ResourceLocation, SiegeEngineDefinitionData> siege_engine = readMap(buf, SiegeEngineDefinitionData.CODEC);
-        Map<ResourceLocation, WeaponDefinitionData> weapon = readMap(buf, WeaponDefinitionData.CODEC);
+        Map<ResourceLocation, ArmorDefinitionData> armor = buf.readMap(
+                FriendlyByteBuf::readResourceLocation,
+                b -> b.readJsonWithCodec(ArmorDefinitionData.CODEC)
+        );
+        Map<ResourceLocation, AccessoriesDefinitionData> accessories = buf.readMap(
+                FriendlyByteBuf::readResourceLocation,
+                b -> b.readJsonWithCodec(AccessoriesDefinitionData.CODEC)
+        );
+        Map<ResourceLocation, LandValues> land = buf.readMap(
+                FriendlyByteBuf::readResourceLocation,
+                b -> b.readJsonWithCodec(LandValues.CODEC)
+        );
+        Map<ResourceLocation, SiegeEngineDefinitionData> siege_engine = buf.readMap(
+                FriendlyByteBuf::readResourceLocation,
+                b -> b.readJsonWithCodec(SiegeEngineDefinitionData.CODEC)
+        );
+        Map<ResourceLocation, WeaponDefinitionData> weapon = buf.readMap(
+                FriendlyByteBuf::readResourceLocation,
+                b -> b.readJsonWithCodec(WeaponDefinitionData.CODEC)
+        );
         if (client.player != null) {
             ArmorDefinitionsStorage.clearDefinitions();
             armor.forEach(ArmorDefinitionsStorage::addDefinition);
