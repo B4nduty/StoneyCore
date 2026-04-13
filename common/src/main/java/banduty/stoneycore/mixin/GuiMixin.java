@@ -2,6 +2,8 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.playerdata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.render.TextureData;
@@ -31,6 +33,10 @@ public class GuiMixin {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         if (player == null) return;
+        if (client.options.hideGui || StaminaData.isStaminaBlocked((IEntityDataSaver) Minecraft.getInstance().player)) {
+            ci.cancel();
+            return;
+        }
 
         ItemStack mainHandStack = player.getMainHandItem();
         Item item = mainHandStack.getItem();
@@ -76,9 +82,6 @@ public class GuiMixin {
 
     @Unique
     private void stoneyCore$renderCrosshairTexture(GuiGraphics guiGraphics, ResourceLocation tex, int centerX, int centerY, int hexColor) {
-        Minecraft client = Minecraft.getInstance();
-        if (client.options.hideGui) return;
-
         TextureData texData = stoneyCore$getTextureData(tex);
         float[] rgb = stoneyCore$hexToRGB(hexColor);
 

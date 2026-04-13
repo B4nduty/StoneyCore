@@ -184,7 +184,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             ItemStack handStack = serverPlayer.getMainHandItem();
             if (!handStack.isEmpty()) {
                 serverPlayer.drop(handStack, false, true);
-                serverPlayer.setItemInHand(serverPlayer.getUsedItemHand(), ItemStack.EMPTY);
+                serverPlayer.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
             }
         }
     }
