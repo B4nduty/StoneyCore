@@ -76,77 +76,77 @@ public class ForgeConfigImpl extends ConfigImpl {
         return new VisualOptions() {
             @Override
             public boolean getDamageIndicator() {
-                return SCConfigs.damageIndicator.get();
+                return SCVisualConfigs.damageIndicator.get();
             }
 
             @Override
             public boolean getVisoredHelmet() {
-                return SCConfigs.visoredHelmet.get();
+                return SCVisualConfigs.visoredHelmet.get();
             }
 
             @Override
             public float getVisoredHelmetAlphaCreative() {
-                return SCConfigs.visoredHelmetAlphaCreative.get().floatValue();
+                return SCVisualConfigs.visoredHelmetAlphaCreative.get().floatValue();
             }
 
             @Override
             public float getVisoredHelmetAlphaSurvival() {
-                return SCConfigs.visoredHelmetAlphaSurvival.get().floatValue();
+                return SCVisualConfigs.visoredHelmetAlphaSurvival.get().floatValue();
             }
 
             @Override
             public boolean overlayThirdPerson() {
-                return SCConfigs.overlayThirdPerson.get();
+                return SCVisualConfigs.overlayThirdPerson.get();
             }
 
             @Override
             public boolean getLowStaminaIndicator() {
-                return SCConfigs.lowStaminaIndicator.get();
+                return SCVisualConfigs.lowStaminaIndicator.get();
             }
 
             @Override
             public boolean getNoiseEffect() {
-                return SCConfigs.noiseEffect.get();
+                return SCVisualConfigs.noiseEffect.get();
             }
 
             @Override
             public int getMuzzlesSmokeParticlesTime() {
-                return SCConfigs.muzzlesSmokeParticlesTime.get();
+                return SCVisualConfigs.muzzlesSmokeParticlesTime.get();
             }
 
             @Override
             public int getStaminaBarYOffset() {
-                return SCConfigs.staminaBarYOffset.get();
+                return SCVisualConfigs.staminaBarYOffset.get();
             }
 
             @Override
             public int hexColorTooFarClose() {
-                return hexToInt(SCConfigs.hexColorTooFarClose.get());
+                return hexToInt(SCVisualConfigs.hexColorTooFarClose.get());
             }
 
             @Override
             public int hexColorEffective() {
-                return hexToInt(SCConfigs.hexColorEffective.get());
+                return hexToInt(SCVisualConfigs.hexColorEffective.get());
             }
 
             @Override
             public int hexColorCritical() {
-                return hexToInt(SCConfigs.hexColorCritical.get());
+                return hexToInt(SCVisualConfigs.hexColorCritical.get());
             }
 
             @Override
             public int hexColorMaximum() {
-                return hexToInt(SCConfigs.hexColorMaximum.get());
+                return hexToInt(SCVisualConfigs.hexColorMaximum.get());
             }
 
             @Override
             public boolean armWave() {
-                return SCConfigs.armWave.get();
+                return SCVisualConfigs.armWave.get();
             }
 
             @Override
             public int claimOutlineColor() {
-                return hexToInt(SCConfigs.claimOutlineColor.get());
+                return hexToInt(SCVisualConfigs.claimOutlineColor.get());
             }
         };
     }

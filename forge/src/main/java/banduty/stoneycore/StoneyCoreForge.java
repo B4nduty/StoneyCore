@@ -3,6 +3,7 @@ package banduty.stoneycore;
 import banduty.stoneycore.block.ModBlockEntities;
 import banduty.stoneycore.block.ModBlocks;
 import banduty.stoneycore.config.SCConfigs;
+import banduty.stoneycore.config.SCVisualConfigs;
 import banduty.stoneycore.entity.ModEntities;
 import banduty.stoneycore.event.AdjustAttributeModifierEvent;
 import banduty.stoneycore.items.SCItems;
@@ -15,7 +16,9 @@ import banduty.stoneycore.util.data.playerdata.SCAttributes;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 
@@ -25,7 +28,10 @@ public class StoneyCoreForge {
     public StoneyCoreForge() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
-        SCConfigs.loadConfig(SCConfigs.SPEC, FMLPaths.GAMEDIR.get().resolve(FMLPaths.CONFIGDIR.get()).resolve(StoneyCore.MOD_ID + "-common.toml"));
+        SCConfigs.loadConfig(SCConfigs.SPEC, FMLPaths.CONFIGDIR.get().resolve(StoneyCore.MOD_ID + "-common.toml"));
+        SCVisualConfigs.loadConfig(SCVisualConfigs.SPEC, FMLPaths.CONFIGDIR.get().resolve(StoneyCore.MOD_ID + "-client.toml"));
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SCConfigs.SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, SCVisualConfigs.SPEC);
 
         SCAttributes.register(modEventBus);
         ModSounds.registerSounds(modEventBus);
@@ -44,5 +50,6 @@ public class StoneyCoreForge {
 
         StoneyCore.LOG.info("Hello Forge world!");
         StoneyCore.init();
+
     }
 }
