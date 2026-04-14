@@ -17,10 +17,11 @@
     "PlayerMixin",
     "SpawnHelperMixin",
     "StairBlockMixin",
-    "VindicatorEntityMixin",
-    "VillagerMixin"
+    "VillagerMixin",
+    "VindicatorEntityMixin"
   ],
   "client": [
+    "BipedEntityModelMixin",
     "CameraAccessor",
     "CameraMixin",
     "FItemRendererMixin",

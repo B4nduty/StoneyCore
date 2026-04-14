@@ -10,7 +10,6 @@
     "PlayerDataMixin"
   ],
   "client": [
-    "BipedEntityModelMixin",
     "FGuiMixin"
   ],
   "server": [
