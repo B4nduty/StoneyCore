@@ -45,7 +45,8 @@ public class FGuiMixin {
     private void stoneycore$renderPlayerHealth(GuiGraphics guiGraphics, CallbackInfo ci) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
-        if (player == null || player.isSpectator() || player.isCreative() || !stoneyCore$ableStaminaOverlay(player)) return;
+        if (player == null || player.isSpectator() || player.isCreative() || !stoneyCore$ableStaminaOverlay(player))
+            return;
         double maxStamina = player.getAttributeValue(Services.ATTRIBUTES.getMaxStamina());
         if (maxStamina <= 0) return;
 
@@ -74,9 +75,30 @@ public class FGuiMixin {
     @Unique
     private int stoneyCore$getStaminaBarYPosition(LocalPlayer player) {
         Minecraft client = Minecraft.getInstance();
-
         int windowHeight = client.getWindow().getGuiScaledHeight();
-        return player.getAirSupply() < player.getMaxAirSupply() ? windowHeight - 59 : windowHeight - 49;
+
+        int baseY = windowHeight - 49;
+
+        // Air bubbles (vanilla behavior)
+        if (player.getAirSupply() < player.getMaxAirSupply()) {
+            baseY -= 10;
+        }
+
+        // Dynamic mount health handling
+        if (player.getVehicle() instanceof net.minecraft.world.entity.LivingEntity vehicle) {
+            if (vehicle.showVehicleHealth()) {
+                float maxHealth = vehicle.getMaxHealth();
+                // Convert to hearts
+                int hearts = (int) Math.floor(maxHealth / 2.0);
+                // 10 hearts per row (vanilla layout)
+                int rows = (int) Math.ceil(hearts / 10.0) - 1;
+                if (rows < 0) rows = 0;
+                // Each row = ~10px height
+                baseY -= rows * 10;
+            }
+        }
+
+        return baseY;
     }
 
     @Unique
@@ -119,7 +141,8 @@ public class FGuiMixin {
 
                 guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-                if (!isStaminaBlocked) stoneyCore$renderStaminaUnit(guiGraphics, x, baseY, STAMINA_OVERLAY, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT);
+                if (!isStaminaBlocked)
+                    stoneyCore$renderStaminaUnit(guiGraphics, x, baseY, STAMINA_OVERLAY, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT);
             }
         }
     }

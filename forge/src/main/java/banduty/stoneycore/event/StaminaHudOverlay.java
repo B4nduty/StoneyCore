@@ -22,25 +22,25 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class StaminaHudOverlay {
 
-    
+
     private static final ResourceLocation STAMINA = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/stamina_bar.png");
-    
+
     private static final ResourceLocation STAMINA_OVERLAY = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_overlay.png");
-    
+
     private static final ResourceLocation STAMINA_EMPTY = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_empty.png");
-    
+
     private static final ResourceLocation STAMINA_BLOCKED = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_blocked.png");
-    
+
     private static final int STAMINA_UNIT_SIZE = 8;
-    
+
     private static final int EMPTY_STAMINA_WIDTH = 9;
-    
+
     private static final int EMPTY_STAMINA_HEIGHT = 9;
-    
+
     private static final int STAMINA_BAR_WIDTH = 9;
-    
+
     private static final int STAMINA_BAR_HEIGHT = 9;
-    
+
     @SubscribeEvent
     public static void onRenderGui(RenderGuiOverlayEvent.Post event) {
         if (event.getOverlay().id().equals(VanillaGuiOverlay.PLAYER_HEALTH.id())) {
@@ -48,7 +48,8 @@ public class StaminaHudOverlay {
             Minecraft client = Minecraft.getInstance();
             LocalPlayer player = client.player;
 
-            if (player == null || player.isSpectator() || player.isCreative() || !stoneyCore$ableStaminaOverlay(player)) return;
+            if (player == null || player.isSpectator() || player.isCreative() || !stoneyCore$ableStaminaOverlay(player))
+                return;
             double maxStamina = player.getAttributeValue(Services.ATTRIBUTES.getMaxStamina());
             if (maxStamina <= 0) return;
 
@@ -76,10 +77,32 @@ public class StaminaHudOverlay {
 
     private static int stoneyCore$getStaminaBarYPosition(LocalPlayer player) {
         Minecraft client = Minecraft.getInstance();
-
         int windowHeight = client.getWindow().getGuiScaledHeight();
-        return player.getAirSupply() < player.getMaxAirSupply() ? windowHeight - 59 : windowHeight - 49;
+
+        int baseY = windowHeight - 49;
+
+        // Air bubbles (vanilla behavior)
+        if (player.getAirSupply() < player.getMaxAirSupply()) {
+            baseY -= 10;
+        }
+
+        // Dynamic mount health handling
+        if (player.getVehicle() instanceof net.minecraft.world.entity.LivingEntity vehicle) {
+            if (vehicle.showVehicleHealth()) {
+                float maxHealth = vehicle.getMaxHealth();
+                // Convert to hearts
+                int hearts = (int) Math.floor(maxHealth / 2.0);
+                // 10 hearts per row (vanilla layout)
+                int rows = (int) Math.ceil(hearts / 10.0) - 1;
+                if (rows < 0) rows = 0;
+                // Each row = ~10px height
+                baseY -= rows * 10;
+            }
+        }
+
+        return baseY;
     }
+
     private static void stoneyCore$renderStaminaBar(GuiGraphics guiGraphics, int staminaBarX, int staminaBarY, double stamina, boolean isStaminaBlocked) {
         int yOffset = StoneyCore.getConfig().visualOptions().getStaminaBarYOffset();
         int baseY = staminaBarY - yOffset;
@@ -119,7 +142,8 @@ public class StaminaHudOverlay {
 
                 guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-                if (!isStaminaBlocked) stoneyCore$renderStaminaUnit(guiGraphics, x, baseY, STAMINA_OVERLAY, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT);
+                if (!isStaminaBlocked)
+                    stoneyCore$renderStaminaUnit(guiGraphics, x, baseY, STAMINA_OVERLAY, STAMINA_BAR_WIDTH, STAMINA_BAR_HEIGHT);
             }
         }
     }

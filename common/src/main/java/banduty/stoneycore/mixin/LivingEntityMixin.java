@@ -60,6 +60,9 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     @Unique
     private CompoundTag persistentData;
 
+    @Unique
+    private boolean stoneycore$droppedThisHit = false;
+
     LivingEntityMixin(final EntityType<?> type, final Level level) {
         super(type, level);
     }
@@ -131,6 +134,11 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     }
 
     @Inject(method = "hurt", at = @At("HEAD"))
+    private void stoneycore$resetDropFlag(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        stoneycore$droppedThisHit = false;
+    }
+
+    @Inject(method = "hurt", at = @At("HEAD"))
     private void stoneycore$injectDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (this.level().isClientSide()) return;
         if (source.getEntity() instanceof LivingEntity attacker) {
@@ -179,12 +187,16 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             cir.cancel();
         }
 
-        if (livingEntity instanceof ServerPlayer serverPlayer && StaminaData.isStaminaBlocked((IEntityDataSaver) serverPlayer) &&
-                StoneyCore.getConfig().combatOptions().getRealisticCombat()) {
+        if (livingEntity instanceof ServerPlayer serverPlayer
+                && StaminaData.isStaminaBlocked((IEntityDataSaver) serverPlayer)
+                && StoneyCore.getConfig().combatOptions().getRealisticCombat()
+                && !stoneycore$droppedThisHit) {
+
             ItemStack handStack = serverPlayer.getMainHandItem();
             if (!handStack.isEmpty()) {
-                serverPlayer.drop(handStack, false, true);
+                serverPlayer.drop(handStack.copy(), false, true);
                 serverPlayer.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+                stoneycore$droppedThisHit = true;
             }
         }
     }
@@ -257,14 +269,14 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
         strength += WeaponDefinitionsStorage.getData(weaponStack).melee().bonusKnockback();
 
-        strength *= (double)1.0F - livingEntity.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE);
-        if (!(strength <= (double)0.0F)) {
+        strength *= (double) 1.0F - livingEntity.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE);
+        if (!(strength <= (double) 0.0F)) {
             livingEntity.hasImpulse = true;
             Vec3 vec3 = livingEntity.getDeltaMovement();
             Vec3 vec32 = (new Vec3(x, 0.0F, z)).normalize().scale(strength);
-            livingEntity.setDeltaMovement(vec3.x / (double)2.0F - vec32.x,
-                    livingEntity.onGround() ? vec3.y / (double)2.0F + strength : vec3.y,
-                    vec3.z / (double)2.0F - vec32.z);
+            livingEntity.setDeltaMovement(vec3.x / (double) 2.0F - vec32.x,
+                    livingEntity.onGround() ? vec3.y / (double) 2.0F + strength : vec3.y,
+                    vec3.z / (double) 2.0F - vec32.z);
         }
 
         ci.cancel();
@@ -273,7 +285,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     @Inject(method = "getDamageAfterArmorAbsorb", at = @At("HEAD"), cancellable = true)
     private void stoneycore$getDamageAfterArmorAbsorb(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
         LivingEntity livingEntity = (LivingEntity) (Object) this;
-        amount = CombatRules.getDamageAfterAbsorb(amount, (float)livingEntity.getArmorValue(), (float)livingEntity.getAttributeValue(Attributes.ARMOR_TOUGHNESS));
+        amount = CombatRules.getDamageAfterAbsorb(amount, (float) livingEntity.getArmorValue(), (float) livingEntity.getAttributeValue(Attributes.ARMOR_TOUGHNESS));
 
         for (ItemStack armorStack : livingEntity.getArmorSlots()) {
             if (armorStack.isEmpty()) continue;
