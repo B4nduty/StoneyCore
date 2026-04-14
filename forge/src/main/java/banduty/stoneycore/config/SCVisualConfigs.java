@@ -32,8 +32,6 @@ public class SCVisualConfigs {
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
 
-        builder.push("visual");
-
         damageIndicator = builder
                 .comment("Damage Indicator | Default: false")
                 .define("damageIndicator", false);
@@ -93,8 +91,6 @@ public class SCVisualConfigs {
         claimOutlineColor = builder
                 .comment("Claim Outline Render Hex Color")
                 .define("claimOutlineColor", "0x00FFFF80");
-
-        builder.pop();
 
         SPEC = builder.build();
     }
