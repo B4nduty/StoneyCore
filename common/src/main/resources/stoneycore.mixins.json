@@ -14,6 +14,7 @@
     "LivingEntityMixin",
     "MobEntityAccessor",
     "PersistentProjectileEntityMixin",
+    "PlayerDataMixin",
     "PlayerMixin",
     "SpawnHelperMixin",
     "StairBlockMixin",

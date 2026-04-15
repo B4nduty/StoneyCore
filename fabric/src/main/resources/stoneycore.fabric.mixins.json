@@ -6,8 +6,7 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "FItemEntityMixin",
-    "FPlayerMixin",
-    "PlayerDataMixin"
+    "FPlayerMixin"
   ],
   "client": [
     "FGuiMixin"
