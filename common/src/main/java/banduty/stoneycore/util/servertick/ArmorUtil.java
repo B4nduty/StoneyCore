@@ -39,7 +39,16 @@ public class ArmorUtil {
             );
 
             // Armor is missing → remove the accessory
-            player.addItem(equippedStack.copy());
+            ItemStack copy = equippedStack.copy();
+
+            // Try to add to inventory
+            boolean added = player.addItem(copy);
+
+            // If inventory is full, drop it
+            if (!added) {
+                player.drop(copy, false);
+            }
+
             equippedStack.setCount(0);
         }
     }
