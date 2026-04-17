@@ -131,26 +131,6 @@ public class FabricConfigImpl extends ConfigImpl {
             }
 
             @Override
-            public int hexColorEffective() {
-                return hexToInt(config.visualOptions.hexColorEffective());
-            }
-
-            @Override
-            public int hexColorCritical() {
-                return hexToInt(config.visualOptions.hexColorCritical());
-            }
-
-            @Override
-            public int hexColorMaximum() {
-                return hexToInt(config.visualOptions.hexColorMaximum());
-            }
-
-            @Override
-            public boolean armWave() {
-                return config.visualOptions.armWave();
-            }
-
-            @Override
             public int claimOutlineColor() {
                 return hexToInt(config.visualOptions.claimOutlineColor());
             }

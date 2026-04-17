@@ -112,22 +112,6 @@ public class SCConfigs {
         public String hexColorTooFarClose = "0xFFFFFF";
 
         @Sync(Option.SyncMode.NONE)
-        @Comment("Hex Color Effective")
-        public String hexColorEffective = "0xcbbd63";
-
-        @Sync(Option.SyncMode.NONE)
-        @Comment("Hex Color Critical")
-        public String hexColorCritical = "0xff4949";
-
-        @Sync(Option.SyncMode.NONE)
-        @Comment("Hex Color Maximum")
-        public String hexColorMaximum = "0xFFFFFF";
-
-        @Sync(Option.SyncMode.NONE)
-        @Comment("Player waves arms when in land under siege and not participant")
-        public boolean armWave = true;
-
-        @Sync(Option.SyncMode.NONE)
         @Comment("Claim Outline Render Hex Color")
         public String claimOutlineColor = "0x00FFFF80";
     }

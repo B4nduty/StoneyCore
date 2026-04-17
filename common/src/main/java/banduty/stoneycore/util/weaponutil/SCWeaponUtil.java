@@ -17,8 +17,10 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.Comparator;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class SCWeaponUtil {
     private static final double BACKSTAB_ANGLE_THRESHOLD = -0.5;
@@ -112,35 +114,28 @@ public final class SCWeaponUtil {
         return getRadius(item, 4);
     }
 
+    public static List<Double> getSortedDamageValues(SCDamageType type, Item item) {
+        WeaponDefinitionData attributeData = WeaponDefinitionsStorage.getData(item);
+        if (attributeData == null || attributeData.melee() == null) return Collections.emptyList();
+
+        Map<String, Float> levels = attributeData.melee().damage().get(type.name());
+        if (levels == null || levels.isEmpty()) return Collections.emptyList();
+
+        return levels.values().stream()
+                .map(Float::doubleValue)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
     public static double getMaxDamage(SCDamageType scDamageType, Item item) {
-        WeaponDefinitionData data = WeaponDefinitionsStorage.getData(item);
-        if (data == null || data.melee() == null) return 0.0;
-
-        Map<String, Float> typeLevels = data.melee().damage().get(scDamageType.name());
-        if (typeLevels == null || typeLevels.isEmpty()) return 0.0;
-
-        return typeLevels.values().stream()
-                .mapToDouble(Float::doubleValue)
-                .max()
-                .orElse(0.0);
+        List<Double> values = getSortedDamageValues(scDamageType, item);
+        return values.isEmpty() ? 0.0 : values.get(values.size() - 1);
     }
 
     public static double getSecondMaxDamage(SCDamageType scDamageType, Item item) {
-        WeaponDefinitionData data = WeaponDefinitionsStorage.getData(item);
-        if (data == null || data.melee() == null) return 0.0;
-
-        Map<String, Float> typeLevels = data.melee().damage().get(scDamageType.name());
-        if (typeLevels == null || typeLevels.size() < 2) {
-            return 0.0;
-        }
-
-        return typeLevels.values().stream()
-                .mapToDouble(Float::doubleValue)
-                .boxed()
-                .sorted(Comparator.reverseOrder())
-                .skip(1)
-                .findFirst()
-                .orElse(0.0);
+        List<Double> values = getSortedDamageValues(scDamageType, item);
+        return values.size() < 2 ? 0.0 : values.get(values.size() - 2);
     }
 
     public static double getRadius(Item item, int index) {

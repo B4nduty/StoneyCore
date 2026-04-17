@@ -22,11 +22,7 @@ public class SCVisualConfigs {
     public static final ForgeConfigSpec.IntValue staminaBarYOffset;
 
     public static final ForgeConfigSpec.ConfigValue<String> hexColorTooFarClose;
-    public static final ForgeConfigSpec.ConfigValue<String> hexColorEffective;
-    public static final ForgeConfigSpec.ConfigValue<String> hexColorCritical;
-    public static final ForgeConfigSpec.ConfigValue<String> hexColorMaximum;
 
-    public static final ForgeConfigSpec.BooleanValue armWave;
     public static final ForgeConfigSpec.ConfigValue<String> claimOutlineColor;
 
     static {
@@ -71,22 +67,6 @@ public class SCVisualConfigs {
         hexColorTooFarClose = builder
                 .comment("Hex Color Too/Far Close")
                 .define("hexColorTooFarClose", "0xFFFFFF");
-
-        hexColorEffective = builder
-                .comment("Hex Color Effective")
-                .define("hexColorEffective", "0xCBBD63");
-
-        hexColorCritical = builder
-                .comment("Hex Color Critical")
-                .define("hexColorCritical", "0xFF4949");
-
-        hexColorMaximum = builder
-                .comment("Hex Color Maximum")
-                .define("hexColorMaximum", "0xFFFFFF");
-
-        armWave = builder
-                .comment("Player waves arms when in land under siege_engine and not participant")
-                .define("armWave", true);
 
         claimOutlineColor = builder
                 .comment("Claim Outline Render Hex Color")

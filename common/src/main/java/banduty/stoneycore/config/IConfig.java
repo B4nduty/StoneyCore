@@ -50,14 +50,6 @@ public interface IConfig {
 
         int hexColorTooFarClose();
 
-        int hexColorEffective();
-
-        int hexColorCritical();
-
-        int hexColorMaximum();
-
-        boolean armWave();
-
         int claimOutlineColor();
     }
 

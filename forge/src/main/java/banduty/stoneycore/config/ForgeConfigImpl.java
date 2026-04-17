@@ -125,26 +125,6 @@ public class ForgeConfigImpl extends ConfigImpl {
             }
 
             @Override
-            public int hexColorEffective() {
-                return hexToInt(SCVisualConfigs.hexColorEffective.get());
-            }
-
-            @Override
-            public int hexColorCritical() {
-                return hexToInt(SCVisualConfigs.hexColorCritical.get());
-            }
-
-            @Override
-            public int hexColorMaximum() {
-                return hexToInt(SCVisualConfigs.hexColorMaximum.get());
-            }
-
-            @Override
-            public boolean armWave() {
-                return SCVisualConfigs.armWave.get();
-            }
-
-            @Override
             public int claimOutlineColor() {
                 return hexToInt(SCVisualConfigs.claimOutlineColor.get());
             }
