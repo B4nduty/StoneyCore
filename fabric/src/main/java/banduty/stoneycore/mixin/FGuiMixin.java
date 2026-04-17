@@ -1,6 +1,8 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.client.overlay.StoneyCoreOverlayRenderer;
+import banduty.stoneycore.platform.ClientPlatform;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.data.playerdata.StaminaData;
@@ -150,5 +152,18 @@ public class FGuiMixin {
     @Unique
     private void stoneyCore$renderStaminaUnit(GuiGraphics guiGraphics, int x, int y, ResourceLocation texture, int width, int height) {
         guiGraphics.blit(texture, x, y, 0, 0, width, height, width, height);
+    }
+
+    @Unique
+    private static final StoneyCoreOverlayRenderer OVERLAY_RENDERER = new StoneyCoreOverlayRenderer();
+
+    // Render visor BEFORE HUD elements
+    @Inject(method = "render", at = @At(value = "HEAD"))
+    private void renderVisorBeforeHud(GuiGraphics guiGraphics, float partialTick, CallbackInfo ci) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null || minecraft.options.hideGui) return;
+        if (ClientPlatform.getKeyInputHelper().isHidingVisor()) return;
+
+        OVERLAY_RENDERER.render(guiGraphics, partialTick);
     }
 }
