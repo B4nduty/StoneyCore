@@ -4,7 +4,6 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.melee.SCDamageType;
 import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
 import banduty.stoneycore.util.data.playerdata.StaminaData;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.render.TextureData;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
@@ -47,37 +46,41 @@ public class GuiMixin {
                 ? 9999
                 : playerPos.distanceTo(client.crosshairPickEntity.position());
 
-        WeaponDefinitionData weaponData = WeaponDefinitionsStorage.getData(item);
-
-        SCDamageType damageType = SCDamageType.determine(mainHandStack, weaponData, player);
-        stoneyCore$renderCrosshair(item, guiGraphics, distance, damageType);
+        SCDamageType damageType = SCDamageType.determine(mainHandStack, player);
+        stoneyCore$calculateCrosshair(item, guiGraphics, distance, damageType);
 
         ci.cancel();
     }
 
     @Unique
-    private void stoneyCore$renderCrosshair(Item item, GuiGraphics guiGraphics, double distance, SCDamageType damageType) {
+    private void stoneyCore$calculateCrosshair(Item item, GuiGraphics guiGraphics, double distance, SCDamageType damageType) {
         Minecraft client = Minecraft.getInstance();
         int centerX = client.getWindow().getGuiScaledWidth() / 2;
         int centerY = client.getWindow().getGuiScaledHeight() / 2;
 
-        ResourceLocation[] textures = {
-                TOO_FAR_CLOSE,
-                stoneyCore$getCrosshair(damageType, "effective"),
-                stoneyCore$getCrosshair(damageType, "critical"),
-                stoneyCore$getCrosshair(damageType, "effective"),
-                stoneyCore$getCrosshair(damageType, "maximum")
-        };
+        double currentDamage = SCWeaponUtil.calculateDamage(item, distance, damageType);
 
-        for (int i = 0; i < textures.length; i++) {
-            double radius = SCWeaponUtil.getRadius(item, i) + 0.25F;
-            if (distance <= radius) {
-                stoneyCore$renderCrosshairTexture(guiGraphics, textures[i], centerX, centerY, stoneyCore$getColorForIndex(i));
-                return;
-            }
+        double maxDamage = SCWeaponUtil.getMaxDamage(damageType, item);
+        double secondMaxDamage = SCWeaponUtil.getSecondMaxDamage(damageType, item);
+
+        ResourceLocation texture;
+        int color;
+
+        if (currentDamage <= 0) {
+            texture = TOO_FAR_CLOSE;
+            color = StoneyCore.getConfig().visualOptions().hexColorTooFarClose();
+        } else if (currentDamage >= maxDamage) {
+            texture = stoneyCore$getCrosshair(damageType, "critical");
+            color = StoneyCore.getConfig().visualOptions().hexColorCritical();
+        } else if (currentDamage >= secondMaxDamage) {
+            texture = stoneyCore$getCrosshair(damageType, "effective");
+            color = StoneyCore.getConfig().visualOptions().hexColorEffective();
+        } else {
+            texture = stoneyCore$getCrosshair(damageType, "maximum");
+            color = StoneyCore.getConfig().visualOptions().hexColorMaximum();
         }
 
-        stoneyCore$renderCrosshairTexture(guiGraphics, TOO_FAR_CLOSE, centerX, centerY, StoneyCore.getConfig().visualOptions().hexColorTooFarClose());
+        stoneyCore$renderCrosshairTexture(guiGraphics, texture, centerX, centerY, color);
     }
 
     @Unique
@@ -89,17 +92,6 @@ public class GuiMixin {
         RenderSystem.setShaderColor(rgb[0], rgb[1], rgb[2], 1.0f);
         guiGraphics.blit(tex, centerX - texData.offsetX(), centerY - texData.offsetY(), 0, 0, texData.width(), texData.height(), texData.width(), texData.height());
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-    }
-
-    @Unique
-    private int stoneyCore$getColorForIndex(int i) {
-        return switch (i) {
-            case 0 -> StoneyCore.getConfig().visualOptions().hexColorTooFarClose();
-            case 1, 3 -> StoneyCore.getConfig().visualOptions().hexColorEffective();
-            case 2 -> StoneyCore.getConfig().visualOptions().hexColorCritical();
-            case 4 -> StoneyCore.getConfig().visualOptions().hexColorMaximum();
-            default -> 0xFFFFFF;
-        };
     }
 
     @Unique

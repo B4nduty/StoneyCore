@@ -52,8 +52,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntFunction;
 
-import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
-
 @Mixin(Item.class)
 public abstract class ItemMixin {
     @Shadow
@@ -135,7 +133,7 @@ public abstract class ItemMixin {
 
     @Unique
     private void stoneyCore$handleWeaponUse(Level level, Player player, InteractionHand hand, ItemStack stack, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
-        if (!level.isClientSide() && player.isShiftKeyDown() && stoneyCore$isBludgeoningWeapon(stack.getItem())) {
+        if (!level.isClientSide() && player.isShiftKeyDown() && SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, stack.getItem())) {
             stoneyCore$toggleBludgeoningMode(stack);
             cir.setReturnValue(InteractionResultHolder.success(stack));
             return;
@@ -155,11 +153,6 @@ public abstract class ItemMixin {
         }
 
         cir.setReturnValue(InteractionResultHolder.fail(stack));
-    }
-
-    @Unique
-    private boolean stoneyCore$isBludgeoningWeapon(Item item) {
-        return getDamageValues(SCDamageType.BLUDGEONING, item) > 0;
     }
 
     @Unique
@@ -252,15 +245,15 @@ public abstract class ItemMixin {
 
         Item item = stack.getItem();
         if (WeaponDefinitionsStorage.isMelee(stack)) {
-            double slashing = getDamageValues(SCDamageType.SLASHING, item);
-            double piercing = getDamageValues(SCDamageType.PIERCING, item);
-            double bludgeoning = getDamageValues(SCDamageType.BLUDGEONING, item);
+            boolean hasSlashing = SCWeaponUtil.hasDamageType(SCDamageType.SLASHING, item);
+            boolean hasPiercing = SCWeaponUtil.hasDamageType(SCDamageType.PIERCING, item);
+            boolean hasBludgeoning = SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, item);
 
-            if (slashing > 0 && bludgeoning > 0) {
+            if (hasSlashing && hasBludgeoning) {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.shift-right_click-bludgeoning"));
             }
 
-            if (slashing == 0 && bludgeoning > 0 && piercing > 0) {
+            if (!hasSlashing && hasBludgeoning && hasPiercing) {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.shift-right_click-bludgeoning-piercing"));
             }
 
@@ -268,17 +261,21 @@ public abstract class ItemMixin {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.right_click-replant"));
             }
 
+            double slashing = SCWeaponUtil.getSecondMaxDamage(SCDamageType.SLASHING, item);
+            double bludgeoning = SCWeaponUtil.getSecondMaxDamage(SCDamageType.BLUDGEONING, item);
+            double piercing = SCWeaponUtil.getSecondMaxDamage(SCDamageType.PIERCING, item);
+
             if (stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
                 slashing *= 0.25f;
                 bludgeoning *= 0.25f;
                 piercing *= 0.25f;
             }
 
-            if (slashing != 0)
+            if (hasSlashing)
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.slashingDamage", slashing).withStyle(ChatFormatting.GREEN));
-            if (bludgeoning != 0)
+            if (hasBludgeoning)
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.bludgeoningDamage", bludgeoning).withStyle(ChatFormatting.GREEN));
-            if (piercing != 0)
+            if (hasPiercing)
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.piercingDamage", piercing).withStyle(ChatFormatting.GREEN));
         }
 

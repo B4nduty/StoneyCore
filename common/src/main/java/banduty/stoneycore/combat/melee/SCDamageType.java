@@ -7,6 +7,7 @@ import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
+import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import com.mojang.serialization.Codec;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,8 +16,6 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-
-import static banduty.stoneycore.util.weaponutil.SCWeaponUtil.getDamageValues;
 
 public enum SCDamageType {
     SLASHING,
@@ -29,23 +28,21 @@ public enum SCDamageType {
     );
 
     // Determination Logic
-    public static SCDamageType determine(ItemStack mainHandStack, WeaponDefinitionData weaponData, Player player) {
+    public static SCDamageType determine(ItemStack mainHandStack, Player player) {
         Item item = mainHandStack.getItem();
         boolean isBludgeoningNBT = NBTDataHelper.get(mainHandStack, INBTKeys.BLUDGEONING, false);
         boolean isPiercingCombo = isPiercingAnimation(player, item);
 
         boolean bludgeoningToPiercing =
-                getDamageValues(SLASHING, item) == 0 &&
-                        getDamageValues(SCDamageType.PIERCING, item) > 0 &&
-                        getDamageValues(SCDamageType.BLUDGEONING, item) > 0;
+                !SCWeaponUtil.hasDamageType(SCDamageType.SLASHING, item) &&
+                        SCWeaponUtil.hasDamageType(SCDamageType.PIERCING, item) &&
+                        SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, item);
 
-        SCDamageType onlyType = weaponData.melee().onlyDamageType();
-
-        if (isBludgeoningNBT || onlyType == SCDamageType.BLUDGEONING) {
+        if (isBludgeoningNBT || SCWeaponUtil.isOnlyDamageType(SCDamageType.BLUDGEONING, item)) {
             return SCDamageType.BLUDGEONING;
         }
 
-        if (isPiercingCombo || bludgeoningToPiercing || onlyType == SCDamageType.PIERCING) {
+        if (isPiercingCombo || bludgeoningToPiercing || SCWeaponUtil.isOnlyDamageType(SCDamageType.PIERCING, item)) {
             return SCDamageType.PIERCING;
         }
 

@@ -28,15 +28,18 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
     ).apply(instance, (usage, melee, ranged, ammo) ->
             new WeaponDefinitionData(usage, melee.orElse(null), ranged.orElse(null), ammo.orElse(null))));
 
-    public record MeleeData(Map<String, Float> damage, Map<String, Double> radius, int[] piercingAnimation,
-                            int animation, SCDamageType onlyDamageType, double deflectChance, double bonusKnockback) {
+    public record MeleeData(Map<String, Map<String, Float>> damage, Map<String, Double> radius, int[] piercingAnimation,
+                            int animation, double deflectChance, double bonusKnockback) {
+
         public static final Codec<MeleeData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                Codec.unboundedMap(Codec.STRING, Codec.FLOAT).xmap(
+                Codec.unboundedMap(Codec.STRING, Codec.unboundedMap(Codec.STRING, Codec.FLOAT)).xmap(
                         map -> {
-                            Map<String, Float> upperCaseMap = new HashMap<>();
-                            for (Map.Entry<String, Float> entry : map.entrySet()) {
-                                upperCaseMap.put(entry.getKey().toUpperCase(), entry.getValue());
-                            }
+                            Map<String, Map<String, Float>> upperCaseMap = new HashMap<>();
+                            map.forEach((type, levels) -> {
+                                Map<String, Float> levelMap = new HashMap<>();
+                                levels.forEach((lvl, val) -> levelMap.put(lvl.toLowerCase(), val));
+                                upperCaseMap.put(type.toUpperCase(), levelMap);
+                            });
                             return upperCaseMap;
                         },
                         map -> map
@@ -47,11 +50,9 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
                         array -> Arrays.stream(array).boxed().toList()
                 ).optionalFieldOf("piercingAnimation", new int[0]).forGetter(MeleeData::piercingAnimation),
                 Codec.INT.optionalFieldOf("animation", 0).forGetter(MeleeData::animation),
-                SCDamageType.CODEC.optionalFieldOf("onlyDamageType").forGetter(md -> Optional.ofNullable(md.onlyDamageType)),
                 Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(MeleeData::deflectChance),
                 Codec.DOUBLE.optionalFieldOf("bonusKnockback", 0.0).forGetter(MeleeData::bonusKnockback)
-        ).apply(instance, (damage, radius, piercingAnimation, animation, onlyDamageType, deflectChance, bonusKnockback) ->
-                new MeleeData(damage, radius, piercingAnimation, animation, onlyDamageType.orElse(null), deflectChance, bonusKnockback)));
+        ).apply(instance, MeleeData::new));
     }
 
     public record RangedData(String id, float baseDamage, SCDamageType damageType, int maxUseTime,

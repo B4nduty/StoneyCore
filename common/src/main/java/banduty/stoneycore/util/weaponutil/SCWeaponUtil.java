@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Comparator;
 import java.util.Map;
 
 public final class SCWeaponUtil {
@@ -27,24 +28,50 @@ public final class SCWeaponUtil {
         throw new UnsupportedOperationException("Utility class should not be instantiated");
     }
 
-    public static double getDamageValues(SCDamageType key, Item item) {
+    public static double getDamageValues(SCDamageType type, Item item, int levelIndex) {
         WeaponDefinitionData attributeData = WeaponDefinitionsStorage.getData(item);
-        Map<String, Float> damageValues = attributeData.melee().damage();
+        if (attributeData.melee() == null) return 0f;
 
-        return damageValues.getOrDefault(key.name(), 0f);
+        Map<String, Float> levels = attributeData.melee().damage().get(type.name());
+        if (levels == null) return 0f;
+
+        String levelKey = "level_" + levelIndex;
+        return levels.getOrDefault(levelKey, 0f);
+    }
+
+    public static boolean hasDamageType(SCDamageType type, Item item) {
+        WeaponDefinitionData data = WeaponDefinitionsStorage.getData(item);
+        if (data.melee() == null) return false;
+        Map<String, Float> levels = data.melee().damage().get(type.name());
+        return levels != null && levels.values().stream().anyMatch(v -> v > 0);
+    }
+
+    public static boolean isOnlyDamageType(SCDamageType type, Item item) {
+        boolean hasSlashing = hasDamageType(SCDamageType.SLASHING, item);
+        boolean hasPiercing = hasDamageType(SCDamageType.PIERCING, item);
+        boolean hasBludgeoning = hasDamageType(SCDamageType.BLUDGEONING, item);
+
+        return switch (type) {
+            case SLASHING -> hasSlashing && !hasPiercing && !hasBludgeoning;
+            case PIERCING -> hasPiercing && !hasSlashing && !hasBludgeoning;
+            case BLUDGEONING -> hasBludgeoning && !hasSlashing && !hasPiercing;
+        };
     }
 
     public static SCDamageType calculateDamageType(ItemStack stack, int comboCount) {
-        boolean bludgeoningToPiercing = getDamageValues(SCDamageType.SLASHING, stack.getItem()) == 0
-                && getDamageValues(SCDamageType.PIERCING, stack.getItem()) > 0
-                && getDamageValues(SCDamageType.BLUDGEONING, stack.getItem()) > 0;
-        boolean isBludgeoning = NBTDataHelper.get(stack, INBTKeys.BLUDGEONING, false);
-        boolean isPiercing = isPiercingWeapon(stack.getItem(), comboCount);
+        Item item = stack.getItem();
+        boolean hasSlashing = hasDamageType(SCDamageType.SLASHING, item);
+        boolean hasPiercing = hasDamageType(SCDamageType.PIERCING, item);
+        boolean hasBludgeoning = hasDamageType(SCDamageType.BLUDGEONING, item);
 
-        if (isBludgeoning ^ bludgeoningToPiercing || WeaponDefinitionsStorage.getData(stack).melee().onlyDamageType() == SCDamageType.BLUDGEONING) {
+        boolean bludgeoningToPiercing = !hasSlashing && hasPiercing && hasBludgeoning;
+        boolean isBludgeoningNBT = NBTDataHelper.get(stack, INBTKeys.BLUDGEONING, false);
+        boolean isPiercingLogic = isPiercingWeapon(item, comboCount);
+
+        if (isBludgeoningNBT ^ bludgeoningToPiercing || isOnlyDamageType(SCDamageType.BLUDGEONING, item)) {
             return SCDamageType.BLUDGEONING;
         }
-        if (isPiercing || bludgeoningToPiercing) {
+        if (isPiercingLogic || bludgeoningToPiercing) {
             return SCDamageType.PIERCING;
         }
         return SCDamageType.SLASHING;
@@ -52,7 +79,7 @@ public final class SCWeaponUtil {
 
     private static boolean isPiercingWeapon(Item item, int comboCount) {
         return (WeaponDefinitionsStorage.getData(item).melee().animation() > 0 && isComboCountPiercing(item, comboCount)) ||
-                WeaponDefinitionsStorage.getData(item).melee().onlyDamageType() == SCDamageType.PIERCING;
+                isOnlyDamageType(SCDamageType.PIERCING, item);
     }
 
     private static boolean isComboCountPiercing(Item item, int comboCount) {
@@ -85,6 +112,37 @@ public final class SCWeaponUtil {
         return getRadius(item, 4);
     }
 
+    public static double getMaxDamage(SCDamageType scDamageType, Item item) {
+        WeaponDefinitionData data = WeaponDefinitionsStorage.getData(item);
+        if (data == null || data.melee() == null) return 0.0;
+
+        Map<String, Float> typeLevels = data.melee().damage().get(scDamageType.name());
+        if (typeLevels == null || typeLevels.isEmpty()) return 0.0;
+
+        return typeLevels.values().stream()
+                .mapToDouble(Float::doubleValue)
+                .max()
+                .orElse(0.0);
+    }
+
+    public static double getSecondMaxDamage(SCDamageType scDamageType, Item item) {
+        WeaponDefinitionData data = WeaponDefinitionsStorage.getData(item);
+        if (data == null || data.melee() == null) return 0.0;
+
+        Map<String, Float> typeLevels = data.melee().damage().get(scDamageType.name());
+        if (typeLevels == null || typeLevels.size() < 2) {
+            return 0.0;
+        }
+
+        return typeLevels.values().stream()
+                .mapToDouble(Float::doubleValue)
+                .boxed()
+                .sorted(Comparator.reverseOrder())
+                .skip(1)
+                .findFirst()
+                .orElse(0.0);
+    }
+
     public static double getRadius(Item item, int index) {
         WeaponDefinitionData attributeData = WeaponDefinitionsStorage.getData(item);
         Map<String, Double> radiusValues = attributeData.melee().radius();
@@ -106,21 +164,10 @@ public final class SCWeaponUtil {
         for (int i = 0; i <= 4; i++) {
             double radius = getRadius(item, i);
             if (distance < radius + RADIUS_TOLERANCE) {
-                double attackDamage = getDamageValues(key, item);
-                float percentage = calculatePercentageForIndex(i);
-                return attackDamage * percentage;
+                return getDamageValues(key, item, i);
             }
         }
         return 0.0F;
-    }
-
-    private static float calculatePercentageForIndex(int index) {
-        return switch (index) {
-            case 4 -> (1f/3f);
-            case 3, 1 -> (2f/3f);
-            case 2 -> 1.0f;
-            default -> 0f;
-        };
     }
 
     public static void replantCrop(Level level, BlockPos pos, CropBlock cropBlock, Player player, ItemStack stack, InteractionHand hand) {

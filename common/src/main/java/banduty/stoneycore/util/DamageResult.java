@@ -23,6 +23,9 @@ public record DamageResult(double damage, SCDamageType damageType) {
         }
 
         double baseDamage = SCWeaponUtil.calculateDamage(stack.getItem(), actualDistance, damageType);
+        if (stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
+            baseDamage *= 0.25f;
+        }
         double enchantmentBonus = EnchantmentHelper.getDamageBonus(stack, target.getMobType());
         baseDamage += enchantmentBonus;
 
