@@ -1,5 +1,6 @@
 package banduty.stoneycore.util.render;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -41,7 +42,9 @@ public class LandTitleRenderer {
         int x = (screenWidth - textWidth) / 2;
         int y = screenHeight / 4;
 
+        RenderSystem.enableBlend();
         if (currentTitle != null) guiGraphics.drawString(font, currentTitle, x, y, color, true);
+        RenderSystem.disableBlend();
     }
 
     private int getColor() {

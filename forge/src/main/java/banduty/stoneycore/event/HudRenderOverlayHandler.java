@@ -11,6 +11,6 @@ import net.minecraftforge.fml.common.Mod;
 public class HudRenderOverlayHandler {
     @SubscribeEvent
     public static void onRender(RenderGuiOverlayEvent.Post event) {
-        SCOverlayRenderer.render(event.getGuiGraphics(), event.getPartialTick());
+        SCOverlayRenderer.render(event.getGuiGraphics());
     }
 }

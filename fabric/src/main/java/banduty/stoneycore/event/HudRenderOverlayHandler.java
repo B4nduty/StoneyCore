@@ -6,6 +6,8 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 public class HudRenderOverlayHandler {
 
     public static void register() {
-        HudRenderCallback.EVENT.register(SCOverlayRenderer::render);
+        HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> {
+            SCOverlayRenderer.render(guiGraphics);
+        });
     }
 }
