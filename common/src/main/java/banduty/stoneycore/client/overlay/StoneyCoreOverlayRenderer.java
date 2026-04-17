@@ -146,16 +146,18 @@ public class StoneyCoreOverlayRenderer {
         if (noiseTextures == null) return;
 
         ResourceLocation noiseTexture = noiseTextures[currentNoiseTexture];
-        float alpha = (float) (1 - Math.max(0, 1.0f - staminaPercentage)) * 0.2f;
+        float alpha = (float) Math.max(0, 1.0f - staminaPercentage);
 
         if (currentNoiseTextureTime-- <= 0 && !Minecraft.getInstance().isPaused()) {
             currentNoiseTexture = (currentNoiseTexture + 1) % noiseTextures.length;
             currentNoiseTextureTime = 10;
         }
 
+        RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0f, 0.5f, 0.5f, alpha);
         guiGraphics.blit(noiseTexture, 0, 0, 0, 0, width, height, width, height);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderSystem.disableBlend();
     }
 
     private void renderTunnelVision(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
