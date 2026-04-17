@@ -7,10 +7,7 @@ import banduty.stoneycore.client.SCAccessoryItemRenderer;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.SCUnderArmourRenderer;
 import banduty.stoneycore.entity.ModEntities;
-import banduty.stoneycore.event.AttackCancelHandler;
-import banduty.stoneycore.event.ClientTickHandler;
-import banduty.stoneycore.event.ItemTooltipHandler;
-import banduty.stoneycore.event.KeyInputHandler;
+import banduty.stoneycore.event.*;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.armor.ISCUnderArmor;
 import banduty.stoneycore.items.armor.SCAccessoryItem;
@@ -57,6 +54,8 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(new ClientTickHandler());
         KeyInputHandler.register();
         EntityRendererRegistry.register(ModEntities.SC_BULLET, SCBulletEntityRenderer::new);
+        HudRenderOverlayHandler.register();
+
         for (Item item : BuiltInRegistries.ITEM) {
             if (((item instanceof SCAccessoryItem || item instanceof ISCUnderArmor) && item instanceof DyeableLeatherItem dyeableItem)) {
                 ColorProviderRegistry.ITEM.register((stack, tintIndex) ->
