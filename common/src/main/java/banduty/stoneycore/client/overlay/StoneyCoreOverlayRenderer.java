@@ -132,7 +132,7 @@ public class StoneyCoreOverlayRenderer {
     private void renderBlur(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
         float blurStrength = (float) (Math.max(0.1f, 1.0f - staminaPercentage) * 0.4f);
         int alpha = (int) (blurStrength * 255);
-        int color = (alpha << 24) | 0x000000;
+        int color = alpha << 24;
         guiGraphics.fill(0, 0, width, height, color);
 
         try {
@@ -146,7 +146,7 @@ public class StoneyCoreOverlayRenderer {
         if (noiseTextures == null) return;
 
         ResourceLocation noiseTexture = noiseTextures[currentNoiseTexture];
-        float alpha = (float) (-0.001f * currentNoiseTextureTime * (currentNoiseTextureTime - 10) + Math.max(0, 1.0f - staminaPercentage) * 0.2f);
+        float alpha = (float) (1 - Math.max(0, 1.0f - staminaPercentage)) * 0.2f;
 
         if (currentNoiseTextureTime-- <= 0 && !Minecraft.getInstance().isPaused()) {
             currentNoiseTexture = (currentNoiseTexture + 1) % noiseTextures.length;
