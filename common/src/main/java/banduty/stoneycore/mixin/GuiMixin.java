@@ -63,8 +63,9 @@ public class GuiMixin {
 
         List<Double> damageValues = SCWeaponUtil.getSortedDamageValues(damageType, item);
 
-        ResourceLocation texture;
+        ResourceLocation texture = null;
         int color;
+        boolean hasTexture = false;
 
         if (currentDamage <= 0 || damageValues.isEmpty()) {
             texture = TOO_FAR_CLOSE;
@@ -73,11 +74,17 @@ public class GuiMixin {
             int index = 0;
             for (int i = 0; i < damageValues.size(); i++) {
                 if (currentDamage >= damageValues.get(i)) {
-                    index = i;
+                    if (damageValues.get(i) <= 0) {
+                        texture = TOO_FAR_CLOSE;
+                        hasTexture = true;
+                    } else {
+                        index = i;
+                        hasTexture = false;
+                    }
                 }
             }
 
-            texture = stoneyCore$getCrosshair(damageType, String.valueOf(index));
+            if (!hasTexture) texture = stoneyCore$getCrosshair(damageType, String.valueOf(index));
             color = 0xFFFFFF;
         }
 
