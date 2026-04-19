@@ -110,8 +110,37 @@ public final class SCWeaponUtil {
         return isBehind ? damage * 2 : damage;
     }
 
+    public static List<Double> getSortedDistances(Item item) {
+        WeaponDefinitionData attributeData = WeaponDefinitionsStorage.getData(item);
+        if (attributeData == null || attributeData.melee() == null) return Collections.emptyList();
+
+        Map<String, Double> levels = attributeData.melee().radius();
+        if (levels == null || levels.isEmpty()) return Collections.emptyList();
+
+        return levels.values().stream()
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
     public static double getMaxDistance(Item item) {
-        return getRadius(item, 4);
+        WeaponDefinitionData attributeData = WeaponDefinitionsStorage.getData(item);
+        if (attributeData == null || attributeData.melee() == null) return 0.0;
+
+        Map<String, Double> levels = attributeData.melee().radius();
+        if (levels == null || levels.isEmpty()) return 0.0;
+
+        return levels.values().stream()
+                .mapToDouble(Double::doubleValue)
+                .max()
+                .orElse(0.0);
+    }
+
+    public static double getRadius(Item item, int index) {
+        WeaponDefinitionData attributeData = WeaponDefinitionsStorage.getData(item);
+        Map<String, Double> radiusValues = attributeData.melee().radius();
+
+        return radiusValues.getOrDefault("level_" + index, 0.0);
     }
 
     public static List<Double> getSortedDamageValues(SCDamageType type, Item item) {
@@ -136,23 +165,6 @@ public final class SCWeaponUtil {
     public static double getSecondMaxDamage(SCDamageType scDamageType, Item item) {
         List<Double> values = getSortedDamageValues(scDamageType, item);
         return values.size() < 2 ? 0.0 : values.get(values.size() - 2);
-    }
-
-    public static double getRadius(Item item, int index) {
-        WeaponDefinitionData attributeData = WeaponDefinitionsStorage.getData(item);
-        Map<String, Double> radiusValues = attributeData.melee().radius();
-
-        String key;
-        switch (index) {
-            case 0 -> key = "level_0";
-            case 1 -> key = "level_1";
-            case 2 -> key = "level_2";
-            case 3 -> key = "level_3";
-            case 4 -> key = "level_4";
-            default -> throw new IllegalArgumentException("Invalid index: " + index);
-        }
-
-        return radiusValues.getOrDefault(key, 0.0);
     }
 
     public static double calculateDamage(Item item, double distance, SCDamageType key) {

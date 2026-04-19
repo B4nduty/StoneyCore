@@ -233,8 +233,10 @@ public abstract class DefinitionsProvider implements DataProvider {
             public void damage(SCDamageType type, int level, float val) {
                 damage.computeIfAbsent(type.name(), k -> new HashMap<>()).put("level_" + level, val);
             }
-            public MeleeBuilder levelRadii(double l0, double l1, double l2, double l3, double l4) {
-                radius(0, l0); radius(1, l1); radius(2, l2); radius(3, l3); radius(4, l4);
+            public MeleeBuilder levelRadii(double... levels) {
+                for (int i = 0; i < levels.length; i++) {
+                    radius(i, levels[i]);
+                }
                 return this;
             }
             public void radius(int level, double blocks) { radius.put("level_" + level, blocks);}
