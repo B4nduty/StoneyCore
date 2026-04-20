@@ -46,10 +46,10 @@ public abstract class FItemRendererMixin {
             at = @At("HEAD"),
             cancellable = true)
     public void stoneycore$onRenderItem(LivingEntity entity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, boolean leftHanded, PoseStack poseStack, MultiBufferSource multiBufferSource, Level level, int light, int overlay, int seed, CallbackInfo ci) {
-        BakedModel bakedModel = getCustomBakedModel(itemStack, entity, seed, null);
+        BakedModel bakedModel = stoneyCore$getCustomBakedModel(itemStack, entity, seed, null);
         if (itemStack.getItem() instanceof Manuscript && Manuscript.hasTargetStack(itemStack)) {
             String modelPath = "manuscript_" + Manuscript.getTargetItemPath(itemStack);
-            bakedModel = getCustomBakedModel(itemStack, entity, seed,
+            bakedModel = stoneyCore$getCustomBakedModel(itemStack, entity, seed,
                     new ModelResourceLocation(Manuscript.getTargetItemNamespace(itemStack), modelPath, "inventory"));
             if (bakedModel != null) {
                 ItemRenderer itemRenderer = (ItemRenderer) (Object) this;
@@ -81,11 +81,11 @@ public abstract class FItemRendererMixin {
     @Inject(method = "render",
             at = @At("HEAD"), cancellable = true)
     public void stoneycore$renderGUIItem(ItemStack itemStack, ItemDisplayContext renderMode, boolean leftHanded, PoseStack poseStack, MultiBufferSource multiBufferSource, int light, int overlay, BakedModel model, CallbackInfo ci) {
-        BakedModel guiBakedModel = getCustomBakedModel(itemStack, Minecraft.getInstance().player, 0, null);
+        BakedModel guiBakedModel = stoneyCore$getCustomBakedModel(itemStack, Minecraft.getInstance().player, 0, null);
 
         if (itemStack.getItem() instanceof Manuscript && Manuscript.hasTargetStack(itemStack)) {
             String modelPath = "manuscript_" + Manuscript.getTargetItemPath(itemStack);
-            guiBakedModel = getCustomBakedModel(itemStack, Minecraft.getInstance().player, 0,
+            guiBakedModel = stoneyCore$getCustomBakedModel(itemStack, Minecraft.getInstance().player, 0,
                     new ModelResourceLocation(Manuscript.getTargetItemNamespace(itemStack), modelPath, "inventory"));
             if (guiBakedModel == null) return;
             guiBakedModel.getTransforms().getTransform(renderMode).apply(leftHanded, poseStack);
@@ -93,7 +93,7 @@ public abstract class FItemRendererMixin {
             poseStack.translate(-0.5F, -0.5F, -0.5F);
 
             VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.cutout());
-            renderBakedItemModel(guiBakedModel, light, overlay, poseStack, vertexConsumer, new float[]{1, 1, 1});
+            stoneyCore$renderBakedItemModel(guiBakedModel, light, overlay, poseStack, vertexConsumer, new float[]{1, 1, 1});
             ci.cancel();
             return;
         }
@@ -102,7 +102,7 @@ public abstract class FItemRendererMixin {
             if ((renderMode == ItemDisplayContext.GUI || renderMode == ItemDisplayContext.GROUND) && model != null) {
                 poseStack.translate(-0.5F, -0.5F, -0.5F);
                 VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.cutout());
-                renderBakedItemModel(guiBakedModel, light, overlay, poseStack, vertexConsumer, new float[]{1, 1, 1});
+                stoneyCore$renderBakedItemModel(guiBakedModel, light, overlay, poseStack, vertexConsumer, new float[]{1, 1, 1});
                 ci.cancel();
             } else return;
         }
@@ -111,7 +111,7 @@ public abstract class FItemRendererMixin {
             model.getTransforms().getTransform(renderMode).apply(leftHanded, poseStack);
             poseStack.translate(-0.5F, -0.5F, -0.5F);
             VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.cutout());
-            renderBakedItemModel(guiBakedModel, light, overlay, poseStack, vertexConsumer, DyeUtil.getFloatDyeColor(itemStack));
+            stoneyCore$renderBakedItemModel(guiBakedModel, light, overlay, poseStack, vertexConsumer, DyeUtil.getFloatDyeColor(itemStack));
 
             List<Tuple<ResourceLocation, DyeColor>> bannerPatterns = PatternHelper.getBannerPatterns(itemStack);
             if (!bannerPatterns.isEmpty()) {
@@ -128,14 +128,15 @@ public abstract class FItemRendererMixin {
                         patternName = patternName.substring(0, patternName.length() - 4);
                     }
 
-                    String modelPath = itemStack.getItem() + "/" + patternName;
+                    ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(itemStack.getItem());
+                    String modelPath = itemId.getPath() + "/" + patternName;
 
                     float[] rgb = dyeColor.getTextureDiffuseColors();
                     ModelResourceLocation modelId = new ModelResourceLocation(patternId.getNamespace(), modelPath, "inventory");
 
                     RenderType renderLayer = ItemBlockRenderTypes.getRenderType(itemStack, true);
                     vertexConsumer = getFoilBufferDirect(multiBufferSource, renderLayer, true, itemStack.hasFoil());
-                    renderBakedItemModel(modelManager.getModel(modelId), light, overlay, poseStack, vertexConsumer, rgb);
+                    stoneyCore$renderBakedItemModel(modelManager.getModel(modelId), light, overlay, poseStack, vertexConsumer, rgb);
                 }
             }
             PoseStack.Pose pose = poseStack.last();
@@ -149,12 +150,12 @@ public abstract class FItemRendererMixin {
     }
 
     @Unique
-    private BakedModel getCustomBakedModel(ItemStack itemStack, LivingEntity entity, int seed, ModelResourceLocation newModelPath) {
+    private BakedModel stoneyCore$getCustomBakedModel(ItemStack itemStack, LivingEntity entity, int seed, ModelResourceLocation newModelPath) {
         Minecraft minecraft = Minecraft.getInstance();
         ModelManager modelManager = minecraft.getItemRenderer().getItemModelShaper().getModelManager();
         BakedModel bakedModel = modelManager.getMissingModel();
 
-        String modelPath = determineModelPath(itemStack);
+        String modelPath = stoneyCore$determineModelPath(itemStack);
         ModelResourceLocation iModelPath = new ModelResourceLocation(BuiltInRegistries.ITEM.getKey(itemStack.getItem()).getNamespace(), modelPath, "inventory");
         if (newModelPath != null) iModelPath = newModelPath;
         if (!modelPath.isEmpty()) {
@@ -173,26 +174,27 @@ public abstract class FItemRendererMixin {
     }
 
     @Unique
-    private String determineModelPath(ItemStack stack) {
-        if (stack.is(SCTags.GEO_2D_ITEMS.getTag())) return stack.getItem() + "_icon";
-        if (stack.is(SCTags.WEAPONS_3D.getTag())) return stack.getItem() + "_3d";
-        return stack.getItem().toString();
+    private String stoneyCore$determineModelPath(ItemStack stack) {
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        if (stack.is(SCTags.GEO_2D_ITEMS.getTag())) return id.getPath() + "_icon";
+        if (stack.is(SCTags.WEAPONS_3D.getTag())) return id.getPath() + "_3d";
+        return id.getPath();
     }
 
     @Unique
-    private void renderBakedItemModel(BakedModel model, int light, int overlay, PoseStack matrices, VertexConsumer vertices, float[] color) {
+    private void stoneyCore$renderBakedItemModel(BakedModel model, int light, int overlay, PoseStack matrices, VertexConsumer vertices, float[] color) {
         RandomSource random = RandomSource.create();
         for (Direction direction : Direction.values()) {
             random.setSeed(42L);
-            renderBakedItemQuads(matrices, vertices, model.getQuads(null, direction, random), light, overlay, color);
+            stoneyCore$renderBakedItemQuads(matrices, vertices, model.getQuads(null, direction, random), light, overlay, color);
         }
 
         random.setSeed(42L);
-        renderBakedItemQuads(matrices, vertices, model.getQuads(null, null, random), light, overlay, color);
+        stoneyCore$renderBakedItemQuads(matrices, vertices, model.getQuads(null, null, random), light, overlay, color);
     }
 
     @Unique
-    private void renderBakedItemQuads(PoseStack poseStack, VertexConsumer vertices, List<BakedQuad> quads, int light, int overlay, float[] color) {
+    private void stoneyCore$renderBakedItemQuads(PoseStack poseStack, VertexConsumer vertices, List<BakedQuad> quads, int light, int overlay, float[] color) {
         PoseStack.Pose pose = poseStack.last();
         for (BakedQuad bakedQuad : quads) {
             float r = color[0];
