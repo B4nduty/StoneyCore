@@ -261,9 +261,9 @@ public abstract class ItemMixin {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.right_click-replant"));
             }
 
-            double slashing = SCWeaponUtil.getSecondMaxDamage(SCDamageType.SLASHING, item);
-            double bludgeoning = SCWeaponUtil.getSecondMaxDamage(SCDamageType.BLUDGEONING, item);
-            double piercing = SCWeaponUtil.getSecondMaxDamage(SCDamageType.PIERCING, item);
+            double slashing = SCWeaponUtil.getMaxDamage(SCDamageType.SLASHING, item);
+            double bludgeoning = SCWeaponUtil.getMaxDamage(SCDamageType.BLUDGEONING, item);
+            double piercing = SCWeaponUtil.getMaxDamage(SCDamageType.PIERCING, item);
 
             if (stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
                 slashing *= 0.25f;

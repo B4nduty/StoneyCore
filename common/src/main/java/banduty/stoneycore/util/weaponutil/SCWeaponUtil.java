@@ -162,11 +162,6 @@ public final class SCWeaponUtil {
         return values.isEmpty() ? 0.0 : values.get(values.size() - 1);
     }
 
-    public static double getSecondMaxDamage(SCDamageType scDamageType, Item item) {
-        List<Double> values = getSortedDamageValues(scDamageType, item);
-        return values.size() < 2 ? 0.0 : values.get(values.size() - 2);
-    }
-
     public static double calculateDamage(Item item, double distance, SCDamageType key) {
         for (int i = 0; i <= 4; i++) {
             double radius = getRadius(item, i);
