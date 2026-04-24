@@ -13,7 +13,7 @@ public record LandType(ResourceLocation id, Block coreBlock, Item coreItem, int 
     public String toString() {
         return "LandType{id=" + id + ", block=" + coreBlock + ", item=" + coreItem + ", baseRadius=" + baseRadius +
                 ", itemsToExpand=" + itemsToExpand + ", expandFormula=" + expandFormula +
-                ", terrainType=" + terrainType + ", spawnChance=" + spawnChance + ", maxVisitorsPerLand=" + maxVisitorsPerLand + "}";
+                ", terrainType=" + terrainType + ",  maxAllies=" + maxAllies + ", spawnChance=" + spawnChance + ", maxVisitorsPerLand=" + maxVisitorsPerLand + "}";
     }
 
     public boolean isOf(TerrainType terrainType) {
