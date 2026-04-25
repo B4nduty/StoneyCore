@@ -163,7 +163,8 @@ public final class SCWeaponUtil {
     }
 
     public static double calculateDamage(Item item, double distance, SCDamageType key) {
-        for (int i = 0; i <= 4; i++) {
+        WeaponDefinitionData attributeData = WeaponDefinitionsStorage.getData(item);
+        for (int i = 0; i <= attributeData.melee().radius().size(); i++) {
             double radius = getRadius(item, i);
             if (distance < radius + RADIUS_TOLERANCE) {
                 return getDamageValues(key, item, i);
