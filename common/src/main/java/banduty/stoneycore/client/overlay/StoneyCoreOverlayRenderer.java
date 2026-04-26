@@ -49,6 +49,7 @@ public class StoneyCoreOverlayRenderer {
     }
 
     private void renderVisor(GuiGraphics guiGraphics, LocalPlayer player, int width, int height) {
+        if (ClientPlatform.getKeyInputHelper().isHidingVisor()) return;
         if (!Minecraft.getInstance().options.getCameraType().isFirstPerson() && !StoneyCore.getConfig().visualOptions().overlayThirdPerson())
             return;
         for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(player)) {

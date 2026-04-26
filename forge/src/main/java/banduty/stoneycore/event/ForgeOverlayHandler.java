@@ -17,19 +17,13 @@ public class ForgeOverlayHandler {
 
     // Main overlays - renders on top of HUD
     public static final IGuiOverlay MAIN_OVERLAYS = (gui, guiGraphics, partialTick, screenWidth, screenHeight) -> {
-        if (shouldRenderOverlays()) {
-            OVERLAY_RENDERER.render(guiGraphics, partialTick);
-        }
+        if (Minecraft.getInstance().player == null) return;
+
+        OVERLAY_RENDERER.render(guiGraphics, partialTick);
     };
 
     @SubscribeEvent
     public static void registerOverlays(RegisterGuiOverlaysEvent event) {
         event.registerBelowAll("main_overlays", MAIN_OVERLAYS);
-    }
-
-    private static boolean shouldRenderOverlays() {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.options.hideGui) return false;
-        return !ClientPlatform.getKeyInputHelper().isHidingVisor();
     }
 }

@@ -161,8 +161,7 @@ public class FGuiMixin {
     @Inject(method = "render", at = @At(value = "HEAD"))
     private void renderVisorBeforeHud(GuiGraphics guiGraphics, float partialTick, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.options.hideGui) return;
-        if (ClientPlatform.getKeyInputHelper().isHidingVisor()) return;
+        if (minecraft.player == null) return;
 
         OVERLAY_RENDERER.render(guiGraphics, partialTick);
     }
