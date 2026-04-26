@@ -28,13 +28,9 @@ public class StoneyCoreOverlayRenderer {
     private float lastRenderedProgress = 0.0f;
 
     public void render(GuiGraphics guiGraphics, float tickDelta) {
-        Minecraft client = Minecraft.getInstance();
-        LocalPlayer player = client.player;
+        LocalPlayer player = Minecraft.getInstance().player;
 
         if (player == null || player.isSpectator()) return;
-        if (client.options.hideGui) return;
-        if (!client.options.getCameraType().isFirstPerson() && !StoneyCore.getConfig().visualOptions().overlayThirdPerson())
-            return;
 
         int width = guiGraphics.guiWidth();
         int height = guiGraphics.guiHeight();
@@ -53,6 +49,8 @@ public class StoneyCoreOverlayRenderer {
     }
 
     private void renderVisor(GuiGraphics guiGraphics, LocalPlayer player, int width, int height) {
+        if (!Minecraft.getInstance().options.getCameraType().isFirstPerson() && !StoneyCore.getConfig().visualOptions().overlayThirdPerson())
+            return;
         for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(player)) {
             ResourceLocation visorId = AccessoriesDefinitionsStorage.getData(itemStack).visoredHelmet();
 
@@ -169,6 +167,7 @@ public class StoneyCoreOverlayRenderer {
     }
 
     private void renderVisorToggleProgress(GuiGraphics guiGraphics, float tickDelta) {
+        if (Minecraft.getInstance().options.hideGui) return;
         if (StoneyCore.getConfig().combatOptions().getToggleVisorTime() == 0
                 || !ClientPlatform.getKeyInputHelper().isTogglingVisor()
                 || ClientPlatform.getKeyInputHelper().isVisorToggled()
