@@ -26,6 +26,8 @@
     "CameraAccessor",
     "CameraMixin",
     "FItemRendererMixin",
+    "GameRendererAccessor",
+    "GameRendererMixin",
     "GuiMixin",
     "HorseModelMixin",
     "ItemInHandRendererMixin",

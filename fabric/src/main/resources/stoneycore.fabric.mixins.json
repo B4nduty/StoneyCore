@@ -8,9 +8,6 @@
     "FItemEntityMixin",
     "FPlayerMixin"
   ],
-  "client": [
-    "FGuiMixin"
-  ],
   "server": [
   ],
   "injectors": {
