@@ -14,7 +14,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -70,10 +69,13 @@ public final class SCRangeWeaponUtil {
     public static void shootArrow(Level level, ItemStack stack, Player player, ItemStack arrowStack, float pullProgress) {
         if (level == null || level.isClientSide() || player == null || arrowStack == null || arrowStack.isEmpty())
             return;
+
         if (!(arrowStack.getItem() instanceof ArrowItem arrowItem)) return;
 
         var definitionData = WeaponDefinitionsStorage.getData(stack);
         if (definitionData == null || definitionData.ranged() == null) return;
+
+        boolean isCrossbow = definitionData.ranged().id().equals("crossbow");
 
         AbstractArrow arrowEntity = arrowItem.createArrow(level, arrowStack, player);
         arrowEntity.setBaseDamage(definitionData.ranged().baseDamage() / definitionData.ranged().speed());
@@ -88,9 +90,19 @@ public final class SCRangeWeaponUtil {
             arrowEntity.setRemainingFireTicks(1000);
         }
 
-        arrowEntity.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F,
+        if (isCrossbow) {
+            arrowEntity.setShotFromCrossbow(true);
+            arrowEntity.setCritArrow(true);
+        }
+
+        arrowEntity.shootFromRotation(
+                player,
+                player.getXRot(),
+                player.getYRot(),
+                0.0F,
                 pullProgress * definitionData.ranged().speed(),
-                definitionData.ranged().divergence());
+                definitionData.ranged().divergence()
+        );
 
         if (player.isCreative()) {
             arrowEntity.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
@@ -205,41 +217,19 @@ public final class SCRangeWeaponUtil {
         var definitionData = WeaponDefinitionsStorage.getData(itemStack);
         if (definitionData == null || definitionData.ranged() == null) return 0;
         int chargeTime = Math.max(1, definitionData.ranged().rechargeTime() * 20);
-        float progress = (float) useTicks / (float) chargeTime;
+        float progress = Math.min((float) useTicks / chargeTime, 1.0F);
+        if (useTicks <= 1) progress = 0f;
         return Math.min(progress, 1.0F);
-    }
-
-    public static void loadAndPlayCrossbowSound(Level level, ItemStack stack, Player player) {
-        if (level.isClientSide()) return;
-
-        level.playSound(
-                null,
-                player.getOnPos(),
-                SoundEvents.CROSSBOW_LOADING_END,
-                SoundSource.PLAYERS,
-                1.0F,
-                1.0F / (level.getRandom().nextFloat() * 0.5F + 1.0F)
-        );
-
-        setWeaponState(stack, new WeaponState(false, true, false));
     }
 
     public static InteractionResultHolder<ItemStack> handleCrossbowUse(Level world, Player player, InteractionHand hand, ItemStack stack) {
         WeaponState state = getWeaponState(stack);
-
         if (state.isCharged()) {
-            Optional<ItemStack> arrowOpt = getArrowFromInventory(player);
-            if (arrowOpt.isPresent()) {
-                shootArrow(world, stack, player, arrowOpt.get(), 1.0F);
-                setWeaponState(stack, new WeaponState(false, false, true));
-                return InteractionResultHolder.consume(stack);
-            } else {
-                return InteractionResultHolder.fail(stack);
-            }
+            handleShoot(world, player, stack);
         } else {
             player.startUsingItem(hand);
-            return InteractionResultHolder.consume(stack);
         }
+        return InteractionResultHolder.consume(stack);
     }
 
     public record AmmoRequirement(
@@ -296,6 +286,22 @@ public final class SCRangeWeaponUtil {
     }
 
     public record WeaponState(boolean isReloading, boolean isCharged, boolean isShooting) {
+
+        public static WeaponState idle() {
+            return new WeaponState(false, false, false);
+        }
+
+        public static WeaponState reloading() {
+            return new WeaponState(true, false, false);
+        }
+
+        public static WeaponState charged() {
+            return new WeaponState(false, true, false);
+        }
+
+        public static WeaponState shooting() {
+            return new WeaponState(false, false, true);
+        }
 
         public static WeaponState fromNbt(CompoundTag tag) {
             if (tag == null) return new WeaponState(false, false, false);
