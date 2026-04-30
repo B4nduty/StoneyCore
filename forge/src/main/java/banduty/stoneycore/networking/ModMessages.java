@@ -20,8 +20,8 @@ public class ModMessages {
 
     private static int packetId = 0;
 
-    public static void register() {
-        // C2S packets
+
+    public static void registerC2SPackets() {
         CHANNEL.registerMessage(packetId++, AttackC2SPacket.class,
                 AttackC2SPacket::encode, AttackC2SPacket::decode, AttackC2SPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
@@ -37,8 +37,9 @@ public class ModMessages {
         CHANNEL.registerMessage(packetId++, ToggleVisorC2SPacket.class,
                 ToggleVisorC2SPacket::encode, ToggleVisorC2SPacket::decode, ToggleVisorC2SPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
+    }
 
-        // S2C packets
+    public static void registerS2CPackets() {
         CHANNEL.registerMessage(packetId++, StaminaBlockedS2CPacket.class,
                 StaminaBlockedS2CPacket::encode, StaminaBlockedS2CPacket::decode, StaminaBlockedS2CPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));

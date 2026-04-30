@@ -13,6 +13,7 @@ import banduty.stoneycore.model.UnderArmourBootsModel;
 import banduty.stoneycore.model.UnderArmourChestplateModel;
 import banduty.stoneycore.model.UnderArmourHelmetModel;
 import banduty.stoneycore.model.UnderArmourLeggingsModel;
+import banduty.stoneycore.networking.ModMessages;
 import banduty.stoneycore.particle.ModParticles;
 import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
@@ -48,6 +49,7 @@ public class StoneyCoreForgeClient {
             ClientPlatform.setHumanoidModelSetupAnimHelper(new ForgeHumanoidModelSetupAnimHelper());
             ClientPlatform.setKeyInputHelper(new ForgeKeyInputHelper());
             ClientPlatform.setRenderFirstPersonAccessoryArmorHelper(new ForgeRenderFirstPersonAccessoryArmorHelper());
+            ModMessages.registerC2SPackets();
             BlockEntityRenderers.register(
                     ModBlockEntities.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(),
                     CraftmanAnvilBlockRenderer::new

@@ -38,7 +38,7 @@ public class StoneyCoreForge {
         ModRecipes.register(modEventBus);
         SCItems.registerItems(modEventBus);
         ModEntities.registerEntities(modEventBus);
-        ModMessages.register();
+        ModMessages.registerC2SPackets();
         ModScreenHandlers.register(modEventBus);
         ModBlocks.registerBlocks(modEventBus);
         ModBlockEntities.registerBlockEntities(modEventBus);
