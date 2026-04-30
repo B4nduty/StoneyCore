@@ -49,7 +49,7 @@ public class StoneyCoreForgeClient {
             ClientPlatform.setHumanoidModelSetupAnimHelper(new ForgeHumanoidModelSetupAnimHelper());
             ClientPlatform.setKeyInputHelper(new ForgeKeyInputHelper());
             ClientPlatform.setRenderFirstPersonAccessoryArmorHelper(new ForgeRenderFirstPersonAccessoryArmorHelper());
-            ModMessages.registerC2SPackets();
+            ModMessages.registerS2CPackets();
             BlockEntityRenderers.register(
                     ModBlockEntities.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(),
                     CraftmanAnvilBlockRenderer::new
