@@ -1,6 +1,5 @@
 package banduty.stoneycore.networking.packet;
 
-import banduty.stoneycore.util.data.playerdata.StaminaData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
@@ -11,7 +10,7 @@ public record StaminaValueS2CPacket(double stamina) {
     public static void handle(StaminaValueS2CPacket msg, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
             if (Minecraft.getInstance().player != null) {
-                StaminaData.setStamina(Minecraft.getInstance().player, msg.stamina);
+                ClientPacketHandler.handleStaminaValue(msg.stamina);
             }
         });
         ctx.get().setPacketHandled(true);

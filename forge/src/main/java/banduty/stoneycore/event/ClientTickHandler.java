@@ -13,7 +13,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.PacketDistributor;
 
 @Mod.EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientTickHandler {
@@ -38,7 +37,7 @@ public class ClientTickHandler {
             float yaw = localPlayer.getYRot();
             float pitch = localPlayer.getXRot();
 
-            ModMessages.CHANNEL.send(PacketDistributor.SERVER.noArg(), new SiegeYawC2SPacket(yaw, pitch));
+            ModMessages.sendToServer(new SiegeYawC2SPacket(yaw, pitch));
         }
     }
 }

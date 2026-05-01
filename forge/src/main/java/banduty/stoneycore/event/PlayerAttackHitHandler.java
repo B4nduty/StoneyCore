@@ -31,7 +31,7 @@ public class PlayerAttackHitHandler {
                     return;
                 }
 
-                ModMessages.CHANNEL.sendToServer(new AttackC2SPacket());
+                ModMessages.sendToServer(new AttackC2SPacket());
             }
         }
     }

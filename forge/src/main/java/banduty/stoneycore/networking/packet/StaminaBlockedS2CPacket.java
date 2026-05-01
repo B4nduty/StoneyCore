@@ -13,8 +13,10 @@ public record StaminaBlockedS2CPacket(boolean blocked) {
 
     public static void handle(StaminaBlockedS2CPacket msg, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            if (Minecraft.getInstance().player != null) {
-                NBTDataHelper.set((IEntityDataSaver) Minecraft.getInstance().player, PDKeys.STAMINA_BLOCKED, msg.blocked);
+            if (ctx.get().getDirection().getReceptionSide().isClient()) {
+                if (Minecraft.getInstance().player != null) {
+                    NBTDataHelper.set((IEntityDataSaver) Minecraft.getInstance().player, PDKeys.STAMINA_BLOCKED, msg.blocked);
+                }
             }
         });
         ctx.get().setPacketHandled(true);

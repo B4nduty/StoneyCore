@@ -22,7 +22,6 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -75,7 +74,7 @@ public class KeyInputHandler {
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
             if (reload.isDown()) {
-                ModMessages.CHANNEL.send(PacketDistributor.SERVER.noArg(), new ReloadC2SPacket());
+                ModMessages.sendToServer(new ReloadC2SPacket());
             }
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
@@ -127,7 +126,7 @@ public class KeyInputHandler {
                                 localPlayer.playSound(ModSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
                             }
 
-                            ModMessages.CHANNEL.send(PacketDistributor.SERVER.noArg(), new ToggleVisorC2SPacket());
+                            ModMessages.sendToServer(new ToggleVisorC2SPacket());
                             visorToggled = true;
                             isTogglingVisor = false;
                             toggleProgress = 0.0f;
