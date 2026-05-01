@@ -3,69 +3,108 @@ package banduty.stoneycore.networking;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.networking.packet.*;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
-import java.util.Optional;
-
 public class ModMessages {
-    private static final String PROTOCOL_VERSION = "1";
-    public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(StoneyCore.MOD_ID, "main"),
-            () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals
-    );
-
+    public static SimpleChannel CHANNEL;
     private static int packetId = 0;
 
-
-    public static void registerC2SPackets() {
-        CHANNEL.registerMessage(packetId++, AttackC2SPacket.class,
-                AttackC2SPacket::encode, AttackC2SPacket::decode, AttackC2SPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_SERVER));
-
-        CHANNEL.registerMessage(packetId++, ReloadC2SPacket.class,
-                ReloadC2SPacket::encode, ReloadC2SPacket::decode, ReloadC2SPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_SERVER));
-
-        CHANNEL.registerMessage(packetId++, SiegeYawC2SPacket.class,
-                SiegeYawC2SPacket::encode, SiegeYawC2SPacket::decode, SiegeYawC2SPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_SERVER));
-
-        CHANNEL.registerMessage(packetId++, ToggleVisorC2SPacket.class,
-                ToggleVisorC2SPacket::encode, ToggleVisorC2SPacket::decode, ToggleVisorC2SPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+    private static int id() {
+        return packetId++;
     }
 
-    public static void registerS2CPackets() {
-        CHANNEL.registerMessage(packetId++, StaminaBlockedS2CPacket.class,
-                StaminaBlockedS2CPacket::encode, StaminaBlockedS2CPacket::decode, StaminaBlockedS2CPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+    public static void register() {
+        SimpleChannel net = NetworkRegistry.ChannelBuilder
+                .named(ResourceLocation.tryBuild(StoneyCore.MOD_ID, "messages"))
+                .networkProtocolVersion(() -> "1.0")
+                .clientAcceptedVersions(s -> true)
+                .serverAcceptedVersions(s -> true)
+                .simpleChannel();
 
-        CHANNEL.registerMessage(packetId++, StaminaValueS2CPacket.class,
-                StaminaValueS2CPacket::encode, StaminaValueS2CPacket::decode, StaminaValueS2CPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL = net;
 
-        CHANNEL.registerMessage(packetId++, SyncDefinitionsPacket.class,
-                SyncDefinitionsPacket::encode, SyncDefinitionsPacket::decode, SyncDefinitionsPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // Server-bound packets (PLAY_TO_SERVER)
+        net.messageBuilder(AttackC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(AttackC2SPacket::encode)
+                .decoder(AttackC2SPacket::decode)
+                .consumerMainThread(AttackC2SPacket::handle)
+                .add();
 
-        CHANNEL.registerMessage(packetId++, LandTitleS2CPacket.class,
-                LandTitleS2CPacket::encode, LandTitleS2CPacket::decode, LandTitleS2CPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        net.messageBuilder(ReloadC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ReloadC2SPacket::encode)
+                .decoder(ReloadC2SPacket::decode)
+                .consumerMainThread(ReloadC2SPacket::handle)
+                .add();
 
-        CHANNEL.registerMessage(packetId++, OutlineClaimS2CPacket.class,
-                OutlineClaimS2CPacket::encode, OutlineClaimS2CPacket::decode, OutlineClaimS2CPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        net.messageBuilder(SiegeYawC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(SiegeYawC2SPacket::encode)
+                .decoder(SiegeYawC2SPacket::decode)
+                .consumerMainThread(SiegeYawC2SPacket::handle)
+                .add();
 
-        CHANNEL.registerMessage(packetId++, SiegeYawS2CPacket.class,
-                SiegeYawS2CPacket::encode, SiegeYawS2CPacket::decode, SiegeYawS2CPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        net.messageBuilder(ToggleVisorC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ToggleVisorC2SPacket::encode)
+                .decoder(ToggleVisorC2SPacket::decode)
+                .consumerMainThread(ToggleVisorC2SPacket::handle)
+                .add();
 
-        CHANNEL.registerMessage(packetId++, LandClientDataS2CPacket.class,
-                LandClientDataS2CPacket::encode, LandClientDataS2CPacket::decode, LandClientDataS2CPacket::handle,
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // Client-bound packets (PLAY_TO_CLIENT)
+        net.messageBuilder(StaminaBlockedS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(StaminaBlockedS2CPacket::encode)
+                .decoder(StaminaBlockedS2CPacket::decode)
+                .consumerMainThread(StaminaBlockedS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(StaminaValueS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(StaminaValueS2CPacket::encode)
+                .decoder(StaminaValueS2CPacket::decode)
+                .consumerMainThread(StaminaValueS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(SyncDefinitionsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SyncDefinitionsPacket::encode)
+                .decoder(SyncDefinitionsPacket::decode)
+                .consumerMainThread(SyncDefinitionsPacket::handle)
+                .add();
+
+        net.messageBuilder(LandTitleS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(LandTitleS2CPacket::encode)
+                .decoder(LandTitleS2CPacket::decode)
+                .consumerMainThread(LandTitleS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(OutlineClaimS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(OutlineClaimS2CPacket::encode)
+                .decoder(OutlineClaimS2CPacket::decode)
+                .consumerMainThread(OutlineClaimS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(SiegeYawS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SiegeYawS2CPacket::encode)
+                .decoder(SiegeYawS2CPacket::decode)
+                .consumerMainThread(SiegeYawS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(LandClientDataS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(LandClientDataS2CPacket::encode)
+                .decoder(LandClientDataS2CPacket::decode)
+                .consumerMainThread(LandClientDataS2CPacket::handle)
+                .add();
+    }
+
+    public static <MSG> void sendToServer(MSG message) {
+        CHANNEL.sendToServer(message);
+    }
+
+    public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), message);
+    }
+
+    public static <MSG> void sendToAll(MSG message) {
+        CHANNEL.send(PacketDistributor.ALL.noArg(), message);
     }
 }

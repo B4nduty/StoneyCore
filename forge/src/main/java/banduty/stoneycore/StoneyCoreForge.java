@@ -14,11 +14,13 @@ import banduty.stoneycore.screen.ModScreenHandlers;
 import banduty.stoneycore.sounds.ModSounds;
 import banduty.stoneycore.util.data.playerdata.SCAttributes;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 
@@ -38,12 +40,13 @@ public class StoneyCoreForge {
         ModRecipes.register(modEventBus);
         SCItems.registerItems(modEventBus);
         ModEntities.registerEntities(modEventBus);
-        ModMessages.registerC2SPackets();
         ModScreenHandlers.register(modEventBus);
         ModBlocks.registerBlocks(modEventBus);
         ModBlockEntities.registerBlockEntities(modEventBus);
         ModParticles.registerParticles(modEventBus);
-
+        modEventBus.addListener(this::commonSetup);
+        MinecraftForge.EVENT_BUS.register(this);
+        
         if (ModList.get().isLoaded("accessories")) {
             AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
         }
@@ -51,5 +54,9 @@ public class StoneyCoreForge {
         StoneyCore.LOG.info("Hello Forge world!");
         StoneyCore.init();
 
+    }
+
+    private void commonSetup(final FMLCommonSetupEvent event) {
+        ModMessages.register();
     }
 }

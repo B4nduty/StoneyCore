@@ -12,7 +12,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.List;
 import java.util.Optional;
@@ -58,11 +57,11 @@ public class ForgeOutlineClaimRenderer implements OutlineClaimRendererHelper {
 
     @Override
     public void sendClearPacket(ServerPlayer player) {
-        ModMessages.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OutlineClaimS2CPacket(List.of()));
+        ModMessages.sendToPlayer(new OutlineClaimS2CPacket(List.of()), player);
     }
 
     @Override
     public void sendOutlinePacket(ServerPlayer player, List<BlockPos> borderPositions) {
-        ModMessages.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OutlineClaimS2CPacket(borderPositions));
+        ModMessages.sendToPlayer(new OutlineClaimS2CPacket(borderPositions), player);
     }
 }

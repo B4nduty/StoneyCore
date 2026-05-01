@@ -6,7 +6,6 @@ import banduty.stoneycore.sounds.ModSounds;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.List;
 import java.util.Set;
@@ -25,9 +24,9 @@ public class ForgeAbstractSiegeHelper implements AbstractSiegeHelper {
         for (ServerPlayer player : players) {
             UUID playerId = player.getUUID();
             if (!abstractSiegeEntity.playersNotified.contains(playerId)) {
-                ModMessages.CHANNEL.send(
-                        PacketDistributor.PLAYER.with(() -> player),
-                        new SiegeYawS2CPacket(abstractSiegeEntity.getYRot(), abstractSiegeEntity.getXRot(), abstractSiegeEntity.getWheelRotation())
+                ModMessages.sendToPlayer(
+                        new SiegeYawS2CPacket(abstractSiegeEntity.getYRot(), abstractSiegeEntity.getXRot(), abstractSiegeEntity.getWheelRotation()),
+                        player
                 );
                 abstractSiegeEntity.playersNotified.add(playerId);
             }

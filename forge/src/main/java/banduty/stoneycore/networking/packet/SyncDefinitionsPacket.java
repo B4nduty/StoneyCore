@@ -17,21 +17,23 @@ public record SyncDefinitionsPacket(Map<ResourceLocation, ArmorDefinitionData> a
 
     public static void handle(SyncDefinitionsPacket msg, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            if (Minecraft.getInstance().player != null) {
-                ArmorDefinitionsStorage.clearDefinitions();
-                msg.armor().forEach(ArmorDefinitionsStorage::addDefinition);
+            if (ctx.get().getDirection().getReceptionSide().isClient()) {
+                if (Minecraft.getInstance().player != null) {
+                    ArmorDefinitionsStorage.clearDefinitions();
+                    msg.armor().forEach(ArmorDefinitionsStorage::addDefinition);
 
-                AccessoriesDefinitionsStorage.clearDefinitions();
-                msg.accessories().forEach(AccessoriesDefinitionsStorage::addDefinition);
+                    AccessoriesDefinitionsStorage.clearDefinitions();
+                    msg.accessories().forEach(AccessoriesDefinitionsStorage::addDefinition);
 
-                LandDefinitionsStorage.clearDefinitions();
-                msg.land().forEach(LandDefinitionsStorage::addDefinition);
+                    LandDefinitionsStorage.clearDefinitions();
+                    msg.land().forEach(LandDefinitionsStorage::addDefinition);
 
-                SiegeEngineDefinitionsStorage.clearDefinitions();
-                msg.siege_engine().forEach(SiegeEngineDefinitionsStorage::addDefinition);
+                    SiegeEngineDefinitionsStorage.clearDefinitions();
+                    msg.siege_engine().forEach(SiegeEngineDefinitionsStorage::addDefinition);
 
-                WeaponDefinitionsStorage.clearDefinitions();
-                msg.weapon().forEach(WeaponDefinitionsStorage::addDefinition);
+                    WeaponDefinitionsStorage.clearDefinitions();
+                    msg.weapon().forEach(WeaponDefinitionsStorage::addDefinition);
+                }
             }
         });
         ctx.get().setPacketHandled(true);

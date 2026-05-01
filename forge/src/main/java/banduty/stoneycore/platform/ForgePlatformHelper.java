@@ -25,7 +25,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +62,7 @@ public class ForgePlatformHelper implements IPlatformHelper {
 
     @Override
     public void sendTitle(ServerPlayer player, Component mainTitle) {
-        ModMessages.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new LandTitleS2CPacket(mainTitle));
+        ModMessages.sendToPlayer(new LandTitleS2CPacket(mainTitle), player);
     }
 
     @Override
@@ -114,7 +113,7 @@ public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public List<ItemStack> getEquippedAccessories(LivingEntity livingEntity) {
         List<ItemStack> itemStacks = new ArrayList<>();
-        
+
         if (!ModList.get().isLoaded("accessories")) {
             return itemStacks;
         }
