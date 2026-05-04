@@ -11,7 +11,6 @@ import net.minecraft.data.models.model.ModelTemplates;
 import net.minecraft.data.models.model.TextureMapping;
 import net.minecraft.data.models.model.TextureSlot;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.DyeableLeatherItem;
 import net.minecraft.world.item.Item;
 
 import java.util.*;
@@ -47,7 +46,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
             List<List<OverrideCondition>> allCombinations = generateAllCombinations(conditions);
 
             for (List<OverrideCondition> combination : allCombinations) {
-                if (combination.size() > 1) { // Skip single conditions (already handled above)
+                if (combination.size() > 1) {
                     JsonObject combinedPredicate = new JsonObject();
                     List<String> modelNames = new ArrayList<>();
 
@@ -58,7 +57,6 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
 
                     String combinedModelName = combineMultipleModelNames(modelNames);
 
-                    // Only generate combined model if it doesn't exist yet
                     if (!generatedModels.contains(combinedModelName)) {
                         generateOverrideModel(item, ModelTemplates.FLAT_ITEM, combinedModelName, itemModelGenerators);
                         generatedModels.add(combinedModelName);
@@ -69,19 +67,18 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
             }
         }
 
-        // Register the main model with overrides
-        ResourceLocation modelId = new ResourceLocation(namespace, "item/" + path);
+        ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path);
 
         TextureMapping textures;
-        if (item instanceof DyeableLeatherItem) {
+        if (item.components().has(net.minecraft.core.component.DataComponents.DYED_COLOR)) {
             textures = TextureMapping.layered(
-                    new ResourceLocation(namespace, "item/" + path),
-                    new ResourceLocation(namespace, "item/" + path + "_overlay")
+                    ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path),
+                    ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path + "_overlay")
             );
         } else {
-            // For non-dyeable items, use the standard approach
-            textures = TextureMapping.layer0(new ResourceLocation(namespace, "item/" + path));
+            textures = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path));
         }
+
         model.create(
                 modelId,
                 textures,
@@ -158,18 +155,18 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
     private void generateOverrideModel(Item item, ModelTemplate model, String modelName, ItemModelGenerators itemModelGenerator) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
         String namespace = itemId.getNamespace();
-        ResourceLocation modelId = new ResourceLocation(namespace, "item/" + modelName);
+        ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName);
 
-        if (item instanceof DyeableLeatherItem) {
+        if (item.components().has(net.minecraft.core.component.DataComponents.DYED_COLOR)) {
             TextureMapping textures = TextureMapping.layered(
-                    new ResourceLocation(namespace, "item/" + modelName),
-                    new ResourceLocation(namespace, "item/" + modelName + "_overlay")
+                    ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName),
+                    ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName + "_overlay")
             );
 
-            ModelTemplate customModel = new ModelTemplate(Optional.of(new ResourceLocation("item/handheld")), Optional.empty(), TextureSlot.LAYER0, TextureSlot.LAYER1);
+            ModelTemplate customModel = new ModelTemplate(Optional.of(ResourceLocation.withDefaultNamespace("item/handheld")), Optional.empty(), TextureSlot.LAYER0, TextureSlot.LAYER1);
             customModel.create(modelId, textures, itemModelGenerator.output, (id, textureMap) -> {
                 JsonObject json = new JsonObject();
-                json.addProperty("parent", "item/handheld");
+                json.addProperty("parent", "minecraft:item/handheld");
 
                 JsonObject texturesJson = new JsonObject();
                 texturesJson.addProperty("layer0", textureMap.get(TextureSlot.LAYER0).toString());
@@ -179,7 +176,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
                 return json;
             });
         } else {
-            TextureMapping textures = TextureMapping.layer0(new ResourceLocation(namespace, "item/" + modelName));
+            TextureMapping textures = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName));
             model.create(modelId, textures, itemModelGenerator.output);
         }
     }
@@ -201,21 +198,13 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
 
     protected void generateBannerPatternModels(Item item, ModelTemplate model, ItemModelGenerators itemModelGenerator) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
-
-        String[] bannerPatternNames = {
-                "bl", "bo", "br", "bri", "bs", "bt", "bts", "cbo", "cr", "cre",
-                "cs", "dls", "drs", "flo", "glb", "gra", "gru", "hh", "hhb", "ld",
-                "ls", "lud", "mc", "moj", "mr", "ms", "pig", "rd", "rs", "rud",
-                "sc", "sku", "ss", "tl", "tr", "ts", "tt", "tts", "vh", "vhr"
-        };
+        String[] bannerPatternNames = { "bl", "bo", "br", "bri", "bs", "bt", "bts", "cbo", "cr", "cre", "cs", "dls",
+                "drs", "flo", "glb", "gra", "gru", "hh", "hhb", "ld", "ls", "lud", "mc", "moj", "mr", "ms", "pig", "rd",
+                "rs", "rud", "sc", "sku", "ss", "tl", "tr", "ts", "tt", "tts", "vh", "vhr" };
 
         for (String pattern : bannerPatternNames) {
-            ResourceLocation modelId = new ResourceLocation(itemId.getNamespace(), "item/" + itemId.getPath() + "/" + pattern);
-
-            TextureMapping textures = TextureMapping.layer0(
-                    new ResourceLocation(itemId.getNamespace(), "item/" + itemId.getPath() + "/" + pattern)
-            );
-
+            ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + itemId.getPath() + "/" + pattern);
+            TextureMapping textures = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + itemId.getPath() + "/" + pattern));
             model.create(modelId, textures, itemModelGenerator.output);
         }
     }
@@ -223,10 +212,10 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
     protected void registerWCustomName(Item item, ModelTemplate model, ItemModelGenerators itemModelGenerator, String modelName, ResourceLocation texturePath) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
 
-        ResourceLocation modelId = new ResourceLocation(itemId.getNamespace(), "item/" + item);
-        if (!modelName.isEmpty()) modelId = new ResourceLocation(itemId.getNamespace(), "item/" + modelName);
+        ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + item);
+        if (!modelName.isEmpty()) modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + modelName);
 
-        TextureMapping texture = TextureMapping.layer0(new ResourceLocation(itemId.getNamespace(), "item/" + item));
+        TextureMapping texture = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + item));
         if (texturePath != null) texture = TextureMapping.layer0(texturePath);
 
         model.create(modelId, texture, itemModelGenerator.output);

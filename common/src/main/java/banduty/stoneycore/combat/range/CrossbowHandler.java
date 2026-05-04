@@ -1,10 +1,10 @@
 package banduty.stoneycore.combat.range;
 
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -29,17 +29,17 @@ public class CrossbowHandler implements IRangedWeaponHandler {
         var weaponState = SCRangeWeaponUtil.getWeaponState(weapon);
         if (!weaponState.isCharged()) return;
 
-        CompoundTag nbt = weapon.getTag();
-        if (nbt == null || !nbt.contains("loaded_arrow")) return;
+        DataComponentMap components = weapon.getComponents();
+        if (components.isEmpty() || !components.has(SCDataComponents.LOADED_ARROW)) return;
 
-        Item arrowItem = BuiltInRegistries.ITEM.get(new ResourceLocation(nbt.getString("loaded_arrow")));
+        Item arrowItem = BuiltInRegistries.ITEM.get(components.get(SCDataComponents.LOADED_ARROW));
         if (!(arrowItem instanceof ArrowItem arrow)) return;
 
         ItemStack fakeArrow = new ItemStack(arrow);
 
         SCRangeWeaponUtil.shootArrow(level, weapon, player, fakeArrow, 1.0f);
 
-        nbt.remove("loaded_arrow");
+        weapon.remove(SCDataComponents.LOADED_ARROW);
 
         if (player instanceof ServerPlayer serverPlayer) {
             CriteriaTriggers.SHOT_CROSSBOW.trigger(serverPlayer, new ItemStack(Items.CROSSBOW));
@@ -94,17 +94,17 @@ public class CrossbowHandler implements IRangedWeaponHandler {
 
         if (pullProgress >= 0.2F && prevProgress < 0.2F) {
             level.playSound(null,
-                    player.getOnPos(),
-                    net.minecraft.sounds.SoundEvents.CROSSBOW_LOADING_START,
-                    net.minecraft.sounds.SoundSource.PLAYERS,
+                    player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.CROSSBOW_LOADING_START,
+                    SoundSource.PLAYERS,
                     0.5F, 1.0F);
         }
 
         if (pullProgress >= 0.5F && prevProgress < 0.5F) {
             level.playSound(null,
-                    player.getOnPos(),
-                    net.minecraft.sounds.SoundEvents.CROSSBOW_LOADING_MIDDLE,
-                    net.minecraft.sounds.SoundSource.PLAYERS,
+                    player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.CROSSBOW_LOADING_MIDDLE,
+                    SoundSource.PLAYERS,
                     0.5F, 1.0F);
         }
 
@@ -119,17 +119,14 @@ public class CrossbowHandler implements IRangedWeaponHandler {
                     if (slot >= 0) player.getInventory().removeItem(slot, 1);
                 }
 
-                CompoundTag nbt = stack.getOrCreateTag();
-                nbt.putString("loaded_arrow", BuiltInRegistries.ITEM.getKey(ammoStack.getItem()).toString());
+                stack.set(SCDataComponents.LOADED_ARROW, BuiltInRegistries.ITEM.getKey(ammoStack.getItem()));
 
-                level.playSound(
-                        null,
-                        player.getOnPos(),
+                level.playSound(null,
+                        player.getX(), player.getY(), player.getZ(),
                         SoundEvents.CROSSBOW_LOADING_END,
                         SoundSource.PLAYERS,
                         1.0F,
-                        1.0F / (level.getRandom().nextFloat() * 0.5F + 1.0F)
-                );
+                        1.0F / (level.getRandom().nextFloat() * 0.5F + 1.0F));
 
                 nextState = SCRangeWeaponUtil.WeaponState.charged();
             }

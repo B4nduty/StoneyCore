@@ -20,7 +20,7 @@ import java.util.concurrent.Executor;
 
 public class SiegeEngineDefinitionsLoader implements IdentifiableResourceReloadListener {
     private static final ResourceLocation RELOAD_LISTENER_ID =
-            new ResourceLocation(StoneyCore.MOD_ID, "siege_engine_definitions_loader");
+            ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "siege_engine_definitions_loader");
 
     @Override
     public ResourceLocation getFabricId() {

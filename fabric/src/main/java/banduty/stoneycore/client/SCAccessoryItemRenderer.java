@@ -1,12 +1,11 @@
 package banduty.stoneycore.client;
 
 import banduty.stoneycore.event.custom.RenderOverlayAndAdditionsEvents;
-import banduty.stoneycore.items.armor.SCAccessoryItem;
+import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
 import banduty.stoneycore.platform.ClientPlatform;
 import banduty.stoneycore.util.DyeUtil;
-import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.patterns.PatternHelper;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -61,7 +60,7 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
     public <M extends LivingEntity> void render(ItemStack stack, SlotReference reference, PoseStack poseStack, EntityModel<M> model, MultiBufferSource multiBufferSource, int light, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!(stack.getItem() instanceof SCAccessoryItem scAccessoryItem)) return;
         Optional<HumanoidModel<LivingEntity>> optionalModel = scAccessoryItem.getModels(stack).base();
-        if (NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false)) optionalModel = scAccessoryItem.getModels(stack).visorOpen();
+        if (Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN))) optionalModel = scAccessoryItem.getModels(stack).visorOpen();
         if (optionalModel.isEmpty()) return;
         HumanoidModel<LivingEntity> accessoryModel = optionalModel.get();
 
@@ -70,9 +69,9 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
         if (scAccessoryItem.getRenderSettings(stack).customAngles()) accessoryModel.setupAnim(reference.entity(), limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 
         VertexConsumer baseConsumer = multiBufferSource.getBuffer(RenderType.armorCutoutNoCull(scAccessoryItem.getTexturePath(stack)));
-        float[] color = DyeUtil.getFloatDyeColor(stack);
+        int color = DyeUtil.getDyeColorInt(stack);
 
-        accessoryModel.renderToBuffer(poseStack, baseConsumer, light, OverlayTexture.NO_OVERLAY, color[0], color[1], color[2], 1.0F);
+        accessoryModel.renderToBuffer(poseStack, baseConsumer, light, OverlayTexture.NO_OVERLAY, color);
 
         renderEmissiveTexture(scAccessoryItem, stack, poseStack, multiBufferSource, accessoryModel, color);
 
@@ -81,12 +80,12 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
     }
 
     private void renderEmissiveTexture(SCAccessoryItem scAccessoryItem, ItemStack stack, PoseStack poseStack,
-                                       MultiBufferSource multiBufferSource, HumanoidModel<LivingEntity> model, float[] color) {
+                                       MultiBufferSource multiBufferSource, HumanoidModel<LivingEntity> model, int color) {
         if (scAccessoryItem.getEmissiveTexturePath(stack).isPresent()) {
             Optional<ResourceLocation> emissiveTexture = scAccessoryItem.getEmissiveTexturePath(stack);
             if (emissiveTexture.isPresent()) {
                 VertexConsumer emissiveConsumer = multiBufferSource.getBuffer(RENDER_TYPE_FUNCTION.apply(emissiveTexture.get()));
-                model.renderToBuffer(poseStack, emissiveConsumer, LightTexture.FULL_SKY, OverlayTexture.NO_OVERLAY, color[0], color[1], color[2], 1.0F);
+                model.renderToBuffer(poseStack, emissiveConsumer, LightTexture.FULL_SKY, OverlayTexture.NO_OVERLAY, color);
             }
         }
     }
@@ -107,11 +106,10 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
                 ResourceLocation pattern = patternPair.getA();
                 DyeColor dyeColor = patternPair.getB();
 
-                float[] rgb = dyeColor.getTextureDiffuseColors();
+                int rgb = dyeColor.getTextureDiffuseColor();
 
                 VertexConsumer patternConsumer = multiBufferSource.getBuffer(ClientPlatform.getSCRenderTypeHelper().getArmorTranslucentNoCull(pattern));
-                model.renderToBuffer(poseStack, patternConsumer, light, OverlayTexture.NO_OVERLAY,
-                        rgb[0], rgb[1], rgb[2], 1.0F);
+                model.renderToBuffer(poseStack, patternConsumer, light, OverlayTexture.NO_OVERLAY, rgb);
             }
         }
     }

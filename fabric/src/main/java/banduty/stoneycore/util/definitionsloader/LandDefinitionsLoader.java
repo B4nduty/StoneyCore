@@ -21,7 +21,7 @@ import java.util.concurrent.Executor;
 
 public class LandDefinitionsLoader implements IdentifiableResourceReloadListener {
     private static final ResourceLocation RELOAD_LISTENER_ID =
-            new ResourceLocation(StoneyCore.MOD_ID, "land_definitions_loader");
+            ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "land_definitions_loader");
 
     @Override
     public ResourceLocation getFabricId() {
@@ -50,7 +50,7 @@ public class LandDefinitionsLoader implements IdentifiableResourceReloadListener
 
                     result.resultOrPartial(StoneyCore.LOG::error)
                             .ifPresent(def -> {
-                                ResourceLocation landId = new ResourceLocation(
+                                ResourceLocation landId = ResourceLocation.fromNamespaceAndPath(
                                         id.getNamespace(),
                                         id.getPath().substring("definitions/lands/".length(),
                                                 id.getPath().length() - 5)

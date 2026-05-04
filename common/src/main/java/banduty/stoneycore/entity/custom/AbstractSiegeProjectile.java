@@ -1,10 +1,13 @@
 package banduty.stoneycore.entity.custom;
 
-import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageApplier;
+import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.siege.SiegeManager;
+import banduty.stoneycore.sounds.SCSounds;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
@@ -21,12 +24,9 @@ import java.util.Optional;
 public abstract class AbstractSiegeProjectile extends AbstractArrow {
     private SCDamageType damageType;
 
-    public AbstractSiegeProjectile(EntityType<? extends AbstractArrow> entityEntityType, Level level) {
-        super(entityEntityType, level);
-    }
-
-    public AbstractSiegeProjectile(EntityType<? extends AbstractSiegeProjectile> scSiegeProjectile, LivingEntity shooter, Level level) {
-        super(scSiegeProjectile, shooter, level);
+    public AbstractSiegeProjectile(EntityType<? extends AbstractSiegeProjectile> type, LivingEntity shooter, Level level) {
+        super(type, level);
+        this.setOwner(shooter);
     }
 
     @Override
@@ -39,8 +39,8 @@ public abstract class AbstractSiegeProjectile extends AbstractArrow {
         super.onHitEntity(entityHitResult);
         if (entityHitResult.getEntity().level().isClientSide()) return;
         if (entityHitResult.getEntity() instanceof LivingEntity target) {
-            double damage = SCDamageType.calculateSCDamage(target, (float) this.getBaseDamage(), this.damageType);
-            if (this.getOwner() instanceof AbstractSiegeEntity abstractSiegeEntity) SCDamageType.apply(target, abstractSiegeEntity.getOwner(), ItemStack.EMPTY, damage);
+            double damage = SCDamageCalculator.applyArmor(target, (float) this.getBaseDamage(), this.damageType);
+            if (this.getOwner() instanceof AbstractSiegeEntity abstractSiegeEntity) SCDamageApplier.apply(target, abstractSiegeEntity.getOwner(), ItemStack.EMPTY, damage);
         }
         setDeltaMovement(getDeltaMovement().scale(-0.9));
         setBaseDamage(getBaseDamage() * 0.9);
@@ -78,7 +78,7 @@ public abstract class AbstractSiegeProjectile extends AbstractArrow {
 
     @Override
     protected SoundEvent getDefaultHitGroundSoundEvent() {
-        return Services.ABSTRACT_SIEGE_ENTITY.getDefaultHitGroundSoundEvent();
+        return SCSounds.BULLET_CRACK;
     }
 
     public void setDamageType(SCDamageType damageType) {

@@ -99,7 +99,7 @@ public enum SCTags {
     private final TagKey<Item> tag;
 
     SCTags(String name) {
-        this.tag = TagKey.create(Registries.ITEM, new ResourceLocation(StoneyCore.MOD_ID, name));
+        this.tag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, name));
     }
 
     public TagKey<Item> getTag() {

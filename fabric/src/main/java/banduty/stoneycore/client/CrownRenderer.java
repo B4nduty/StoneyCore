@@ -20,7 +20,7 @@ public class CrownRenderer implements ArmorRenderer {
         HumanoidModel<LivingEntity> model = new CrownModel(CrownModel.getTexturedModelData().bakeRoot());
         contextModel.copyPropertiesTo(model);
 
-        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderType.armorCutoutNoCull(new ResourceLocation(StoneyCore.MOD_ID, "textures/entity/armor/crown.png")));
-        model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
+        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderType.armorCutoutNoCull(ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/entity/armor/crown.png")));
+        model.renderToBuffer(poseStack, vertexConsumer, light, OverlayTexture.NO_OVERLAY, 1);
     }
 }

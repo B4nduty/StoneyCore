@@ -1,6 +1,6 @@
 package banduty.stoneycore.client;
 
-import banduty.stoneycore.items.armor.underarmor.SCDyeableUnderArmor;
+import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.model.UnderArmourBootsModel;
 import banduty.stoneycore.model.UnderArmourChestplateModel;
 import banduty.stoneycore.model.UnderArmourHelmetModel;
@@ -11,7 +11,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -37,21 +36,21 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
             contextModel.copyPropertiesTo(model);
 
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
-                    RenderType.armorCutoutNoCull(new ResourceLocation(BuiltInRegistries.ITEM.getKey(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
+                    RenderType.armorCutoutNoCull(ResourceLocation.fromNamespaceAndPath(BuiltInRegistries.ITEM.getKey(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
             if (armorItem instanceof SCDyeableUnderArmor) {
-                float[] color = DyeUtil.getFloatDyeColor(stack);
+                int color = DyeUtil.getDyeColorInt(stack);
 
                 ResourceLocation textureOverlayPath = getOverlayIdentifier(armorItem);
 
-                model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, color[0], color[1], color[2], 1.0F);
+                model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, color);
 
                 ArmorRenderer.renderPart(matrices, vertexConsumers, light, stack, model, textureOverlayPath);
-            } else model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
+            } else model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, 1);
         }
     }
 
     private static @NotNull ResourceLocation getOverlayIdentifier(ArmorItem armorItem) {
-        ResourceLocation originalIdentifier = new ResourceLocation(BuiltInRegistries.ITEM.getKey(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png");
+        ResourceLocation originalIdentifier = ResourceLocation.fromNamespaceAndPath(BuiltInRegistries.ITEM.getKey(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png");
 
         String textureOverlayString = originalIdentifier.getPath();
 
@@ -61,16 +60,17 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
 
         textureOverlayString += "_overlay.png";
 
-        return new ResourceLocation(originalIdentifier.getNamespace(), textureOverlayString);
+        return ResourceLocation.fromNamespaceAndPath(originalIdentifier.getNamespace(), textureOverlayString);
     }
 
     public @Nullable HumanoidModel<LivingEntity> getModel(ArmorItem armorItem) {
-        if (this.model == null && FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+        if (this.model == null) {
             this.model = switch (armorItem.getType()) {
                 case HELMET -> new UnderArmourHelmetModel(UnderArmourHelmetModel.getTexturedModelData().bakeRoot());
                 case CHESTPLATE -> new UnderArmourChestplateModel(UnderArmourChestplateModel.getTexturedModelData().bakeRoot());
                 case LEGGINGS -> new UnderArmourLeggingsModel(UnderArmourLeggingsModel.getTexturedModelData().bakeRoot());
                 case BOOTS -> new UnderArmourBootsModel(UnderArmourBootsModel.getTexturedModelData().bakeRoot());
+                default -> null;
             };
         }
         return this.model;

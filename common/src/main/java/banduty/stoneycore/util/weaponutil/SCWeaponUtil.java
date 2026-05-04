@@ -1,8 +1,7 @@
 package banduty.stoneycore.util.weaponutil;
 
-import banduty.stoneycore.combat.melee.SCDamageType;
-import banduty.stoneycore.util.data.itemdata.INBTKeys;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import net.minecraft.core.BlockPos;
@@ -67,7 +66,7 @@ public final class SCWeaponUtil {
         boolean hasBludgeoning = hasDamageType(SCDamageType.BLUDGEONING, item);
 
         boolean bludgeoningToPiercing = !hasSlashing && hasPiercing && hasBludgeoning;
-        boolean isBludgeoningNBT = NBTDataHelper.get(stack, INBTKeys.BLUDGEONING, false);
+        boolean isBludgeoningNBT = Boolean.TRUE.equals(stack.get(SCDataComponents.BLUDGEONING));
         boolean isPiercingLogic = isPiercingWeapon(item, comboCount);
 
         if (isBludgeoningNBT ^ bludgeoningToPiercing || isOnlyDamageType(SCDamageType.BLUDGEONING, item)) {
@@ -184,6 +183,6 @@ public final class SCWeaponUtil {
             }
         }
 
-        stack.hurtAndBreak(1, player, p -> p.broadcastBreakEvent(hand));
+        stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(hand));
     }
 }

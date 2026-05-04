@@ -2,7 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.melee.CombatSelect;
-import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.platform.Services;
@@ -10,11 +10,10 @@ import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.DeflectChanceHelper;
 import banduty.stoneycore.util.EntityDamageUtil;
 import banduty.stoneycore.util.WeightUtil;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.SCAttributes;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.PDKeys;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
@@ -93,12 +92,24 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             method = "createLivingAttributes",
             require = 1, allow = 1, at = @At("RETURN"))
     private static void stoneycore$addAttributes(final CallbackInfoReturnable<AttributeSupplier.Builder> info) {
-        info.getReturnValue().add(Services.ATTRIBUTES.getHungerDrainMultiplier()).add(Services.ATTRIBUTES.getStamina())
-                .add(Services.ATTRIBUTES.getMaxStamina()).add(Services.ATTRIBUTES.getDeflectChance());
+        info.getReturnValue().add(SCAttributes.HUNGER_DRAIN_MULTIPLIER).add(SCAttributes.STAMINA)
+                .add(SCAttributes.MAX_STAMINA).add(SCAttributes.DEFLECT_CHANCE);
     }
 
     @Unique
     private boolean blockShield = true;
+
+    @Inject(method = "onEquipItem", at = @At("HEAD"))
+    private void stoneycore$onEquipItem(CallbackInfo ci) {
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+        WeightUtil.refreshWeight(livingEntity);
+    }
+
+    @Inject(method = "remove", at = @At("HEAD"))
+    private void stoneycore$remove(CallbackInfo ci) {
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+        WeightUtil.removeEntity(livingEntity);
+    }
 
     @Inject(method = "jumpFromGround", at = @At("HEAD"), cancellable = true)
     private void stoneycore$onJump(CallbackInfo ci) {
@@ -213,7 +224,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
         if (source.getDirectEntity() instanceof AbstractArrow) return false;
 
-        long blockStartTick = NBTDataHelper.get((IEntityDataSaver) player, PDKeys.BLOCK_START_TICK, 0L);
+        long blockStartTick = ((IEntityDataSaver) player).stoneycore$getPersistentData().getLong("blockStartTick");
         long currentTick = player.level().getGameTime();
 
         if (currentTick - blockStartTick > PARRY_WINDOW_TICKS) {
@@ -223,7 +234,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         if (source.getDirectEntity() == null) return false;
 
         stoneyCore$performParryEffects(player, source.getDirectEntity());
-        StaminaData.removeStamina(player, StoneyCore.getConfig().combatOptions().onParryStaminaConstant() * WeightUtil.getCachedWeight(player));
+        StaminaData.removeStamina(player, StoneyCore.getConfig().combatOptions().onParryStaminaConstant() * WeightUtil.getWeight(player));
         return true;
     }
 
@@ -285,12 +296,12 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     @Inject(method = "getDamageAfterArmorAbsorb", at = @At("HEAD"), cancellable = true)
     private void stoneycore$getDamageAfterArmorAbsorb(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
         LivingEntity livingEntity = (LivingEntity) (Object) this;
-        amount = CombatRules.getDamageAfterAbsorb(amount, (float) livingEntity.getArmorValue(), (float) livingEntity.getAttributeValue(Attributes.ARMOR_TOUGHNESS));
+        amount = CombatRules.getDamageAfterAbsorb(livingEntity, amount, source, (float) livingEntity.getArmorValue(), (float) livingEntity.getAttributeValue(Attributes.ARMOR_TOUGHNESS));
 
         for (ItemStack armorStack : livingEntity.getArmorSlots()) {
             if (armorStack.isEmpty()) continue;
 
-            EquipmentSlot slot = LivingEntity.getEquipmentSlotForItem(armorStack);
+            EquipmentSlot slot = livingEntity.getEquipmentSlotForItem(armorStack);
             boolean slotProtected = false;
 
             for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(livingEntity)) {
@@ -299,18 +310,14 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
                     if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(slot.getName())) {
                         slotProtected = true;
-                        itemStack.hurtAndBreak((int) amount, livingEntity, (entity) ->
-                                entity.broadcastBreakEvent(EquipmentSlot.MAINHAND)
-                        );
+                        itemStack.hurtAndBreak((int) amount, livingEntity, EquipmentSlot.MAINHAND);
                     }
                 }
             }
 
             // Damage the armor only if no accessory protects this slot
             if (!slotProtected) {
-                armorStack.hurtAndBreak((int) amount, livingEntity, (entity) ->
-                        entity.broadcastBreakEvent(slot)
-                );
+                armorStack.hurtAndBreak((int) amount, livingEntity, slot);
             }
         }
 
@@ -344,7 +351,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
             boolean wearingSCArmor = stoneyCore$isWearingSCArmor(livingEntity);
             if (!staminaBlocked && wearingSCArmor) {
-                StaminaData.removeStamina(livingEntity, StoneyCore.getConfig().combatOptions().jumpingStaminaConstant() * WeightUtil.getCachedWeight(livingEntity));
+                StaminaData.removeStamina(livingEntity, StoneyCore.getConfig().combatOptions().jumpingStaminaConstant() * WeightUtil.getWeight(livingEntity));
             }
         }
     }

@@ -21,7 +21,7 @@ import java.util.concurrent.Executor;
 
 public class WeaponDefinitionsLoader implements IdentifiableResourceReloadListener {
     private static final ResourceLocation RELOAD_LISTENER_ID =
-            new ResourceLocation(StoneyCore.MOD_ID, "weapon_definitions_loader");
+            ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "weapon_definitions_loader");
 
     @Override
     public ResourceLocation getFabricId() {

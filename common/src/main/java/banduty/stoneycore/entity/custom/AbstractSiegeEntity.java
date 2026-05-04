@@ -2,8 +2,8 @@ package banduty.stoneycore.entity.custom;
 
 import banduty.stoneycore.entity.custom.siegeentity.RotationAndMovementUtil;
 import banduty.stoneycore.entity.custom.siegeentity.SiegeProperties;
-import banduty.stoneycore.items.SiegeSpawnerItem;
-import banduty.stoneycore.items.SmithingHammer;
+import banduty.stoneycore.items.custom.SiegeSpawnerItem;
+import banduty.stoneycore.items.custom.SmithingHammer;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.platform.Services;
@@ -69,20 +69,19 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     public AbstractSiegeEntity(EntityType<? extends LivingEntity> type, Level level) {
         super(type, level);
         setNoGravity(false);
-        setMaxUpStep(1.0F);
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(TRACKED_YAW, 0.0f);
-        this.entityData.define(TRACKED_PITCH, 0.0f);
-        this.entityData.define(COOLDOWN, 0);
-        this.entityData.define(LOAD_STAGE, 0);
-        this.entityData.define(AMMO_LOADED, "");
-        this.entityData.define(RELOAD_TIME, 0);
-        this.entityData.define(IS_PICKED, false);
-        this.entityData.define(ATTACK_HAPPENED, true);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TRACKED_YAW, 0.0f);
+        builder.define(TRACKED_PITCH, 0.0f);
+        builder.define(COOLDOWN, 0);
+        builder.define(LOAD_STAGE, 0);
+        builder.define(AMMO_LOADED, "");
+        builder.define(RELOAD_TIME, 0);
+        builder.define(IS_PICKED, false);
+        builder.define(ATTACK_HAPPENED, true);
     }
 
     public void setTrackedYaw(float yaw) {
@@ -380,7 +379,9 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
                     Math.min(this.getMaxHealth(), this.getHealth() + 1F));
 
             if (!player.isCreative()) {
-                player.getMainHandItem().hurt(1, player.getRandom(), (ServerPlayer) player);
+                player.getMainHandItem().hurtAndBreak(1, serverLevel, (ServerPlayer) player, item -> {
+                    player.onEquippedItemBroken(item, EquipmentSlot.MAINHAND);
+                });
                 if (player.getMainHandItem().getDamageValue() >= player.getMainHandItem().getMaxDamage()) {
                     player.getMainHandItem().setCount(0);
                 }
@@ -509,8 +510,8 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     protected abstract InteractionResult handleSiegeInteraction(Player player, InteractionHand hand, ServerLevel serverLevel);
 
     @Override
-    public double getPassengersRidingOffset() {
-        return 1.0D;
+    public Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions dimensions, float scale) {
+        return new Vec3(0.0, 1.0, 0.0);
     }
 
     @Override

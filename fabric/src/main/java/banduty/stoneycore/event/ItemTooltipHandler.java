@@ -1,12 +1,11 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.combat.melee.SCDamageType;
-import banduty.stoneycore.items.armor.SCAccessoryItem;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
+import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
-import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
@@ -15,10 +14,10 @@ import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
@@ -26,14 +25,16 @@ import java.util.List;
 
 public class ItemTooltipHandler implements ItemTooltipCallback {
     @Override
-    public void getTooltip(ItemStack stack, TooltipFlag tooltipFlag, List<Component> lines) {
+    public void getTooltip(ItemStack stack, Item.TooltipContext tooltipContext, TooltipFlag tooltipType, List<Component> lines) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
         Component attackDamage = Component.translatable("attribute.name.generic.attack_damage");
         if (WeaponDefinitionsStorage.containsItem(stack)) lines.removeIf(line -> line.contains(attackDamage));
 
         for (LandType landType : LandTypeRegistry.getAll()) {
-            if (stack.getItem() == landType.coreItem() || (stack.getTag() != null && stack.getTag().contains(BuiltInRegistries.ITEM.getKey(landType.coreItem()).getPath()))) {
+            if (stack.is(landType.coreItem()) || (stack.getComponents().has(SCDataComponents.TARGET_STACK) &&
+                    stack.get(SCDataComponents.TARGET_STACK).getItem() == landType.coreItem())) {
+
                 lines.add(Component.translatable("component.tooltip.stoneycore.coreItem").withStyle(ChatFormatting.GOLD));
                 break;
             }
@@ -91,7 +92,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
 
         if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.getModels(stack).visorOpen().isPresent()) {
             lines.add(Component.translatable("component.tooltip.stoneycore.openVisor").withStyle(ChatFormatting.WHITE));
-            if (!NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false)) {
+            if (!Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN))) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.openVisorDeflectChance").withStyle(ChatFormatting.AQUA));
                 lines.add(Component.translatable("component.tooltip.stoneycore.openVisorArmor").withStyle(ChatFormatting.AQUA));
                 lines.add(Component.translatable("component.tooltip.stoneycore.openVisorToughness").withStyle(ChatFormatting.AQUA));

@@ -2,6 +2,9 @@ package banduty.stoneycore.util.definitionsloader;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 
@@ -14,8 +17,10 @@ public record AccessoriesDefinitionData(double armor, double toughness, String a
             Codec.DOUBLE.optionalFieldOf("hungerDrainMultiplier", 0.0).forGetter(AccessoriesDefinitionData::hungerDrainMultiplier),
             Codec.FLOAT.optionalFieldOf("deflectChance", 0.0f).forGetter(AccessoriesDefinitionData::deflectChance),
             Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(AccessoriesDefinitionData::weight),
-            ResourceLocation.CODEC.optionalFieldOf("visoredHelmet", new ResourceLocation("", "")).forGetter(AccessoriesDefinitionData::visoredHelmet)
+            ResourceLocation.CODEC.optionalFieldOf("visoredHelmet", ResourceLocation.fromNamespaceAndPath("","")).forGetter(AccessoriesDefinitionData::visoredHelmet)
     ).apply(instance, AccessoriesDefinitionData::new));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, AccessoriesDefinitionData> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
     public EquipmentSlot getArmorSlot() {
         if (armorSlot.isEmpty()) return null;

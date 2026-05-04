@@ -1,8 +1,8 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.event.custom.PlayerPickupCallback;
-import banduty.stoneycore.items.hotiron.HotIron;
-import banduty.stoneycore.items.tongs.Tongs;
+import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.tongs.Tongs;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -57,7 +57,7 @@ public class TongsPickupHandler {
     private static void removeHotIronFromInventory(Player player, ItemStack hotIron) {
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
-            if (ItemStack.isSameItemSameTags(stack, hotIron)) {
+            if (ItemStack.isSameItemSameComponents(stack, hotIron)) {
                 player.getInventory().removeItem(i, 1);
                 break;
             }

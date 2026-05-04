@@ -1,18 +1,16 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.armor.SCAccessoryItem;
-import banduty.stoneycore.networking.ModMessages;
-import banduty.stoneycore.sounds.ModSounds;
-import banduty.stoneycore.util.data.itemdata.INBTKeys;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
+import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
+import banduty.stoneycore.networking.payload.ReloadC2SPacket;
+import banduty.stoneycore.networking.payload.ToggleVisorC2SPacket;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -39,7 +37,7 @@ public class KeyInputHandler {
 
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (reload.isDown()) {
-                ClientPlayNetworking.send(ModMessages.RELOAD_PACKET_ID, PacketByteBufs.empty());
+                ClientPlayNetworking.send(new ReloadC2SPacket());
             }
             if (hideVisor.isDown()) {
                 visorHidden = hideVisor.isDown();
@@ -76,7 +74,7 @@ public class KeyInputHandler {
                                     ItemStack stack = equipped.stack();
                                     if (!stack.isEmpty() && stack.getItem() instanceof SCAccessoryItem accessory) {
                                         if (accessory.hasOpenVisor(stack)) {
-                                            isCurrentlyOpen = NBTDataHelper.get(stack, INBTKeys.VISOR_OPEN, false);
+                                            isCurrentlyOpen = Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN));
                                             break;
                                         }
                                     }
@@ -85,12 +83,12 @@ public class KeyInputHandler {
 
                             // Play appropriate sound
                             if (isCurrentlyOpen) {
-                                localPlayer.playSound(ModSounds.VISOR_CLOSE, 1.0F, 1.0F);
+                                localPlayer.playSound(banduty.stoneycore.sounds.SCSounds.VISOR_CLOSE, 1.0F, 1.0F);
                             } else {
-                                localPlayer.playSound(ModSounds.VISOR_OPEN, 1.0F, 1.0F);
+                                localPlayer.playSound(banduty.stoneycore.sounds.SCSounds.VISOR_OPEN, 1.0F, 1.0F);
                             }
 
-                            ClientPlayNetworking.send(ModMessages.TOGGLE_VISOR_ID, PacketByteBufs.create());
+                            ClientPlayNetworking.send(new ToggleVisorC2SPacket());
                             visorToggled = true;
                             isTogglingVisor = false;
                             toggleProgress = 0.0f;

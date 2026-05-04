@@ -1,6 +1,6 @@
 package banduty.stoneycore.block;
 
-import banduty.stoneycore.recipes.AnvilRecipe;
+import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -100,7 +100,7 @@ public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanA
             poseStack.popPose();
         }
 
-        Optional<AnvilRecipe> recipe = entity.getRecipe();
+        Optional<CraftmanAnvilRecipe> recipe = entity.getRecipe();
         recipe.ifPresent(anvilRecipe -> renderHitSquares(entity, poseStack, vertexConsumers, recipe.get().hitTimes(), facing));
     }
 
@@ -238,37 +238,33 @@ public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanA
 
     private void renderSingleSquare(VertexConsumer bufferBuilder, Matrix4f matrix, Matrix3f normalMatrix,
                                     float x, float y, float squareSize, float r, float g, float b, float a) {
-        bufferBuilder.vertex(matrix, x, y, 0)
-                .color(r, g, b, a)
-                .uv(0, 0)
-                .overlayCoords(OverlayTexture.NO_OVERLAY)
-                .uv2(LightTexture.FULL_BRIGHT)
-                .normal(normalMatrix, 0, 0, 1)
-                .endVertex();
+        bufferBuilder.addVertex(matrix, x, y, 0)
+                .setColor(r, g, b, a)
+                .setUv(0, 0)
+                .setOverlay(OverlayTexture.NO_OVERLAY)
+                .setLight(LightTexture.FULL_BRIGHT)
+                .setNormal(0, 0, 1);
 
-        bufferBuilder.vertex(matrix, x, y + squareSize, 0)
-                .color(r, g, b, a)
-                .uv(0, 1)
-                .overlayCoords(OverlayTexture.NO_OVERLAY)
-                .uv2(LightTexture.FULL_BRIGHT)
-                .normal(normalMatrix, 0, 0, 1)
-                .endVertex();
+        bufferBuilder.addVertex(matrix, x, y + squareSize, 0)
+                .setColor(r, g, b, a)
+                .setUv(0, 1)
+                .setOverlay(OverlayTexture.NO_OVERLAY)
+                .setLight(LightTexture.FULL_BRIGHT)
+                .setNormal(0, 0, 1);
 
-        bufferBuilder.vertex(matrix, x + squareSize, y + squareSize, 0)
-                .color(r, g, b, a)
-                .uv(1, 1)
-                .overlayCoords(OverlayTexture.NO_OVERLAY)
-                .uv2(LightTexture.FULL_BRIGHT)
-                .normal(normalMatrix, 0, 0, 1)
-                .endVertex();
+        bufferBuilder.addVertex(matrix, x + squareSize, y + squareSize, 0)
+                .setColor(r, g, b, a)
+                .setUv(1, 1)
+                .setOverlay(OverlayTexture.NO_OVERLAY)
+                .setLight(LightTexture.FULL_BRIGHT)
+                .setNormal(0, 0, 1);
 
-        bufferBuilder.vertex(matrix, x + squareSize, y, 0)
-                .color(r, g, b, a)
-                .uv(1, 0)
-                .overlayCoords(OverlayTexture.NO_OVERLAY)
-                .uv2(LightTexture.FULL_BRIGHT)
-                .normal(normalMatrix, 0, 0, 1)
-                .endVertex();
+        bufferBuilder.addVertex(matrix, x + squareSize, y, 0)
+                .setColor(r, g, b, a)
+                .setUv(1, 0)
+                .setOverlay(OverlayTexture.NO_OVERLAY)
+                .setLight(LightTexture.FULL_BRIGHT)
+                .setNormal(0, 0, 1);
     }
 
     private int getLightLevel(Level level, BlockPos pos) {

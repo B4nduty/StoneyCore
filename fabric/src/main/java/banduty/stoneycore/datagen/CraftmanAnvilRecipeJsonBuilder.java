@@ -1,26 +1,34 @@
 package banduty.stoneycore.datagen;
 
-import banduty.stoneycore.recipes.ModRecipes;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.data.recipes.FinishedRecipe;
+import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
+import banduty.stoneycore.recipes.StackIngredient;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementRequirements;
+import net.minecraft.advancements.AdvancementRewards;
+import net.minecraft.advancements.Criterion;
+import net.minecraft.advancements.critereon.RecipeUnlockedTrigger;
+import net.minecraft.data.recipes.RecipeBuilder;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Map;
+import java.util.Optional;
 
-public class CraftmanAnvilRecipeJsonBuilder {
+public class CraftmanAnvilRecipeJsonBuilder implements RecipeBuilder {
     private final ItemStack result;
-    private final List<Ingredient> inputs = new ArrayList<>();
-    private int hitTimes = 1;
+    private final List<StackIngredient> ingredients = new ArrayList<>();
+    private int hitTimes = 3;
     private float chance = 1.0f;
+    private final Map<String, Criterion<?>> criteria = new LinkedHashMap<>();
+    @Nullable
+    private String group;
 
     private CraftmanAnvilRecipeJsonBuilder(ItemStack result) {
         this.result = result;
@@ -31,87 +39,58 @@ public class CraftmanAnvilRecipeJsonBuilder {
     }
 
     public CraftmanAnvilRecipeJsonBuilder requires(ItemStack stack) {
-        this.inputs.add(new ItemIngredient(stack));
+        this.ingredients.add(new StackIngredient(stack, Optional.empty()));
         return this;
     }
 
     public CraftmanAnvilRecipeJsonBuilder requires(TagKey<Item> tag, int count) {
-        this.inputs.add(new TagIngredient(tag, count));
+        this.ingredients.add(new StackIngredient(new ItemStack(net.minecraft.world.item.Items.AIR, count), Optional.of(tag)));
         return this;
     }
 
-    public CraftmanAnvilRecipeJsonBuilder requires(TagKey<Item> tag) {
-        return requires(tag, 1);
+    public CraftmanAnvilRecipeJsonBuilder hitTimes(int times) {
+        this.hitTimes = times;
+        return this;
     }
 
-    public CraftmanAnvilRecipeJsonBuilder hitTimes(int times) { this.hitTimes = times; return this; }
-    public CraftmanAnvilRecipeJsonBuilder chance(float c) { this.chance = c; return this; }
-
-    public void save(Consumer<FinishedRecipe> exporter, ResourceLocation resourceLocation) {
-        exporter.accept(new Provider(resourceLocation));
+    public CraftmanAnvilRecipeJsonBuilder chance(float c) {
+        this.chance = c;
+        return this;
     }
 
-    private interface Ingredient {
-        JsonObject toJson();
+    @Override
+    public RecipeBuilder unlockedBy(String name, Criterion<?> criterion) {
+        this.criteria.put(name, criterion);
+        return this;
     }
 
-    private record ItemIngredient(ItemStack stack) implements Ingredient {
-        private ItemIngredient(ItemStack stack) {
-            this.stack = stack.copy();
-        }
-
-        @Override
-        public JsonObject toJson() {
-            JsonObject obj = new JsonObject();
-            obj.addProperty("item", BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
-            obj.addProperty("count", stack.getCount());
-            if (stack.hasTag()) {
-                obj.addProperty("nbt", stack.getTag().toString());
-            }
-            return obj;
-        }
+    @Override
+    public RecipeBuilder group(@Nullable String groupName) {
+        this.group = groupName;
+        return this;
     }
 
-    private record TagIngredient(TagKey<Item> tag, int count) implements Ingredient {
-
-        @Override
-        public JsonObject toJson() {
-            JsonObject obj = new JsonObject();
-            obj.addProperty("tag", tag.location().toString());
-            obj.addProperty("count", count);
-            return obj;
-        }
+    @Override
+    public Item getResult() {
+        return result.getItem();
     }
 
-    private class Provider implements FinishedRecipe {
-        private final ResourceLocation resourceLocation;
-        Provider(ResourceLocation id) { this.resourceLocation = id; }
+    @Override
+    public void save(RecipeOutput recipeOutput, ResourceLocation id) {
+        Advancement.Builder advancementBuilder = recipeOutput.advancement()
+                .addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(id))
+                .rewards(AdvancementRewards.Builder.recipe(id))
+                .requirements(AdvancementRequirements.Strategy.OR);
 
-        @Override
-        public void serializeRecipeData(JsonObject json) {
-            json.addProperty("type", "stoneycore:craftman_anvil_crafting");
+        this.criteria.forEach(advancementBuilder::addCriterion);
 
-            JsonArray ingredients = new JsonArray();
-            for (Ingredient ingredient : inputs) {
-                ingredients.add(ingredient.toJson());
-            }
-            json.add("ingredients", ingredients);
+        CraftmanAnvilRecipe recipe = new CraftmanAnvilRecipe(
+                List.copyOf(this.ingredients),
+                this.result,
+                this.hitTimes,
+                this.chance
+        );
 
-            JsonObject resultObj = new JsonObject();
-            resultObj.addProperty("item", BuiltInRegistries.ITEM.getKey(result.getItem()).toString());
-            resultObj.addProperty("count", result.getCount());
-            if (result.hasTag()) {
-                resultObj.addProperty("nbt", result.getTag().toString());
-            }
-            json.add("result", resultObj);
-
-            json.addProperty("hit_times", hitTimes);
-            json.addProperty("chance", chance);
-        }
-
-        @Override public @NotNull ResourceLocation getId() { return resourceLocation; }
-        @Override public @NotNull RecipeSerializer<?> getType() { return ModRecipes.ANVIL_RECIPE_SERIALIZER; }
-        @Override public JsonObject serializeAdvancement() { return null; }
-        @Override public ResourceLocation getAdvancementId() { return null; }
+        recipeOutput.accept(id, recipe, advancementBuilder.build(id.withPrefix("recipes/")));
     }
 }

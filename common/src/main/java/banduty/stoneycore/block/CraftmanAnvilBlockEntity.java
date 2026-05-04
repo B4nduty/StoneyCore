@@ -1,9 +1,12 @@
 package banduty.stoneycore.block;
 
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.recipes.AnvilRecipe;
+import banduty.stoneycore.recipes.AnvilInput;
+import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
+import banduty.stoneycore.recipes.SCRecipes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
@@ -23,9 +26,9 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Vector3f;
 
@@ -37,6 +40,11 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
     private int hitCount = 0;
     private UUID lastHitter = null;
     private boolean lastRecipeValid = false;
+
+    public CraftmanAnvilBlockEntity(BlockPos pos, BlockState state) {
+        super(SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY, pos, state);
+        this.items = NonNullList.withSize(7, ItemStack.EMPTY);
+    }
 
     protected final ContainerData data = new ContainerData() {
         @Override
@@ -62,19 +70,22 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         }
     };
 
-    public CraftmanAnvilBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state);
-        this.items = NonNullList.withSize(7, ItemStack.EMPTY);
-    }
-
     @Override
     public NonNullList<ItemStack> getItems() {
         return items;
     }
 
-    public Optional<AnvilRecipe> getRecipe() {
+    public Optional<CraftmanAnvilRecipe> getRecipe() {
         if (level == null) return Optional.empty();
-        return level.getRecipeManager().getRecipeFor(Services.PLATFORM.getCraftmanAnvilRecipe(), this, level);
+
+        AnvilInput input = new AnvilInput(
+                items.get(0), items.get(1), items.get(2),
+                items.get(3), items.get(4), items.get(5)
+        );
+
+        return level.getRecipeManager()
+                .getRecipeFor(SCRecipes.CRAFTMAN_ANVIL_RECIPE_TYPE, input, level)
+                .map(RecipeHolder::value);
     }
 
     public int getHitCount() {
@@ -142,7 +153,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         }
     }
 
-    private void completeCrafting(AnvilRecipe recipe) {
+    private void completeCrafting(CraftmanAnvilRecipe recipe) {
         if (level == null || !(level instanceof ServerLevel serverLevel)) return;
 
         RandomSource random = level.random;
@@ -165,7 +176,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
                 boolean added = false;
 
                 for (int j = 1; j < 7; j++) {
-                    if (!items.get(j).isEmpty() && ItemStack.isSameItemSameTags(items.get(j), remainder)) {
+                    if (!items.get(j).isEmpty() && ItemStack.isSameItemSameComponents(items.get(j), remainder)) {
                         int newCount = items.get(j).getCount() + remainder.getCount();
                         if (newCount <= items.get(j).getMaxStackSize()) {
                             items.get(j).setCount(newCount);
@@ -272,9 +283,9 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
     }
 
     @Override
-    public void saveAdditional(CompoundTag nbt) {
-        super.saveAdditional(nbt);
-        ContainerHelper.saveAllItems(nbt, items, true);
+    protected void saveAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
+        super.saveAdditional(nbt, registries);
+        ContainerHelper.saveAllItems(nbt, items, registries);
         nbt.putInt("HitCount", hitCount);
         if (lastHitter != null) {
             nbt.putUUID("LastHitter", lastHitter);
@@ -282,23 +293,21 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
     }
 
     @Override
-    public void load(CompoundTag nbt) {
-        super.load(nbt);
+    protected void loadAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
+        super.loadAdditional(nbt, registries);
         this.items.clear();
-        ContainerHelper.loadAllItems(nbt, items);
-        if (nbt.contains("HitCount")) {
-            hitCount = nbt.getInt("HitCount");
-        }
+        ContainerHelper.loadAllItems(nbt, items, registries);
+        this.hitCount = nbt.getInt("HitCount");
         if (nbt.hasUUID("LastHitter")) {
-            lastHitter = nbt.getUUID("LastHitter");
+            this.lastHitter = nbt.getUUID("LastHitter");
         }
     }
 
     @Override
-    public CompoundTag getUpdateTag() {
-        CompoundTag nbt = new CompoundTag();
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag nbt = super.getUpdateTag(registries);
         nbt.putInt("HitCount", hitCount);
-        ContainerHelper.saveAllItems(nbt, this.items, true);
+        ContainerHelper.saveAllItems(nbt, this.items, registries);
         return nbt;
     }
 
@@ -330,23 +339,25 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
     }
 
     public void removeItems(Player playerEntity) {
-        if (level != null && level.isClientSide()) {
-            return;
-        }
+        if (level != null && level.isClientSide()) return;
 
         hitCount = 0;
         boolean itemsRemoved = false;
 
         for (int i = 0; i < 6; i++) {
             ItemStack stack = items.get(i);
-            if (!stack.isEmpty()) {
+            if (!stack.isEmpty() && stack.getCount() > 0) {
+                ItemStack copy = stack.copy();
                 // Try to add to player inventory with proper stacking
-                if (!playerEntity.getInventory().add(stack)) {
+                if (!playerEntity.getInventory().add(copy)) {
                     // If inventory is full, drop the item at the player's feet
-                    playerEntity.drop(stack, false);
+                    playerEntity.drop(copy, false);
                 }
                 items.set(i, ItemStack.EMPTY);
                 itemsRemoved = true;
+            } else {
+                // Clean up any ghost stacks with 0 count
+                items.set(i, ItemStack.EMPTY);
             }
         }
 

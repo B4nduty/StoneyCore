@@ -3,6 +3,9 @@ package banduty.stoneycore.util.definitionsloader;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
@@ -25,4 +28,6 @@ public record LandValues(int baseRadius, Map<Item, Integer> itemsToExpand, Strin
             Codec.INT.optionalFieldOf("maxVisitorsPerLand", 3)
                     .forGetter(LandValues::maxVisitorsPerLand)
     ).apply(instance, LandValues::new));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, LandValues> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 }

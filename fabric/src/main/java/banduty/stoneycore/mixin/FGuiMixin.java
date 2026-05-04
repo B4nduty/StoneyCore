@@ -4,11 +4,13 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.client.overlay.StoneyCoreOverlayRenderer;
 import banduty.stoneycore.platform.ClientPlatform;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.SCAttributes;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
@@ -25,13 +27,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Gui.class)
 public class FGuiMixin {
     @Unique
-    private static final ResourceLocation STAMINA = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/stamina_bar.png");
+    private static final ResourceLocation STAMINA = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/stamina_bar.png");
     @Unique
-    private static final ResourceLocation STAMINA_OVERLAY = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_overlay.png");
+    private static final ResourceLocation STAMINA_OVERLAY = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_overlay.png");
     @Unique
-    private static final ResourceLocation STAMINA_EMPTY = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_empty.png");
+    private static final ResourceLocation STAMINA_EMPTY = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_empty.png");
     @Unique
-    private static final ResourceLocation STAMINA_BLOCKED = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_blocked.png");
+    private static final ResourceLocation STAMINA_BLOCKED = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_blocked.png");
     @Unique
     private static final int STAMINA_UNIT_SIZE = 8;
     @Unique
@@ -49,7 +51,7 @@ public class FGuiMixin {
         LocalPlayer player = client.player;
         if (player == null || player.isSpectator() || player.isCreative() || !stoneyCore$ableStaminaOverlay(player))
             return;
-        double maxStamina = player.getAttributeValue(Services.ATTRIBUTES.getMaxStamina());
+        double maxStamina = player.getAttributeValue(SCAttributes.MAX_STAMINA);
         if (maxStamina <= 0) return;
 
         int staminaBarX = client.getWindow().getGuiScaledWidth() / 2;
@@ -159,11 +161,11 @@ public class FGuiMixin {
 
     // Render visor BEFORE HUD elements
     @Inject(method = "render", at = @At(value = "HEAD"))
-    private void renderVisorBeforeHud(GuiGraphics guiGraphics, float partialTick, CallbackInfo ci) {
+    private void renderVisorBeforeHud(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null || minecraft.options.hideGui) return;
         if (ClientPlatform.getKeyInputHelper().isHidingVisor()) return;
 
-        OVERLAY_RENDERER.render(guiGraphics, partialTick);
+        OVERLAY_RENDERER.render(guiGraphics, deltaTracker.getGameTimeDeltaTicks());
     }
 }

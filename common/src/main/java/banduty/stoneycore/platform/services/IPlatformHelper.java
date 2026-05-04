@@ -2,20 +2,27 @@ package banduty.stoneycore.platform.services;
 
 import banduty.stoneycore.config.ConfigImpl;
 import banduty.stoneycore.lands.util.ClaimWorker;
-import banduty.stoneycore.recipes.AnvilRecipe;
-import banduty.stoneycore.recipes.BannerPatternRecipe;
-import banduty.stoneycore.recipes.ManuscriptCraftingRecipe;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 import java.util.Queue;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 public interface IPlatformHelper {
 
@@ -57,21 +64,23 @@ public interface IPlatformHelper {
 
     Queue<ClaimWorker> getClaimTasks();
 
-    Attribute getAttackRange();
+    <T> Supplier<T> register(Registry<T> registry, String name, Supplier<T> entry);
 
-    Attribute getReach();
-
-    Block getCraftmanAnvil();
-
-    RecipeType<AnvilRecipe> getCraftmanAnvilRecipe();
-
-    RecipeSerializer<AnvilRecipe> getCraftmanAnvilRecipeSerializer();
-
-    RecipeSerializer<ManuscriptCraftingRecipe> getManuscriptRecipeSerializer();
-
-    RecipeSerializer<BannerPatternRecipe> getBannerRecipeSerializer();
+    <T> Holder<T> registerHolder(ResourceKey<Registry<T>> registryKey, String name, java.util.function.Supplier<T> value);
 
     ConfigImpl getConfig();
 
     List<ItemStack> getEquippedAccessories(LivingEntity livingEntity);
+
+    <T extends BlockEntity> BlockEntityType<T> registerBlockEntityType(
+            String name,
+            BiFunction<BlockPos, BlockState, T> factory,
+            Block block
+    );
+
+    <T extends AbstractContainerMenu> MenuType<T> createMenuType(IFactory<T> factory);
+
+    interface IFactory<T extends AbstractContainerMenu> {
+        T create(int syncId, Inventory inventory, RegistryFriendlyByteBuf buf);
+    }
 }

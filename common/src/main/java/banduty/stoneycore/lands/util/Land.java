@@ -4,9 +4,7 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.PDKeys;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import com.mojang.authlib.GameProfile;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -133,7 +131,7 @@ public class Land {
         Services.PLATFORM.sendTitle(serverPlayerEntity, Component.translatable(
                 "component.land.stoneycore.expansion.increased", radius, radius + radiusToIncrease
         ));
-        NBTDataHelper.set((IEntityDataSaver) player, PDKeys.LAND_EXPANDED, true);
+        ((IEntityDataSaver) player).stoneycore$getPersistentData().putBoolean("landExpanded", true);
     }
 
     public Land copy() {
@@ -307,7 +305,7 @@ public class Land {
         int radius = nbt.getInt("Radius");
         String name = nbt.getString("CustomName");
         BlockPos corePos = BlockPos.of(nbt.getLong("CorePos"));
-        ResourceLocation landTypeId = new ResourceLocation(nbt.getString("LandType"));
+        ResourceLocation landTypeId = ResourceLocation.parse(nbt.getString("LandType"));
         int maxAllies = nbt.getInt("MaxAllies");
         LandType landType = LandTypeRegistry.getById(landTypeId)
                 .orElseThrow(() -> new IllegalStateException("Unknown LandType: " + landTypeId));

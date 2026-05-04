@@ -1,14 +1,13 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
-import banduty.stoneycore.items.armor.SCAccessoryItem;
+import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.data.itemdata.INBTKeys;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
@@ -18,10 +17,7 @@ import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import banduty.stoneycore.util.weaponutil.TooltipClientSide;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -48,7 +44,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntFunction;
 
@@ -72,7 +67,7 @@ public abstract class ItemMixin {
     }
 
     @Inject(method = "getUseDuration", at = @At("HEAD"), cancellable = true)
-    public void stoneycore$getUseDuration(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
+    public void stoneycore$getUseDuration(ItemStack stack, LivingEntity entity, CallbackInfoReturnable<Integer> cir) {
         if (WeaponDefinitionsStorage.isRanged(stack)) {
             cir.setReturnValue(WeaponDefinitionsStorage.getData(stack).ranged().maxUseTime());
             return;
@@ -109,7 +104,7 @@ public abstract class ItemMixin {
         if ((getUseAnimation(stack) == UseAnim.DRINK || getUseAnimation(stack) == UseAnim.EAT)) {
             for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(player)) {
                 if (player.isCreative()) break;
-                if (!NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false) && !AccessoriesDefinitionsStorage.getData(itemStack).visoredHelmet().getPath().isBlank()) {
+                if (!Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN)) && !AccessoriesDefinitionsStorage.getData(itemStack).visoredHelmet().getPath().isBlank()) {
                     player.displayClientMessage(Component.translatable("component.tooltip.stoneycore.openVisorEatDrink"), true);
                     cir.setReturnValue(InteractionResultHolder.fail(stack));
                     return;
@@ -157,8 +152,8 @@ public abstract class ItemMixin {
 
     @Unique
     private void stoneyCore$toggleBludgeoningMode(ItemStack stack) {
-        boolean current = NBTDataHelper.get(stack, INBTKeys.BLUDGEONING, false);
-        NBTDataHelper.set(stack, INBTKeys.BLUDGEONING, !current);
+        boolean current = Boolean.TRUE.equals(stack.get(SCDataComponents.BLUDGEONING));
+        stack.set(SCDataComponents.BLUDGEONING, !current);
     }
 
     @Unique
@@ -194,7 +189,7 @@ public abstract class ItemMixin {
                 weaponState.isReloading(), false, true));
 
         if (!player.getAbilities().instabuild && needsFAS && player instanceof ServerPlayer serverPlayer) {
-            offHandStack.hurtAndBreak(1, serverPlayer, p -> p.broadcastBreakEvent(hand));
+            offHandStack.hurtAndBreak(1, serverPlayer, LivingEntity.getSlotForHand(hand));
         }
 
         cir.setReturnValue(InteractionResultHolder.consume(stack));
@@ -240,9 +235,7 @@ public abstract class ItemMixin {
     }
 
     @Inject(method = "appendHoverText", at = @At("HEAD"))
-    public void stoneycore$appendHoverText(ItemStack stack, Level level, List<Component> tooltip, TooltipFlag tooltipFlag, CallbackInfo ci) {
-        if (level == null) return;
-
+    public void stoneycore$appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag, CallbackInfo ci) {
         Item item = stack.getItem();
         if (WeaponDefinitionsStorage.isMelee(stack)) {
             boolean hasSlashing = SCWeaponUtil.hasDamageType(SCDamageType.SLASHING, item);
@@ -279,9 +272,7 @@ public abstract class ItemMixin {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.piercingDamage", piercing).withStyle(ChatFormatting.GREEN));
         }
 
-        if (level.isClientSide()) {
-            TooltipClientSide.setTooltip(tooltip, stack);
-        }
+        TooltipClientSide.setTooltip(tooltip, stack);
     }
 
     @Inject(method = "useOn", at = @At("HEAD"), cancellable = true)
@@ -313,14 +304,14 @@ public abstract class ItemMixin {
         if (!(stack.getItem() instanceof SCAccessoryItem)) return;
 
         if (player.containerMenu instanceof CraftingMenu craftingInventory) {
-            stoneyCore$applyCraftingModifiers(stack, craftingInventory.getSize(), craftingInventory::getSlot);
+            stoneyCore$applyCraftingModifiers(stack, craftingInventory.getSize(), craftingInventory::getSlot, level);
         } else if (player.containerMenu instanceof InventoryMenu inventoryMenu) {
-            stoneyCore$applyCraftingModifiers(stack, 4, inventoryMenu::getSlot);
+            stoneyCore$applyCraftingModifiers(stack, 4, inventoryMenu::getSlot, level);
         }
     }
 
     @Unique
-    private void stoneyCore$applyCraftingModifiers(ItemStack resultStack, int slotCount, IntFunction<Slot> slotSupplier) {
+    private void stoneyCore$applyCraftingModifiers(ItemStack resultStack, int slotCount, IntFunction<Slot> slotSupplier, Level level) {
         ItemStack bannerStack = ItemStack.EMPTY;
 
         for (int i = 0; i < slotCount; i++) {
@@ -331,43 +322,13 @@ public abstract class ItemMixin {
             }
         }
 
-        if (bannerStack.isEmpty() || !(resultStack.getItem() instanceof SCAccessoryItem) || !resultStack.is(SCTags.BANNER_COMPATIBLE.getTag()))
-            return;
+        if (bannerStack.isEmpty() || !(resultStack.getItem() instanceof SCAccessoryItem)) return;
 
-        List<Tuple<ResourceLocation, DyeColor>> bannerPatterns = stoneyCore$getBannerPatterns(bannerStack, resultStack.getItem());
-        PatternHelper.setBannerPatterns(resultStack, bannerPatterns);
+        HolderLookup.Provider registries = level.registryAccess();
+
+        List<Tuple<ResourceLocation, DyeColor>> bannerPatterns = PatternHelper.getBannerPatternsFromBanner(bannerStack, resultStack.getItem());
+
+        PatternHelper.setBannerPatterns(resultStack, registries, bannerPatterns);
         PatternHelper.setBannerDyeColor(resultStack, ((BannerItem) bannerStack.getItem()).getColor());
-    }
-
-    @Unique
-    private static List<Tuple<ResourceLocation, DyeColor>> stoneyCore$getBannerPatterns(ItemStack bannerStack, Item armor) {
-        List<Tuple<ResourceLocation, DyeColor>> patterns = new ArrayList<>();
-
-        if (bannerStack.isEmpty() || !(bannerStack.getItem() instanceof BannerItem)) return patterns;
-
-        CompoundTag nbt = bannerStack.getTag();
-        if (nbt == null || !nbt.contains(INBTKeys.BLOCK_ENTITY_TAG)) return patterns;
-
-        CompoundTag blockEntityTag = nbt.getCompound(INBTKeys.BLOCK_ENTITY_TAG);
-        if (!blockEntityTag.contains(INBTKeys.PATTERNS)) return patterns;
-
-        ListTag patternList = blockEntityTag.getList(INBTKeys.PATTERNS, Tag.TAG_COMPOUND);
-        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(armor);
-
-        for (int i = 0; i < patternList.size(); i++) {
-            CompoundTag patternTag = patternList.getCompound(i);
-
-            String pattern = NBTDataHelper.get(patternTag, INBTKeys.PATTERN, "");
-            int colorId = NBTDataHelper.get(patternTag, INBTKeys.COLOR, 0);
-
-            DyeColor color = DyeColor.byId(colorId);
-            ResourceLocation patternId = new ResourceLocation(
-                    itemId.getNamespace(),
-                    "textures/banner_pattern/" + itemId.getPath() + "/" + pattern + ".png"
-            );
-
-            patterns.add(new Tuple<>(patternId, color));
-        }
-        return patterns;
     }
 }

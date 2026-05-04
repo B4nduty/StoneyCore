@@ -42,7 +42,7 @@ public class AccessoriesDefinitionsStorage {
     }
 
     private static AccessoriesDefinitionData getDefaultData() {
-        return new AccessoriesDefinitionData(0, 0, "", 0, 0, 0, new ResourceLocation("", ""));
+        return new AccessoriesDefinitionData(0, 0, "", 0, 0, 0, ResourceLocation.fromNamespaceAndPath("", ""));
     }
 
     public static Map<ResourceLocation, AccessoriesDefinitionData> getDefinitions() {

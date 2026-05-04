@@ -1,114 +1,55 @@
 package banduty.stoneycore.recipes;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagParser;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-public record StackIngredient(ItemStack stack, TagKey<Item> tag) {
+public record StackIngredient(ItemStack stack, Optional<TagKey<Item>> tag) {
+
+    public static final MapCodec<StackIngredient> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
+            ItemStack.CODEC.fieldOf("stack").forGetter(StackIngredient::stack),
+            TagKey.codec(Registries.ITEM).optionalFieldOf("tag").forGetter(StackIngredient::tag)
+    ).apply(inst, StackIngredient::new));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, TagKey<Item>> TAG_STREAM_CODEC =
+            ResourceLocation.STREAM_CODEC.<RegistryFriendlyByteBuf>cast()
+                    .map(location -> TagKey.create(Registries.ITEM, location),
+                            TagKey::location
+                    );
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, StackIngredient> STREAM_CODEC = StreamCodec.composite(
+            ItemStack.STREAM_CODEC, StackIngredient::stack,
+            ByteBufCodecs.optional(TAG_STREAM_CODEC), StackIngredient::tag,
+            StackIngredient::new
+    );
 
     public boolean test(ItemStack input) {
-        if (tag != null) {
-            return !input.isEmpty() && input.is(tag);
+        if (tag.isPresent()) {
+            return !input.isEmpty() && input.is(tag.get());
         }
         if (input.isEmpty()) return false;
-        if (!ItemStack.isSameItem(stack, input)) return false;
 
-        if (stack.hasTag()) {
-            CompoundTag expected = stack.getTag();
-            CompoundTag actual = input.getTag();
-            if (actual == null) return false;
-            return expected.equals(actual);
-        }
-
-        return true;
-    }
-
-    public JsonElement toJson() {
-        JsonObject obj = new JsonObject();
-
-        if (tag != null) {
-            obj.addProperty("tag", tag.location().toString());
-            obj.addProperty("count", stack.getCount());
-        } else {
-            obj.addProperty("item", BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
-            obj.addProperty("count", stack.getCount());
-
-            if (stack.hasTag()) {
-                obj.addProperty("nbt", stack.getTag().copy().toString());
-            }
-        }
-
-        return obj;
-    }
-
-    public static StackIngredient fromJson(JsonObject json) {
-        if (json.has("tag")) {
-            TagKey<Item> tag = TagKey.create(Registries.ITEM, new ResourceLocation(GsonHelper.getAsString(json, "tag")));
-            int count = GsonHelper.getAsInt(json, "count", 1);
-            ItemStack stack = new ItemStack(Items.BARRIER, count);
-            return new StackIngredient(stack, tag);
-        } else {
-            Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(GsonHelper.getAsString(json, "item")));
-            int count = GsonHelper.getAsInt(json, "count", 1);
-
-            ItemStack stack = new ItemStack(item, count);
-            if (json.has("nbt")) {
-                try {
-                    CompoundTag tag = TagParser.parseTag(GsonHelper.getAsString(json, "nbt"));
-                    stack.setTag(tag);
-                } catch (Exception e) {
-                    throw new RuntimeException("Invalid NBT data for StackIngredient: " + json, e);
-                }
-            }
-
-            return new StackIngredient(stack, null);
-        }
-    }
-
-    public void write(FriendlyByteBuf buf) {
-        buf.writeBoolean(tag != null);
-        if (tag != null) {
-            buf.writeResourceLocation(tag.location());
-            buf.writeVarInt(stack.getCount());
-        } else {
-            buf.writeItem(stack);
-        }
-    }
-
-    public static StackIngredient read(FriendlyByteBuf buf) {
-        boolean isTag = buf.readBoolean();
-        if (isTag) {
-            ResourceLocation tagId = buf.readResourceLocation();
-            int count = buf.readVarInt();
-            TagKey<Item> tag = TagKey.create(BuiltInRegistries.ITEM.key(), tagId);
-            ItemStack stack = new ItemStack(net.minecraft.world.item.Items.AIR, count);
-            return new StackIngredient(stack, tag);
-        } else {
-            ItemStack stack = buf.readItem();
-            return new StackIngredient(stack, null);
-        }
+        return ItemStack.isSameItemSameComponents(stack, input);
     }
 
     public List<ItemStack> asItemStacks() {
-        if (tag != null) {
-            return BuiltInRegistries.ITEM.stream()
-                    .filter(item -> item.builtInRegistryHolder().is(tag))
-                    .map(item -> {
-                        ItemStack s = new ItemStack(item);
+        if (tag.isPresent()) {
+            return BuiltInRegistries.ITEM.getOrCreateTag(tag.get()).stream()
+                    .map(holder -> {
+                        ItemStack s = new ItemStack(holder.value());
                         s.setCount(stack.getCount());
                         return s;
                     })

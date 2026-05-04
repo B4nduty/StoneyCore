@@ -40,8 +40,8 @@ public record SiegeProperties(
         private double knockbackResistance = 265.0;
         private SoundEvent moveSound = SoundEvents.HORSE_STEP_WOOD;
         private SoundEvent reloadSound = SoundEvents.ITEM_BREAK;
-        private SoundEvent shootSound = SoundEvents.GENERIC_EXPLODE;
-        private SoundEvent attackSound = SoundEvents.GENERIC_EXPLODE;
+        private SoundEvent shootSound = SoundEvents.GENERIC_EXPLODE.value();
+        private SoundEvent attackSound = SoundEvents.GENERIC_EXPLODE.value();
         private int moveSoundDelay = 150;
         private double moveSoundRange = 30.0;
         private double reloadSoundRange = 15.0;

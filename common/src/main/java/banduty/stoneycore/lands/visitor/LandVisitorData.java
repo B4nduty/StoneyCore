@@ -105,7 +105,7 @@ public class LandVisitorData {
         int mood = tag.getInt("Mood");
         int ticksVisiting = tag.getInt("TicksVisiting");
         boolean isSettled = tag.getBoolean("IsSettled");
-        ResourceLocation professionId = new ResourceLocation(tag.getString("Profession"));
+        ResourceLocation professionId = ResourceLocation.withDefaultNamespace(tag.getString("Profession"));
         VillagerProfession profession = BuiltInRegistries.VILLAGER_PROFESSION.get(professionId);
 
         LandVisitorData data = new LandVisitorData(visitorId, landOwner, landCore, mood, profession);

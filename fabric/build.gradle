@@ -59,23 +59,18 @@ dependencies {
     modCompileOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei}"
     modRuntimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei}"
 
-    modApi "me.shedaniel.cloth:cloth-config:${cloth_config}"
-
-    include modImplementation("com.jamieswhiteshirt:reach-entity-attributes:${project.reach_version}")
+    modCompileOnlyApi "me.shedaniel.cloth:cloth-config:${cloth_config}"
 
     modApi "com.terraformersmc:modmenu:${modmenu}"
 
-    modImplementation "io.wispforest:owo-lib:${owo_version}"
-    include "io.wispforest:owo-sentinel:${owo_version}"
-    annotationProcessor "io.wispforest:owo-lib:${owo_version}"
+    modImplementation "io.wispforest:owo-lib:${owo_version_fabric}"
+    include "io.wispforest:owo-sentinel:${owo_version_fabric}"
+    annotationProcessor "io.wispforest:owo-lib:${owo_version_fabric}"
 
 /*    modRuntimeOnly "curse.maven:playeranimator-658587:4587215"
     modRuntimeOnly "curse.maven:architectury-api-419699:5137936"
     modRuntimeOnly "curse.maven:better-combat-by-daedelus-639842:7287333"
     modRuntimeOnly "curse.maven:geckolib-388172:7553256"*/
-
-    compileOnly project(":common")
-    runtimeOnly project(":common")
 
     include implementation("com.github.B4nduty:streq:v${streq}")
 }
@@ -89,8 +84,9 @@ sourceSets {
 }
 
 loom {
-    if (project(":common").file("src/main/resources/${mod_id}.accesswidener").exists()) {
-        accessWidenerPath.set(project(":common").file("src/main/resources/${mod_id}.accesswidener"))
+    def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
+    if (aw.exists()) {
+        accessWidenerPath.set(aw)
     }
     mixin {
         defaultRefmapName.set("${mod_id}.refmap.json")
