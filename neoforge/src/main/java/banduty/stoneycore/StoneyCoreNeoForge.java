@@ -20,7 +20,6 @@ public class StoneyCoreNeoForge {
         modContainer.registerConfig(ModConfig.Type.CLIENT, SCVisualConfigs.SPEC);
 
         NeoForgePlatformHelper.registerRegistries(modEventBus);
-        NeoForge.EVENT_BUS.register(this);
         
         if (ModList.get().isLoaded("accessories")) {
             AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
