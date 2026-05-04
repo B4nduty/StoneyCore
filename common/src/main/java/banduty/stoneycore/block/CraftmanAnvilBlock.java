@@ -77,7 +77,7 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         return this.getStateDefinition()
-                .any().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
+                .any().setValue(FACING, ctx.getHorizontalDirection());
     }
 
     @Override
