@@ -1,7 +1,7 @@
 package banduty.stoneycore.screen;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.blueprint.BlueprintItem;
+import banduty.stoneycore.items.custom.blueprint.BlueprintItem;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.screen.button.TexturedButton;
 import banduty.stoneycore.structure.StructureSpawnRegistry;
@@ -49,8 +49,8 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
 
         this.legendButton = new TexturedButton(0, 0, 87, 174,
                 button -> this.showLegend = !this.showLegend,
-                new ResourceLocation("stoneycore", "textures/models/armor/a_layer_1.png"),
-                new ResourceLocation("stoneycore", "textures/models/armor/a_layer_1.png")
+                ResourceLocation.fromNamespaceAndPath("stoneycore", "textures/models/armor/a_layer_1.png"),
+                ResourceLocation.fromNamespaceAndPath("stoneycore", "textures/models/armor/a_layer_1.png")
         );
 
         this.addRenderableWidget(legendButton);
@@ -67,7 +67,7 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
         int xOffset = 170 / 2 - 1; // move right (+) or left (-)
         int yOffset = 2;  // move down (+) or up (-)
 
-        ResourceLocation texture = new ResourceLocation(
+        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(
                 originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace,
                 "textures/gui/blueprint/" + basePath + ".png"
         );
@@ -86,7 +86,7 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
                 this.imageHeight
         );
 
-        texture = new ResourceLocation(
+        texture = ResourceLocation.fromNamespaceAndPath(
                 namespace,
                 "textures/gui/blueprint/" + this.menu.getStructureId().getPath() + ".png"
         );
@@ -112,7 +112,7 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
 
     private void renderLegend(GuiGraphics guiGraphics, String originalBasePath, String namespace, String basePath, int xOffset) {
 
-        ResourceLocation texture = new ResourceLocation(
+        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(
                 originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace,
                 "textures/gui/blueprint/" + basePath + "_legend.png"
         );
@@ -131,7 +131,7 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
         int width = showLegend ? 157 : 16;
         int height = 174;
 
-        ResourceLocation hoverTexture = new ResourceLocation(originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace,
+        ResourceLocation hoverTexture = ResourceLocation.fromNamespaceAndPath(originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace,
                 "textures/gui/blueprint/" + basePath + legendSuffix + "_overlay.png");
 
         legendButton.setX(xPos);
@@ -203,7 +203,7 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        renderBackground(guiGraphics);
+        renderBackground(guiGraphics, mouseX, mouseY, delta);
         super.render(guiGraphics, mouseX, mouseY, delta);
         Services.BLUEPRINT.renderBlueprintEvents(guiGraphics, mouseX, mouseY, delta, this);
         renderTooltip(guiGraphics, mouseX, mouseY);

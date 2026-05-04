@@ -1,7 +1,7 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;

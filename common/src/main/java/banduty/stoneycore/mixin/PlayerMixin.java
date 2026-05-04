@@ -4,18 +4,21 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.melee.CombatSelect;
 import banduty.stoneycore.util.EntityDamageUtil;
 import banduty.stoneycore.util.WeightUtil;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -40,21 +43,25 @@ public abstract class PlayerMixin {
 
         if (playerEntity.getUseItem().is(SCTags.WEAPONS_SHIELD.getTag())) {
             int i = 1 + Mth.floor(amount);
-            playerEntity.getUseItem().hurtAndBreak(i, playerEntity, (player) -> player.broadcastBreakEvent(playerEntity.getUsedItemHand()));
+            playerEntity.getUseItem().hurtAndBreak(i, playerEntity, LivingEntity.getSlotForHand(playerEntity.getUsedItemHand()));
             playerEntity.awardStat(Stats.ITEM_USED.get(playerEntity.getUseItem().getItem()));
             ci.cancel();
 
-            StaminaData.removeStamina(playerEntity, StoneyCore.getConfig().combatOptions().onBlockStaminaConstant() * WeightUtil.getCachedWeight(playerEntity));
+            StaminaData.removeStamina(playerEntity, StoneyCore.getConfig().combatOptions().onBlockStaminaConstant() * WeightUtil.getWeight(playerEntity));
         }
     }
 
     @Inject(method = "disableShield", at = @At("HEAD"), cancellable = true)
-    public void stoneycore$disableShield(boolean sprinting, CallbackInfo ci) {
+    public void stoneycore$disableShield(CallbackInfo ci) {
         ItemStack activeItem = playerEntity.getUseItem();
         Level level = playerEntity.level();
 
-        float disableChance = SHIELD_DISABLE_CHANCE_BASE + (float) EnchantmentHelper.getBlockEfficiency(playerEntity) * 0.05F;
-        if (sprinting) {
+        float efficiencyLevel = EnchantmentHelper.getEnchantmentLevel(
+                level.holderLookup(Registries.ENCHANTMENT).getOrThrow(Enchantments.EFFICIENCY),
+                playerEntity
+        );
+        float disableChance = SHIELD_DISABLE_CHANCE_BASE + efficiencyLevel * 0.05F;
+        if (playerEntity.isSprinting()) {
             disableChance += SHIELD_DISABLE_CHANCE_SPRINT_BONUS;
         }
 
@@ -84,14 +91,23 @@ public abstract class PlayerMixin {
 
         if (!WeaponDefinitionsStorage.isMelee(weaponStack)) return f;
 
-        float weaponDamage = 0;
-        if (weaponStack.getItem() instanceof SwordItem swordItem) weaponDamage = swordItem.getDamage();
-        else if (weaponStack.getItem() instanceof DiggerItem miningToolItem) weaponDamage = miningToolItem.getAttackDamage();
+        float weaponDamage = (float) stoneyCore$getBaseAttackDamage(weaponStack);
 
         double extra = EntityDamageUtil.onDamage(living, playerEntity, weaponStack);
 
         if (weaponStack.is(SCTags.BROKEN_WEAPONS.getTag()) && weaponStack.getDamageValue() >= weaponStack.getMaxDamage() * 0.9f) extra *= 0.2f;
 
         return f + (float)extra - weaponDamage - 1;
+    }
+
+    @Unique
+    private static double stoneyCore$getBaseAttackDamage(ItemStack stack) {
+        ItemAttributeModifiers modifiers = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
+        if (modifiers == null) return 0.0;
+
+        return modifiers.modifiers().stream()
+                .filter(mod -> mod.attribute().is(Attributes.ATTACK_DAMAGE))
+                .mapToDouble(mod -> mod.modifier().amount())
+                .sum();
     }
 }

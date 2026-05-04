@@ -1,6 +1,6 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.items.hotiron.HotIron;
+import banduty.stoneycore.items.custom.hotiron.HotIron;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
@@ -39,7 +39,7 @@ public class HotIronCoolingHandler {
         });
 
         // tick cooling logic
-        ServerTickEvents.END_WORLD_TICK.register(world -> tick(world));
+        ServerTickEvents.END_WORLD_TICK.register(HotIronCoolingHandler::tick);
     }
 
     private static void tick(ServerLevel world) {

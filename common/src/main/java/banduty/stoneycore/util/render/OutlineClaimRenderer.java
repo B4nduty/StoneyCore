@@ -18,8 +18,7 @@ public class OutlineClaimRenderer {
         Services.OUTLINE_CLAIM_RENDERER.renderOutlineClaim(player);
     }
 
-    protected static List<BlockPos> calculateBorderPositions(ServerPlayer player, Land land) {
-        ServerLevel world = player.serverLevel();
+    public static List<BlockPos> calculateBorderPositions(ServerLevel world, Land land) {
         Set<BlockPos> claimed = land.getClaimed();
         List<BlockPos> borderPositions = new ArrayList<>();
 
@@ -28,14 +27,12 @@ public class OutlineClaimRenderer {
                 borderPositions.add(getAdjustedTopPosition(world, pos));
             }
         }
-
         return borderPositions;
     }
 
     protected static boolean isBorderBlock(BlockPos pos, Set<BlockPos> claimed) {
         int x = pos.getX();
         int z = pos.getZ();
-
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 if (dx == 0 && dz == 0) continue;
@@ -56,7 +53,6 @@ public class OutlineClaimRenderer {
             checkPos.move(0, -1, 0);
             state = serverLevel.getBlockState(checkPos);
         }
-
         return checkPos.immutable();
     }
 }

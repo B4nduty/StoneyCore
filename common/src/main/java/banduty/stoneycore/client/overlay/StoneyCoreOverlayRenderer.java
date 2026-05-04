@@ -4,10 +4,10 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.StoneyCoreClient;
 import banduty.stoneycore.platform.ClientPlatform;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.data.itemdata.INBTKeys;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.SCAttributes;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -18,9 +18,8 @@ import net.minecraft.world.item.ItemStack;
 import org.lwjgl.opengl.GL11;
 
 public class StoneyCoreOverlayRenderer {
-
-    private static final ResourceLocation VISOR_PROGRESS_BACKGROUND = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/visor_progress_background.png");
-    private static final ResourceLocation VISOR_PROGRESS_BAR = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/visor_progress_bar.png");
+    private static final ResourceLocation VISOR_PROGRESS_BACKGROUND = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/visor_progress_background.png");
+    private static final ResourceLocation VISOR_PROGRESS_BAR = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/visor_progress_bar.png");
 
     private ResourceLocation[] noiseTextures;
     private int currentNoiseTexture = 0;
@@ -33,6 +32,7 @@ public class StoneyCoreOverlayRenderer {
 
         if (player == null || player.isSpectator()) return;
         if (client.options.hideGui) return;
+
         if (!client.options.getCameraType().isFirstPerson() && !StoneyCore.getConfig().visualOptions().overlayThirdPerson())
             return;
 
@@ -46,6 +46,7 @@ public class StoneyCoreOverlayRenderer {
         renderVisor(guiGraphics, player, width, height);
         renderStaminaEffects(guiGraphics, player, width, height);
         renderVisorToggleProgress(guiGraphics, tickDelta);
+
         StoneyCoreClient.LAND_TITLE_RENDERER.render(guiGraphics);
 
         RenderSystem.disableBlend();
@@ -54,29 +55,20 @@ public class StoneyCoreOverlayRenderer {
 
     private void renderVisor(GuiGraphics guiGraphics, LocalPlayer player, int width, int height) {
         for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(player)) {
-            ResourceLocation visorId = AccessoriesDefinitionsStorage.getData(itemStack).visoredHelmet();
+            var data = AccessoriesDefinitionsStorage.getData(itemStack);
+            ResourceLocation visorId = data.visoredHelmet();
 
-            if (!NBTDataHelper.get(itemStack, INBTKeys.VISOR_OPEN, false)
+            if (!Boolean.TRUE.equals(itemStack.get(SCDataComponents.VISOR_OPEN))
                     && !(visorId.getPath().isEmpty() || visorId.getPath().equals("empty"))
                     && StoneyCore.getConfig().visualOptions().getVisoredHelmet()) {
 
-                String namespace = visorId.getNamespace();
-                if (namespace.isEmpty()) namespace = "stoneycore";
-
-                ResourceLocation visorTexture =
-                        new ResourceLocation(namespace, "textures/overlay/visor/" + visorId.getPath() + ".png");
+                String namespace = visorId.getNamespace().isEmpty() ? "stoneycore" : visorId.getNamespace();
+                ResourceLocation visorTexture = ResourceLocation.fromNamespaceAndPath(namespace, "textures/overlay/visor/" + visorId.getPath() + ".png");
 
                 RenderSystem.setShaderTexture(0, visorTexture);
-                RenderSystem.texParameter(
-                        GL11.GL_TEXTURE_2D,
-                        GL11.GL_TEXTURE_MIN_FILTER,
-                        GL11.GL_LINEAR
-                );
-                RenderSystem.texParameter(
-                        GL11.GL_TEXTURE_2D,
-                        GL11.GL_TEXTURE_MAG_FILTER,
-                        GL11.GL_LINEAR
-                );
+
+                RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+                RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 
                 float alpha = player.isCreative()
                         ? StoneyCore.getConfig().visualOptions().getVisoredHelmetAlphaCreative()
@@ -92,7 +84,8 @@ public class StoneyCoreOverlayRenderer {
 
     private void renderStaminaEffects(GuiGraphics guiGraphics, LocalPlayer player, int width, int height) {
         double stamina = StaminaData.getStamina(player);
-        double secondLevel = player.getAttributeBaseValue(Services.ATTRIBUTES.getMaxStamina()) * 0.15d;
+        double maxStamina = player.getAttributeValue(SCAttributes.MAX_STAMINA);
+        double secondLevel = maxStamina * 0.15d;
 
         if (!player.isCreative()
                 && StaminaData.isStaminaBlocked((IEntityDataSaver) player)
@@ -105,11 +98,9 @@ public class StoneyCoreOverlayRenderer {
                 renderBlurEffect(guiGraphics, width, height, staminaPercentage);
             } else {
                 int opacity = (int) ((Math.max(0, 0.4f - staminaPercentage) * 255));
-                int green = StaminaData.isStaminaBlocked((IEntityDataSaver) player)
-                        ? 0
-                        : (int) (stamina / secondLevel);
-
+                int green = StaminaData.isStaminaBlocked((IEntityDataSaver) player) ? 0 : (int)(stamina / secondLevel);
                 int gradientColorEnd = opacity << 24 | green | 0x00FF0000;
+
                 guiGraphics.fillGradient(0, 0, width, height, 0x00FFFFFF, gradientColorEnd);
             }
         }
@@ -118,28 +109,20 @@ public class StoneyCoreOverlayRenderer {
     private void initNoiseTextures() {
         noiseTextures = new ResourceLocation[12];
         for (int i = 0; i < noiseTextures.length; i++) {
-            noiseTextures[i] = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/noise/noise_" + i + ".png");
+            noiseTextures[i] = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/noise/noise_" + i + ".png");
         }
     }
 
     private void renderBlurEffect(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
-        renderBlur(guiGraphics, width, height, staminaPercentage);
-        renderTunnelVision(guiGraphics, width, height, staminaPercentage);
-        if (StoneyCore.getConfig().visualOptions().getNoiseEffect())
-            renderNoise(guiGraphics, width, height, staminaPercentage);
-    }
-
-    private void renderBlur(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
         float blurStrength = (float) (Math.max(0.1f, 1.0f - staminaPercentage) * 0.4f);
-        int alpha = (int) (blurStrength * 255);
-        int color = alpha << 24;
-        guiGraphics.fill(0, 0, width, height, color);
 
         try {
             ClientPlatform.getClientPlaformHelper().startBlurService(blurStrength * 12.0f);
-        } catch (Exception e) {
-            // Fallback silently if blur fails
-        }
+        } catch (Exception ignored) {}
+
+        renderTunnelVision(guiGraphics, width, height, staminaPercentage);
+        if (StoneyCore.getConfig().visualOptions().getNoiseEffect())
+            renderNoise(guiGraphics, width, height, staminaPercentage);
     }
 
     private void renderNoise(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
@@ -153,19 +136,15 @@ public class StoneyCoreOverlayRenderer {
             currentNoiseTextureTime = 10;
         }
 
-        RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0f, 0.5f, 0.5f, alpha);
         guiGraphics.blit(noiseTexture, 0, 0, 0, 0, width, height, width, height);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderSystem.disableBlend();
     }
 
     private void renderTunnelVision(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
         int opacity = (int) ((Math.max(0, 0.2f - staminaPercentage) * 255));
-        int gradientColor = opacity << 24;
         int opacity2 = (int) ((Math.max(0, 0.6f - staminaPercentage) * 255));
-        int gradientColor2 = opacity2 << 24;
-        guiGraphics.fillGradient(0, 0, width, height, gradientColor, gradientColor2);
+        guiGraphics.fillGradient(0, 0, width, height, opacity << 24, opacity2 << 24);
     }
 
     private void renderVisorToggleProgress(GuiGraphics guiGraphics, float tickDelta) {
@@ -177,35 +156,19 @@ public class StoneyCoreOverlayRenderer {
             return;
         }
 
-        Minecraft minecraft = Minecraft.getInstance();
-        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
-
+        int screenWidth = guiGraphics.guiWidth();
+        int screenHeight = guiGraphics.guiHeight();
         int centerX = screenWidth / 2;
         int centerY = screenHeight / 2;
-        int yOffset = 50;
-
-        int bgWidth = 128;
-        int bgHeight = 16;
-        int barWidth = 124;
-        int barHeight = 12;
 
         float targetProgress = ClientPlatform.getKeyInputHelper().toggleProgress();
-        float interpolationSpeed = 20.0f;
+        lastRenderedProgress = lastRenderedProgress + (targetProgress - lastRenderedProgress) * Math.min(1.0f, 20.0f * tickDelta);
 
-        float smoothProgress = lastRenderedProgress + (targetProgress - lastRenderedProgress) * Math.min(1.0f, interpolationSpeed * tickDelta);
-        lastRenderedProgress = smoothProgress;
+        int progressWidth = (int) (124 * lastRenderedProgress);
 
-        int progressWidth = (int) (barWidth * smoothProgress);
-        int bgX = centerX - bgWidth / 2;
-        int bgY = centerY + yOffset - bgHeight / 2;
-
-        guiGraphics.blit(VISOR_PROGRESS_BACKGROUND, bgX, bgY, 0, 0, bgWidth, bgHeight, bgWidth, bgHeight);
-
+        guiGraphics.blit(VISOR_PROGRESS_BACKGROUND, centerX - 64, centerY + 42, 0, 0, 128, 16, 128, 16);
         if (progressWidth > 0) {
-            int barX = centerX - barWidth / 2;
-            int barY = centerY + yOffset - barHeight / 2;
-            guiGraphics.blit(VISOR_PROGRESS_BAR, barX, barY, 0, 0, progressWidth, barHeight, barWidth, barHeight);
+            guiGraphics.blit(VISOR_PROGRESS_BAR, centerX - 62, centerY + 44, 0, 0, progressWidth, 12, 124, 12);
         }
     }
 }

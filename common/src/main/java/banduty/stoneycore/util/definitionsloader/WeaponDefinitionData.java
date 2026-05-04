@@ -1,9 +1,12 @@
 package banduty.stoneycore.util.definitionsloader;
 
-import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.UseAnim;
@@ -27,6 +30,8 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
             AmmoData.CODEC.optionalFieldOf("ammo").forGetter(wd -> Optional.ofNullable(wd.ammo()))
     ).apply(instance, (usage, melee, ranged, ammo) ->
             new WeaponDefinitionData(usage, melee.orElse(null), ranged.orElse(null), ammo.orElse(null))));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, WeaponDefinitionData> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
     public record MeleeData(Map<String, Map<String, Float>> damage, Map<String, Double> radius, int[] piercingAnimation,
                             int animation, double deflectChance, double bonusKnockback) {

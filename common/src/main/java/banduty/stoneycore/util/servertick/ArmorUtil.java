@@ -1,6 +1,6 @@
 package banduty.stoneycore.util.servertick;
 
-import banduty.stoneycore.items.armor.SCAccessoryItem;
+import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;

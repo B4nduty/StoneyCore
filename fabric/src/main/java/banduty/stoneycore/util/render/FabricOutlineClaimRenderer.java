@@ -2,19 +2,20 @@ package banduty.stoneycore.util.render;
 
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
-import banduty.stoneycore.networking.ModMessages;
+import banduty.stoneycore.networking.payload.OutlineClaimS2CPacket;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import io.wispforest.accessories.api.AccessoriesCapability;
 import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,8 +40,8 @@ public class FabricOutlineClaimRenderer implements OutlineClaimRendererHelper {
             if (AccessoriesCapability.getOptionally(player).isPresent()) {
                 for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                     ItemStack equippedStack = equipped.stack();
-                    if (equippedStack.getTag() != null && equippedStack.getTag().getBoolean(
-                            BuiltInRegistries.ITEM.getKey(land.getLandType().coreItem()).getPath())) {
+                    if (equippedStack.getComponents().has(SCDataComponents.TARGET_STACK) &&
+                            equippedStack.get(SCDataComponents.TARGET_STACK).getItem() == land.getLandType().coreItem()) {
                         shouldRender = true;
                     }
                 }
@@ -52,7 +53,7 @@ public class FabricOutlineClaimRenderer implements OutlineClaimRendererHelper {
             return;
         }
 
-        List<BlockPos> borderPositions = OutlineClaimRenderer.calculateBorderPositions(player, land);
+        List<BlockPos> borderPositions = OutlineClaimRenderer.calculateBorderPositions(player.serverLevel(), land);
         sendOutlinePacket(player, borderPositions);
     }
 
@@ -60,7 +61,7 @@ public class FabricOutlineClaimRenderer implements OutlineClaimRendererHelper {
     public void sendClearPacket(ServerPlayer player) {
         FriendlyByteBuf clearBuf = PacketByteBufs.create();
         clearBuf.writeInt(0);
-        ServerPlayNetworking.send(player, ModMessages.OUTLINE_CLAIM_PACKET_ID, clearBuf);
+        ServerPlayNetworking.send(player, new OutlineClaimS2CPacket(new ArrayList<>()));
     }
 
     @Override
@@ -68,6 +69,6 @@ public class FabricOutlineClaimRenderer implements OutlineClaimRendererHelper {
         FriendlyByteBuf buf = PacketByteBufs.create();
         buf.writeInt(borderPositions.size());
         borderPositions.forEach(buf::writeBlockPos);
-        ServerPlayNetworking.send(player, ModMessages.OUTLINE_CLAIM_PACKET_ID, buf);
+        ServerPlayNetworking.send(player, new OutlineClaimS2CPacket(borderPositions));
     }
 }

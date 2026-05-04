@@ -6,7 +6,6 @@ import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.lands.visitor.*;
 import banduty.stoneycore.siege.SiegeManager;
-import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.render.OutlineClaimRenderer;
 import banduty.stoneycore.util.servertick.*;
 import io.wispforest.accessories.api.AccessoriesCapability;
@@ -14,6 +13,7 @@ import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,13 +26,11 @@ import java.util.*;
 
 public class StartTickHandler implements ServerTickEvents.StartTick {
     public static final Queue<ClaimWorker> CLAIM_TASKS = new LinkedList<>();
-    private static final UUID POWDER_SNOW_SLOW_ID = UUID.fromString("1eaf83ff-7207-4596-b37a-d7a07b3ec4ce");
+    private static final ResourceLocation POWDER_SNOW_SLOW_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "powder_snow_slow");
 
     @Override
     public void onStartTick(MinecraftServer server) {
-
         processClaimTasks();
-        WeightUtil.clearCache();
         VisitorTracker.tickCooldowns();
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
@@ -57,8 +55,6 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
 
     private void updatePlayerTick(ServerPlayer player) {
         boolean isDead = player.getHealth() <= 0;
-
-        WeightUtil.setCachedWeight(player);
 
         ModifiersUtil.updatePlayerReachAttributes(player);
         StaminaUtil.startStaminaTrack(player);

@@ -5,9 +5,7 @@ import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.siege.SiegeManager;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.PDKeys;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -59,11 +57,11 @@ public class LandTracker {
             lastLandCore.put(uuid, newCore);
 
             if (newCore != null) {
-                if (!NBTDataHelper.get((IEntityDataSaver) player, PDKeys.LAND_EXPANDED, false)) {
+                if (!((IEntityDataSaver) player).stoneycore$getPersistentData().getBoolean("landExpanded")) {
                     Land land = optionalLand.get();
                     Services.PLATFORM.sendTitle(player, land.getLandTitle(serverLevel));
                 } else {
-                    NBTDataHelper.set((IEntityDataSaver) player, PDKeys.LAND_EXPANDED, false);
+                    ((IEntityDataSaver) player).stoneycore$getPersistentData().putBoolean("landExpanded", false);
                 }
             }
         }

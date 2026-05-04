@@ -14,7 +14,7 @@ import net.minecraft.world.entity.LivingEntity;
 
 public class UnderArmourBootsModel extends HumanoidModel<LivingEntity> {
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
-			new ResourceLocation(StoneyCore.MOD_ID, "under_armour_boots"), "main");
+			ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "under_armour_boots"), "main");
 
 	private final ModelPart armorRightBoot;
 	private final ModelPart armorLeftBoot;
@@ -46,11 +46,11 @@ public class UnderArmourBootsModel extends HumanoidModel<LivingEntity> {
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
 		this.armorRightBoot.copyFrom(this.rightLeg);
-		this.armorRightBoot.render(poseStack, vertexConsumer, light, overlay, red, green, blue, alpha);
+		this.armorRightBoot.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 
 		this.armorLeftBoot.copyFrom(this.leftLeg);
-		this.armorLeftBoot.render(poseStack, vertexConsumer, light, overlay, red, green, blue, alpha);
+		this.armorLeftBoot.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 	}
 }

@@ -2,6 +2,9 @@ package banduty.stoneycore.util.definitionsloader;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 
 public record SiegeEngineDefinitionData(double playerSpeed, double horseSpeed, double knockback, double baseDamage,
                                         int baseReload, float projectileSpeed, float accuracyMultiplier,
@@ -20,5 +23,7 @@ public record SiegeEngineDefinitionData(double playerSpeed, double horseSpeed, d
             Codec.FLOAT.optionalFieldOf("accuracyMultiplier", 1.2f).forGetter(SiegeEngineDefinitionData::accuracyMultiplier),
             DamageSourceConfig.CODEC.optionalFieldOf("damageConfig", DamageSourceConfig.DEFAULT).forGetter(SiegeEngineDefinitionData::damageConfig)
     ).apply(instance, SiegeEngineDefinitionData::new));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, SiegeEngineDefinitionData> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 }
 

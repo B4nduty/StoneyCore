@@ -1,6 +1,6 @@
 package banduty.stoneycore.util.weaponutil;
 
-import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionData;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import net.minecraft.world.item.Item;

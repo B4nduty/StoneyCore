@@ -1,6 +1,6 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;

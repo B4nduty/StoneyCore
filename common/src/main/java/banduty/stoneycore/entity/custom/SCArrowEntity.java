@@ -1,12 +1,11 @@
 package banduty.stoneycore.entity.custom;
 
-import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageApplier;
+import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.mixin.AbstractArrowAccessor;
 import banduty.stoneycore.util.DeflectChanceHelper;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -22,12 +21,9 @@ import net.minecraft.world.phys.Vec3;
 public abstract class SCArrowEntity extends AbstractArrow {
     private SCDamageType damageType;
 
-    public SCArrowEntity(EntityType<? extends AbstractArrow> type, Level level) {
-        super(type, level);
-    }
-
     public SCArrowEntity(EntityType<? extends SCArrowEntity> scArrow, LivingEntity shooter, Level level) {
-        super(scArrow, shooter, level);
+        super(scArrow, level);
+        this.setOwner(shooter);
     }
 
     public void setDamageType(SCDamageType damageType) {
@@ -36,11 +32,6 @@ public abstract class SCArrowEntity extends AbstractArrow {
 
     public SCDamageType getDamageType() {
         return this.damageType;
-    }
-
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return new ClientboundAddEntityPacket(this);
     }
 
     @Override
@@ -112,8 +103,8 @@ public abstract class SCArrowEntity extends AbstractArrow {
 
         damage *= getDeltaMovement().length();
 
-        damage = SCDamageType.calculateSCDamage(target, damage, getDamageType());
-        SCDamageType.apply(target, this, stack, damage);
+        damage = SCDamageCalculator.applyArmor(target, damage, getDamageType());
+        SCDamageApplier.apply(target, this, stack, damage);
         if (this.isOnFire()) target.setRemainingFireTicks(5);
         return true;
     }

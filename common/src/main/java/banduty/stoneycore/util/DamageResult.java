@@ -1,9 +1,11 @@
 package banduty.stoneycore.util;
 
+import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
 import banduty.stoneycore.combat.melee.CombatSelect;
-import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -26,14 +28,16 @@ public record DamageResult(double damage, SCDamageType damageType) {
         if (stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
             baseDamage *= 0.25f;
         }
-        double enchantmentBonus = EnchantmentHelper.getDamageBonus(stack, target.getMobType());
-        baseDamage += enchantmentBonus;
+
+        if (attacker.level() instanceof ServerLevel serverLevel) {
+            baseDamage = EnchantmentHelper.modifyDamage(serverLevel, stack, target, attacker.damageSources().generic(), (float) baseDamage);
+        }
 
         if (stack.is(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
             return new DamageResult(baseDamage, damageType);
         }
 
-        double calculatedDamage = SCDamageType.calculateSCDamage(target, baseDamage, damageType);
+        double calculatedDamage = SCDamageCalculator.applyArmor(target, baseDamage, damageType);
 
         if (stack.is(SCTags.WEAPONS_DAMAGE_BEHIND.getTag())) {
             calculatedDamage = SCWeaponUtil.adjustDamageForBackstab(target, attacker.position(), calculatedDamage);

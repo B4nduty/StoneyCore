@@ -3,20 +3,19 @@ package banduty.stoneycore.util.weaponutil;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.entity.custom.SCArrowEntity;
 import banduty.stoneycore.entity.custom.SCBulletEntity;
-import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.data.itemdata.INBTKeys;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
+import banduty.stoneycore.particle.SCParticles;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ArrowItem;
@@ -36,18 +35,18 @@ public final class SCRangeWeaponUtil {
         throw new UnsupportedOperationException("Utility class");
     }
 
-    private static final String KEY_RELOAD = "reload";
-    private static final String KEY_CHARGED = "charged";
-    private static final String KEY_SHOOT = "shoot";
-
     public static WeaponState getWeaponState(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
-        return tag != null ? WeaponState.fromNbt(tag) : new WeaponState(false, false, false);
+        return new WeaponState(
+                stack.getOrDefault(SCDataComponents.RELOADING, false),
+                stack.getOrDefault(SCDataComponents.CHARGED, false),
+                stack.getOrDefault(SCDataComponents.SHOOTING, false)
+        );
     }
 
     public static void setWeaponState(ItemStack stack, WeaponState state) {
-        CompoundTag tag = stack.getOrCreateTag();
-        state.applyToNbt(tag);
+        stack.set(SCDataComponents.RELOADING, state.isReloading());
+        stack.set(SCDataComponents.CHARGED, state.isCharged());
+        stack.set(SCDataComponents.SHOOTING, state.isShooting());
     }
 
     public static void handleShoot(Level level, Player player, ItemStack weapon) {
@@ -75,24 +74,14 @@ public final class SCRangeWeaponUtil {
         var definitionData = WeaponDefinitionsStorage.getData(stack);
         if (definitionData == null || definitionData.ranged() == null) return;
 
-        boolean isCrossbow = definitionData.ranged().id().equals("crossbow");
-
-        AbstractArrow arrowEntity = arrowItem.createArrow(level, arrowStack, player);
+        AbstractArrow arrowEntity = arrowItem.createArrow(level, arrowStack, player, stack);
         arrowEntity.setBaseDamage(definitionData.ranged().baseDamage() / definitionData.ranged().speed());
 
         if (arrowEntity instanceof SCArrowEntity scArrowEntity)
             scArrowEntity.setDamageType(definitionData.ranged().damageType());
 
-        arrowEntity.setOwner(player);
-
-        if (NBTDataHelper.get(arrowStack, INBTKeys.IGNITED, false)) {
-            arrowEntity.setSharedFlagOnFire(true);
-            arrowEntity.setRemainingFireTicks(1000);
-        }
-
-        if (isCrossbow) {
-            arrowEntity.setShotFromCrossbow(true);
-            arrowEntity.setCritArrow(true);
+        if (Boolean.TRUE.equals(stack.get(SCDataComponents.IGNITED))) {
+            arrowEntity.igniteForSeconds(5);
         }
 
         arrowEntity.shootFromRotation(
@@ -104,21 +93,27 @@ public final class SCRangeWeaponUtil {
                 definitionData.ranged().divergence()
         );
 
-        if (player.isCreative()) {
-            arrowEntity.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
-        } else {
-            stack.hurtAndBreak(1, player, p -> p.broadcastBreakEvent(player.getUsedItemHand()));
+        if (!player.isCreative()) {
+            stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(player.getUsedItemHand()));
         }
 
         level.addFreshEntity(arrowEntity);
         playSoundForPlayers(level, stack, player);
     }
 
+    private static Item[] getItemsFromIds(Set<String> itemIds) {
+        return itemIds.stream()
+                .map(ResourceLocation::parse)
+                .map(BuiltInRegistries.ITEM::get)
+                .filter(i -> i != Items.AIR)
+                .toArray(Item[]::new);
+    }
+
     public static void shootBullet(Level level, ItemStack stack, Player player) {
         var definitionData = WeaponDefinitionsStorage.getData(stack);
         if (definitionData == null || definitionData.ranged() == null) return;
 
-        SCBulletEntity bulletEntity = new SCBulletEntity(player, level);
+        SCBulletEntity bulletEntity = new SCBulletEntity(level, player);
         bulletEntity.setDamageAmount(definitionData.ranged().baseDamage());
         bulletEntity.setDamageType(definitionData.ranged().damageType());
         bulletEntity.setOwner(player);
@@ -131,12 +126,12 @@ public final class SCRangeWeaponUtil {
         playSoundForPlayers(level, stack, player);
 
         if (!player.isCreative()) {
-            stack.hurt(1, player.getRandom(), player instanceof ServerPlayer ? (ServerPlayer) player : null);
+            stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(player.getUsedItemHand()));
         }
 
         if (level instanceof ServerLevel serverLevel) {
-            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), Services.PARTICLE.getMuzzlesSmokeParticle(), 50, 0.2f, 0.0005f, 5);
-            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), Services.PARTICLE.getMuzzlesFlashParticle(), 1, 0f, 0.1f, 6);
+            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), SCParticles.MUZZLES_SMOKE_PARTICLE, 50, 0.2f, 0.0005f, 5);
+            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), SCParticles.MUZZLES_FLASH_PARTICLE, 1, 0f, 0.1f, 6);
         }
     }
 
@@ -277,14 +272,6 @@ public final class SCRangeWeaponUtil {
         );
     }
 
-    private static Item[] getItemsFromIds(Set<String> itemIds) {
-        return itemIds.stream()
-                .map(ResourceLocation::new)
-                .map(BuiltInRegistries.ITEM::get)
-                .filter(i -> i != Items.AIR)
-                .toArray(Item[]::new);
-    }
-
     public record WeaponState(boolean isReloading, boolean isCharged, boolean isShooting) {
 
         public static WeaponState idle() {
@@ -301,18 +288,6 @@ public final class SCRangeWeaponUtil {
 
         public static WeaponState shooting() {
             return new WeaponState(false, false, true);
-        }
-
-        public static WeaponState fromNbt(CompoundTag tag) {
-            if (tag == null) return new WeaponState(false, false, false);
-            return new WeaponState(tag.getBoolean(KEY_RELOAD), tag.getBoolean(KEY_CHARGED), tag.getBoolean(KEY_SHOOT));
-        }
-
-        public void applyToNbt(CompoundTag tag) {
-            if (tag == null) return;
-            tag.putBoolean(KEY_RELOAD, isReloading);
-            tag.putBoolean(KEY_CHARGED, isCharged);
-            tag.putBoolean(KEY_SHOOT, isShooting);
         }
     }
 }

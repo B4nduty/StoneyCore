@@ -2,10 +2,10 @@ package banduty.stoneycore.util.servertick;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.config.IConfig;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.WeightUtil;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.SCAttributes;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class StaminaUtil {
     public static void startStaminaTrack(LivingEntity entity) {
-        double maxStamina = entity.getAttributeValue(Services.ATTRIBUTES.getMaxStamina());
+        double maxStamina = entity.getAttributeValue(SCAttributes.MAX_STAMINA);
         double currentStamina = StaminaData.getStamina(entity);
         boolean isCreativeOrSpectator = entity instanceof Player player &&
                 (player.isCreative() || player.isSpectator());
@@ -75,7 +75,7 @@ public class StaminaUtil {
 
         if (entity.tickCount % recoveryRate != 0) return;
 
-        double maxStamina = entity.getAttributeValue(Services.ATTRIBUTES.getMaxStamina());
+        double maxStamina = entity.getAttributeValue(SCAttributes.MAX_STAMINA);
         if (currentStamina < maxStamina && (foodLevel > 0 || !config.getRealisticCombat())) {
             StaminaData.addStamina(entity, 0.1d);
         }
@@ -107,19 +107,19 @@ public class StaminaUtil {
         IConfig.CombatOptions config = StoneyCore.getConfig().combatOptions();
 
         if (isSCWeapon(entity.getMainHandItem()) && entity.isBlocking()) { // Blocking
-            StaminaData.removeStamina(entity, config.blockingStaminaConstant() * WeightUtil.getCachedWeight(entity) / 20.0);
+            StaminaData.removeStamina(entity, config.blockingStaminaConstant() * WeightUtil.getWeight(entity) / 20.0);
             usingStamina = true;
         }
 
         if (!isWearingSCArmor(entity)) return usingStamina;
 
         if (entity.isSprinting()) { // Running
-            StaminaData.removeStamina(entity, config.sprintingStaminaConstant() * WeightUtil.getCachedWeight(entity) / 20.0);
+            StaminaData.removeStamina(entity, config.sprintingStaminaConstant() * WeightUtil.getWeight(entity) / 20.0);
             usingStamina = true;
         }
 
         if (entity.isSwimming()) { // Swimming
-            StaminaData.removeStamina(entity, config.swimmingStaminaConstant() * WeightUtil.getCachedWeight(entity) / 40.0);
+            StaminaData.removeStamina(entity, config.swimmingStaminaConstant() * WeightUtil.getWeight(entity) / 40.0);
             usingStamina = true;
         }
 

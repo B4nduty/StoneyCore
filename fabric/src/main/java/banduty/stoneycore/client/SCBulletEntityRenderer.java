@@ -23,6 +23,6 @@ public class SCBulletEntityRenderer extends EntityRenderer<SCBulletEntity> {
 
     @Override
     public @NotNull ResourceLocation getTextureLocation(SCBulletEntity entity) {
-        return new ResourceLocation(StoneyCore.MOD_ID, "textures/models/armor/a_layer_1.png");
+        return ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/models/armor/a_layer_1.png");
     }
 }

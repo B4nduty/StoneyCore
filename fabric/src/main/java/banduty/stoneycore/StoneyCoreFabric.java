@@ -1,23 +1,15 @@
 package banduty.stoneycore;
 
-import banduty.stoneycore.block.ModBlockEntities;
-import banduty.stoneycore.block.ModBlocks;
 import banduty.stoneycore.commands.FabricSCCommandsHandler;
-import banduty.stoneycore.entity.ModEntities;
 import banduty.stoneycore.event.*;
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
-import banduty.stoneycore.items.SCItems;
-import banduty.stoneycore.networking.ModMessages;
-import banduty.stoneycore.particle.ModParticles;
+import banduty.stoneycore.networking.SCPayloads;
+import banduty.stoneycore.networking.SCPayloadsClient;
+import banduty.stoneycore.networking.payload.SyncDefinitionsPacket;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.recipes.ModRecipes;
-import banduty.stoneycore.screen.ModScreenHandlers;
-import banduty.stoneycore.sounds.ModSounds;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.PDKeys;
-import banduty.stoneycore.util.data.playerdata.SCAttributes;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.SCAttributes;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.*;
 import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import net.bettercombat.api.client.BetterCombatClientEvents;
@@ -29,13 +21,11 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
@@ -45,16 +35,9 @@ public class StoneyCoreFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         Services.PLATFORM.getConfig();
-        SCAttributes.registerAttributes();
-        ModSounds.registerSounds();
-        ModRecipes.registerRecipes();
-        SCItems.registerItems();
-        ModEntities.registerEntities();
-        ModMessages.registerC2SPackets();
-        ModScreenHandlers.registerMenu();
-        ModBlocks.registerBlocks();
-        ModBlockEntities.registerBlockEntities();
-        ModParticles.registerParticles();
+        SCPayloads.registerPayloads();
+        SCPayloadsClient.registerPayloads();
+        SCPayloads.registerC2SReceivers();
         HotIronCoolingHandler.init();
 
         ServerTickEvents.START_SERVER_TICK.register(new StartTickHandler());
@@ -107,7 +90,7 @@ public class StoneyCoreFabric implements ModInitializer {
 
                 sendSyncDefinitions(player);
 
-                if (NBTDataHelper.get((IEntityDataSaver) player, PDKeys.FIRST_JOIN, false)) {
+                if (((IEntityDataSaver) player).stoneycore$getPersistentData().getBoolean("firstJoin")) {
                     StaminaData.loadStamina(player);
                     return;
                 }
@@ -118,7 +101,7 @@ public class StoneyCoreFabric implements ModInitializer {
                                 """),
                         false);
 
-                NBTDataHelper.set((IEntityDataSaver) player, PDKeys.FIRST_JOIN, true);
+                ((IEntityDataSaver) player).stoneycore$getPersistentData().putBoolean("firstJoin", true);
 
                 StaminaData.setStamina(player, player.getAttributeValue(SCAttributes.MAX_STAMINA));
             });
@@ -128,28 +111,8 @@ public class StoneyCoreFabric implements ModInitializer {
     }
 
     public static void sendSyncDefinitions(ServerPlayer player) {
-        FriendlyByteBuf buffer = PacketByteBufs.create();
-
-        buffer.writeMap(ArmorDefinitionsStorage.getDefinitions(),
-                FriendlyByteBuf::writeResourceLocation,
-                (buf, data) -> buf.writeJsonWithCodec(ArmorDefinitionData.CODEC, data));
-
-        buffer.writeMap(AccessoriesDefinitionsStorage.getDefinitions(),
-                FriendlyByteBuf::writeResourceLocation,
-                (buf, data) -> buf.writeJsonWithCodec(AccessoriesDefinitionData.CODEC, data));
-
-        buffer.writeMap(LandDefinitionsStorage.getDefinitions(),
-                FriendlyByteBuf::writeResourceLocation,
-                (buf, data) -> buf.writeJsonWithCodec(LandValues.CODEC, data));
-
-        buffer.writeMap(SiegeEngineDefinitionsStorage.getDefinitions(),
-                FriendlyByteBuf::writeResourceLocation,
-                (buf, data) -> buf.writeJsonWithCodec(SiegeEngineDefinitionData.CODEC, data));
-
-        buffer.writeMap(WeaponDefinitionsStorage.getDefinitions(),
-                FriendlyByteBuf::writeResourceLocation,
-                (buf, data) -> buf.writeJsonWithCodec(WeaponDefinitionData.CODEC, data));
-
-        ServerPlayNetworking.send(player, ModMessages.SYNC_DEFINITIONS, buffer);
+        ServerPlayNetworking.send(player, new SyncDefinitionsPacket(ArmorDefinitionsStorage.getDefinitions(),
+                AccessoriesDefinitionsStorage.getDefinitions(), LandDefinitionsStorage.getDefinitions(),
+                SiegeEngineDefinitionsStorage.getDefinitions(), WeaponDefinitionsStorage.getDefinitions()));
     }
 }

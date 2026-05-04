@@ -14,7 +14,7 @@
 
 	public class UnderArmourHelmetModel extends HumanoidModel<LivingEntity> {
 		public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
-			new ResourceLocation(StoneyCore.MOD_ID, "under_armour_helmet"), "main");
+			ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "under_armour_helmet"), "main");
 
 		private final ModelPart armorHead;
 		public UnderArmourHelmetModel(ModelPart root) {
@@ -41,8 +41,8 @@
 		}
 
         @Override
-		public void renderToBuffer(PoseStack matrices, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
+		public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
 			this.armorHead.copyFrom(this.head);
-			this.armorHead.render(matrices, vertexConsumer, light, overlay, red, green, blue, alpha);
+			this.armorHead.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 		}
 	}

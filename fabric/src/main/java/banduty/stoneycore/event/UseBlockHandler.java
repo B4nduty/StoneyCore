@@ -2,8 +2,8 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.block.CraftmanAnvilBlock;
-import banduty.stoneycore.block.ModBlocks;
-import banduty.stoneycore.items.SmithingHammer;
+import banduty.stoneycore.block.SCBlocks;
+import banduty.stoneycore.items.custom.SmithingHammer;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.lands.util.Land;
@@ -60,7 +60,7 @@ public class UseBlockHandler implements UseBlockCallback {
         }
 
         if (player.isShiftKeyDown() && player.getMainHandItem().getItem() instanceof SmithingHammer && state.getBlock() instanceof AnvilBlock) {
-            serverLevel.setBlockAndUpdate(blockPos, ModBlocks.CRAFTMAN_ANVIL.defaultBlockState());
+            serverLevel.setBlockAndUpdate(blockPos, SCBlocks.CRAFTMAN_ANVIL.defaultBlockState());
             level.playSound(null, blockPos, SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 0.7f, 1.0f / (level.getRandom().nextFloat() * 0.5F + 1.0F));
             return InteractionResult.SUCCESS;
         }

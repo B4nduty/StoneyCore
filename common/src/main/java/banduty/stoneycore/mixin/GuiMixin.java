@@ -1,12 +1,14 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.combat.melee.SCDamageType;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageTypeResolver;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
@@ -26,10 +28,10 @@ import java.util.List;
 @Mixin(Gui.class)
 public class GuiMixin {
     @Unique
-    private static final ResourceLocation TOO_FAR_CLOSE = new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/too_far_close.png");
+    private static final ResourceLocation TOO_FAR_CLOSE = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/too_far_close.png");
 
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
-    private void stoneycore$renderCrosshair(GuiGraphics guiGraphics, CallbackInfo ci) {
+    private void stoneycore$renderCrosshair(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         if (player == null) return;
@@ -47,7 +49,7 @@ public class GuiMixin {
                 ? 9999
                 : playerPos.distanceTo(client.crosshairPickEntity.position());
 
-        SCDamageType damageType = SCDamageType.determine(mainHandStack, player);
+        SCDamageType damageType = SCDamageTypeResolver.determine(mainHandStack, player);
         stoneyCore$calculateCrosshair(item, guiGraphics, distance, damageType);
 
         ci.cancel();
@@ -115,6 +117,6 @@ public class GuiMixin {
 
     @Unique
     private static ResourceLocation stoneyCore$getCrosshair(SCDamageType damageType, String crosshairType) {
-        return new ResourceLocation(StoneyCore.MOD_ID, "textures/overlay/" + damageType.name().toLowerCase() + "_" + crosshairType + ".png");
+        return ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/" + damageType.name().toLowerCase() + "_" + crosshairType + ".png");
     }
 }

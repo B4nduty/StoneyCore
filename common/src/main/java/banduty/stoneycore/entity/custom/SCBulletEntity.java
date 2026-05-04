@@ -1,7 +1,11 @@
 package banduty.stoneycore.entity.custom;
 
-import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageApplier;
+import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
+import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.platform.Services;
+import banduty.stoneycore.sounds.SCSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -12,9 +16,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.AbstractGlassBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.TransparentBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.BlockHitResult;
@@ -25,16 +29,22 @@ public class SCBulletEntity extends AbstractArrow {
     private SCDamageType damageType;
     private double damage;
 
-    public SCBulletEntity(EntityType<? extends AbstractArrow> entityEntityType, Level level) {
-        super(entityEntityType, level);
+    public SCBulletEntity(EntityType<? extends AbstractArrow> type, Level level) {
+        super(type, level);
     }
 
-    public SCBulletEntity(LivingEntity shooter, Level level) {
-        super(Services.SC_BULLET_ENTITY.getBulletEntity(), shooter, level);
+    public SCBulletEntity(Level level, LivingEntity shooter) {
+        this(SCEntities.SC_BULLET, level);
+        this.setOwner(shooter);
     }
 
     @Override
     protected ItemStack getPickupItem() {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    protected ItemStack getDefaultPickupItem() {
         return ItemStack.EMPTY;
     }
 
@@ -44,8 +54,8 @@ public class SCBulletEntity extends AbstractArrow {
         if (this.level().isClientSide()) return;
 
         if (entityHitResult.getEntity() instanceof LivingEntity target && this.getOwner() instanceof LivingEntity livingEntity) {
-            damage = SCDamageType.calculateSCDamage(target, this.damage, this.damageType);
-            SCDamageType.apply(target, livingEntity, ItemStack.EMPTY, damage);
+            damage = SCDamageCalculator.applyArmor(target, this.damage, this.damageType);
+            SCDamageApplier.apply(target, livingEntity, ItemStack.EMPTY, damage);
             if (this.isOnFire()) target.setRemainingFireTicks(5);
         }
         this.discard();
@@ -59,7 +69,7 @@ public class SCBulletEntity extends AbstractArrow {
         BlockState state = level.getBlockState(pos);
         if (!(level instanceof ServerLevel serverLevel)) return;
 
-        if ((state.getBlock() == Blocks.POINTED_DRIPSTONE || state.getBlock() instanceof AbstractGlassBlock)) {
+        if ((state.getBlock() == Blocks.POINTED_DRIPSTONE || state.getBlock() instanceof TransparentBlock)) {
             serverLevel.levelEvent(2001, pos, Block.getId(state));
 
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
@@ -88,15 +98,13 @@ public class SCBulletEntity extends AbstractArrow {
         this.inGround = true;
         this.shakeTime = 7;
         this.setCritArrow(false);
-        this.setPierceLevel((byte) 0);
         this.setSoundEvent(SoundEvents.ARROW_HIT);
-        this.setShotFromCrossbow(false);
         this.discard();
     }
 
     @Override
     protected SoundEvent getDefaultHitGroundSoundEvent() {
-        return Services.ABSTRACT_SIEGE_ENTITY.getDefaultHitGroundSoundEvent();
+        return SCSounds.BULLET_CRACK;
     }
 
     public void setDamageAmount(float damage) {

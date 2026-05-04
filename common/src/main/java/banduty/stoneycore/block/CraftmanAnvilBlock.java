@@ -1,9 +1,10 @@
 package banduty.stoneycore.block;
 
-import banduty.stoneycore.items.CraftmanAnvilHelper;
-import banduty.stoneycore.items.SmithingHammer;
-import banduty.stoneycore.items.hotiron.HotIron;
-import banduty.stoneycore.items.tongs.Tongs;
+import banduty.stoneycore.items.custom.CraftmanAnvilHelper;
+import banduty.stoneycore.items.custom.SmithingHammer;
+import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.tongs.Tongs;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
@@ -15,7 +16,8 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -37,6 +39,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import java.util.Optional;
 
 public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
+    public static final MapCodec<CraftmanAnvilBlock> CODEC = simpleCodec(CraftmanAnvilBlock::new);
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
     private static final VoxelShape SHAPE = Block.box(2, 0, 2, 14, 10, 14);
 
@@ -46,25 +49,26 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
+    }
+
+    @Override
     public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
         return SHAPE;
     }
 
     @Override
     public BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
-        // This will be implemented differently per loader
-        return null; // To be overridden by loader-specific implementations
+        return new CraftmanAnvilBlockEntity(blockPos, blockState);
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public BlockState rotate(BlockState state, Rotation rotation) {
         return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public BlockState mirror(BlockState state, Mirror mirror) {
         return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
@@ -86,24 +90,22 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        ItemStack stack = player.getItemInHand(hand);
-
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (!level.isClientSide()) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
 
             if (!(blockEntity instanceof CraftmanAnvilBlockEntity anvilEntity)) {
-                return InteractionResult.PASS;
+                return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
             }
 
-            if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
+            if (!(player instanceof ServerPlayer serverPlayer)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
             if (stack.getItem() instanceof SmithingHammer && anvilEntity.getRecipe().isPresent()) {
                 anvilEntity.hitAnvil(serverPlayer);
-                if (player.isCreative()) return InteractionResult.SUCCESS;
-                stack.hurtAndBreak(1, serverPlayer, p -> p.broadcastBreakEvent(serverPlayer.getUsedItemHand()));
+                if (player.isCreative()) return ItemInteractionResult.SUCCESS;
+                stack.hurtAndBreak(1, serverPlayer, LivingEntity.getSlotForHand(hand));
                 if (stack.getDamageValue() >= stack.getMaxDamage()) stack.shrink(1);
-                return InteractionResult.SUCCESS;
+                return ItemInteractionResult.SUCCESS;
             }
 
             if (hand == InteractionHand.MAIN_HAND) {
@@ -122,14 +124,18 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
                         if (!(itemStack.getItem() instanceof HotIron))
                             continue;
 
-                        Tongs.setTargetStack(tongs.get(), itemStack);
+                        Tongs.setTargetStack(tongs.get(), itemStack.copy());
                         itemStack.shrink(1);
+
+                        if (itemStack.isEmpty()) {
+                            itemStacks.set(itemStacks.indexOf(itemStack), ItemStack.EMPTY);
+                        }
                     }
                     anvilEntity.removeItems(serverPlayer);
-                    return InteractionResult.SUCCESS;
+                    return ItemInteractionResult.SUCCESS;
                 }
 
-                if (stack.getItem() instanceof SmithingHammer) return InteractionResult.PASS;
+                if (stack.getItem() instanceof SmithingHammer) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
                 ItemStack newStack = stack;
 
@@ -145,7 +151,7 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
             }
         }
 
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return ItemInteractionResult.sidedSuccess(level.isClientSide());
     }
 
     public static Optional<ItemStack> getTongsFromInventory(Player player) {
@@ -167,8 +173,8 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
 
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> blockEntityType) {
-        // This will be implemented differently per loader
-        return null; // To be overridden by loader-specific implementations
+        return createTickerHelper(blockEntityType, SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY,
+                (world1, pos, state1, blockEntity) -> blockEntity.tick(world1, pos, state1));
     }
 
     @Override

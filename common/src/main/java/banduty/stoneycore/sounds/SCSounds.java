@@ -1,0 +1,24 @@
+package banduty.stoneycore.sounds;
+
+import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.platform.Services;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+
+public interface SCSounds {
+    SoundEvent BULLET_CRACK = registerSound("bullet_crack");
+    SoundEvent VISOR_OPEN = registerSound("visor_open");
+    SoundEvent VISOR_CLOSE = registerSound("visor_close");
+
+    private static SoundEvent registerSound(String name) {
+        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, name);
+
+        return Services.PLATFORM.register(BuiltInRegistries.SOUND_EVENT, name,
+                () -> SoundEvent.createVariableRangeEvent(id)).get();
+    }
+
+    static void register() {
+        StoneyCore.LOG.info("Registering Sounds for " + StoneyCore.MOD_ID);
+    }
+}

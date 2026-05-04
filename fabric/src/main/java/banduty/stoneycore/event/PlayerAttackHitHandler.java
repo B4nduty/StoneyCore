@@ -1,14 +1,13 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.networking.ModMessages;
-import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.data.playerdata.IEntityDataSaver;
-import banduty.stoneycore.util.data.playerdata.StaminaData;
+import banduty.stoneycore.networking.payload.AttackC2SPacket;
+import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
+import banduty.stoneycore.util.data.entitydata.SCAttributes;
+import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import net.bettercombat.api.AttackHand;
 import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
@@ -23,11 +22,11 @@ public class PlayerAttackHitHandler implements BetterCombatClientEvents.PlayerAt
 
             if (player.isCreative()) return;
 
-            if (StaminaData.isStaminaBlocked(dataSaver) || player.getAttributeValue(Services.ATTRIBUTES.getMaxStamina()) <= 0) {
+            if (StaminaData.isStaminaBlocked(dataSaver) || player.getAttributeValue(SCAttributes.MAX_STAMINA) <= 0) {
                 return;
             }
 
-            ClientPlayNetworking.send(ModMessages.ATTACK_ID, PacketByteBufs.create());
+            ClientPlayNetworking.send(new AttackC2SPacket());
         }
     }
 }

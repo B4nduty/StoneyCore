@@ -14,7 +14,7 @@ import net.minecraft.world.entity.LivingEntity;
 
 public class UnderArmourChestplateModel extends HumanoidModel<LivingEntity> {
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
-			new ResourceLocation(StoneyCore.MOD_ID, "under_armour_chestplate"), "main");
+			ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "under_armour_chestplate"), "main");
 
 	private final ModelPart armorBody;
 	private final ModelPart armorRightArm;
@@ -49,14 +49,14 @@ public class UnderArmourChestplateModel extends HumanoidModel<LivingEntity> {
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
 		this.armorBody.copyFrom(this.body);
-		this.armorBody.render(poseStack, vertexConsumer, light, overlay, red, green, blue, alpha);
+		this.armorBody.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 
 		this.armorRightArm.copyFrom(this.rightArm);
-		this.armorRightArm.render(poseStack, vertexConsumer, light, overlay, red, green, blue, alpha);
+		this.armorRightArm.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 
 		this.armorLeftArm.copyFrom(this.leftArm);
-		this.armorLeftArm.render(poseStack, vertexConsumer, light, overlay, red, green, blue, alpha);
+		this.armorLeftArm.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 	}
 }

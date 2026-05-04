@@ -1,10 +1,12 @@
 package banduty.stoneycore.lands.util;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.*;
@@ -19,11 +21,12 @@ public class LandState extends SavedData {
     }
 
     public static LandState get(ServerLevel serverLevel) {
-        return serverLevel.getDataStorage().computeIfAbsent(
-                LandState::fromNbt,
+        SavedData.Factory<LandState> factory = new SavedData.Factory<>(
                 LandState::new,
-                "lands"
+                LandState::fromNbt,
+                DataFixTypes.LEVEL
         );
+        return serverLevel.getDataStorage().computeIfAbsent(factory, "lands");
     }
 
     public void addLand(Land land) {
@@ -106,7 +109,7 @@ public class LandState extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag compoundTag) {
+    public CompoundTag save(CompoundTag compoundTag, HolderLookup.Provider provider) {
         ListTag list = new ListTag();
         for (Land land : landMap.values()) {
             list.add(land.toNbt());
@@ -115,9 +118,9 @@ public class LandState extends SavedData {
         return compoundTag;
     }
 
-    public static LandState fromNbt(CompoundTag compoundTag) {
+    public static LandState fromNbt(CompoundTag tag, HolderLookup.Provider provider) {
         LandState state = new LandState();
-        ListTag list = compoundTag.getList("Lands", Tag.TAG_COMPOUND);
+        ListTag list = tag.getList("Lands", Tag.TAG_COMPOUND);
         for (int i = 0, size = list.size(); i < size; i++) {
             Land land = Land.fromNbt(list.getCompound(i));
             state.landMap.put(land.getCorePos(), land);

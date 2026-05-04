@@ -4,12 +4,14 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
@@ -24,11 +26,13 @@ public class VisitorManager extends SavedData {
     private int ticksUntilSpawnTry = 0;
 
     public static VisitorManager get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-                VisitorManager::fromNbt,
+        SavedData.Factory<VisitorManager> factory = new SavedData.Factory<>(
                 VisitorManager::new,
-                "visitor_manager"
+                VisitorManager::fromNbt,
+                DataFixTypes.LEVEL
         );
+
+        return level.getDataStorage().computeIfAbsent(factory, "visitor_manager");
     }
 
     public void tick(ServerLevel level) {
@@ -250,7 +254,7 @@ public class VisitorManager extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
         ListTag list = new ListTag();
         for (LandVisitorData data : visitorData.values()) {
             list.add(data.toNbt());
@@ -259,7 +263,7 @@ public class VisitorManager extends SavedData {
         return tag;
     }
 
-    public static VisitorManager fromNbt(CompoundTag tag) {
+    public static VisitorManager fromNbt(CompoundTag tag, HolderLookup.Provider provider) {
         VisitorManager manager = new VisitorManager();
         ListTag list = tag.getList("Visitors", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {

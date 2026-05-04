@@ -1,6 +1,7 @@
 package banduty.stoneycore.datagen;
 
-import banduty.stoneycore.block.ModBlocks;
+import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.items.SCItems;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.core.Direction;
@@ -22,10 +23,10 @@ public class ModModelProvider extends FabricModelProviderPlus {
     @Override
     public void generateBlockStateModels(BlockModelGenerators generators) {
 
-        ResourceLocation model = new ResourceLocation("stoneycore", "block/craftman_anvil");
+        ResourceLocation model = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "block/craftman_anvil");
 
         generators.blockStateOutput.accept(
-                MultiVariantGenerator.multiVariant(ModBlocks.CRAFTMAN_ANVIL)
+                MultiVariantGenerator.multiVariant(SCBlocks.CRAFTMAN_ANVIL)
                         .with(
                                 PropertyDispatch.property(HorizontalDirectionalBlock.FACING)
 
@@ -65,10 +66,10 @@ public class ModModelProvider extends FabricModelProviderPlus {
         itemModelGenerator.generateFlatItem(SCItems.MANUSCRIPT, ModelTemplates.FLAT_ITEM);
 
         registerItemWConditions(SCItems.TONGS, ModelTemplates.FLAT_ITEM, itemModelGenerator, false,
-                new OverrideCondition(new ResourceLocation("hotiron"), 1),
-                new OverrideCondition(new ResourceLocation("finished"), 1));
+                new OverrideCondition(ResourceLocation.fromNamespaceAndPath("", "hotiron"), 1),
+                new OverrideCondition(ResourceLocation.fromNamespaceAndPath("", "finished"), 1));
 
         registerItemWConditions(SCItems.HOT_IRON, ModelTemplates.FLAT_ITEM, itemModelGenerator,
-                new OverrideCondition(new ResourceLocation("finished"), 1));
+                new OverrideCondition(ResourceLocation.fromNamespaceAndPath("", "finished"), 1));
     }
 }

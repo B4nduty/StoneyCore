@@ -1,11 +1,20 @@
 package banduty.stoneycore;
 
+import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.combat.range.BowHandler;
 import banduty.stoneycore.combat.range.CrossbowHandler;
 import banduty.stoneycore.combat.range.MusketHandler;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.config.IConfig;
+import banduty.stoneycore.entity.SCEntities;
+import banduty.stoneycore.items.SCItems;
+import banduty.stoneycore.particle.SCParticles;
 import banduty.stoneycore.platform.Services;
+import banduty.stoneycore.recipes.SCRecipes;
+import banduty.stoneycore.screen.SCScreenHandlers;
+import banduty.stoneycore.sounds.SCSounds;
+import banduty.stoneycore.util.data.entitydata.SCAttributes;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.streq.StrEq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +28,16 @@ public class StoneyCore {
     private static StrEq strEq;
 
     public static void init() {
+        SCBlocks.register();
+        SCEntities.register();
+        SCItems.register();
+        SCParticles.register();
+        SCRecipes.register();
+        SCScreenHandlers.register();
+        SCSounds.register();
+        SCAttributes.register();
+        SCDataComponents.register();
+
         RangedWeaponHandlers.register(new BowHandler());
         RangedWeaponHandlers.register(new CrossbowHandler());
         RangedWeaponHandlers.register(new MusketHandler());

@@ -1,10 +1,11 @@
 package banduty.stoneycore.compat.jei;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.hotiron.HotIron;
-import banduty.stoneycore.items.manuscript.Manuscript;
+import banduty.stoneycore.block.SCBlocks;
+import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.manuscript.Manuscript;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.recipes.AnvilRecipe;
+import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
 import banduty.stoneycore.recipes.StackIngredient;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
@@ -20,19 +21,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+public class CraftmanAnvilCategoryJEI implements IRecipeCategory<CraftmanAnvilRecipe> {
+    public static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "craftman_anvil");
+    public static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/gui/craftman_anvil_gui.png");
 
-public class CraftmanAnvilCategoryJEI implements IRecipeCategory<AnvilRecipe> {
-    public static final ResourceLocation UID = new ResourceLocation(StoneyCore.MOD_ID, "craftman_anvil");
-    public static final ResourceLocation TEXTURE = new ResourceLocation(StoneyCore.MOD_ID, "textures/gui/craftman_anvil_gui.png");
-
-    public static final RecipeType<AnvilRecipe> CRAFTMAN_ANVIL_TYPE =
-            new RecipeType<>(UID, AnvilRecipe.class);
+    public static final RecipeType<CraftmanAnvilRecipe> CRAFTMAN_ANVIL_TYPE =
+            new RecipeType<>(UID, CraftmanAnvilRecipe.class);
 
     private final IDrawable background;
     private final IDrawable icon;
@@ -40,11 +36,11 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<AnvilRecipe> {
     public CraftmanAnvilCategoryJEI(IGuiHelper helper) {
         this.background = helper.createDrawable(TEXTURE, 0, 0, 175, 82);
         this.icon = helper.createDrawableIngredient(VanillaTypes.ITEM_STACK,
-                new ItemStack(Services.PLATFORM.getCraftmanAnvil().asItem()));
+                new ItemStack(SCBlocks.CRAFTMAN_ANVIL.asItem()));
     }
 
     @Override
-    public @NotNull RecipeType<AnvilRecipe> getRecipeType() {
+    public @NotNull RecipeType<CraftmanAnvilRecipe> getRecipeType() {
         return CRAFTMAN_ANVIL_TYPE;
     }
 
@@ -64,7 +60,7 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<AnvilRecipe> {
     }
 
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, AnvilRecipe recipe, IFocusGroup focuses) {
+    public void setRecipe(IRecipeLayoutBuilder builder, CraftmanAnvilRecipe recipe, IFocusGroup focuses) {
         var ingredients = recipe.ingredients();
         int inputSize = Math.min(ingredients.size(), 6);
 
@@ -80,18 +76,8 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<AnvilRecipe> {
             if (inputSize == 1 || inputSize == 2) addX = 18;
             else if (inputSize == 5 && (i == 3 || i == 4)) addX = 9;
 
-            if (ing.tag() != null) {
-                Ingredient tagIngredient = Ingredient.of(ing.tag());
-                List<ItemStack> stacks = Arrays.stream(tagIngredient.getItems())
-                        .map(ItemStack::copy)
-                        .collect(Collectors.toList());
-
-                builder.addSlot(RecipeIngredientRole.INPUT, inputSlotsX[i] + addX, inputSlotsY[i] + addY)
-                        .addItemStacks(stacks);
-            } else {
-                builder.addSlot(RecipeIngredientRole.INPUT, inputSlotsX[i] + addX, inputSlotsY[i] + addY)
-                        .addIngredients(VanillaTypes.ITEM_STACK, ing.asItemStacks());
-            }
+            builder.addSlot(RecipeIngredientRole.INPUT, inputSlotsX[i] + addX, inputSlotsY[i] + addY)
+                    .addItemStacks(ing.asItemStacks());
         }
 
         ItemStack output = recipe.output();
@@ -105,7 +91,7 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<AnvilRecipe> {
     }
 
     @Override
-    public void draw(AnvilRecipe recipe, IRecipeSlotsView slots, GuiGraphics guiGraphics, double mouseX, double mouseY) {
+    public void draw(CraftmanAnvilRecipe recipe, IRecipeSlotsView slots, GuiGraphics guiGraphics, double mouseX, double mouseY) {
         guiGraphics.pose().pushPose();
 
         // Hit times

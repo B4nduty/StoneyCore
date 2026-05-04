@@ -1,6 +1,6 @@
 package banduty.stoneycore.datagen;
 
-import banduty.stoneycore.combat.melee.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
@@ -45,7 +45,7 @@ public abstract class DefinitionsProvider implements DataProvider {
             List<CompletableFuture<?>> futures = new ArrayList<>();
             for (Map.Entry<ResourceLocation, DefinitionEntry> entry : entries.entrySet()) {
                 Path path = output.getOutputFolder().resolve("data/" + entry.getKey().getNamespace() + "/definitions/accessories/" + entry.getKey().getPath() + ".json");
-                futures.add(DataProvider.saveStable(writer, DefinitionEntry.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(false, s -> {}), path));
+                futures.add(DataProvider.saveStable(writer, DefinitionEntry.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(s -> new IllegalStateException("Failed to encode JSON: " + s)), path));
             }
             return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         }
@@ -73,14 +73,14 @@ public abstract class DefinitionsProvider implements DataProvider {
                     Codec.DOUBLE.optionalFieldOf("hungerDrainMultiplier", 0.0).forGetter(DefinitionEntry::hungerDrainMultiplier),
                     Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(DefinitionEntry::deflectChance),
                     Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(DefinitionEntry::weight),
-                    ResourceLocation.CODEC.optionalFieldOf("visoredHelmet", new ResourceLocation("", "")).forGetter(DefinitionEntry::visoredHelmet)
+                    ResourceLocation.CODEC.optionalFieldOf("visoredHelmet", ResourceLocation.fromNamespaceAndPath("","")).forGetter(DefinitionEntry::visoredHelmet)
             ).apply(instance, DefinitionEntry::new));
         }
 
         public static class Builder {
             private double armor, toughness, hunger, deflect, weight;
             private String slot = "";
-            private ResourceLocation visor = new ResourceLocation("", "");
+            private ResourceLocation visor = ResourceLocation.fromNamespaceAndPath("","");
             public static Builder create() { return new Builder(); }
             public Builder armor(double a, double t) { this.armor = a; this.toughness = t; return this; }
             public Builder weight(double w) { this.weight = w; return this; }
@@ -102,7 +102,7 @@ public abstract class DefinitionsProvider implements DataProvider {
             List<CompletableFuture<?>> futures = new ArrayList<>();
             for (Map.Entry<ResourceLocation, DefinitionEntry> entry : entries.entrySet()) {
                 Path path = output.getOutputFolder().resolve("data/" + entry.getKey().getNamespace() + "/definitions/armor/" + entry.getKey().getPath() + ".json");
-                futures.add(DataProvider.saveStable(writer, DefinitionEntry.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(false, s -> {}), path));
+                futures.add(DataProvider.saveStable(writer, DefinitionEntry.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(s -> new IllegalStateException("Failed to encode JSON: " + s)), path));
             }
             return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         }
@@ -156,7 +156,7 @@ public abstract class DefinitionsProvider implements DataProvider {
             List<CompletableFuture<?>> futures = new ArrayList<>();
             for (Map.Entry<ResourceLocation, WeaponDefinitionData> entry : entries.entrySet()) {
                 Path path = output.getOutputFolder().resolve("data/" + entry.getKey().getNamespace() + "/definitions/weapon/" + entry.getKey().getPath() + ".json");
-                futures.add(DataProvider.saveStable(writer, WeaponDefinitionData.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(false, s -> {}), path));
+                futures.add(DataProvider.saveStable(writer, WeaponDefinitionData.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(s -> new IllegalStateException("Failed to encode JSON: " + s)), path));
             }
             return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         }
