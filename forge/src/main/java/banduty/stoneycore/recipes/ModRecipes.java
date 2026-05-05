@@ -22,7 +22,7 @@ public interface ModRecipes {
             });
 
     RegistryObject<RecipeSerializer<AnvilRecipe>> ANVIL_RECIPE_SERIALIZER =
-            RECIPE_SERIALIZERS.register("craftman_anvil_crafting", () -> AnvilRecipeSerializer.INSTANCE);
+            RECIPE_SERIALIZERS.register("craftman_anvil_crafting", () -> AnvilRecipe.Serializer.INSTANCE);
 
 
     RegistryObject<RecipeSerializer<ManuscriptCraftingRecipe>> MANUSCRIPT_SERIALIZER =

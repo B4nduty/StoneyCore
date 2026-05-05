@@ -107,7 +107,7 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
             }
 
             if (hand == InteractionHand.MAIN_HAND) {
-                if (Tongs.getTargetStack(stack).isEmpty() && (stack.isEmpty() || player.getMainHandItem().getItem() instanceof Tongs || player.getOffhandItem().getItem() instanceof Tongs)) {
+                if (stack.isEmpty() || (Tongs.getTargetStack(stack).isEmpty() && (player.getMainHandItem().getItem() instanceof Tongs || player.getOffhandItem().getItem() instanceof Tongs))) {
                     NonNullList<ItemStack> itemStacks = anvilEntity.getItems();
                     for (ItemStack itemStack : itemStacks) {
                         Optional<ItemStack> tongs = getTongsFromInventory(player);
@@ -137,7 +137,7 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
                     newStack = helper.acceptCraftmanAnvilItem(stack);
                 }
 
-                boolean wasAdded = anvilEntity.addItem(newStack);
+                boolean wasAdded = anvilEntity.addItem(newStack, player);
                 if (wasAdded) {
                     level.playSound(null, pos, SoundEvents.METAL_PLACE, SoundSource.BLOCKS, 0.5f, 1.0f);
                     anvilEntity.checkAndSpawnRecipeParticles();

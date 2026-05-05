@@ -113,10 +113,12 @@ dependencies {
     modImplementation "blue.endless:jankson:1.2.3"
     compileOnly "org.jetbrains:annotations:24.0.1"
 
-    implementation "com.github.B4nduty:streq:v${streq}"
+    modApi "com.github.B4nduty:streq:v${streq}"
+    modImplementation "com.github.B4nduty:streq:v${streq}"
     jarJar("com.github.B4nduty:streq:v${streq}") {
         transitive = false
     }
+    modImplementation("curse.maven:item-nbt-viewer-514135:4578522")
 }
 
 jar {

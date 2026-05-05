@@ -25,7 +25,7 @@ public interface ModRecipes {
     RecipeSerializer<AnvilRecipe> ANVIL_RECIPE_SERIALIZER = Registry.register(
             BuiltInRegistries.RECIPE_SERIALIZER,
             new ResourceLocation(StoneyCore.MOD_ID, "craftman_anvil_crafting"),
-            AnvilRecipeSerializer.INSTANCE
+            AnvilRecipe.Serializer.INSTANCE
     );
 
     RecipeSerializer<ManuscriptCraftingRecipe> MANUSCRIPT_SERIALIZER = Registry.register(

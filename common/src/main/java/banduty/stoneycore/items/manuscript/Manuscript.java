@@ -41,9 +41,13 @@ public abstract class Manuscript extends Item {
 
     public static void setTargetStack(ItemStack manuscript, ItemStack targetStack) {
         if (targetStack == null || targetStack.isEmpty()) return;
+
+        ItemStack clean = new ItemStack(targetStack.getItem(), 1);
+
         CompoundTag nbt = manuscript.getOrCreateTag();
         CompoundTag stackTag = new CompoundTag();
-        targetStack.save(stackTag);
+
+        clean.save(stackTag);
         nbt.put(STACK_KEY, stackTag);
     }
 
