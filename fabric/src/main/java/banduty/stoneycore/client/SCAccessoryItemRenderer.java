@@ -60,7 +60,7 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
     public <M extends LivingEntity> void render(ItemStack stack, SlotReference reference, PoseStack poseStack, EntityModel<M> model, MultiBufferSource multiBufferSource, int light, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!(stack.getItem() instanceof SCAccessoryItem scAccessoryItem)) return;
         Optional<HumanoidModel<LivingEntity>> optionalModel = scAccessoryItem.getModels(stack).base();
-        if (Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN))) optionalModel = scAccessoryItem.getModels(stack).visorOpen();
+        if (Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN.get()))) optionalModel = scAccessoryItem.getModels(stack).visorOpen();
         if (optionalModel.isEmpty()) return;
         HumanoidModel<LivingEntity> accessoryModel = optionalModel.get();
 

@@ -35,7 +35,7 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<CraftmanAnvilRe
     public CraftmanAnvilCategoryJEI(IGuiHelper helper) {
         this.background = helper.createDrawable(TEXTURE, 0, 0, 175, 82);
         this.icon = helper.createDrawableIngredient(VanillaTypes.ITEM_STACK,
-                new ItemStack(SCBlocks.CRAFTMAN_ANVIL.asItem()));
+                new ItemStack(SCBlocks.CRAFTMAN_ANVIL.get().asItem()));
     }
 
     @Override

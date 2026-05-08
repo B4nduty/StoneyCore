@@ -41,7 +41,7 @@ public class AdjustAttributeModifierEvent implements AdjustAttributeModifierCall
             deflectChance = data.deflectChance();
         }
 
-        if (Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN))) {
+        if (Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN.get()))) {
             armor -= 1;
             toughness -= 1;
             deflectChance -= 0.05;

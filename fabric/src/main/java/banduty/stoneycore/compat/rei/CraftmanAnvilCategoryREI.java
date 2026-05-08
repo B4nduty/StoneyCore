@@ -40,7 +40,7 @@ public class CraftmanAnvilCategoryREI implements DisplayCategory<BasicDisplay> {
 
     @Override
     public Renderer getIcon() {
-        return EntryStacks.of(SCBlocks.CRAFTMAN_ANVIL.asItem().getDefaultInstance());
+        return EntryStacks.of(SCBlocks.CRAFTMAN_ANVIL.get().asItem().getDefaultInstance());
     }
 
     @Override

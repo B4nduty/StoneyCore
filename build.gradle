@@ -5,10 +5,10 @@ plugins {
 
 tasks.register("runAllDatagen") {
     group = "datagen"
-    description = "Runs datagen for Forge and Fabric"
+    description = "Runs datagen for NeoForge and Fabric"
 
     dependsOn(
-            ":forge:runData",
+            ":neoforge:runData",
             ":fabric:runDatagen"
     )
 }

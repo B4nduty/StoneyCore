@@ -26,8 +26,8 @@ public record ToggleVisorC2SPacket() implements CustomPacketPayload {
                 for (SlotEntryReference equipped : cap.getAllEquipped()) {
                     ItemStack stack = equipped.stack();
                     if (!stack.isEmpty() && stack.getItem() instanceof SCAccessoryItem item && item.hasOpenVisor(stack)) {
-                        boolean current = stack.getOrDefault(SCDataComponents.VISOR_OPEN, false);
-                        stack.set(SCDataComponents.VISOR_OPEN, !current);
+                        boolean current = stack.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false);
+                        stack.set(SCDataComponents.VISOR_OPEN.get(), !current);
                     }
                 }
             });
