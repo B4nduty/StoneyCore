@@ -92,7 +92,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
 
         if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.getModels(stack).visorOpen().isPresent()) {
             lines.add(Component.translatable("component.tooltip.stoneycore.openVisor").withStyle(ChatFormatting.WHITE));
-            if (!Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN))) {
+            if (!Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN.get()))) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.openVisorDeflectChance").withStyle(ChatFormatting.AQUA));
                 lines.add(Component.translatable("component.tooltip.stoneycore.openVisorArmor").withStyle(ChatFormatting.AQUA));
                 lines.add(Component.translatable("component.tooltip.stoneycore.openVisorToughness").withStyle(ChatFormatting.AQUA));

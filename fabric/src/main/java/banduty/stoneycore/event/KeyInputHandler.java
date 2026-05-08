@@ -74,7 +74,7 @@ public class KeyInputHandler {
                                     ItemStack stack = equipped.stack();
                                     if (!stack.isEmpty() && stack.getItem() instanceof SCAccessoryItem accessory) {
                                         if (accessory.hasOpenVisor(stack)) {
-                                            isCurrentlyOpen = Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN));
+                                            isCurrentlyOpen = Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN.get()));
                                             break;
                                         }
                                     }
