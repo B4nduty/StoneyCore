@@ -18,6 +18,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
@@ -100,8 +101,8 @@ public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanA
             poseStack.popPose();
         }
 
-        Optional<CraftmanAnvilRecipe> recipe = entity.getRecipe();
-        recipe.ifPresent(anvilRecipe -> renderHitSquares(entity, poseStack, vertexConsumers, recipe.get().hitTimes(), facing));
+        Optional<RecipeHolder<CraftmanAnvilRecipe>> recipe = entity.getRecipe();
+        recipe.ifPresent(anvilRecipe -> renderHitSquares(entity, poseStack, vertexConsumers, recipe.get().value().hitTimes(), facing));
     }
 
     private void renderHitSquares(CraftmanAnvilBlockEntity entity, PoseStack poseStack, MultiBufferSource vertexConsumers, int totalHits, Direction facing) {

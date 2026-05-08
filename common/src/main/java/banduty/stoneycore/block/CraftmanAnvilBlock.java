@@ -81,7 +81,7 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         return this.getStateDefinition()
-                .any().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
+                .any().setValue(FACING, ctx.getHorizontalDirection());
     }
 
     @Override
@@ -109,7 +109,9 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
             }
 
             if (hand == InteractionHand.MAIN_HAND) {
-                if (Tongs.getTargetStack(stack).isEmpty() && (stack.isEmpty() || player.getMainHandItem().getItem() instanceof Tongs || player.getOffhandItem().getItem() instanceof Tongs)) {
+                if (stack.isEmpty() || (Tongs.getTargetStack(stack).isEmpty() &&
+                        (player.getMainHandItem().getItem() instanceof Tongs ||
+                                player.getOffhandItem().getItem() instanceof Tongs))) {
                     NonNullList<ItemStack> itemStacks = anvilEntity.getItems();
                     for (ItemStack itemStack : itemStacks) {
                         Optional<ItemStack> tongs = getTongsFromInventory(player);
@@ -143,7 +145,7 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
                     newStack = helper.acceptCraftmanAnvilItem(stack);
                 }
 
-                boolean wasAdded = anvilEntity.addItem(newStack);
+                boolean wasAdded = anvilEntity.addItem(newStack, player);
                 if (wasAdded) {
                     level.playSound(null, pos, SoundEvents.METAL_PLACE, SoundSource.BLOCKS, 0.5f, 1.0f);
                     anvilEntity.checkAndSpawnRecipeParticles();
@@ -174,7 +176,7 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> blockEntityType) {
         return createTickerHelper(blockEntityType, SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(),
-                (world1, pos, state1, blockEntity) -> blockEntity.tick(world1, pos, state1));
+                (world1, pos, state1, blockEntity) -> blockEntity.tick(world1));
     }
 
     @Override
