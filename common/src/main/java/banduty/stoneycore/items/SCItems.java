@@ -10,21 +10,23 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 
+import java.util.function.Supplier;
+
 public interface SCItems {
-    Item SMITHING_HAMMER = registerItem("smithing_hammer", new SmithingHammer(new Item.Properties().stacksTo(1).durability(163)));
+    Supplier<Item> SMITHING_HAMMER = registerItem("smithing_hammer", () -> new SmithingHammer(new Item.Properties().stacksTo(1).durability(163)));
 
-    Item BLACK_POWDER = registerItem("black_powder", new Item(new Item.Properties()));
+    Supplier<Item> BLACK_POWDER = registerItem("black_powder", () -> new Item(new Item.Properties()));
 
-    Item CROWN = registerItem("crown", new ArmorItem(ModArmorMaterials.CROWN, ArmorItem.Type.HELMET, new Item.Properties().stacksTo(1)));
+    Supplier<Item> CROWN = registerItem("crown", () -> new ArmorItem(ModArmorMaterials.CROWN, ArmorItem.Type.HELMET, new Item.Properties().stacksTo(1)));
 
-    Item MANUSCRIPT = registerItem("manuscript", new Manuscript(new Item.Properties().stacksTo(1)));
+    Supplier<Item> MANUSCRIPT = registerItem("manuscript", () -> new Manuscript(new Item.Properties().stacksTo(1)));
 
-    Item TONGS = registerItem("tongs", new Tongs(new Item.Properties().stacksTo(1)));
+    Supplier<Item> TONGS = registerItem("tongs", () -> new Tongs(new Item.Properties().stacksTo(1)));
 
-    Item HOT_IRON = registerItem("hot_iron", new HotIron(new Item.Properties()));
+    Supplier<Item> HOT_IRON = registerItem("hot_iron", () -> new HotIron(new Item.Properties()));
 
-    private static Item registerItem(String name, Item item) {
-        return Services.PLATFORM.register(BuiltInRegistries.ITEM, name, () -> item).get();
+    private static Supplier<Item> registerItem(String name, Supplier<Item> itemSupplier) {
+        return Services.PLATFORM.register(BuiltInRegistries.ITEM, name, itemSupplier);
     }
 
     static void register() {

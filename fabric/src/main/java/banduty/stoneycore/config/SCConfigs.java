@@ -28,10 +28,6 @@ public class SCConfigs {
         public boolean getParry = true;
 
         @Sync(Option.SyncMode.INFORM_SERVER)
-        @Comment("Max Base Stamina (0 or less disables)")
-        public float maxBaseStamina = 20f;
-
-        @Sync(Option.SyncMode.INFORM_SERVER)
         @Comment("Stamina Recovery Formula")
         public String staminaRecoveryFormula = "10 - (foodLevel + health) / 5";
 

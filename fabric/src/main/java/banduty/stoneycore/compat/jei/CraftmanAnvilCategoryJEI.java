@@ -4,7 +4,6 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
 import banduty.stoneycore.items.custom.manuscript.Manuscript;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
 import banduty.stoneycore.recipes.StackIngredient;
 import mezz.jei.api.constants.VanillaTypes;

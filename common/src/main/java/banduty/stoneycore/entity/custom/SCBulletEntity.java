@@ -4,7 +4,6 @@ import banduty.stoneycore.combat.damagetype.SCDamageApplier;
 import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.entity.SCEntities;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.sounds.SCSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -34,7 +33,7 @@ public class SCBulletEntity extends AbstractArrow {
     }
 
     public SCBulletEntity(Level level, LivingEntity shooter) {
-        this(SCEntities.SC_BULLET, level);
+        this(SCEntities.SC_BULLET.get(), level);
         this.setOwner(shooter);
     }
 
@@ -104,7 +103,7 @@ public class SCBulletEntity extends AbstractArrow {
 
     @Override
     protected SoundEvent getDefaultHitGroundSoundEvent() {
-        return SCSounds.BULLET_CRACK;
+        return SCSounds.BULLET_CRACK.get();
     }
 
     public void setDamageAmount(float damage) {

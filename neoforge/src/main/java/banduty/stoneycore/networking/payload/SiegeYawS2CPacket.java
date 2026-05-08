@@ -2,7 +2,6 @@ package banduty.stoneycore.networking.payload;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.entity.custom.AbstractSiegeEntity;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;

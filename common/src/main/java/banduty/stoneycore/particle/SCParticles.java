@@ -2,15 +2,23 @@ package banduty.stoneycore.particle;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.platform.Services;
+import net.minecraft.core.Registry;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 
-public interface SCParticles {
-    SimpleParticleType MUZZLES_SMOKE_PARTICLE = registerSimpleParticleType("muzzles_smoke_particle", true);
-    SimpleParticleType MUZZLES_FLASH_PARTICLE = registerSimpleParticleType("muzzles_flash_particle", false);
+import java.util.function.Supplier;
 
-    private static SimpleParticleType registerSimpleParticleType(String name, boolean overrideLimiter) {
-        return (SimpleParticleType) Services.PLATFORM.register(BuiltInRegistries.PARTICLE_TYPE, name, () -> new SimpleParticleType(overrideLimiter) {}).get();
+public interface SCParticles {
+    Supplier<SimpleParticleType> MUZZLES_SMOKE_PARTICLE = registerSimpleParticleType("muzzles_smoke_particle", true);
+    Supplier<SimpleParticleType> MUZZLES_FLASH_PARTICLE = registerSimpleParticleType("muzzles_flash_particle", false);
+
+    @SuppressWarnings("unchecked")
+    private static Supplier<SimpleParticleType> registerSimpleParticleType(String name, boolean overrideLimiter) {
+        return Services.PLATFORM.register(
+                (Registry<SimpleParticleType>) (Registry<?>) BuiltInRegistries.PARTICLE_TYPE,
+                name,
+                () -> new SimpleParticleType(overrideLimiter) {}
+        );
     }
 
     static void register() {

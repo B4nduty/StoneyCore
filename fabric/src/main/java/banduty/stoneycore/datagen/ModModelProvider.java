@@ -26,7 +26,7 @@ public class ModModelProvider extends FabricModelProviderPlus {
         ResourceLocation model = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "block/craftman_anvil");
 
         generators.blockStateOutput.accept(
-                MultiVariantGenerator.multiVariant(SCBlocks.CRAFTMAN_ANVIL)
+                MultiVariantGenerator.multiVariant(SCBlocks.CRAFTMAN_ANVIL.get())
                         .with(
                                 PropertyDispatch.property(HorizontalDirectionalBlock.FACING)
 
@@ -60,16 +60,16 @@ public class ModModelProvider extends FabricModelProviderPlus {
 
     @Override
     public void generateItemModels(ItemModelGenerators itemModelGenerator) {
-        itemModelGenerator.generateFlatItem(SCItems.SMITHING_HAMMER, ModelTemplates.FLAT_HANDHELD_ITEM);
-        itemModelGenerator.generateFlatItem(SCItems.BLACK_POWDER, ModelTemplates.FLAT_ITEM);
-        itemModelGenerator.generateFlatItem(SCItems.CROWN, ModelTemplates.FLAT_ITEM);
-        itemModelGenerator.generateFlatItem(SCItems.MANUSCRIPT, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(SCItems.SMITHING_HAMMER.get(), ModelTemplates.FLAT_HANDHELD_ITEM);
+        itemModelGenerator.generateFlatItem(SCItems.BLACK_POWDER.get(), ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(SCItems.CROWN.get(), ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(SCItems.MANUSCRIPT.get(), ModelTemplates.FLAT_ITEM);
 
-        registerItemWConditions(SCItems.TONGS, ModelTemplates.FLAT_ITEM, itemModelGenerator, false,
+        registerItemWConditions(SCItems.TONGS.get(), ModelTemplates.FLAT_ITEM, itemModelGenerator, false,
                 new OverrideCondition(ResourceLocation.fromNamespaceAndPath("", "hotiron"), 1),
                 new OverrideCondition(ResourceLocation.fromNamespaceAndPath("", "finished"), 1));
 
-        registerItemWConditions(SCItems.HOT_IRON, ModelTemplates.FLAT_ITEM, itemModelGenerator,
+        registerItemWConditions(SCItems.HOT_IRON.get(), ModelTemplates.FLAT_ITEM, itemModelGenerator,
                 new OverrideCondition(ResourceLocation.fromNamespaceAndPath("", "finished"), 1));
     }
 }

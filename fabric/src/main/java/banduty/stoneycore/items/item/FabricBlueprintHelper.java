@@ -41,7 +41,7 @@ public class FabricBlueprintHelper implements IBlueprintHelper {
 
     @Override
     public MenuType<?> blueprintScreenHandler() {
-        return SCScreenHandlers.BLUEPRINT_SCREEN_HANDLER;
+        return SCScreenHandlers.BLUEPRINT_SCREEN_HANDLER.get();
     }
 
     @Override

@@ -9,7 +9,7 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
 
-public class ForgeRenderFirstPersonAccessoryArmorHelper implements RenderFirstPersonAccessoryArmorHelper {
+public class NeoForgeRenderFirstPersonAccessoryArmorHelper implements RenderFirstPersonAccessoryArmorHelper {
     @Override
     public void onRenderInFirstPerson(LocalPlayer player, ItemStack itemStack, PoseStack poseStack, MultiBufferSource multiBufferSource, int light, HumanoidArm arm) {
         NeoForge.EVENT_BUS.post(new RenderFirstPersonAccesoryArmorEvents(player, itemStack, poseStack, multiBufferSource, light, arm));

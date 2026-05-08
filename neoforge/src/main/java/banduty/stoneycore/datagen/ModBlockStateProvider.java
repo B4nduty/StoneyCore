@@ -20,7 +20,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        horizontalBlock(SCBlocks.CRAFTMAN_ANVIL,
+        horizontalBlock(SCBlocks.CRAFTMAN_ANVIL.get(),
                 new ModelFile.UncheckedModelFile(modLoc("block/craftman_anvil")));
     }
 

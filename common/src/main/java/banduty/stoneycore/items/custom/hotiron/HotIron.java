@@ -58,7 +58,7 @@ public class HotIron extends Item {
             return;
         }
 
-        if (!stack.has(SCDataComponents.IGNITE_TIME))
+        if (!stack.has(SCDataComponents.IGNITE_TIME.get()))
             igniteHotIron(stack, entity);
 
         if (!isHeldByTongs(stack)) {
@@ -66,7 +66,7 @@ public class HotIron extends Item {
             entity.setRemainingFireTicks(20);
         }
 
-        long igniteTime = stack.get(SCDataComponents.IGNITE_TIME);
+        long igniteTime = stack.get(SCDataComponents.IGNITE_TIME.get());
         long currentTime = level.getGameTime();
         if (isFinished(stack)) currentTime -= IGNITE_DURATION_TICKS_AFTER_FINISH;
 
@@ -86,23 +86,23 @@ public class HotIron extends Item {
     }
 
     public static void setHeldByTongs(ItemStack stack, boolean held) {
-        stack.set(SCDataComponents.HELD_BY_TONGS_KEY, held);
+        stack.set(SCDataComponents.HELD_BY_TONGS_KEY.get(), held);
     }
 
     public static boolean isHeldByTongs(ItemStack stack) {
-        return Boolean.TRUE.equals(stack.get(SCDataComponents.HELD_BY_TONGS_KEY));
+        return Boolean.TRUE.equals(stack.get(SCDataComponents.HELD_BY_TONGS_KEY.get()));
     }
 
     public static void removeTargetStack(ItemStack stack) {
-        stack.remove(SCDataComponents.TARGET_STACK);
+        stack.remove(SCDataComponents.TARGET_STACK.get());
     }
 
     public static void igniteHotIron(ItemStack stack, Entity entity) {
-        stack.set(SCDataComponents.IGNITE_TIME, entity.level().getGameTime());
+        stack.set(SCDataComponents.IGNITE_TIME.get(), entity.level().getGameTime());
     }
 
     public static void unlimitedHotIron(ItemStack stack) {
-        stack.remove(SCDataComponents.IGNITE_TIME);
+        stack.remove(SCDataComponents.IGNITE_TIME.get());
     }
 
     public static boolean hasTargetStack(ItemStack stack) {
@@ -114,19 +114,19 @@ public class HotIron extends Item {
     }
 
     public static ItemStack createForStack(ItemStack targetStack) {
-        ItemStack stack = new ItemStack(SCItems.HOT_IRON);
+        ItemStack stack = new ItemStack(SCItems.HOT_IRON.get());
         setTargetStack(stack, targetStack);
         return stack;
     }
 
     public static void setTargetStack(ItemStack stack, ItemStack targetStack) {
         if (targetStack == null || targetStack.isEmpty()) return;
-        stack.set(SCDataComponents.TARGET_STACK, targetStack);
+        stack.set(SCDataComponents.TARGET_STACK.get(), targetStack);
     }
 
     public static ItemStack getTargetStack(ItemStack stack) {
-        if (stack.has(SCDataComponents.TARGET_STACK)) {
-            return stack.get(SCDataComponents.TARGET_STACK);
+        if (stack.has(SCDataComponents.TARGET_STACK.get())) {
+            return stack.get(SCDataComponents.TARGET_STACK.get());
         }
         return ItemStack.EMPTY;
     }
@@ -149,7 +149,7 @@ public class HotIron extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        Long igniteTime = stack.get(SCDataComponents.IGNITE_TIME);
+        Long igniteTime = stack.get(SCDataComponents.IGNITE_TIME.get());
 
         if (igniteTime != null) {
             long currentTime = MinecraftS4S.minecraft().level.getGameTime();

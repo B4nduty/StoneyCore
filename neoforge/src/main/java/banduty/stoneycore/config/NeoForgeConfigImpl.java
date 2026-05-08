@@ -20,11 +20,6 @@ public class NeoForgeConfigImpl extends ConfigImpl {
             }
 
             @Override
-            public float maxBaseStamina() {
-                return SCConfigs.maxBaseStamina.get().floatValue();
-            }
-
-            @Override
             public String staminaRecoveryFormula() {
                 return SCConfigs.staminaRecoveryFormula.get();
             }

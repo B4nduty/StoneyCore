@@ -26,11 +26,6 @@ public class FabricConfigImpl extends ConfigImpl {
             }
 
             @Override
-            public float maxBaseStamina() {
-                return config.combatOptions.maxBaseStamina();
-            }
-
-            @Override
             public String staminaRecoveryFormula() {
                 return config.combatOptions.staminaRecoveryFormula();
             }

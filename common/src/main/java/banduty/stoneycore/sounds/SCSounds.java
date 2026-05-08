@@ -6,16 +6,18 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 
-public interface SCSounds {
-    SoundEvent BULLET_CRACK = registerSound("bullet_crack");
-    SoundEvent VISOR_OPEN = registerSound("visor_open");
-    SoundEvent VISOR_CLOSE = registerSound("visor_close");
+import java.util.function.Supplier;
 
-    private static SoundEvent registerSound(String name) {
+public interface SCSounds {
+    Supplier<SoundEvent> BULLET_CRACK = registerSound("bullet_crack");
+    Supplier<SoundEvent> VISOR_OPEN = registerSound("visor_open");
+    Supplier<SoundEvent> VISOR_CLOSE = registerSound("visor_close");
+
+    private static Supplier<SoundEvent> registerSound(String name) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, name);
 
         return Services.PLATFORM.register(BuiltInRegistries.SOUND_EVENT, name,
-                () -> SoundEvent.createVariableRangeEvent(id)).get();
+                () -> SoundEvent.createVariableRangeEvent(id));
     }
 
     static void register() {

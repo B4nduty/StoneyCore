@@ -18,7 +18,7 @@ public class ModRecipeProvider extends RecipeProvider {
 
     @Override
     protected void buildRecipes(RecipeOutput exporter) {
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SCItems.TONGS, 1)
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SCItems.TONGS.get(), 1)
                 .pattern("N N")
                 .pattern(" N ")
                 .pattern("I I")
@@ -28,7 +28,7 @@ public class ModRecipeProvider extends RecipeProvider {
                 .unlockedBy(getHasName(Items.IRON_NUGGET), has(Items.IRON_NUGGET))
                 .save(exporter);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SCItems.SMITHING_HAMMER, 1)
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SCItems.SMITHING_HAMMER.get(), 1)
                 .pattern("IIN")
                 .pattern(" S ")
                 .pattern(" S ")
@@ -40,7 +40,7 @@ public class ModRecipeProvider extends RecipeProvider {
                 .unlockedBy(getHasName(Items.IRON_NUGGET), has(Items.IRON_NUGGET))
                 .save(exporter);
 
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SCItems.BLACK_POWDER, 4)
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SCItems.BLACK_POWDER.get(), 4)
                 .requires(Items.CHARCOAL)
                 .requires(Items.BONE_MEAL)
                 .requires(Items.MAGMA_BLOCK)
@@ -52,7 +52,7 @@ public class ModRecipeProvider extends RecipeProvider {
         SimpleCookingRecipeBuilder.campfireCooking(
                         Ingredient.of(Items.IRON_INGOT),
                         RecipeCategory.MISC,
-                        SCItems.HOT_IRON,
+                        SCItems.HOT_IRON.get(),
                         0.7f,
                         900
                 ).unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))

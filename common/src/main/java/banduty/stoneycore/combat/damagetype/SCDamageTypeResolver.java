@@ -13,7 +13,7 @@ public class SCDamageTypeResolver {
     public static SCDamageType determine(ItemStack stack, Player player) {
         Item item = stack.getItem();
 
-        boolean isBludgeoningNBT = Boolean.TRUE.equals(stack.get(SCDataComponents.BLUDGEONING));
+        boolean isBludgeoningNBT = Boolean.TRUE.equals(stack.get(SCDataComponents.BLUDGEONING.get()));
         boolean isPiercingCombo = isPiercingAnimation(player, item);
 
         boolean bludgeoningToPiercing =

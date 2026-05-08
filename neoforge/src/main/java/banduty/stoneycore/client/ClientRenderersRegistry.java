@@ -17,7 +17,7 @@ public class ClientRenderersRegistry {
 
     @SubscribeEvent
     public static void registerExtensions(RegisterClientExtensionsEvent event) {
-        event.registerItem(CROWN_RENDERER, SCItems.CROWN);
+        event.registerItem(CROWN_RENDERER, SCItems.CROWN.get());
         for (Item item : BuiltInRegistries.ITEM) {
             if (item instanceof SCUnderArmor) {
                 event.registerItem(ARMOR_RENDERER, item);

@@ -74,12 +74,12 @@ public record CraftmanAnvilRecipe(List<StackIngredient> ingredients, ItemStack o
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return SCRecipes.CRAFTMAN_ANVIL_RECIPE_SERIALIZER;
+        return SCRecipes.CRAFTMAN_ANVIL_RECIPE_SERIALIZER.get();
     }
 
     @Override
     public RecipeType<?> getType() {
-        return SCRecipes.CRAFTMAN_ANVIL_RECIPE_TYPE;
+        return SCRecipes.CRAFTMAN_ANVIL_RECIPE_TYPE.get();
     }
 
     public static class Serializer implements RecipeSerializer<CraftmanAnvilRecipe> {

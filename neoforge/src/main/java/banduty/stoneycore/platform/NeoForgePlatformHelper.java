@@ -122,9 +122,11 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends BlockEntity> BlockEntityType<T> registerBlockEntityType(String name, BiFunction<BlockPos, BlockState, T> factory, Block block) {
-        return (BlockEntityType<T>) register(BuiltInRegistries.BLOCK_ENTITY_TYPE, name,
-                () -> BlockEntityType.Builder.of(factory::apply, block).build(null)).get();
+    public <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlockEntityType(
+            String name, BiFunction<BlockPos, BlockState, T> factory, Supplier<Block> blockSupplier) {
+
+        return (Supplier<BlockEntityType<T>>) (Supplier<?>) register(BuiltInRegistries.BLOCK_ENTITY_TYPE, name,
+                () -> BlockEntityType.Builder.of(factory::apply, blockSupplier.get()).build(null));
     }
 
     @Override

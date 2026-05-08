@@ -14,11 +14,10 @@ import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
 import banduty.stoneycore.items.custom.tongs.Tongs;
-import banduty.stoneycore.networking.SCPayloads;
 import banduty.stoneycore.networking.SCPayloadsClient;
-import banduty.stoneycore.particle.SCParticles;
 import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
+import banduty.stoneycore.particle.SCParticles;
 import banduty.stoneycore.platform.*;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.SCScreenHandlers;
@@ -53,7 +52,7 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         ItemTooltipCallback.EVENT.register(new ItemTooltipHandler());
         ClientTickEvents.END_CLIENT_TICK.register(new ClientTickHandler());
         KeyInputHandler.register();
-        EntityRendererRegistry.register(SCEntities.SC_BULLET, SCBulletEntityRenderer::new);
+        EntityRendererRegistry.register(SCEntities.SC_BULLET.get(), SCBulletEntityRenderer::new);
         ClientOutlineRenderer.register();
         for (Item item : BuiltInRegistries.ITEM) {
             if (item instanceof SCAccessoryItem || item instanceof SCUnderArmor) {
@@ -100,13 +99,13 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                                 !(HotIron.getTargetStack(Tongs.getTargetStack(stack)).isEmpty()) ? 1.0F : 0.0F);
             }
         }
-        ArmorRenderer.register(new CrownRenderer(), SCItems.CROWN);
+        ArmorRenderer.register(new CrownRenderer(), SCItems.CROWN.get());
 
-        ParticleFactoryRegistry.getInstance().register(SCParticles.MUZZLES_SMOKE_PARTICLE, MuzzlesSmokeParticle.Factory::new);
-        ParticleFactoryRegistry.getInstance().register(SCParticles.MUZZLES_FLASH_PARTICLE, MuzzlesFlashParticle.Factory::new);
+        ParticleFactoryRegistry.getInstance().register(SCParticles.MUZZLES_SMOKE_PARTICLE.get(), MuzzlesSmokeParticle.Factory::new);
+        ParticleFactoryRegistry.getInstance().register(SCParticles.MUZZLES_FLASH_PARTICLE.get(), MuzzlesFlashParticle.Factory::new);
 
-        BlockEntityRenderers.register(SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY, CraftmanAnvilBlockRenderer::new);
+        BlockEntityRenderers.register(SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(), CraftmanAnvilBlockRenderer::new);
 
-        MenuScreens.register(SCScreenHandlers.BLUEPRINT_SCREEN_HANDLER, BlueprintScreen::new);
+        MenuScreens.register(SCScreenHandlers.BLUEPRINT_SCREEN_HANDLER.get(), BlueprintScreen::new);
     }
 }

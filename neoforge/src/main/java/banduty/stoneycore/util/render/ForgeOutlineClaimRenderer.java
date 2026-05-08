@@ -38,7 +38,7 @@ public class ForgeOutlineClaimRenderer implements OutlineClaimRendererHelper {
             if (AccessoriesCapability.getOptionally(player).isPresent()) {
                 for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                     ItemStack equippedStack = equipped.stack();
-                    if (equippedStack.getComponents().has(SCDataComponents.TARGET_STACK) &&
+                    if (equippedStack.getComponents().has(SCDataComponents.TARGET_STACK.get()) &&
                             equippedStack.get(SCDataComponents.TARGET_STACK).getItem() == land.getLandType().coreItem()) {
                         shouldRender = true;
                     }

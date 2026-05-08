@@ -9,7 +9,6 @@ public class SCConfigs {
     public static final ModConfigSpec.BooleanValue realisticCombat;
     public static final ModConfigSpec.IntValue toggleVisorTime;
     public static final ModConfigSpec.BooleanValue parry;
-    public static final ModConfigSpec.DoubleValue maxBaseStamina;
     public static final ModConfigSpec.ConfigValue<String> staminaRecoveryFormula;
 
     public static final ModConfigSpec.DoubleValue blockingStaminaConstant;
@@ -49,10 +48,6 @@ public class SCConfigs {
         parry = builder
                 .comment("Parry | Default: true")
                 .define("parry", true);
-
-        maxBaseStamina = builder
-                .comment("Max Base Stamina (0 or less disables) | Default: 20")
-                .defineInRange("maxBaseStamina", 20.0, -100000.0, 100000.0);
 
         staminaRecoveryFormula = builder
                 .comment("Stamina Recovery Formula")

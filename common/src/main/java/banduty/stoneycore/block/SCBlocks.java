@@ -14,23 +14,22 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import java.util.function.Supplier;
 
 public interface SCBlocks {
-
-    Block CRAFTMAN_ANVIL = registerBlock("craftman_anvil",
-            new CraftmanAnvilBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.ANVIL)
+    Supplier<Block> CRAFTMAN_ANVIL = registerBlock("craftman_anvil",
+            () -> new CraftmanAnvilBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.ANVIL)
                     .sound(SoundType.ANVIL)
                     .noOcclusion()));
 
-    BlockEntityType<CraftmanAnvilBlockEntity> CRAFTMAN_ANVIL_BLOCK_ENTITY =
+    Supplier<BlockEntityType<CraftmanAnvilBlockEntity>> CRAFTMAN_ANVIL_BLOCK_ENTITY =
             Services.PLATFORM.registerBlockEntityType(
                     "craftman_anvil_block_entity",
                     CraftmanAnvilBlockEntity::new,
-                    SCBlocks.CRAFTMAN_ANVIL
+                    CRAFTMAN_ANVIL
             );
 
-    private static Block registerBlock(String name, Block block) {
-        Block registeredBlock = Services.PLATFORM.register(BuiltInRegistries.BLOCK, name, () -> block).get();
+    private static Supplier<Block> registerBlock(String name, Supplier<Block> blockSupplier) {
+        Supplier<Block> registeredBlock = Services.PLATFORM.register(BuiltInRegistries.BLOCK, name, blockSupplier);
 
-        registerBlockItem(name, () -> registeredBlock);
+        registerBlockItem(name, registeredBlock);
 
         return registeredBlock;
     }

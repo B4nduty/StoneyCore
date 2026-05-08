@@ -8,8 +8,6 @@ public interface IConfig {
 
         boolean getParry();
 
-        float maxBaseStamina();
-
         String staminaRecoveryFormula();
 
         double blockingStaminaConstant();

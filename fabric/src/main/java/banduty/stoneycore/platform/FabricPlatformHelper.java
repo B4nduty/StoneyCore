@@ -114,13 +114,14 @@ public class FabricPlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public <T extends BlockEntity> BlockEntityType<T> registerBlockEntityType(String name, BiFunction<BlockPos, BlockState, T> factory, Block block) {
-        BlockEntityType<T> type = BlockEntityType.Builder.of(factory::apply, block).build(null);
+    public <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlockEntityType(String name, BiFunction<BlockPos, BlockState, T> factory, Supplier<Block> block) {
+        BlockEntityType<T> type = Registry.register(
+                BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, name),
+                BlockEntityType.Builder.of(factory::apply, block.get()).build(null)
+        );
 
-        Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, name), type);
-
-        return type;
+        return () -> type;
     }
 
     @Override

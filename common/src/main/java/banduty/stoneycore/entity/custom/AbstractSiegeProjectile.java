@@ -5,7 +5,6 @@ import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.sounds.SCSounds;
 import net.minecraft.server.level.ServerLevel;
@@ -78,7 +77,7 @@ public abstract class AbstractSiegeProjectile extends AbstractArrow {
 
     @Override
     protected SoundEvent getDefaultHitGroundSoundEvent() {
-        return SCSounds.BULLET_CRACK;
+        return SCSounds.BULLET_CRACK.get();
     }
 
     public void setDamageType(SCDamageType damageType) {

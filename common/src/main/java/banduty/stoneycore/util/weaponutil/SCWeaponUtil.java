@@ -66,7 +66,7 @@ public final class SCWeaponUtil {
         boolean hasBludgeoning = hasDamageType(SCDamageType.BLUDGEONING, item);
 
         boolean bludgeoningToPiercing = !hasSlashing && hasPiercing && hasBludgeoning;
-        boolean isBludgeoningNBT = Boolean.TRUE.equals(stack.get(SCDataComponents.BLUDGEONING));
+        boolean isBludgeoningNBT = Boolean.TRUE.equals(stack.get(SCDataComponents.BLUDGEONING.get()));
         boolean isPiercingLogic = isPiercingWeapon(item, comboCount);
 
         if (isBludgeoningNBT ^ bludgeoningToPiercing || isOnlyDamageType(SCDamageType.BLUDGEONING, item)) {
@@ -158,7 +158,7 @@ public final class SCWeaponUtil {
 
     public static double getMaxDamage(SCDamageType scDamageType, Item item) {
         List<Double> values = getSortedDamageValues(scDamageType, item);
-        return values.isEmpty() ? 0.0 : values.get(values.size() - 1);
+        return values.isEmpty() ? 0.0 : values.getLast();
     }
 
     public static double calculateDamage(Item item, double distance, SCDamageType key) {

@@ -37,16 +37,16 @@ public final class SCRangeWeaponUtil {
 
     public static WeaponState getWeaponState(ItemStack stack) {
         return new WeaponState(
-                stack.getOrDefault(SCDataComponents.RELOADING, false),
-                stack.getOrDefault(SCDataComponents.CHARGED, false),
-                stack.getOrDefault(SCDataComponents.SHOOTING, false)
+                stack.getOrDefault(SCDataComponents.RELOADING.get(), false),
+                stack.getOrDefault(SCDataComponents.CHARGED.get(), false),
+                stack.getOrDefault(SCDataComponents.SHOOTING.get(), false)
         );
     }
 
     public static void setWeaponState(ItemStack stack, WeaponState state) {
-        stack.set(SCDataComponents.RELOADING, state.isReloading());
-        stack.set(SCDataComponents.CHARGED, state.isCharged());
-        stack.set(SCDataComponents.SHOOTING, state.isShooting());
+        stack.set(SCDataComponents.RELOADING.get(), state.isReloading());
+        stack.set(SCDataComponents.CHARGED.get(), state.isCharged());
+        stack.set(SCDataComponents.SHOOTING.get(), state.isShooting());
     }
 
     public static void handleShoot(Level level, Player player, ItemStack weapon) {
@@ -80,7 +80,7 @@ public final class SCRangeWeaponUtil {
         if (arrowEntity instanceof SCArrowEntity scArrowEntity)
             scArrowEntity.setDamageType(definitionData.ranged().damageType());
 
-        if (Boolean.TRUE.equals(stack.get(SCDataComponents.IGNITED))) {
+        if (Boolean.TRUE.equals(stack.get(SCDataComponents.IGNITED.get()))) {
             arrowEntity.igniteForSeconds(5);
         }
 
@@ -130,8 +130,8 @@ public final class SCRangeWeaponUtil {
         }
 
         if (level instanceof ServerLevel serverLevel) {
-            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), SCParticles.MUZZLES_SMOKE_PARTICLE, 50, 0.2f, 0.0005f, 5);
-            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), SCParticles.MUZZLES_FLASH_PARTICLE, 1, 0f, 0.1f, 6);
+            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), SCParticles.MUZZLES_SMOKE_PARTICLE.get(), 50, 0.2f, 0.0005f, 5);
+            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), SCParticles.MUZZLES_FLASH_PARTICLE.get(), 1, 0f, 0.1f, 6);
         }
     }
 

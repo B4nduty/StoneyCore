@@ -8,14 +8,14 @@ import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
-import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.fml.config.ModConfig;
 
 @Mod(StoneyCore.MOD_ID)
 public class StoneyCoreNeoForge {
 
     public StoneyCoreNeoForge(IEventBus modEventBus, ModContainer modContainer) {
+        StoneyCore.init();
         modContainer.registerConfig(ModConfig.Type.COMMON, SCConfigs.SPEC);
         modContainer.registerConfig(ModConfig.Type.CLIENT, SCVisualConfigs.SPEC);
 
@@ -26,7 +26,6 @@ public class StoneyCoreNeoForge {
         }
 
         StoneyCore.LOG.info("Hello Neo Forge world!");
-        StoneyCore.init();
 
     }
 }

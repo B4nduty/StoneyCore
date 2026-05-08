@@ -6,7 +6,6 @@ import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.LayeredDraw;
@@ -20,7 +19,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
-@EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class StaminaHudOverlay {
     private static final ResourceLocation STAMINA = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/stamina_bar.png");
     private static final ResourceLocation STAMINA_OVERLAY = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/stamina_bar_overlay.png");
@@ -31,7 +30,9 @@ public class StaminaHudOverlay {
     private static final int EMPTY_STAMINA_HEIGHT = 9;
     private static final int STAMINA_BAR_WIDTH = 9;
 
-    private static final int STAMINA_BAR_HEIGHT = 9;public static final LayeredDraw.Layer STAMINA_LAYER = (guiGraphics, deltaTracker) -> {
+    private static final int STAMINA_BAR_HEIGHT = 9;
+
+    public static final LayeredDraw.Layer STAMINA_LAYER = (guiGraphics, deltaTracker) -> {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
 

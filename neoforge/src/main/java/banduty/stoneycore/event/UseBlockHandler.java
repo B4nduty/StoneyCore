@@ -75,7 +75,7 @@ public class UseBlockHandler {
 
         // Handle anvil conversion with hammer
         if (player.isShiftKeyDown() && player.getMainHandItem().getItem() instanceof SmithingHammer && state.getBlock() instanceof AnvilBlock) {
-            serverLevel.setBlockAndUpdate(blockPos, SCBlocks.CRAFTMAN_ANVIL.defaultBlockState());
+            serverLevel.setBlockAndUpdate(blockPos, SCBlocks.CRAFTMAN_ANVIL.get().defaultBlockState());
             level.playSound(null, blockPos, SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 0.7f, 1.0f / (level.getRandom().nextFloat() * 0.5F + 1.0F));
 
             event.setCanceled(true);

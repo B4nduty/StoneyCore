@@ -4,7 +4,7 @@ import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.platform.services.KeyInputHelper;
 import net.minecraft.network.chat.Component;
 
-public class ForgeKeyInputHelper implements KeyInputHelper {
+public class NeoForgeKeyInputHelper implements KeyInputHelper {
     @Override
     public boolean isTogglingVisor() {
         return KeyInputHandler.isTogglingVisor;

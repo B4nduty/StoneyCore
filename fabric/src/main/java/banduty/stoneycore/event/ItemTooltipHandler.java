@@ -32,8 +32,8 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
         if (WeaponDefinitionsStorage.containsItem(stack)) lines.removeIf(line -> line.contains(attackDamage));
 
         for (LandType landType : LandTypeRegistry.getAll()) {
-            if (stack.is(landType.coreItem()) || (stack.getComponents().has(SCDataComponents.TARGET_STACK) &&
-                    stack.get(SCDataComponents.TARGET_STACK).getItem() == landType.coreItem())) {
+            if (stack.is(landType.coreItem()) || (stack.getComponents().has(SCDataComponents.TARGET_STACK.get()) &&
+                    stack.get(SCDataComponents.TARGET_STACK.get()).getItem() == landType.coreItem())) {
 
                 lines.add(Component.translatable("component.tooltip.stoneycore.coreItem").withStyle(ChatFormatting.GOLD));
                 break;

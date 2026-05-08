@@ -1,6 +1,6 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.lands.visitor.*;
+import banduty.stoneycore.lands.visitor.VisitorTracker;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
