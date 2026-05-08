@@ -1,5 +1,6 @@
 package banduty.stoneycore.block;
 
+import banduty.stoneycore.items.custom.manuscript.Manuscript;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.recipes.AnvilInput;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
@@ -51,22 +52,18 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         public int get(int index) {
             return switch (index) {
                 case 0 -> hitCount;
-                case 1 -> lastRecipeValid ? 1 : 0;
                 default -> 0;
             };
         }
 
         @Override
         public void set(int index, int value) {
-            switch (index) {
-                case 0 -> hitCount = value;
-                case 1 -> lastRecipeValid = value == 1;
-            }
+            if (index == 0) hitCount = value;
         }
 
         @Override
         public int getCount() {
-            return 2;
+            return 1;
         }
     };
 
@@ -75,17 +72,16 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         return items;
     }
 
-    public Optional<CraftmanAnvilRecipe> getRecipe() {
+    public Optional<RecipeHolder<CraftmanAnvilRecipe>> getRecipe() {
         if (level == null) return Optional.empty();
 
         AnvilInput input = new AnvilInput(
-                items.get(0), items.get(1), items.get(2),
-                items.get(3), items.get(4), items.get(5)
+                items.get(1), items.get(2), items.get(3),
+                items.get(4), items.get(5), items.get(6)
         );
 
         return level.getRecipeManager()
-                .getRecipeFor(SCRecipes.CRAFTMAN_ANVIL_RECIPE_TYPE.get(), input, level)
-                .map(RecipeHolder::value);
+                .getRecipeFor(SCRecipes.CRAFTMAN_ANVIL_RECIPE_TYPE.get(), input, level);
     }
 
     public int getHitCount() {
@@ -103,22 +99,19 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
             }
         }
 
-        if (!hasItems) {
-            if (lastRecipeValid) {
-                lastRecipeValid = false;
-            }
-            return;
-        }
+        boolean currentRecipeValid = hasItems && getRecipe().isPresent();
 
-        boolean currentRecipeValid = getRecipe().isPresent();
-
+        // Transition: invalid → valid
         if (currentRecipeValid && !lastRecipeValid) {
             spawnParticles(ParticleTypes.HAPPY_VILLAGER, 10);
-            lastRecipeValid = true;
-        } else if (!currentRecipeValid && lastRecipeValid) {
-            spawnParticles(new DustParticleOptions(new Vector3f(1.0f, 0.0f, 0.0f), 1.0f), 10);
-            lastRecipeValid = false;
         }
+
+        // Transition: valid → invalid
+        if (!currentRecipeValid && lastRecipeValid) {
+            spawnParticles(new DustParticleOptions(new Vector3f(1.0f, 0.0f, 0.0f), 1.0f), 10);
+        }
+
+        lastRecipeValid = currentRecipeValid;
     }
 
     private void spawnParticles(ParticleOptions particleType, int count) {
@@ -140,17 +133,27 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
     public void hitAnvil(Player player) {
         if (level == null) return;
 
-        if (getRecipe().isPresent()) {
-            hitCount++;
-            lastHitter = player.getUUID();
+        Optional<RecipeHolder<CraftmanAnvilRecipe>> recipeOpt = getRecipe();
 
-            level.playSound(null, getBlockPos(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.5f, 1.0f);
-
-            if (hitCount >= getRecipe().get().hitTimes()) {
-                completeCrafting(getRecipe().get());
-            }
+        if (recipeOpt.isEmpty()) {
+            hitCount = 0;
             setChanged();
+            return;
         }
+
+        RecipeHolder<CraftmanAnvilRecipe> recipeHolder = recipeOpt.get();
+        CraftmanAnvilRecipe recipe = recipeHolder.value();
+
+        hitCount++;
+        lastHitter = player.getUUID();
+
+        level.playSound(null, getBlockPos(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.5f, 1.0f);
+
+        if (hitCount >= recipe.hitTimes()) {
+            completeCrafting(recipe);
+        }
+
+        setChanged();
     }
 
     private void completeCrafting(CraftmanAnvilRecipe recipe) {
@@ -241,9 +244,12 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         }
     }
 
-    public void tick(Level level, BlockPos pos, BlockState state) {
+    public void tick(Level level) {
         if (level.isClientSide()) {
             return;
+        }
+        if (getRecipe().isEmpty() && hitCount > 0) {
+            hitCount = 0;
         }
 
         inventoryTick();
@@ -321,11 +327,43 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
     }
 
     public boolean addItem(ItemStack stack) {
+        return addItem(stack, null);
+    }
+
+    public boolean addItem(ItemStack stack, Player player) {
         if (level != null && level.isClientSide()) {
             return false;
         }
 
         hitCount = 0;
+
+        boolean isIncomingManuscript = stack.getItem() instanceof Manuscript;
+
+        if (isIncomingManuscript) {
+            // Look for existing manuscript
+            for (int i = 0; i < 6; i++) {
+                ItemStack existing = items.get(i);
+
+                if (!existing.isEmpty() && existing.getItem() instanceof Manuscript) {
+                    // Swap manuscripts
+                    ItemStack old = existing.copy();
+                    items.set(i, stack.split(1));
+
+                    // Give old one back to player (or drop if no player context)
+                    if (player != null) {
+                        if (!player.getInventory().add(old)) {
+                            player.drop(old, false);
+                        }
+                    } else {
+                        dropStack(level, getBlockPos(), old);
+                    }
+
+                    setChanged();
+                    checkAndSpawnRecipeParticles();
+                    return true;
+                }
+            }
+        }
 
         for (int i = 0; i < 6; i++) {
             if (items.get(i).isEmpty()) {
@@ -335,6 +373,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
                 return true;
             }
         }
+
         return false;
     }
 
@@ -348,9 +387,8 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
             ItemStack stack = items.get(i);
             if (!stack.isEmpty() && stack.getCount() > 0) {
                 ItemStack copy = stack.copy();
-                // Try to add to player inventory with proper stacking
+                // If invalid state OR normal removal → always allow extraction
                 if (!playerEntity.getInventory().add(copy)) {
-                    // If inventory is full, drop the item at the player's feet
                     playerEntity.drop(copy, false);
                 }
                 items.set(i, ItemStack.EMPTY);
