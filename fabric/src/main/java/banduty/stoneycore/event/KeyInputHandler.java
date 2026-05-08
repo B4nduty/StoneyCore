@@ -83,9 +83,9 @@ public class KeyInputHandler {
 
                             // Play appropriate sound
                             if (isCurrentlyOpen) {
-                                localPlayer.playSound(banduty.stoneycore.sounds.SCSounds.VISOR_CLOSE, 1.0F, 1.0F);
+                                localPlayer.playSound(banduty.stoneycore.sounds.SCSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
                             } else {
-                                localPlayer.playSound(banduty.stoneycore.sounds.SCSounds.VISOR_OPEN, 1.0F, 1.0F);
+                                localPlayer.playSound(banduty.stoneycore.sounds.SCSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
                             }
 
                             ClientPlayNetworking.send(new ToggleVisorC2SPacket());

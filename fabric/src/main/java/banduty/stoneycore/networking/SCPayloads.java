@@ -1,7 +1,10 @@
 package banduty.stoneycore.networking;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.networking.payload.*;
+import banduty.stoneycore.networking.payload.AttackC2SPacket;
+import banduty.stoneycore.networking.payload.ReloadC2SPacket;
+import banduty.stoneycore.networking.payload.SiegeYawC2SPacket;
+import banduty.stoneycore.networking.payload.ToggleVisorC2SPacket;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.ResourceLocation;

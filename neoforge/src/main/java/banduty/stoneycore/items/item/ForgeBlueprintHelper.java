@@ -40,7 +40,7 @@ public class ForgeBlueprintHelper implements IBlueprintHelper {
 
     @Override
     public MenuType<?> blueprintScreenHandler() {
-        return SCScreenHandlers.BLUEPRINT_SCREEN_HANDLER;
+        return SCScreenHandlers.BLUEPRINT_SCREEN_HANDLER.get();
     }
 
     @Override

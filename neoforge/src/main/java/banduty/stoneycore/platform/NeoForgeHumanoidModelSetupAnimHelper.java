@@ -7,7 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.common.NeoForge;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-public class ForgeHumanoidModelSetupAnimHelper implements HumanoidModelSetupAnimHelper {
+public class NeoForgeHumanoidModelSetupAnimHelper implements HumanoidModelSetupAnimHelper {
     @Override
     public void afterSetAngles(HumanoidModel<?> model, LivingEntity entity, float limbAngle, float limbDistance, float age, float headYaw, float headPitch, CallbackInfo ci) {
         NeoForge.EVENT_BUS.post(new HumanoidModelSetupAnimEvents.After(model, entity, limbAngle, limbDistance, age, headYaw, headPitch, ci));

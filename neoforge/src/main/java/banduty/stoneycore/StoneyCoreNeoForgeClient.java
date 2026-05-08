@@ -43,14 +43,14 @@ public class StoneyCoreNeoForgeClient {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            ClientPlatform.setClientPlaformHelper(new ForgeClientPlatformHelper());
+            ClientPlatform.setClientPlaformHelper(new NeoForgeClientPlatformHelper());
             ClientPlatform.setSCRenderTypeHelper(new ForgeRenderTypeHelper());
-            ClientPlatform.setHumanoidModelSetupAnimHelper(new ForgeHumanoidModelSetupAnimHelper());
-            ClientPlatform.setKeyInputHelper(new ForgeKeyInputHelper());
-            ClientPlatform.setRenderFirstPersonAccessoryArmorHelper(new ForgeRenderFirstPersonAccessoryArmorHelper());
+            ClientPlatform.setHumanoidModelSetupAnimHelper(new NeoForgeHumanoidModelSetupAnimHelper());
+            ClientPlatform.setKeyInputHelper(new NeoForgeKeyInputHelper());
+            ClientPlatform.setRenderFirstPersonAccessoryArmorHelper(new NeoForgeRenderFirstPersonAccessoryArmorHelper());
 
             BlockEntityRenderers.register(
-                    SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY,
+                    SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(),
                     CraftmanAnvilBlockRenderer::new
             );
 
@@ -83,7 +83,7 @@ public class StoneyCoreNeoForgeClient {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(
-                SCScreenHandlers.BLUEPRINT_SCREEN_HANDLER,
+                SCScreenHandlers.BLUEPRINT_SCREEN_HANDLER.get(),
                 BlueprintScreen::new
         );
     }
@@ -99,7 +99,7 @@ public class StoneyCoreNeoForgeClient {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(SCEntities.SC_BULLET, SCBulletEntityRenderer::new);
+        event.registerEntityRenderer(SCEntities.SC_BULLET.get(), SCBulletEntityRenderer::new);
     }
 
     @SubscribeEvent
@@ -127,7 +127,7 @@ public class StoneyCoreNeoForgeClient {
 
     @SubscribeEvent
     public static void registerParticleFactories(RegisterParticleProvidersEvent event) {
-        event.registerSpriteSet(SCParticles.MUZZLES_SMOKE_PARTICLE, MuzzlesSmokeParticle.Factory::new);
-        event.registerSpriteSet(SCParticles.MUZZLES_FLASH_PARTICLE, MuzzlesFlashParticle.Factory::new);
+        event.registerSpriteSet(SCParticles.MUZZLES_SMOKE_PARTICLE.get(), MuzzlesSmokeParticle.Factory::new);
+        event.registerSpriteSet(SCParticles.MUZZLES_FLASH_PARTICLE.get(), MuzzlesFlashParticle.Factory::new);
     }
 }

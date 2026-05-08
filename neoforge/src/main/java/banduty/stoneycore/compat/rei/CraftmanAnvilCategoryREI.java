@@ -2,7 +2,6 @@ package banduty.stoneycore.compat.rei;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.block.SCBlocks;
-import banduty.stoneycore.platform.Services;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.shedaniel.math.Point;
 import me.shedaniel.math.Rectangle;
@@ -41,7 +40,7 @@ public class CraftmanAnvilCategoryREI implements DisplayCategory<BasicDisplay> {
 
     @Override
     public Renderer getIcon() {
-        return EntryStacks.of(SCBlocks.CRAFTMAN_ANVIL.asItem().getDefaultInstance());
+        return EntryStacks.of(SCBlocks.CRAFTMAN_ANVIL.get().asItem().getDefaultInstance());
     }
 
     @Override
@@ -75,8 +74,8 @@ public class CraftmanAnvilCategoryREI implements DisplayCategory<BasicDisplay> {
         }
 
         // Output slot
-        if (!craftmanAnvilDisplayREI.getRealOutput().isEmpty() && !craftmanAnvilDisplayREI.getRealOutput().get(0).isEmpty()) {
-            ItemStack target = craftmanAnvilDisplayREI.getOutputEntries().get(0).get(0).castValue();
+        if (!craftmanAnvilDisplayREI.getRealOutput().isEmpty() && !craftmanAnvilDisplayREI.getRealOutput().getFirst().isEmpty()) {
+            ItemStack target = craftmanAnvilDisplayREI.getOutputEntries().getFirst().getFirst().castValue();
             widgets.add(Widgets.createDrawableWidget((graphics, mouseX, mouseY, delta) -> {
                 PoseStack poseStack = graphics.pose();
                 poseStack.pushPose();
@@ -93,9 +92,9 @@ public class CraftmanAnvilCategoryREI implements DisplayCategory<BasicDisplay> {
         }
 
         if (!display.getOutputEntries().isEmpty()) {
-            EntryIngredient entryIngredient = display.getOutputEntries().get(0);
-            if (!craftmanAnvilDisplayREI.getRealOutput().isEmpty() && !craftmanAnvilDisplayREI.getRealOutput().get(0).isEmpty())
-                entryIngredient = craftmanAnvilDisplayREI.getRealOutput().get(0);
+            EntryIngredient entryIngredient = display.getOutputEntries().getFirst();
+            if (!craftmanAnvilDisplayREI.getRealOutput().isEmpty() && !craftmanAnvilDisplayREI.getRealOutput().getFirst().isEmpty())
+                entryIngredient = craftmanAnvilDisplayREI.getRealOutput().getFirst();
             Widget outputSlot = Widgets.createSlot(new Point(startPoint.x + 120, startPoint.y + 20))
                     .markOutput()
                     .entries(entryIngredient);

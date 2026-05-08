@@ -21,7 +21,7 @@ public class ManuscriptCraftingRecipe extends ShapelessRecipe {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return SCRecipes.MANUSCRIPT_SERIALIZER;
+        return SCRecipes.MANUSCRIPT_SERIALIZER.get();
     }
 
     @Override

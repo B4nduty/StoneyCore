@@ -42,7 +42,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
     private boolean lastRecipeValid = false;
 
     public CraftmanAnvilBlockEntity(BlockPos pos, BlockState state) {
-        super(SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY, pos, state);
+        super(SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(), pos, state);
         this.items = NonNullList.withSize(7, ItemStack.EMPTY);
     }
 
@@ -84,7 +84,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         );
 
         return level.getRecipeManager()
-                .getRecipeFor(SCRecipes.CRAFTMAN_ANVIL_RECIPE_TYPE, input, level)
+                .getRecipeFor(SCRecipes.CRAFTMAN_ANVIL_RECIPE_TYPE.get(), input, level)
                 .map(RecipeHolder::value);
     }
 

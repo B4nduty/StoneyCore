@@ -62,8 +62,13 @@ neoForge {
 
             // DataGen can be run by - "./gradlew :neoforge:runData" in Terminal.
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-
+            programArguments.addAll(
+                    '--mod', project.mod_id,
+                    '--all',
+                    '--output', file('src/generated/resources/').getAbsolutePath(),
+                    '--existing', file('src/main/resources/').getAbsolutePath(),
+                    '--existing', project.project(':common').file('src/main/resources/').getAbsolutePath()
+            )
         }
         server {
             server()
@@ -92,7 +97,7 @@ dependencies {
     compileOnlyApi "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei}"
     runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei}"
 
-    api "me.shedaniel.cloth:cloth-config-forge:${cloth_config}"
+    api "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config}"
 
     implementation "com.github.B4nduty:streq:v${streq}"
     jarJar("com.github.B4nduty:streq:v${streq}") {

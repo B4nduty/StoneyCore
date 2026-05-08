@@ -19,19 +19,19 @@ public class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-        simpleItem(SCItems.SMITHING_HAMMER);
-        simpleItem(SCItems.BLACK_POWDER);
-        simpleItem(SCItems.CROWN);
-        simpleItem(SCItems.MANUSCRIPT);
+        simpleItem(SCItems.SMITHING_HAMMER.get());
+        simpleItem(SCItems.BLACK_POWDER.get());
+        simpleItem(SCItems.CROWN.get());
+        simpleItem(SCItems.MANUSCRIPT.get());
 
         createTongsModel();
         createHotIronModel();
 
-        blockItem(SCBlocks.CRAFTMAN_ANVIL);
+        blockItem(SCBlocks.CRAFTMAN_ANVIL.get());
     }
 
     private void createTongsModel() {
-        Item tongs = SCItems.TONGS;
+        Item tongs = SCItems.TONGS.get();
         String tongsPath = BuiltInRegistries.ITEM.getKey(tongs).getPath();
 
         getBuilder(tongsPath + "_hotiron")
@@ -58,7 +58,7 @@ public class ModItemModelProvider extends ItemModelProvider {
     }
 
     private void createHotIronModel() {
-        Item hotIron = SCItems.HOT_IRON;
+        Item hotIron = SCItems.HOT_IRON.get();
         String hotIronPath = BuiltInRegistries.ITEM.getKey(hotIron).getPath();
 
         getBuilder(hotIronPath + "_finished")

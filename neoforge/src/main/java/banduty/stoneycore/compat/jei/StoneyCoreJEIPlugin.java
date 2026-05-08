@@ -38,7 +38,7 @@ public class StoneyCoreJEIPlugin implements IModPlugin {
 
     @Override
     public void registerItemSubtypes(ISubtypeRegistration registration) {
-        registration.registerSubtypeInterpreter(VanillaTypes.ITEM_STACK, SCItems.MANUSCRIPT, (stack, context) -> {
+        registration.registerSubtypeInterpreter(VanillaTypes.ITEM_STACK, SCItems.MANUSCRIPT.get(), (stack, context) -> {
             ItemStack target = Manuscript.getTargetStack(stack);
 
             if (target.isEmpty()) return "";
@@ -51,7 +51,7 @@ public class StoneyCoreJEIPlugin implements IModPlugin {
     public void registerRecipes(IRecipeRegistration registration) {
         RecipeManager recipeManager = Minecraft.getInstance().level.getRecipeManager();
 
-        List<RecipeHolder<CraftmanAnvilRecipe>> recipeHolders = recipeManager.getAllRecipesFor(SCRecipes.CRAFTMAN_ANVIL_RECIPE_TYPE);
+        List<RecipeHolder<CraftmanAnvilRecipe>> recipeHolders = recipeManager.getAllRecipesFor(SCRecipes.CRAFTMAN_ANVIL_RECIPE_TYPE.get());
 
         List<CraftmanAnvilRecipe> anvilRecipes = recipeHolders.stream()
                 .map(RecipeHolder::value)
@@ -63,7 +63,7 @@ public class StoneyCoreJEIPlugin implements IModPlugin {
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(
-                new ItemStack(SCBlocks.CRAFTMAN_ANVIL),
+                new ItemStack(SCBlocks.CRAFTMAN_ANVIL.get()),
                 CraftmanAnvilCategoryJEI.CRAFTMAN_ANVIL_TYPE
         );
     }

@@ -30,16 +30,16 @@ public class CrossbowHandler implements IRangedWeaponHandler {
         if (!weaponState.isCharged()) return;
 
         DataComponentMap components = weapon.getComponents();
-        if (components.isEmpty() || !components.has(SCDataComponents.LOADED_ARROW)) return;
+        if (components.isEmpty() || !components.has(SCDataComponents.LOADED_ARROW.get())) return;
 
-        Item arrowItem = BuiltInRegistries.ITEM.get(components.get(SCDataComponents.LOADED_ARROW));
+        Item arrowItem = BuiltInRegistries.ITEM.get(components.get(SCDataComponents.LOADED_ARROW.get()));
         if (!(arrowItem instanceof ArrowItem arrow)) return;
 
         ItemStack fakeArrow = new ItemStack(arrow);
 
         SCRangeWeaponUtil.shootArrow(level, weapon, player, fakeArrow, 1.0f);
 
-        weapon.remove(SCDataComponents.LOADED_ARROW);
+        weapon.remove(SCDataComponents.LOADED_ARROW.get());
 
         if (player instanceof ServerPlayer serverPlayer) {
             CriteriaTriggers.SHOT_CROSSBOW.trigger(serverPlayer, new ItemStack(Items.CROSSBOW));
@@ -119,7 +119,7 @@ public class CrossbowHandler implements IRangedWeaponHandler {
                     if (slot >= 0) player.getInventory().removeItem(slot, 1);
                 }
 
-                stack.set(SCDataComponents.LOADED_ARROW, BuiltInRegistries.ITEM.getKey(ammoStack.getItem()));
+                stack.set(SCDataComponents.LOADED_ARROW.get(), BuiltInRegistries.ITEM.getKey(ammoStack.getItem()));
 
                 level.playSound(null,
                         player.getX(), player.getY(), player.getZ(),

@@ -72,10 +72,10 @@ public interface IPlatformHelper {
 
     List<ItemStack> getEquippedAccessories(LivingEntity livingEntity);
 
-    <T extends BlockEntity> BlockEntityType<T> registerBlockEntityType(
+    <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlockEntityType(
             String name,
             BiFunction<BlockPos, BlockState, T> factory,
-            Block block
+            Supplier<Block> block
     );
 
     <T extends AbstractContainerMenu> MenuType<T> createMenuType(IFactory<T> factory);

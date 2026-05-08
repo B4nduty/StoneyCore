@@ -18,7 +18,7 @@ public class BannerPatternRecipe extends ShapelessRecipe {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return SCRecipes.BANNER_SERIALIZER;
+        return SCRecipes.BANNER_SERIALIZER.get();
     }
 
     @Override

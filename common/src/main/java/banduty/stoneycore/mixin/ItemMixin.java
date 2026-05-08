@@ -104,7 +104,7 @@ public abstract class ItemMixin {
         if ((getUseAnimation(stack) == UseAnim.DRINK || getUseAnimation(stack) == UseAnim.EAT)) {
             for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(player)) {
                 if (player.isCreative()) break;
-                if (!Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN)) && !AccessoriesDefinitionsStorage.getData(itemStack).visoredHelmet().getPath().isBlank()) {
+                if (!Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN.get())) && !AccessoriesDefinitionsStorage.getData(itemStack).visoredHelmet().getPath().isBlank()) {
                     player.displayClientMessage(Component.translatable("component.tooltip.stoneycore.openVisorEatDrink"), true);
                     cir.setReturnValue(InteractionResultHolder.fail(stack));
                     return;
@@ -152,8 +152,8 @@ public abstract class ItemMixin {
 
     @Unique
     private void stoneyCore$toggleBludgeoningMode(ItemStack stack) {
-        boolean current = Boolean.TRUE.equals(stack.get(SCDataComponents.BLUDGEONING));
-        stack.set(SCDataComponents.BLUDGEONING, !current);
+        boolean current = Boolean.TRUE.equals(stack.get(SCDataComponents.BLUDGEONING.get()));
+        stack.set(SCDataComponents.BLUDGEONING.get(), !current);
     }
 
     @Unique

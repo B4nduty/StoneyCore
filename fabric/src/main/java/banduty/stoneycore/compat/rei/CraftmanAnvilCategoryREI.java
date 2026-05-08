@@ -2,7 +2,6 @@ package banduty.stoneycore.compat.rei;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.block.SCBlocks;
-import banduty.stoneycore.platform.Services;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.shedaniel.math.Point;
 import me.shedaniel.math.Rectangle;
