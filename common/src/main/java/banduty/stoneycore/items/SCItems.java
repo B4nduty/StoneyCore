@@ -17,7 +17,7 @@ public interface SCItems {
 
     Supplier<Item> BLACK_POWDER = registerItem("black_powder", () -> new Item(new Item.Properties()));
 
-    Supplier<Item> CROWN = registerItem("crown", () -> new ArmorItem(ModArmorMaterials.CROWN, ArmorItem.Type.HELMET, new Item.Properties().stacksTo(1)));
+    Supplier<Item> CROWN = registerItem("crown", () -> new ArmorItem(ModArmorMaterials.CROWN, ArmorItem.Type.HELMET, new Item.Properties().stacksTo(1).durability(256)));
 
     Supplier<Item> MANUSCRIPT = registerItem("manuscript", () -> new Manuscript(new Item.Properties().stacksTo(1)));
 
