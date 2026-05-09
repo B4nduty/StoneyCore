@@ -86,6 +86,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
         return deferredRegister.register(name, entry);
     }
+
     @Override
     @SuppressWarnings("unchecked")
     public <T> Holder<T> registerHolder(ResourceKey<Registry<T>> registryKey, String name, Supplier<T> value) {

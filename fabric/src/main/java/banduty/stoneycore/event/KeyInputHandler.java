@@ -4,6 +4,7 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
 import banduty.stoneycore.networking.payload.ReloadC2SPacket;
 import banduty.stoneycore.networking.payload.ToggleVisorC2SPacket;
+import banduty.stoneycore.sounds.SCSounds;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.wispforest.accessories.api.AccessoriesCapability;
@@ -83,9 +84,9 @@ public class KeyInputHandler {
 
                             // Play appropriate sound
                             if (isCurrentlyOpen) {
-                                localPlayer.playSound(banduty.stoneycore.sounds.SCSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
+                                localPlayer.playSound(SCSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
                             } else {
-                                localPlayer.playSound(banduty.stoneycore.sounds.SCSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
+                                localPlayer.playSound(SCSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
                             }
 
                             ClientPlayNetworking.send(new ToggleVisorC2SPacket());
