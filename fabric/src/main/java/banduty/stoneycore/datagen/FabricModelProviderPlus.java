@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.models.ItemModelGenerators;
 import net.minecraft.data.models.model.ModelTemplate;
@@ -70,22 +71,28 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path);
 
         TextureMapping textures;
-        if (item.components().has(net.minecraft.core.component.DataComponents.DYED_COLOR)) {
-            textures = TextureMapping.layered(
-                    ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path),
-                    ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path + "_overlay")
-            );
+        ModelTemplate finalModel;
+
+        if (item.components().has(DataComponents.DYED_COLOR)) {
+            textures = new TextureMapping()
+                    .put(TextureSlot.LAYER0, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path))
+                    .put(TextureSlot.LAYER1, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path + "_overlay"));
+            finalModel = ModelTemplates.TWO_LAYERED_ITEM;
         } else {
             textures = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path));
+            finalModel = ModelTemplates.FLAT_ITEM;
         }
 
-        model.create(
+        ModelTemplate finalModel1 = finalModel;
+        finalModel.create(
                 modelId,
                 textures,
                 itemModelGenerators.output,
                 (id, textureMap) -> {
-                    JsonObject json = model.createBaseTemplate(id, textureMap);
-                    json.add("overrides", overrides);
+                    JsonObject json = finalModel1.createBaseTemplate(id, textureMap);
+                    if (!overrides.isEmpty()) {
+                        json.add("overrides", overrides);
+                    }
                     return json;
                 }
         );
@@ -152,32 +159,21 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         return baseName + "_" + String.join("_", sortedConditions);
     }
 
-    private void generateOverrideModel(Item item, ModelTemplate model, String modelName, ItemModelGenerators itemModelGenerator) {
+    private void generateOverrideModel(Item item, ModelTemplate model, String modelName, ItemModelGenerators itemModelGenerators) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
         String namespace = itemId.getNamespace();
         ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName);
 
-        if (item.components().has(net.minecraft.core.component.DataComponents.DYED_COLOR)) {
-            TextureMapping textures = TextureMapping.layered(
-                    ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName),
-                    ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName + "_overlay")
-            );
+        TextureMapping textures;
+        if (item.components().has(DataComponents.DYED_COLOR)) {
+            textures = new TextureMapping()
+                    .put(TextureSlot.LAYER0, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName))
+                    .put(TextureSlot.LAYER1, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName + "_overlay"));
 
-            ModelTemplate customModel = new ModelTemplate(Optional.of(ResourceLocation.withDefaultNamespace("item/handheld")), Optional.empty(), TextureSlot.LAYER0, TextureSlot.LAYER1);
-            customModel.create(modelId, textures, itemModelGenerator.output, (id, textureMap) -> {
-                JsonObject json = new JsonObject();
-                json.addProperty("parent", "minecraft:item/handheld");
-
-                JsonObject texturesJson = new JsonObject();
-                texturesJson.addProperty("layer0", textureMap.get(TextureSlot.LAYER0).toString());
-                texturesJson.addProperty("layer1", textureMap.get(TextureSlot.LAYER1).toString());
-                json.add("textures", texturesJson);
-
-                return json;
-            });
+            ModelTemplates.TWO_LAYERED_ITEM.create(modelId, textures, itemModelGenerators.output);
         } else {
-            TextureMapping textures = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName));
-            model.create(modelId, textures, itemModelGenerator.output);
+            textures = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName));
+            model.create(modelId, textures, itemModelGenerators.output);
         }
     }
 
@@ -211,11 +207,12 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
 
     protected void registerWCustomName(Item item, ModelTemplate model, ItemModelGenerators itemModelGenerator, String modelName, ResourceLocation texturePath) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+        String path = itemId.getPath();
 
-        ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + item);
+        ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + path);
         if (!modelName.isEmpty()) modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + modelName);
 
-        TextureMapping texture = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + item));
+        TextureMapping texture = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + path));
         if (texturePath != null) texture = TextureMapping.layer0(texturePath);
 
         model.create(modelId, texture, itemModelGenerator.output);

@@ -4,7 +4,6 @@ import banduty.stoneycore.commands.FabricSCCommandsHandler;
 import banduty.stoneycore.event.*;
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
 import banduty.stoneycore.networking.SCPayloads;
-import banduty.stoneycore.networking.SCPayloadsClient;
 import banduty.stoneycore.networking.payload.SyncDefinitionsPacket;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
@@ -36,7 +35,6 @@ public class StoneyCoreFabric implements ModInitializer {
     public void onInitialize() {
         Services.PLATFORM.getConfig();
         SCPayloads.registerPayloads();
-        SCPayloadsClient.registerPayloads();
         SCPayloads.registerC2SReceivers();
         HotIronCoolingHandler.init();
 

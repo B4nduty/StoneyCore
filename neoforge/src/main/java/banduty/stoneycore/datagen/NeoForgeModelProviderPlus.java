@@ -1,5 +1,6 @@
 package banduty.stoneycore.datagen;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -23,7 +24,7 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
         String path = BuiltInRegistries.ITEM.getKey(item).getPath();
 
         // Create the base model
-        ItemModelBuilder baseBuilder = item.components().has(net.minecraft.core.component.DataComponents.DYED_COLOR)
+        ItemModelBuilder baseBuilder = item.components().has(DataComponents.DYED_COLOR)
                 ? withExistingParent(path, "item/handheld")
                 .texture("layer0", modLoc("item/" + path))
                 .texture("layer1", modLoc("item/" + path + "_overlay"))

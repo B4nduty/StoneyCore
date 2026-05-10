@@ -47,6 +47,7 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         ClientPlatform.setHumanoidModelSetupAnimHelper(new FabricHumanoidModelSetupAnimHelper());
         ClientPlatform.setKeyInputHelper(new FabricKeyInputHelper());
         ClientPlatform.setRenderFirstPersonAccessoryArmorHelper(new FabricRenderFirstPersonAccessoryArmorHelper());
+        SCPayloadsClient.registerPayloads();
         SCPayloadsClient.registerS2CReceivers();
         ClientPreAttackCallback.EVENT.register(new AttackCancelHandler());
         ItemTooltipCallback.EVENT.register(new ItemTooltipHandler());

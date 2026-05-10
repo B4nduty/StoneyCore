@@ -37,7 +37,9 @@ public record CraftmanAnvilRecipe(List<StackIngredient> ingredients, ItemStack o
         }
 
         for (StackIngredient ingredient : ingredients) {
-            int neededCount = ingredient.stack().getCount();
+            // Use the new count field instead of the stack's count
+            int neededCount = ingredient.count();
+
             for (int i = 0; i < remainingInputs.size() && neededCount > 0; i++) {
                 ItemStack inputStack = remainingInputs.get(i);
                 if (ingredient.test(inputStack)) {

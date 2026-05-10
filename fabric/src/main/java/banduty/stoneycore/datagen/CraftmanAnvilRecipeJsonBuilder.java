@@ -35,12 +35,12 @@ public class CraftmanAnvilRecipeJsonBuilder implements RecipeBuilder {
     }
 
     public CraftmanAnvilRecipeJsonBuilder requires(ItemStack stack) {
-        this.ingredients.add(new StackIngredient(stack, Optional.empty()));
+        this.ingredients.add(new StackIngredient(stack, Optional.empty(), stack.getCount()));
         return this;
     }
 
     public CraftmanAnvilRecipeJsonBuilder requires(TagKey<Item> tag, int count) {
-        this.ingredients.add(new StackIngredient(new ItemStack(net.minecraft.world.item.Items.AIR, count), Optional.of(tag)));
+        this.ingredients.add(new StackIngredient(ItemStack.EMPTY, Optional.of(tag), count));
         return this;
     }
 
