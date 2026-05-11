@@ -41,7 +41,7 @@ public class FabricOutlineClaimRenderer implements OutlineClaimRendererHelper {
                 for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
                     ItemStack equippedStack = equipped.stack();
                     if (equippedStack.getComponents().has(SCDataComponents.TARGET_STACK.get()) &&
-                            equippedStack.get(SCDataComponents.TARGET_STACK.get()).getItem() == land.getLandType().coreItem()) {
+                            equippedStack.get(SCDataComponents.TARGET_STACK.get()).stack().getItem() == land.getLandType().coreItem()) {
                         shouldRender = true;
                     }
                 }

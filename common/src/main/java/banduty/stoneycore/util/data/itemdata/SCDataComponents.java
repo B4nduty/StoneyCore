@@ -8,7 +8,6 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -20,8 +19,9 @@ public interface SCDataComponents {
     Supplier<DataComponentType<Long>> IGNITE_TIME = register("ignite_time",
             builder -> builder.persistent(Codec.LONG).networkSynchronized(ByteBufCodecs.VAR_LONG));
 
-    Supplier<DataComponentType<ItemStack>> TARGET_STACK = register("target_stack",
-            builder -> builder.persistent(ItemStack.CODEC).networkSynchronized(ItemStack.STREAM_CODEC));
+    Supplier<DataComponentType<ItemStackHolder>> TARGET_STACK = register("target_stack",
+            builder -> builder.persistent(ItemStackHolder.CODEC)
+                    .networkSynchronized(ItemStackHolder.STREAM_CODEC));
 
     Supplier<DataComponentType<Boolean>> HELD_BY_TONGS_KEY = register("held_by_tongs_key",
             builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));

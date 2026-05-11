@@ -59,9 +59,6 @@ neoForge {
         }
         data {
             data()
-
-            // DataGen can be run by - "./gradlew :neoforge:runData" in Terminal.
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             programArguments.addAll(
                     '--mod', project.mod_id,
                     '--all',
@@ -83,7 +80,6 @@ neoForge {
 
 
 dependencies {
-    compileOnly "io.wispforest:accessories-neoforge:${accessories}"
     compileOnly "io.wispforest:accessories-neoforge:${accessories}"
 
     implementation "dev.kosmx.player-anim:player-animation-lib-forge:${player_anim}"

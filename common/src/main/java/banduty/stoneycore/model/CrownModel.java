@@ -1,14 +1,19 @@
 package banduty.stoneycore.model;
 
+import banduty.stoneycore.StoneyCore;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 
 public class CrownModel extends HumanoidModel<LivingEntity> {
 	private final ModelPart head;
+	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+			ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "crown"), "main");
 	public CrownModel(ModelPart root) {
 		super(root);
 

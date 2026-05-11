@@ -43,7 +43,7 @@ public class ItemTooltipHandler {
 
         for (LandType landType : LandTypeRegistry.getAll()) {
             if (stack.is(landType.coreItem()) || (stack.getComponents().has(SCDataComponents.TARGET_STACK.get()) &&
-                    stack.get(SCDataComponents.TARGET_STACK.get()).getItem() == landType.coreItem())) {
+                    stack.get(SCDataComponents.TARGET_STACK.get()).stack().getItem() == landType.coreItem())) {
 
                 lines.add(Component.translatable("component.tooltip.stoneycore.coreItem").withStyle(ChatFormatting.GOLD));
                 break;

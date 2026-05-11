@@ -1,6 +1,7 @@
 package banduty.stoneycore.items.custom.manuscript;
 
 import banduty.stoneycore.items.SCItems;
+import banduty.stoneycore.util.data.itemdata.ItemStackHolder;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -34,12 +35,12 @@ public class Manuscript extends Item {
     }
 
     public static void setTargetStack(ItemStack manuscript, ItemStack targetStack) {
-        manuscript.set(SCDataComponents.TARGET_STACK.get(), targetStack);
+        manuscript.set(SCDataComponents.TARGET_STACK.get(), new ItemStackHolder(targetStack));
     }
 
     public static ItemStack getTargetStack(ItemStack manuscript) {
         if (manuscript.has(SCDataComponents.TARGET_STACK.get())) {
-            return manuscript.get(SCDataComponents.TARGET_STACK.get());
+            return manuscript.get(SCDataComponents.TARGET_STACK.get()).stack();
         }
         return ItemStack.EMPTY;
     }

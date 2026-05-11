@@ -4,6 +4,7 @@ import banduty.stoneycore.block.CraftmanAnvilBlock;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.custom.CraftmanAnvilHelper;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.util.data.itemdata.ItemStackHolder;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -42,12 +43,12 @@ public class Tongs extends Item implements CraftmanAnvilHelper {
     }
 
     public static void setTargetStack(ItemStack stack, ItemStack targetStack) {
-        stack.set(SCDataComponents.TARGET_STACK.get(), targetStack);
+        stack.set(SCDataComponents.TARGET_STACK.get(), new ItemStackHolder(targetStack));
     }
 
     public static ItemStack getTargetStack(ItemStack stack) {
         if (stack.has(SCDataComponents.TARGET_STACK.get())) {
-            return stack.get(SCDataComponents.TARGET_STACK.get());
+            return stack.get(SCDataComponents.TARGET_STACK.get()).stack();
         }
         return ItemStack.EMPTY;
     }

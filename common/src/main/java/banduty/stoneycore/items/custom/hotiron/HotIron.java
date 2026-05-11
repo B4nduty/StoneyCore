@@ -2,6 +2,7 @@ package banduty.stoneycore.items.custom.hotiron;
 
 import banduty.stoneycore.client.MinecraftS4S;
 import banduty.stoneycore.items.SCItems;
+import banduty.stoneycore.util.data.itemdata.ItemStackHolder;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -121,12 +122,12 @@ public class HotIron extends Item {
 
     public static void setTargetStack(ItemStack stack, ItemStack targetStack) {
         if (targetStack == null || targetStack.isEmpty()) return;
-        stack.set(SCDataComponents.TARGET_STACK.get(), targetStack);
+        stack.set(SCDataComponents.TARGET_STACK.get(), new ItemStackHolder(targetStack));
     }
 
     public static ItemStack getTargetStack(ItemStack stack) {
         if (stack.has(SCDataComponents.TARGET_STACK.get())) {
-            return stack.get(SCDataComponents.TARGET_STACK.get());
+            return stack.get(SCDataComponents.TARGET_STACK.get()).stack();
         }
         return ItemStack.EMPTY;
     }
