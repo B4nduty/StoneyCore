@@ -6,8 +6,11 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.item.BannerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 
@@ -24,19 +27,29 @@ public class BannerPatternRecipe extends ShapelessRecipe {
     @Override
     public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
         ItemStack banner = ItemStack.EMPTY;
+        ItemStack otherInput = ItemStack.EMPTY;
+
         for (int i = 0; i < input.size(); i++) {
             ItemStack stack = input.getItem(i);
-            if (!stack.isEmpty() && stack.getItem() instanceof net.minecraft.world.item.BannerItem) {
+            if (stack.isEmpty()) continue;
+
+            if (stack.getItem() instanceof BannerItem) {
                 banner = stack;
-                break;
+            } else {
+                otherInput = stack;
             }
         }
 
-        if (banner.isEmpty()) return ItemStack.EMPTY;
+        if (banner.isEmpty() || otherInput.isEmpty()) return ItemStack.EMPTY;
 
-        ItemStack result = banner.transmuteCopy(this.getResultItem(registries).getItem(), 1);
+        ItemStack result = otherInput.copyWithCount(1);
 
-        result.applyComponents(this.getResultItem(registries).getComponentsPatch());
+        banner.getComponents().forEach(component -> {
+            if (component.type() == DataComponents.BANNER_PATTERNS ||
+                    component.type() == DataComponents.BASE_COLOR) {
+                result.set((DataComponentType) component.type(), component.value());
+            }
+        });
 
         return result;
     }

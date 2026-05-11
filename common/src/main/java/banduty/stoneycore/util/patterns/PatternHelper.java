@@ -40,7 +40,7 @@ public class PatternHelper {
             for (BannerPatternLayers.Layer layer : component.layers()) {
 
                 ResourceLocation patternId = layer.pattern().unwrapKey()
-                        .map(key -> key.location())
+                        .map(ResourceKey::location)
                         .orElse(ResourceLocation.fromNamespaceAndPath("minecraft", "base"));
 
                 DyeColor dyeColor = layer.color();

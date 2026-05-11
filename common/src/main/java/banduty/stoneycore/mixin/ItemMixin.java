@@ -298,37 +298,4 @@ public abstract class ItemMixin {
             cir.setReturnValue(InteractionResult.SUCCESS);
         }
     }
-
-    @Inject(method = "onCraftedBy", at = @At("TAIL"))
-    public void onCraftedBy(ItemStack stack, Level level, Player player, CallbackInfo ci) {
-        if (!(stack.getItem() instanceof SCAccessoryItem)) return;
-
-        if (player.containerMenu instanceof CraftingMenu craftingInventory) {
-            stoneyCore$applyCraftingModifiers(stack, craftingInventory.getSize(), craftingInventory::getSlot, level);
-        } else if (player.containerMenu instanceof InventoryMenu inventoryMenu) {
-            stoneyCore$applyCraftingModifiers(stack, 4, inventoryMenu::getSlot, level);
-        }
-    }
-
-    @Unique
-    private void stoneyCore$applyCraftingModifiers(ItemStack resultStack, int slotCount, IntFunction<Slot> slotSupplier, Level level) {
-        ItemStack bannerStack = ItemStack.EMPTY;
-
-        for (int i = 0; i < slotCount; i++) {
-            ItemStack ingredient = slotSupplier.apply(i).getItem();
-            if (ingredient.getItem() instanceof BannerItem) {
-                bannerStack = ingredient;
-                break;
-            }
-        }
-
-        if (bannerStack.isEmpty() || !(resultStack.getItem() instanceof SCAccessoryItem)) return;
-
-        HolderLookup.Provider registries = level.registryAccess();
-
-        List<Tuple<ResourceLocation, DyeColor>> bannerPatterns = PatternHelper.getBannerPatternsFromBanner(bannerStack, resultStack.getItem());
-
-        PatternHelper.setBannerPatterns(resultStack, registries, bannerPatterns);
-        PatternHelper.setBannerDyeColor(resultStack, ((BannerItem) bannerStack.getItem()).getColor());
-    }
 }
