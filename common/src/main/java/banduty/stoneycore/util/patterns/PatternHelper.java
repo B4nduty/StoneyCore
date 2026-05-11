@@ -1,7 +1,6 @@
 package banduty.stoneycore.util.patterns;
 
 import banduty.stoneycore.util.data.itemdata.INBTKeys;
-import banduty.stoneycore.util.data.keys.NBTDataHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -82,17 +81,31 @@ public class PatternHelper {
 
     public static void setBannerDyeColor(ItemStack stack, DyeColor dyeColor) {
         float[] components = dyeColor.getTextureDiffuseColors();
-        NBTDataHelper.set(stack, INBTKeys.DYE_COLOR_R, components[0]);
-        NBTDataHelper.set(stack, INBTKeys.DYE_COLOR_G, components[1]);
-        NBTDataHelper.set(stack, INBTKeys.DYE_COLOR_B, components[2]);
+
+        int r = (int) (components[0] * 255.0F);
+        int g = (int) (components[1] * 255.0F);
+        int b = (int) (components[2] * 255.0F);
+
+        int color = (r << 16) | (g << 8) | b;
+
+        CompoundTag displayTag = stack.getOrCreateTagElement("display");
+        displayTag.putInt("color", color);
     }
 
     public static float[] getBannerDyeColor(ItemStack stack) {
-        return new float[]{
-                NBTDataHelper.get(stack, INBTKeys.DYE_COLOR_R, 1.0f),
-                NBTDataHelper.get(stack, INBTKeys.DYE_COLOR_G, 1.0f),
-                NBTDataHelper.get(stack, INBTKeys.DYE_COLOR_B, 1.0f)
-        };
+        CompoundTag displayTag = stack.getTagElement("display");
+
+        if (displayTag != null && displayTag.contains("color", Tag.TAG_INT)) {
+            int color = displayTag.getInt("color");
+
+            float r = ((color >> 16) & 255) / 255.0F;
+            float g = ((color >> 8) & 255) / 255.0F;
+            float b = (color & 255) / 255.0F;
+
+            return new float[]{r, g, b};
+        }
+
+        return new float[]{1.0F, 1.0F, 1.0F};
     }
 
     public static boolean hasBannerPatterns(ItemStack stack) {

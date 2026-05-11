@@ -54,13 +54,7 @@ public class BannerPatternRecipe extends ShapelessRecipe {
             }
         }
 
-        if (banner.isEmpty() || itemInput.isEmpty()) return false;
-
-        if (PatternHelper.hasBannerPatterns(itemInput)) return false;
-
-        if (getBannerPatterns(banner, itemInput.getItem()).isEmpty()) return false;
-
-        return true;
+        return !banner.isEmpty() && !itemInput.isEmpty();
     }
 
     @Override
@@ -88,7 +82,7 @@ public class BannerPatternRecipe extends ShapelessRecipe {
                 getBannerPatterns(banner, result.getItem());
 
         PatternHelper.setBannerPatterns(result, patterns);
-
+        PatternHelper.setBannerDyeColor(result, ((BannerItem) banner.getItem()).getColor());
         return result;
     }
 
