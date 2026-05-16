@@ -59,12 +59,6 @@ public class ModMessages {
                 .consumerMainThread(StaminaBlockedS2CPacket::handle)
                 .add();
 
-        net.messageBuilder(StaminaValueS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .encoder(StaminaValueS2CPacket::encode)
-                .decoder(StaminaValueS2CPacket::decode)
-                .consumerMainThread(StaminaValueS2CPacket::handle)
-                .add();
-
         net.messageBuilder(SyncDefinitionsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(SyncDefinitionsPacket::encode)
                 .decoder(SyncDefinitionsPacket::decode)

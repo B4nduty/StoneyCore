@@ -340,6 +340,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     @Inject(method = "jumpFromGround", at = @At("HEAD"))
     private void stoneycore$jumpFromGround(CallbackInfo ci) {
         if ((Object) this instanceof LivingEntity livingEntity) {
+            if (livingEntity.level().isClientSide()) return;
             IEntityDataSaver dataSaver = (IEntityDataSaver) livingEntity;
             boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
             boolean wearingSCArmor = stoneyCore$isWearingSCArmor(livingEntity);

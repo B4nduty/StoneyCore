@@ -8,7 +8,6 @@ import net.minecraft.resources.ResourceLocation;
 
 public interface ModMessages {
     ResourceLocation STAMINA_BLOCKED_ID = new ResourceLocation(StoneyCore.MOD_ID, "stamina_blocked");
-    ResourceLocation STAMINA_VALUE_ID = new ResourceLocation(StoneyCore.MOD_ID, "stamina_value");
     ResourceLocation SYNC_DEFINITIONS = new ResourceLocation(StoneyCore.MOD_ID, "sync_definitions");
     ResourceLocation ATTACK_ID = new ResourceLocation(StoneyCore.MOD_ID, "attack");
     ResourceLocation RELOAD_PACKET_ID = new ResourceLocation(StoneyCore.MOD_ID, "reload_packet");
@@ -28,7 +27,6 @@ public interface ModMessages {
 
     static void registerS2CPackets() {
         ClientPlayNetworking.registerGlobalReceiver(STAMINA_BLOCKED_ID, StaminaBlockedS2CPacket::receive);
-        ClientPlayNetworking.registerGlobalReceiver(STAMINA_VALUE_ID, StaminaValueS2CPacket::receive);
         ClientPlayNetworking.registerGlobalReceiver(SYNC_DEFINITIONS, SyncDefinitionsPacket::receive);
         ClientPlayNetworking.registerGlobalReceiver(LAND_TITLE_PACKET_ID, LandTitleS2CPacket::receive);
         ClientPlayNetworking.registerGlobalReceiver(OUTLINE_CLAIM_PACKET_ID, OutlineClaimS2CPacket::receive);

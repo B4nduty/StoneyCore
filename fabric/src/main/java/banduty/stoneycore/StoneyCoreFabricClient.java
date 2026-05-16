@@ -69,21 +69,21 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                 ArmorRenderer.register(new SCUnderArmourRenderer(), item);
             }
 
-            ItemProperties.register(item, new ResourceLocation("broken"),
+            ItemProperties.register(item, new ResourceLocation(StoneyCore.MOD_ID, "broken"),
                     (stack, world, entity, seed) ->
                             stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f ? 1.0F : 0.0F);
 
             if (item instanceof HotIron hotIron) {
-                ItemProperties.register(item, new ResourceLocation("finished"),
+                ItemProperties.register(item, new ResourceLocation(StoneyCore.MOD_ID, "finished"),
                         (stack, world, entity, seed) ->
                                 hotIron.isFinished(stack) ? 1.0F : 0.0F);
             }
 
             if (item instanceof Tongs) {
-                ItemProperties.register(item, new ResourceLocation("hotiron"),
+                ItemProperties.register(item, new ResourceLocation(StoneyCore.MOD_ID, "hotiron"),
                         (stack, world, entity, seed) ->
                                 Tongs.getTargetStack(stack).getItem() instanceof HotIron ? 1.0F : 0.0F);
-                ItemProperties.register(item, new ResourceLocation("finished"),
+                ItemProperties.register(item, new ResourceLocation(StoneyCore.MOD_ID, "finished"),
                         (stack, world, entity, seed) ->
                                 !(HotIron.getTargetStack(Tongs.getTargetStack(stack)).isEmpty()) ? 1.0F : 0.0F);
             }

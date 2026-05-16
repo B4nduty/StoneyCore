@@ -20,10 +20,6 @@ public class StaminaData {
                 new AttributeModifier(GENERIC_STAMINA_MODIFIER_ID,
                         StoneyCore.MOD_ID + ":stamina", clamped, AttributeModifier.Operation.ADDITION)
         );
-
-        if (livingEntity instanceof ServerPlayer serverPlayer) {
-            Services.STAMINA.syncStaminaValue(clamped, serverPlayer);
-        }
     }
 
     public static void addStamina(LivingEntity livingEntity, double amount) {
