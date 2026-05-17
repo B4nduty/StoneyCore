@@ -1,9 +1,0 @@
-// 1.21.1	2026-05-08T13:28:43.5984747	Recipes
-f4b3ee6beb11dcb5bce71fad4cb534021d48dffd data/stoneycore/advancement/recipes/misc/black_powder.json
-5b219cab90c558f7b0802b2d35cc0d4ddc693121 data/stoneycore/advancement/recipes/misc/iron_ingot_from_campfire.json
-91cec91b73740c3286f864210ea400c911875c99 data/stoneycore/advancement/recipes/misc/smithing_hammer.json
-a2663cb26f931f24a9f623dbc7266859d92acda7 data/stoneycore/advancement/recipes/misc/tongs.json
-85ea923e8496fc7d7b6587e11b1060f77243165d data/stoneycore/recipe/black_powder.json
-0b0054d567ad512e86496d3b34585a1398cc78ac data/stoneycore/recipe/iron_ingot_from_campfire.json
-65cf3ab4921401fa3af202c55907751ba43d687c data/stoneycore/recipe/smithing_hammer.json
-4bcddb4ad01ffff6d6c55bdb65d3adc2bb1a71e8 data/stoneycore/recipe/tongs.json

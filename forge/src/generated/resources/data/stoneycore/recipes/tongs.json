@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "N": {
+      "item": "minecraft:iron_nugget"
+    }
+  },
+  "pattern": [
+    "N N",
+    " N ",
+    "I I"
+  ],
+  "result": {
+    "item": "stoneycore:tongs"
+  },
+  "show_notification": true
+}
