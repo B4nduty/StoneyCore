@@ -25,7 +25,7 @@ public class DyeUtil {
         DyedItemColor dyedColor = stack.get(DataComponents.DYED_COLOR);
 
         if (dyedColor == null) {
-            return 0xFFFFFF;
+            return -1;
         }
 
         return dyedColor.rgb();

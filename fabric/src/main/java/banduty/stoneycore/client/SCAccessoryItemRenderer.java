@@ -13,7 +13,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import io.wispforest.accessories.api.client.SimpleAccessoryRenderer;
+import io.wispforest.accessories.api.client.AccessoryRenderer;
 import io.wispforest.accessories.api.slot.SlotReference;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -27,13 +27,14 @@ import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 @Environment(EnvType.CLIENT)
-public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
+public class SCAccessoryItemRenderer implements AccessoryRenderer {
     private static final RenderStateShard.ShaderStateShard RENDER_TYPE_ENTITY_TRANSLUCENT_EMISSIVE_SHADER = new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeEntityTranslucentEmissiveShader);
     private static final RenderStateShard.TransparencyStateShard TRANSLUCENT_TRANSPARENCY = new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
         RenderSystem.enableBlend();
@@ -69,7 +70,7 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
         if (scAccessoryItem.getRenderSettings(stack).customAngles()) accessoryModel.setupAnim(reference.entity(), limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 
         VertexConsumer baseConsumer = multiBufferSource.getBuffer(RenderType.armorCutoutNoCull(scAccessoryItem.getTexturePath(stack)));
-        int color = DyeUtil.getDyeColorInt(stack);
+        int color = DyedItemColor.getOrDefault(stack, -1);
 
         accessoryModel.renderToBuffer(poseStack, baseConsumer, light, OverlayTexture.NO_OVERLAY, color);
 
@@ -112,10 +113,5 @@ public class SCAccessoryItemRenderer implements SimpleAccessoryRenderer {
                 model.renderToBuffer(poseStack, patternConsumer, light, OverlayTexture.NO_OVERLAY, rgb);
             }
         }
-    }
-
-    @Override
-    public <M extends LivingEntity> void align(ItemStack itemStack, SlotReference slotReference, EntityModel<M> entityModel, PoseStack poseStack) {
-
     }
 }
