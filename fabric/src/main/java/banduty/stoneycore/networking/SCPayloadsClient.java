@@ -8,7 +8,6 @@ import net.minecraft.resources.ResourceLocation;
 
 public interface SCPayloadsClient {
     ResourceLocation STAMINA_BLOCKED_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "stamina_blocked");
-    ResourceLocation STAMINA_VALUE_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "stamina_value");
     ResourceLocation SYNC_DEFINITIONS = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "sync_definitions");
     ResourceLocation LAND_TITLE_PACKET_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "land_title_packet");
     ResourceLocation OUTLINE_CLAIM_PACKET_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "outline_claim_packet");
@@ -17,7 +16,6 @@ public interface SCPayloadsClient {
 
     static void registerPayloads() {
         PayloadTypeRegistry.playS2C().register(StaminaBlockedS2CPacket.ID, StaminaBlockedS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(StaminaValueS2CPacket.ID, StaminaValueS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(SyncDefinitionsPacket.ID, SyncDefinitionsPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(LandTitleS2CPacket.ID, LandTitleS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(OutlineClaimS2CPacket.ID, OutlineClaimS2CPacket.CODEC);
@@ -27,7 +25,6 @@ public interface SCPayloadsClient {
 
     static void registerS2CReceivers() {
         ClientPlayNetworking.registerGlobalReceiver(StaminaBlockedS2CPacket.ID, StaminaBlockedS2CPacket::handle);
-        ClientPlayNetworking.registerGlobalReceiver(StaminaValueS2CPacket.ID, StaminaValueS2CPacket::handle);
         ClientPlayNetworking.registerGlobalReceiver(SyncDefinitionsPacket.ID, SyncDefinitionsPacket::handle);
         ClientPlayNetworking.registerGlobalReceiver(LandTitleS2CPacket.ID, LandTitleS2CPacket::handle);
         ClientPlayNetworking.registerGlobalReceiver(OutlineClaimS2CPacket.ID, OutlineClaimS2CPacket::handle);

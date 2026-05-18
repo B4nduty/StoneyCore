@@ -25,10 +25,6 @@ public class StaminaData {
                     AttributeModifier.Operation.ADD_VALUE
             ));
         }
-
-        if (livingEntity instanceof ServerPlayer serverPlayer) {
-            Services.STAMINA.syncStaminaValue(clamped, serverPlayer);
-        }
     }
 
     public static void addStamina(LivingEntity livingEntity, double amount) {

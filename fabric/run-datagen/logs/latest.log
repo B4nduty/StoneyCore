@@ -1,5 +1,5 @@
-[19:37:05] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.1 with Fabric Loader 0.16.9
-[19:37:05] [main/INFO] (FabricLoader) Loading 45 mods:
+[19:23:00] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.1 with Fabric Loader 0.16.9
+[19:23:00] [main/INFO] (FabricLoader) Loading 45 mods:
 	- fabric-api 0.109.0+1.21.1
 	- fabric-api-base 0.4.42+6573ed8c19
 	- fabric-api-lookup-api-v1 1.6.70+b559734419
@@ -44,41 +44,41 @@
 	- minecraft 1.21.1
 	- mixinextras 0.4.1
 	- owo 0.12.15.4+1.21
-	- stoneycore 1.0.0-rev4
-[19:37:05] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/regan/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.4+mixin.0.8.7/6a12aacc794f1078458433116e9ed42c1cc98096/sponge-mixin-0.15.4+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[19:37:05] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[19:37:05] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
-[19:37:05] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_21
-[19:37:05] [main/WARN] (FabricLoader/Mixin) Error loading class: com/mojang/blaze3d/vertex/BufferBuilder (java.lang.RuntimeException: Cannot load class com.mojang.blaze3d.vertex.BufferBuilder in environment type SERVER)
-[19:37:05] [main/WARN] (FabricLoader/Mixin) @Mixin target com.mojang.blaze3d.vertex.BufferBuilder was not found owo.mixins.json:BufferBuilderAccessor from mod owo
-[19:37:05] [main/WARN] (FabricLoader/Mixin) Error loading class: net/minecraft/client/gui/screens/Screen (java.lang.RuntimeException: Cannot load class net.minecraft.client.gui.screens.Screen in environment type SERVER)
-[19:37:05] [main/WARN] (FabricLoader/Mixin) @Mixin target net.minecraft.client.gui.screens.Screen was not found owo.mixins.json:ScreenAccessor from mod owo
-[19:37:05] [main/WARN] (FabricLoader/Mixin) Error loading class: xyz/nucleoid/server/translations/impl/language/SystemDelegatedLanguage (java.lang.ClassNotFoundException: xyz/nucleoid/server/translations/impl/language/SystemDelegatedLanguage)
-[19:37:05] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
-[19:37:05] [main/WARN] (FabricLoader/Mixin) Error loading class: org/quiltmc/loader/impl/game/minecraft/Hooks (java.lang.ClassNotFoundException: org/quiltmc/loader/impl/game/minecraft/Hooks)
-[19:37:06] [main/WARN] (PerfDataUtil) Failed to add PDH Counter: \Paging File(_Total)\% Usage, Error code: 0xC0000BB8
-[19:37:06] [main/WARN] (PerfCounterQueryHandler) Failed to add counter for PDH counter: \Paging File(_Total)\% Usage
-[19:37:06] [main/WARN] (PerfCounterQuery) Disabling further attempts to query Paging File.
-[19:37:07] [main/WARN] (WmiQueryHandler) COM exception: Invalid Query: SELECT PERCENTUSAGE FROM Win32_PerfRawData_PerfOS_PagingFile
-[19:37:10] [main/WARN] (StoneyCore) Could not instantiate banduty.stoneycore.combat.melee.ICombatHelper using default constructor, using anonymous fallback
-[19:37:10] [main/INFO] (owo) I saw ppl complain that minor updates between big updates will ruin it for modders but I thought modders were very good and they can do what we do in a week so they should be ok with updating their mods to new versions in a day, right? :titantroll:
-[19:37:10] [main/INFO] (StoneyCore) Hello Fabric world!
-[19:37:10] [main/INFO] (StoneyCore) Registering Mod Blocks for stoneycore
-[19:37:10] [main/ERROR] (Minecraft) No data fixer registered for sc_bullet
-[19:37:10] [main/INFO] (StoneyCore) Registering Entities for stoneycore
-[19:37:10] [main/INFO] (StoneyCore) Registering Mod Items for stoneycore
-[19:37:10] [main/INFO] (StoneyCore) Registering Particles for stoneycore
-[19:37:10] [main/INFO] (StoneyCore) Registering ModRecipes for stoneycore
-[19:37:10] [main/INFO] (StoneyCore) Registering Menu for stoneycore
-[19:37:10] [main/INFO] (StoneyCore) Registering Sounds for stoneycore
-[19:37:10] [main/INFO] (StoneyCore) Registered attributes for stoneycore
-[19:37:10] [main/INFO] (StoneyCore) Registering Data Components for stoneycore
-[19:37:10] [main/INFO] (StoneyCore) Hello to stoneycore
-[19:37:10] [main/INFO] (owo) Services frozen by 'net.minecraft.server.Main'
-[19:37:10] [main/INFO] (FabricDataGenHelper) Running data generator for stoneycore
-[19:37:10] [main/INFO] (Minecraft) Starting provider: StoneyCore/Model Definitions
-[19:37:10] [main/INFO] (Minecraft) StoneyCore/Model Definitions finished after 29 ms
-[19:37:10] [main/INFO] (Minecraft) Starting provider: StoneyCore/Recipes
-[19:37:11] [main/INFO] (Minecraft) StoneyCore/Recipes finished after 210 ms
-[19:37:11] [main/INFO] (Minecraft) All providers took: 239 ms
-[19:37:11] [main/INFO] (Minecraft) Caching: total files: 27, old count: 19, new count: 20, removed stale: 8, written: 10
+	- stoneycore 1.0.17
+[19:23:00] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/regan/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.15.4+mixin.0.8.7/6a12aacc794f1078458433116e9ed42c1cc98096/sponge-mixin-0.15.4+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[19:23:00] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[19:23:00] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
+[19:23:00] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_21
+[19:23:00] [main/WARN] (FabricLoader/Mixin) Error loading class: com/mojang/blaze3d/vertex/BufferBuilder (java.lang.RuntimeException: Cannot load class com.mojang.blaze3d.vertex.BufferBuilder in environment type SERVER)
+[19:23:00] [main/WARN] (FabricLoader/Mixin) @Mixin target com.mojang.blaze3d.vertex.BufferBuilder was not found owo.mixins.json:BufferBuilderAccessor from mod owo
+[19:23:00] [main/WARN] (FabricLoader/Mixin) Error loading class: net/minecraft/client/gui/screens/Screen (java.lang.RuntimeException: Cannot load class net.minecraft.client.gui.screens.Screen in environment type SERVER)
+[19:23:00] [main/WARN] (FabricLoader/Mixin) @Mixin target net.minecraft.client.gui.screens.Screen was not found owo.mixins.json:ScreenAccessor from mod owo
+[19:23:00] [main/WARN] (FabricLoader/Mixin) Error loading class: xyz/nucleoid/server/translations/impl/language/SystemDelegatedLanguage (java.lang.ClassNotFoundException: xyz/nucleoid/server/translations/impl/language/SystemDelegatedLanguage)
+[19:23:01] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.4.1).
+[19:23:01] [main/WARN] (FabricLoader/Mixin) Error loading class: org/quiltmc/loader/impl/game/minecraft/Hooks (java.lang.ClassNotFoundException: org/quiltmc/loader/impl/game/minecraft/Hooks)
+[19:23:02] [main/WARN] (PerfDataUtil) Failed to add PDH Counter: \Paging File(_Total)\% Usage, Error code: 0xC0000BB8
+[19:23:02] [main/WARN] (PerfCounterQueryHandler) Failed to add counter for PDH counter: \Paging File(_Total)\% Usage
+[19:23:02] [main/WARN] (PerfCounterQuery) Disabling further attempts to query Paging File.
+[19:23:02] [main/WARN] (WmiQueryHandler) COM exception: Invalid Query: SELECT PERCENTUSAGE FROM Win32_PerfRawData_PerfOS_PagingFile
+[19:23:07] [main/WARN] (StoneyCore) Could not instantiate banduty.stoneycore.combat.melee.ICombatHelper using default constructor, using anonymous fallback
+[19:23:07] [main/INFO] (StoneyCore) Hello Fabric world!
+[19:23:07] [main/INFO] (StoneyCore) Registering Mod Blocks for stoneycore
+[19:23:07] [main/ERROR] (Minecraft) No data fixer registered for sc_bullet
+[19:23:07] [main/INFO] (StoneyCore) Registering Entities for stoneycore
+[19:23:07] [main/INFO] (StoneyCore) Registering Mod Items for stoneycore
+[19:23:07] [main/INFO] (StoneyCore) Registering Particles for stoneycore
+[19:23:07] [main/INFO] (StoneyCore) Registering ModRecipes for stoneycore
+[19:23:07] [main/INFO] (StoneyCore) Registering Menu for stoneycore
+[19:23:07] [main/INFO] (StoneyCore) Registering Sounds for stoneycore
+[19:23:07] [main/INFO] (StoneyCore) Registered attributes for stoneycore
+[19:23:07] [main/INFO] (StoneyCore) Registering Data Components for stoneycore
+[19:23:07] [main/INFO] (StoneyCore) Hello to stoneycore
+[19:23:07] [main/INFO] (owo) Noaaan: I'm talking to my inner demons. Which is all of you
+[19:23:07] [main/INFO] (owo) Services frozen by 'net.minecraft.server.Main'
+[19:23:07] [main/INFO] (FabricDataGenHelper) Running data generator for stoneycore
+[19:23:07] [main/INFO] (Minecraft) Starting provider: StoneyCore/Model Definitions
+[19:23:07] [main/INFO] (Minecraft) StoneyCore/Model Definitions finished after 47 ms
+[19:23:07] [main/INFO] (Minecraft) Starting provider: StoneyCore/Recipes
+[19:23:07] [main/INFO] (Minecraft) StoneyCore/Recipes finished after 234 ms
+[19:23:07] [main/INFO] (Minecraft) All providers took: 283 ms
+[19:23:07] [main/INFO] (Minecraft) Caching: total files: 19, old count: 0, new count: 20, removed stale: 0, written: 19

@@ -65,15 +65,17 @@ public class ItemInHandRendererMixin {
             // Load your custom model
             UnderArmourArmModel model = new UnderArmourArmModel(UnderArmourArmModel.getTexturedModelData().bakeRoot());
 
+            var materialKey = armorItem.getMaterial().unwrapKey().orElse(null);
+            if (materialKey == null) return;
+            String namespace = materialKey.location().getNamespace();
+            String path = materialKey.location().getPath();
+
             // Get structureId for the base layer
-            ResourceLocation baseTexture = ResourceLocation.fromNamespaceAndPath(
-                    BuiltInRegistries.ITEM.getKey(armorItem).getNamespace(),
-                    "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png"
-            );
+            ResourceLocation baseTexture = ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + ".png");
             VertexConsumer baseConsumer = multiBufferSource.getBuffer(RenderType.armorCutoutNoCull(baseTexture));
 
             // Handle color if it's dyeable
-            int color = 0;
+            int color = -1;
             if (chestStack.getItem() instanceof SCUnderArmor && chestStack.has(DataComponents.DYED_COLOR)) {
                 color = DyeUtil.getDyeColorARGB(chestStack);
             }

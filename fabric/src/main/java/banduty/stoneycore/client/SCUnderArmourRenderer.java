@@ -15,18 +15,19 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Environment(EnvType.CLIENT)
 public class SCUnderArmourRenderer implements ArmorRenderer {
-    private HumanoidModel<LivingEntity> model;
+    private UnderArmourHelmetModel helmetModel;
+    private UnderArmourChestplateModel chestplateModel;
+    private UnderArmourLeggingsModel leggingsModel;
+    private UnderArmourBootsModel bootsModel;
 
     @Override
     public void render(PoseStack matrices, MultiBufferSource vertexConsumers, ItemStack stack, LivingEntity entity, EquipmentSlot slot, int light, HumanoidModel<LivingEntity> contextModel) {
@@ -35,44 +36,52 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
         if (model != null) {
             contextModel.copyPropertiesTo(model);
 
+            var materialKey = armorItem.getMaterial().unwrapKey().orElse(null);
+            if (materialKey == null) return;
+            String namespace = materialKey.location().getNamespace();
+            String path = materialKey.location().getPath();
+
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
-                    RenderType.armorCutoutNoCull(ResourceLocation.fromNamespaceAndPath(BuiltInRegistries.ITEM.getKey(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png")));
+                    RenderType.armorCutoutNoCull(ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + ".png")));
             if (armorItem instanceof SCDyeableUnderArmor) {
                 int color = DyeUtil.getDyeColorInt(stack);
 
-                ResourceLocation textureOverlayPath = getOverlayIdentifier(armorItem);
+                ResourceLocation textureOverlayPath = ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + "_overlay.png");
 
                 model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, color);
 
                 ArmorRenderer.renderPart(matrices, vertexConsumers, light, stack, model, textureOverlayPath);
-            } else model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, 1);
+            } else model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, -1);
         }
-    }
-
-    private static @NotNull ResourceLocation getOverlayIdentifier(ArmorItem armorItem) {
-        ResourceLocation originalIdentifier = ResourceLocation.fromNamespaceAndPath(BuiltInRegistries.ITEM.getKey(armorItem).getNamespace(), "textures/models/armor/" + armorItem.getMaterial().toString().toLowerCase() + ".png");
-
-        String textureOverlayString = originalIdentifier.getPath();
-
-        if (textureOverlayString.endsWith(".png")) {
-            textureOverlayString = textureOverlayString.substring(0, textureOverlayString.length() - 4);
-        }
-
-        textureOverlayString += "_overlay.png";
-
-        return ResourceLocation.fromNamespaceAndPath(originalIdentifier.getNamespace(), textureOverlayString);
     }
 
     public @Nullable HumanoidModel<LivingEntity> getModel(ArmorItem armorItem) {
-        if (this.model == null) {
-            this.model = switch (armorItem.getType()) {
-                case HELMET -> new UnderArmourHelmetModel(UnderArmourHelmetModel.getTexturedModelData().bakeRoot());
-                case CHESTPLATE -> new UnderArmourChestplateModel(UnderArmourChestplateModel.getTexturedModelData().bakeRoot());
-                case LEGGINGS -> new UnderArmourLeggingsModel(UnderArmourLeggingsModel.getTexturedModelData().bakeRoot());
-                case BOOTS -> new UnderArmourBootsModel(UnderArmourBootsModel.getTexturedModelData().bakeRoot());
-                default -> null;
-            };
-        }
-        return this.model;
+        return switch (armorItem.getType()) {
+            case HELMET -> {
+                if (this.helmetModel == null) {
+                    this.helmetModel = new UnderArmourHelmetModel(UnderArmourHelmetModel.getTexturedModelData().bakeRoot());
+                }
+                yield this.helmetModel;
+            }
+            case CHESTPLATE -> {
+                if (this.chestplateModel == null) {
+                    this.chestplateModel = new UnderArmourChestplateModel(UnderArmourChestplateModel.getTexturedModelData().bakeRoot());
+                }
+                yield this.chestplateModel;
+            }
+            case LEGGINGS -> {
+                if (this.leggingsModel == null) {
+                    this.leggingsModel = new UnderArmourLeggingsModel(UnderArmourLeggingsModel.getTexturedModelData().bakeRoot());
+                }
+                yield this.leggingsModel;
+            }
+            case BOOTS -> {
+                if (this.bootsModel == null) {
+                    this.bootsModel = new UnderArmourBootsModel(UnderArmourBootsModel.getTexturedModelData().bakeRoot());
+                }
+                yield this.bootsModel;
+            }
+            default -> null;
+        };
     }
 }
