@@ -11,7 +11,6 @@ import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.UseAnim;
 
@@ -122,27 +121,28 @@ public abstract class DefinitionsProvider implements DataProvider {
             }
         }
 
-        public record DefinitionEntry(Map<String, Double> damageResistance, Map<String, Double> deflectChance, double weight) {
+        public record DefinitionEntry(Map<String, Double> damageResistance, double deflectChance, double weight) {
             public static final Codec<DefinitionEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                     Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("damageResistance", Map.of()).forGetter(DefinitionEntry::damageResistance),
-                    Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("deflectChance", Map.of()).forGetter(DefinitionEntry::deflectChance),
+                    Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(DefinitionEntry::deflectChance),
                     Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(DefinitionEntry::weight)
             ).apply(instance, DefinitionEntry::new));
         }
 
         public static class Builder {
-            private final Map<String, Double> res = new HashMap<>(), deflect = new HashMap<>();
+            private final Map<String, Double> res = new HashMap<>();
+            private double deflectChance;
             private double weight;
             public static Builder create() { return new Builder(); }
             public Builder damageResistance(double slash, double bludg, double pierce) {
                 res.put("SLASHING", slash); res.put("BLUDGEONING", bludg); res.put("PIERCING", pierce); return this;
             }
             public Builder weight(double w) { this.weight = w; return this; }
-            public Builder deflectChance(double chance, EntityType<?>... types) {
-                for (EntityType<?> t : types) deflect.put(BuiltInRegistries.ENTITY_TYPE.getKey(t).toString(), chance);
+            public Builder deflectChance(double deflectChance) {
+                this.deflectChance = deflectChance;
                 return this;
             }
-            public DefinitionEntry build() { return new DefinitionEntry(res, deflect, weight); }
+            public DefinitionEntry build() { return new DefinitionEntry(res, deflectChance, weight); }
         }
     }
 
