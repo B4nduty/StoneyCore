@@ -7,7 +7,6 @@ import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
 import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
-import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.model.UnderArmourBootsModel;
@@ -28,6 +27,7 @@ import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -105,22 +105,21 @@ public class StoneyCoreNeoForgeClient {
     @SubscribeEvent
     public static void registerItemColors(RegisterColorHandlersEvent.Item event) {
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item instanceof SCAccessoryItem || item instanceof SCUnderArmor) {
+            if (item instanceof SCDyeableUnderArmor || item instanceof SCAccessoryItem) {
                 event.register((stack, tintIndex) -> {
                     if (tintIndex != 0) {
                         return -1;
                     }
 
-                    if (item instanceof SCDyeableUnderArmor dyeable) {
-                        return dyeable.getColor(stack);
+                    int defaultColor = -1;
+                    if (stack.getItem() instanceof SCDyeableUnderArmor dyeable) {
+                        defaultColor = dyeable.getDefaultColor();
+                    } else if (stack.getItem() instanceof SCAccessoryItem accessory) {
+                        defaultColor = accessory.getDefaultColor();
                     }
 
-                    if (item instanceof SCAccessoryItem accessory && accessory.isDyeable(stack)) {
-                        return accessory.getColor(stack);
-                    }
-
-                    return -1;
-                    }, item);
+                    return DyedItemColor.getOrDefault(stack, defaultColor);
+                }, item);
             }
         }
     }

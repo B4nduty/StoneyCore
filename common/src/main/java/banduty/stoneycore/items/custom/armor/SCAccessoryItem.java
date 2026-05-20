@@ -24,11 +24,9 @@ public interface SCAccessoryItem {
         return RenderSettings.DEFAULT;
     }
 
-    default boolean isDyeable(ItemStack stack) {
-        return false;
+    default int getDefaultColor() {
+        return -1;
     }
-
-    int getColor(ItemStack stack);
 
     // ---- SERVER/LOGIC ----
     default boolean hasOpenVisor(ItemStack stack) {

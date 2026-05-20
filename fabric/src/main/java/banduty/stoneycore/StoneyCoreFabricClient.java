@@ -10,7 +10,6 @@ import banduty.stoneycore.event.ItemTooltipHandler;
 import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
-import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
 import banduty.stoneycore.items.custom.tongs.Tongs;
@@ -29,7 +28,6 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
-import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -56,24 +54,6 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         EntityRendererRegistry.register(SCEntities.SC_BULLET.get(), SCBulletEntityRenderer::new);
         ClientOutlineRenderer.register();
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item instanceof SCAccessoryItem || item instanceof SCUnderArmor) {
-
-                ColorProviderRegistry.ITEM.register((stack, tintIndex) -> {
-                    if (tintIndex != 0) {
-                        return -1;
-                    }
-
-                    if (item instanceof SCDyeableUnderArmor dyeable) {
-                        return dyeable.getColor(stack);
-                    }
-
-                    if (item instanceof SCAccessoryItem accessory && accessory.isDyeable(stack)) {
-                        return accessory.getColor(stack);
-                    }
-
-                    return -1;
-                }, item);
-            }
             if (item instanceof SCAccessoryItem) {
                 AccessoriesRendererRegistry.registerRenderer(item, SCAccessoryItemRenderer::new);
             }

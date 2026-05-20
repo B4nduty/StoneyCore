@@ -1,6 +1,5 @@
 package banduty.stoneycore.datagen;
 
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -17,14 +16,14 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
     }
 
     protected void registerItemWConditions(Item item, OverrideCondition... conditions) {
-        registerItemWConditions(item, true, conditions);
+        registerItemWConditions(item, true, false, conditions);
     }
 
-    protected void registerItemWConditions(Item item, boolean joinConditions, OverrideCondition... conditions) {
+    protected void registerItemWConditions(Item item, boolean joinConditions, boolean overlay, OverrideCondition... conditions) {
         String path = BuiltInRegistries.ITEM.getKey(item).getPath();
 
         // Create the base model
-        ItemModelBuilder baseBuilder = item.components().has(DataComponents.DYED_COLOR)
+        ItemModelBuilder baseBuilder = overlay
                 ? withExistingParent(path, "item/handheld")
                 .texture("layer0", modLoc("item/" + path))
                 .texture("layer1", modLoc("item/" + path + "_overlay"))
@@ -36,7 +35,7 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
         // 1. Individual condition models and overrides
         for (OverrideCondition condition : conditions) {
             String modelName = condition.getModelName(path);
-            generateOverrideModel(item, modelName);
+            generateOverrideModel(item, modelName, overlay);
             generatedModels.add(modelName);
 
             baseBuilder.override()
@@ -61,7 +60,7 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
 
                     String combinedModelName = combineMultipleModelNames(modelNames);
                     if (!generatedModels.contains(combinedModelName)) {
-                        generateOverrideModel(item, combinedModelName);
+                        generateOverrideModel(item, combinedModelName, overlay);
                         generatedModels.add(combinedModelName);
                     }
 
@@ -72,7 +71,10 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
     }
 
     private void generateOverrideModel(Item item, String modelName) {
-        if (item.components().has(net.minecraft.core.component.DataComponents.DYED_COLOR)) {
+        this.generateOverrideModel(item, modelName, false);
+    }
+    private void generateOverrideModel(Item item, String modelName, boolean overlay) {
+        if (overlay) {
             withExistingParent(modelName, "item/handheld")
                     .texture("layer0", modLoc("item/" + modelName))
                     .texture("layer1", modLoc("item/" + modelName + "_overlay"));

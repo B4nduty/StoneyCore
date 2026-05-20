@@ -5,7 +5,6 @@ import banduty.stoneycore.model.UnderArmourBootsModel;
 import banduty.stoneycore.model.UnderArmourChestplateModel;
 import banduty.stoneycore.model.UnderArmourHelmetModel;
 import banduty.stoneycore.model.UnderArmourLeggingsModel;
-import banduty.stoneycore.util.DyeUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
@@ -20,6 +19,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import org.jetbrains.annotations.Nullable;
 
 @Environment(EnvType.CLIENT)
@@ -44,7 +44,7 @@ public class SCUnderArmourRenderer implements ArmorRenderer {
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(
                     RenderType.armorCutoutNoCull(ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + ".png")));
             if (armorItem instanceof SCDyeableUnderArmor) {
-                int color = DyeUtil.getDyeColorInt(stack);
+                int color = DyedItemColor.getOrDefault(stack, -1);
 
                 ResourceLocation textureOverlayPath = ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + "_overlay.png");
 

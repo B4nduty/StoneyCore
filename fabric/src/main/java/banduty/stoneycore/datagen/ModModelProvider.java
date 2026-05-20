@@ -65,11 +65,11 @@ public class ModModelProvider extends FabricModelProviderPlus {
         itemModelGenerator.generateFlatItem(SCItems.CROWN.get(), ModelTemplates.FLAT_ITEM);
         itemModelGenerator.generateFlatItem(SCItems.MANUSCRIPT.get(), ModelTemplates.FLAT_ITEM);
 
-        registerItemWConditions(SCItems.TONGS.get(), ModelTemplates.FLAT_ITEM, itemModelGenerator, false,
+        registerItemWConditions(SCItems.TONGS.get(), itemModelGenerator, false, false,
                 new OverrideCondition(ResourceLocation.fromNamespaceAndPath("", "hotiron"), 1),
                 new OverrideCondition(ResourceLocation.fromNamespaceAndPath("", "finished"), 1));
 
-        registerItemWConditions(SCItems.HOT_IRON.get(), ModelTemplates.FLAT_ITEM, itemModelGenerator,
+        registerItemWConditions(SCItems.HOT_IRON.get(), itemModelGenerator,
                 new OverrideCondition(ResourceLocation.fromNamespaceAndPath("", "finished"), 1));
     }
 }

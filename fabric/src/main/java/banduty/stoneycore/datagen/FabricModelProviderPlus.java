@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.models.ItemModelGenerators;
 import net.minecraft.data.models.model.ModelTemplate;
@@ -21,11 +20,11 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         super(output);
     }
 
-    protected void registerItemWConditions(Item item, ModelTemplate model, ItemModelGenerators itemModelGenerators, OverrideCondition... conditions) {
-        registerItemWConditions(item, model, itemModelGenerators, true, conditions);
+    protected void registerItemWConditions(Item item, ItemModelGenerators itemModelGenerators, OverrideCondition... conditions) {
+        registerItemWConditions(item, itemModelGenerators, true, false, conditions);
     }
 
-    protected void registerItemWConditions(Item item, ModelTemplate model, ItemModelGenerators itemModelGenerators, boolean joinConditions, OverrideCondition... conditions) {
+    protected void registerItemWConditions(Item item, ItemModelGenerators itemModelGenerators, boolean joinConditions, boolean overlay, OverrideCondition... conditions) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
         String namespace = itemId.getNamespace();
         String path = itemId.getPath();
@@ -36,7 +35,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         // Generate individual condition models and overrides
         for (OverrideCondition condition : conditions) {
             String modelName = condition.getModelName(path);
-            generateOverrideModel(item, ModelTemplates.FLAT_ITEM, modelName, itemModelGenerators);
+            generateOverrideModel(item, ModelTemplates.FLAT_ITEM, modelName, itemModelGenerators, overlay);
             generatedModels.add(modelName);
 
             addOverride(overrides, namespace, condition.predicateKey, condition.predicateValue, modelName);
@@ -59,7 +58,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
                     String combinedModelName = combineMultipleModelNames(modelNames);
 
                     if (!generatedModels.contains(combinedModelName)) {
-                        generateOverrideModel(item, ModelTemplates.FLAT_ITEM, combinedModelName, itemModelGenerators);
+                        generateOverrideModel(item, ModelTemplates.FLAT_ITEM, combinedModelName, itemModelGenerators, overlay);
                         generatedModels.add(combinedModelName);
                     }
 
@@ -73,7 +72,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         TextureMapping textures;
         ModelTemplate finalModel;
 
-        if (item.components().has(DataComponents.DYED_COLOR)) {
+        if (overlay) {
             textures = new TextureMapping()
                     .put(TextureSlot.LAYER0, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path))
                     .put(TextureSlot.LAYER1, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path + "_overlay"));
@@ -160,12 +159,16 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
     }
 
     private void generateOverrideModel(Item item, ModelTemplate model, String modelName, ItemModelGenerators itemModelGenerators) {
+        this.generateOverrideModel(item, model, modelName, itemModelGenerators, false);
+    }
+
+    private void generateOverrideModel(Item item, ModelTemplate model, String modelName, ItemModelGenerators itemModelGenerators, boolean overlay) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
         String namespace = itemId.getNamespace();
         ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName);
 
         TextureMapping textures;
-        if (item.components().has(DataComponents.DYED_COLOR)) {
+        if (overlay) {
             textures = new TextureMapping()
                     .put(TextureSlot.LAYER0, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName))
                     .put(TextureSlot.LAYER1, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + modelName + "_overlay"));
