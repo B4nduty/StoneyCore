@@ -28,7 +28,7 @@
     "FItemRendererMixin",
     "GuiMixin",
     "HorseModelMixin",
-    "ItemInHandRendererMixin",
+    "ItemInHandLayerMixin",
     "MinecraftClientMixin",
     "PlayerEntityRendererMixin"
   ],

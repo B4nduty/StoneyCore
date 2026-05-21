@@ -70,7 +70,6 @@ public class StoneyCoreForgeClient {
                             (stack, world, entity, seed) ->
                                     hotIron.isFinished(stack) ? 1.0F : 0.0F);
                 }
-
                 if (item instanceof Tongs) {
                     ItemProperties.register(item, new ResourceLocation(StoneyCore.MOD_ID, "hotiron"),
                             (stack, world, entity, seed) ->
