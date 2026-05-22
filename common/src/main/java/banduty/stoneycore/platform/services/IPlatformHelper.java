@@ -7,6 +7,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -74,9 +75,9 @@ public interface IPlatformHelper {
             Supplier<Block> block
     );
 
-    <T extends AbstractContainerMenu> MenuType<T> createMenuType(IFactory<T> factory);
+    <T extends AbstractContainerMenu, D> MenuType<T> createMenuType(IExtendedFactory<T, D> factory, StreamCodec<RegistryFriendlyByteBuf, D> codec);
 
-    interface IFactory<T extends AbstractContainerMenu> {
-        T create(int syncId, Inventory inventory, RegistryFriendlyByteBuf buf);
+    interface IExtendedFactory<T extends AbstractContainerMenu, D> {
+        T create(int syncId, Inventory inventory, D data);
     }
 }

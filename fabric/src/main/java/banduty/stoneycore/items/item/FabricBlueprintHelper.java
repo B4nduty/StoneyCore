@@ -7,7 +7,6 @@ import banduty.stoneycore.screen.BlueprintScreenHandler;
 import banduty.stoneycore.screen.SCScreenHandlers;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,19 +46,5 @@ public class FabricBlueprintHelper implements IBlueprintHelper {
     @Override
     public void renderBlueprintEvents(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta, BlueprintScreen blueprintScreen) {
         RenderBlueprintEvents.EVENT.invoker().render(guiGraphics, mouseX, mouseY, delta, blueprintScreen);
-    }
-
-    public record BlueprintOpeningData(ItemStack stack, ResourceLocation structureId) {
-        public static void write(RegistryFriendlyByteBuf buf, BlueprintOpeningData data) {
-            ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, data.stack());
-            ResourceLocation.STREAM_CODEC.encode(buf, data.structureId());
-        }
-
-        public static BlueprintOpeningData read(RegistryFriendlyByteBuf buf) {
-            return new BlueprintOpeningData(
-                    ItemStack.OPTIONAL_STREAM_CODEC.decode(buf),
-                    ResourceLocation.STREAM_CODEC.decode(buf)
-            );
-        }
     }
 }

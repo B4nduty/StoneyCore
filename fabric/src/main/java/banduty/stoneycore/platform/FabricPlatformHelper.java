@@ -104,10 +104,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public <T extends AbstractContainerMenu> MenuType<T> createMenuType(IFactory<T> factory) {
-        StreamCodec<RegistryFriendlyByteBuf, RegistryFriendlyByteBuf> passThroughCodec =
-                StreamCodec.of((buf, value) -> {}, buf -> buf);
-
-        return new ExtendedScreenHandlerType<>(factory::create, passThroughCodec);
+    public <T extends AbstractContainerMenu, D> MenuType<T> createMenuType(IExtendedFactory<T, D> factory, StreamCodec<RegistryFriendlyByteBuf, D> codec) {
+        return new ExtendedScreenHandlerType<>(factory::create, codec);
     }
 }

@@ -11,7 +11,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -110,8 +112,11 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public <T extends AbstractContainerMenu> MenuType<T> createMenuType(IFactory<T> factory) {
-        return IMenuTypeExtension.create(factory::create);
+    public <T extends AbstractContainerMenu, D> MenuType<T> createMenuType(IExtendedFactory<T, D> factory, StreamCodec<RegistryFriendlyByteBuf, D> codec) {
+        return IMenuTypeExtension.create((syncId, inventory, buf) -> {
+            D data = codec.decode(buf);
+            return factory.create(syncId, inventory, data);
+        });
     }
 
     public static void registerRegistries(IEventBus eventBus) {
