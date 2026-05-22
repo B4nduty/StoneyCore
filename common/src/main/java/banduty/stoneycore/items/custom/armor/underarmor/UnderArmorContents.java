@@ -38,11 +38,12 @@ public record UnderArmorContents(List<ItemStack> accessories) {
         public int tryInsert(ItemStack incoming, Player player, ItemStack underArmorStack) {
             if (incoming.isEmpty() || !(incoming.getItem() instanceof SCAccessory scAccessory)) return 0;
 
+            if (((ArmorItem) underArmorStack.getItem()).getType() != scAccessory.getArmorSlot()) return 0;
+            if (!scAccessory.canEquip(underArmorStack, player)) return 0;
+
             for (ItemStack existing : this.accessories) {
                 if (existing.getItem() == incoming.getItem()) return 0;
                 if (((SCAccessory) existing.getItem()).numberSlot() == scAccessory.numberSlot()) return 0;
-                if (((ArmorItem) underArmorStack.getItem()).getType() != scAccessory.getArmorSlot()) return 0;
-                if (!scAccessory.canEquip(underArmorStack, player)) return 0;
             }
 
             ItemStack singleItem = incoming.copyWithCount(1);
