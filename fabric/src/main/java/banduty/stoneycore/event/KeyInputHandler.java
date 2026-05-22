@@ -68,7 +68,8 @@ public class KeyInputHandler {
                         ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
                         for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
                             if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
-                                isCurrentlyOpen = Boolean.TRUE.equals(accessoryStack.get(SCDataComponents.VISOR_OPEN.get()));
+                                isCurrentlyOpen = accessoryStack.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false);
+                                accessoryStack.set(SCDataComponents.VISOR_OPEN.get(), !isCurrentlyOpen);
                                 break;
                             }
                         }

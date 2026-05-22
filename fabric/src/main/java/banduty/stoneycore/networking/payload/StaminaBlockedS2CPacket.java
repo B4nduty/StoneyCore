@@ -22,11 +22,9 @@ public record StaminaBlockedS2CPacket(boolean blocked) implements CustomPacketPa
     }
 
     public void handle(ClientPlayNetworking.Context context) {
-        context.client().execute(() -> {
-            if (context.player() != null) {
-                ((IEntityDataSaver) context.player()).stoneycore$getPersistentData()
-                        .putBoolean("stamina_blocked", blocked);
-            }
-        });
+        if (context.player() != null) {
+            ((IEntityDataSaver) context.player()).stoneycore$getPersistentData()
+                    .putBoolean("stamina_blocked", blocked);
+        }
     }
 }

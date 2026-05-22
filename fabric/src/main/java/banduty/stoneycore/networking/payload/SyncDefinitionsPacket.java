@@ -37,21 +37,19 @@ public record SyncDefinitionsPacket(
     @Override public Type<? extends CustomPacketPayload> type() { return ID; }
 
     public void handle(ClientPlayNetworking.Context context) {
-        context.client().execute(() -> {
-            ArmorDefinitionsStorage.clearDefinitions();
-            armor.forEach(ArmorDefinitionsStorage::addDefinition);
+        ArmorDefinitionsStorage.clearDefinitions();
+        armor.forEach(ArmorDefinitionsStorage::addDefinition);
 
-            AccessoriesDefinitionsStorage.clearDefinitions();
-            accessories.forEach(AccessoriesDefinitionsStorage::addDefinition);
+        AccessoriesDefinitionsStorage.clearDefinitions();
+        accessories.forEach(AccessoriesDefinitionsStorage::addDefinition);
 
-            LandDefinitionsStorage.clearDefinitions();
-            land.forEach(LandDefinitionsStorage::addDefinition);
+        LandDefinitionsStorage.clearDefinitions();
+        land.forEach(LandDefinitionsStorage::addDefinition);
 
-            SiegeEngineDefinitionsStorage.clearDefinitions();
-            siege_engine.forEach(SiegeEngineDefinitionsStorage::addDefinition);
+        SiegeEngineDefinitionsStorage.clearDefinitions();
+        siege_engine.forEach(SiegeEngineDefinitionsStorage::addDefinition);
 
-            WeaponDefinitionsStorage.clearDefinitions();
-            weapon.forEach(WeaponDefinitionsStorage::addDefinition);
-        });
+        WeaponDefinitionsStorage.clearDefinitions();
+        weapon.forEach(WeaponDefinitionsStorage::addDefinition);
     }
 }
