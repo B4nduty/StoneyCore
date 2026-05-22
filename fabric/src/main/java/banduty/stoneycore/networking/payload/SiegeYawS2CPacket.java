@@ -1,7 +1,7 @@
 package banduty.stoneycore.networking.payload;
 
 import banduty.stoneycore.entity.custom.AbstractSiegeEntity;
-import banduty.stoneycore.networking.SCPayloadsClient;
+import banduty.stoneycore.networking.SCPayloads;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -9,7 +9,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 public record SiegeYawS2CPacket(float yaw, float pitch, float wheelRotation) implements CustomPacketPayload {
-    public static final Type<SiegeYawS2CPacket> ID = new Type<>(SCPayloadsClient.SIEGE_YAW_PITCH_S2C_ID);
+    public static final Type<SiegeYawS2CPacket> ID = new Type<>(SCPayloads.SIEGE_YAW_PITCH_S2C_ID);
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SiegeYawS2CPacket> CODEC = StreamCodec.composite(
             ByteBufCodecs.FLOAT, SiegeYawS2CPacket::yaw,
@@ -23,7 +23,7 @@ public record SiegeYawS2CPacket(float yaw, float pitch, float wheelRotation) imp
         return ID;
     }
 
-    public static void handle(SiegeYawS2CPacket payload, ClientPlayNetworking.Context context) {
+    public void handle(ClientPlayNetworking.Context context) {
         context.client().execute(() -> {
             if (context.player() != null && context.player().isPassenger() &&
                     context.player().getVehicle() instanceof AbstractSiegeEntity siege) {
@@ -31,16 +31,16 @@ public record SiegeYawS2CPacket(float yaw, float pitch, float wheelRotation) imp
                 siege.yBodyRotO = siege.yBodyRot;
                 siege.yHeadRotO = siege.yHeadRot;
 
-                siege.setTrackedYaw(payload.yaw());
-                siege.setYRot(payload.yaw());
-                siege.setYHeadRot(payload.yaw());
-                siege.setYBodyRot(payload.yaw());
+                siege.setTrackedYaw(yaw);
+                siege.setYRot(yaw);
+                siege.setYHeadRot(yaw);
+                siege.setYBodyRot(yaw);
 
-                siege.setTrackedPitch(payload.pitch());
-                siege.setXRot(payload.pitch());
-                siege.lastRiderPitch = payload.pitch();
+                siege.setTrackedPitch(pitch);
+                siege.setXRot(pitch);
+                siege.lastRiderPitch = pitch;
 
-                siege.wheelRotation = payload.wheelRotation();
+                siege.wheelRotation = wheelRotation;
             }
         });
     }

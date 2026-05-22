@@ -11,7 +11,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -46,47 +45,45 @@ public class KeyInputHandler {
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
                 if (toggleVisor.isDown()) {
-                    if (FabricLoader.getInstance().isModLoaded("accessories")) {
-                        if (!isTogglingVisor) {
-                            ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
-                            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                                if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
-                                    isTogglingVisor = true;
-                                    break;
-                                }
+                    if (!isTogglingVisor) {
+                        ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
+                        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                            if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
+                                isTogglingVisor = true;
+                                break;
                             }
-                            if (!isTogglingVisor) return;
+                        }
+                        if (!isTogglingVisor) return;
+                    }
+
+                    toggleVisorTicks++;
+
+                    toggleProgress = Math.min(1.0f, (float) toggleVisorTicks / (StoneyCore.getConfig().combatOptions().getToggleVisorTime() - 1));
+
+                    if (!visorToggled && toggleVisorTicks >= StoneyCore.getConfig().combatOptions().getToggleVisorTime()) {
+
+                        // Determine visor state BEFORE toggle
+                        boolean isCurrentlyOpen = false;
+
+                        ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
+                        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                            if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
+                                isCurrentlyOpen = Boolean.TRUE.equals(accessoryStack.get(SCDataComponents.VISOR_OPEN.get()));
+                                break;
+                            }
                         }
 
-                        toggleVisorTicks++;
-
-                        toggleProgress = Math.min(1.0f, (float) toggleVisorTicks / (StoneyCore.getConfig().combatOptions().getToggleVisorTime() - 1));
-
-                        if (!visorToggled && toggleVisorTicks >= StoneyCore.getConfig().combatOptions().getToggleVisorTime()) {
-
-                            // Determine visor state BEFORE toggle
-                            boolean isCurrentlyOpen = false;
-
-                            ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
-                            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                                if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
-                                    isCurrentlyOpen = Boolean.TRUE.equals(accessoryStack.get(SCDataComponents.VISOR_OPEN.get()));
-                                    break;
-                                }
-                            }
-
-                            // Play appropriate sound
-                            if (isCurrentlyOpen) {
-                                localPlayer.playSound(SCSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
-                            } else {
-                                localPlayer.playSound(SCSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
-                            }
-
-                            ClientPlayNetworking.send(new ToggleVisorC2SPacket());
-                            visorToggled = true;
-                            isTogglingVisor = false;
-                            toggleProgress = 0.0f;
+                        // Play appropriate sound
+                        if (isCurrentlyOpen) {
+                            localPlayer.playSound(SCSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
+                        } else {
+                            localPlayer.playSound(SCSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
                         }
+
+                        ClientPlayNetworking.send(new ToggleVisorC2SPacket());
+                        visorToggled = true;
+                        isTogglingVisor = false;
+                        toggleProgress = 0.0f;
                     }
                 } else {
                     isTogglingVisor = false;

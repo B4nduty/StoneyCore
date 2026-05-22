@@ -16,7 +16,7 @@ import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
 import banduty.stoneycore.items.custom.tongs.Tongs;
-import banduty.stoneycore.networking.SCPayloadsClient;
+import banduty.stoneycore.networking.SCS2CNetworking;
 import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
 import banduty.stoneycore.particle.SCParticles;
@@ -49,8 +49,7 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         ClientPlatform.setClientPlaformHelper(new FabricClientPlatformHelper());
         ClientPlatform.setHumanoidModelSetupAnimHelper(new FabricHumanoidModelSetupAnimHelper());
         ClientPlatform.setKeyInputHelper(new FabricKeyInputHelper());
-        SCPayloadsClient.registerPayloads();
-        SCPayloadsClient.registerS2CReceivers();
+        SCS2CNetworking.registerS2CNetworking();
         ClientPreAttackCallback.EVENT.register(new AttackCancelHandler());
         ItemTooltipCallback.EVENT.register(new ItemTooltipHandler());
         ClientTickEvents.END_CLIENT_TICK.register(new ClientTickHandler());
@@ -116,21 +115,21 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                 ArmorRenderer.register(new FabricUnderArmourRenderer(), item);
             }
 
-            ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath("","broken"),
+            ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID,"broken"),
                     (stack, world, entity, seed) ->
                             stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f ? 1.0F : 0.0F);
 
             if (item instanceof HotIron hotIron) {
-                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath("","finished"),
+                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID,"finished"),
                         (stack, world, entity, seed) ->
                                 hotIron.isFinished(stack) ? 1.0F : 0.0F);
             }
 
             if (item instanceof Tongs) {
-                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath("","hotiron"),
+                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID,"hotiron"),
                         (stack, world, entity, seed) ->
                                 Tongs.getTargetStack(stack).getItem() instanceof HotIron ? 1.0F : 0.0F);
-                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath("","finished"),
+                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID,"finished"),
                         (stack, world, entity, seed) ->
                                 !(HotIron.getTargetStack(Tongs.getTargetStack(stack)).isEmpty()) ? 1.0F : 0.0F);
             }

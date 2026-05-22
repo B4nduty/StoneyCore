@@ -1,7 +1,7 @@
 package banduty.stoneycore.networking.payload;
 
 import banduty.stoneycore.lands.util.LandClientState;
-import banduty.stoneycore.networking.SCPayloadsClient;
+import banduty.stoneycore.networking.SCPayloads;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
@@ -18,7 +18,7 @@ public record LandClientDataS2CPacket(
         boolean isUnderSiege,
         boolean isParticipant
 ) implements CustomPacketPayload {
-    public static final Type<LandClientDataS2CPacket> ID = new Type<>(SCPayloadsClient.LAND_CLIENT_DATA_S2C_ID);
+    public static final Type<LandClientDataS2CPacket> ID = new Type<>(SCPayloads.LAND_CLIENT_DATA_S2C_ID);
 
     public static final StreamCodec<RegistryFriendlyByteBuf, LandClientDataS2CPacket> CODEC = StreamCodec.composite(
             UUIDUtil.STREAM_CODEC, LandClientDataS2CPacket::playerUuid,
@@ -31,11 +31,11 @@ public record LandClientDataS2CPacket(
     @Override
     public Type<? extends CustomPacketPayload> type() { return ID; }
 
-    public static void handle(LandClientDataS2CPacket payload, ClientPlayNetworking.Context context) {
-        context.client().execute(() -> LandClientState.set(payload.playerUuid, new LandClientState(
-                payload.currentLandCore,
-                payload.isUnderSiege,
-                payload.isParticipant
+    public void handle(ClientPlayNetworking.Context context) {
+        context.client().execute(() -> LandClientState.set(playerUuid, new LandClientState(
+                currentLandCore,
+                isUnderSiege,
+                isParticipant
         )));
     }
 }

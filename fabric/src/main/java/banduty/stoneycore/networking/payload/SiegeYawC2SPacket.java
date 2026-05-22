@@ -20,18 +20,18 @@ public record SiegeYawC2SPacket(float yaw, float pitch) implements CustomPacketP
 
     @Override public Type<? extends CustomPacketPayload> type() { return ID; }
 
-    public static void handle(SiegeYawC2SPacket payload, ServerPlayNetworking.Context context) {
+    public void handle(ServerPlayNetworking.Context context) {
         ServerPlayer player = context.player();
         context.server().execute(() -> {
             if (player.getVehicle() instanceof AbstractSiegeEntity siege) {
-                applyYawPitch(siege, payload.yaw, payload.pitch);
+                applyYawPitch(siege, yaw, pitch);
             } else if (player.getVehicle() instanceof Horse horse && horse.getVehicle() instanceof AbstractSiegeEntity siege) {
-                applyYawPitch(siege, payload.yaw, 0); // Horse only syncs yaw[cite: 15]
+                applyYawPitch(siege, yaw, 0);
             }
         });
     }
 
-    private static void applyYawPitch(AbstractSiegeEntity siege, float yaw, float pitch) {
+    private void applyYawPitch(AbstractSiegeEntity siege, float yaw, float pitch) {
         siege.setTrackedYaw(yaw);
         siege.setYRot(yaw);
         siege.setYHeadRot(yaw);

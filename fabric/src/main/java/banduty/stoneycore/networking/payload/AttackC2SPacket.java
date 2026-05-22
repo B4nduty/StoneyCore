@@ -20,7 +20,7 @@ public record AttackC2SPacket() implements CustomPacketPayload {
     @Override
     public Type<? extends CustomPacketPayload> type() { return ID; }
 
-    public static void handle(AttackC2SPacket payload, ServerPlayNetworking.Context context) {
+    public void handle(ServerPlayNetworking.Context context) {
         ServerPlayer player = context.player();
         ItemStack mainHandStack = player.getMainHandItem();
         SCDamageType damageType = SCDamageTypeResolver.determine(mainHandStack, player);

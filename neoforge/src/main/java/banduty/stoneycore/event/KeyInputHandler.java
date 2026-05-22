@@ -15,7 +15,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
@@ -34,7 +33,7 @@ public class KeyInputHandler {
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_R,
             STONEYCORE
-            );
+    );
 
     public static KeyMapping toggleVisor = new KeyMapping(
             KEY_TOGGLE_VISOR,
@@ -42,13 +41,13 @@ public class KeyInputHandler {
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_LEFT_ALT,
             STONEYCORE
-            );
+    );
     public static KeyMapping hideVisor = new KeyMapping(
             KEY_HIDE_VISOR,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_V,
             STONEYCORE
-            );
+    );
     public static long toggleVisorTicks = 0;
     public static boolean isTogglingVisor = false;
     public static float toggleProgress = 0.0f;
@@ -67,48 +66,46 @@ public class KeyInputHandler {
                 visorHidden = hideVisor.isDown();
             } else visorHidden = false;
             if (toggleVisor.isDown()) {
-                if (ModList.get().isLoaded("accessories")) {
-                    if (!isTogglingVisor) {
-                        ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
-                        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                            if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
-                                isTogglingVisor = true;
-                                break;
-                            }
+                if (!isTogglingVisor) {
+                    ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
+                    for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                        if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
+                            isTogglingVisor = true;
+                            break;
                         }
-
-                        if (!isTogglingVisor) return;
                     }
 
-                    toggleVisorTicks++;
+                    if (!isTogglingVisor) return;
+                }
 
-                    toggleProgress = Math.min(1.0f, (float) toggleVisorTicks / (StoneyCore.getConfig().combatOptions().getToggleVisorTime() - 1));
+                toggleVisorTicks++;
 
-                    if (!visorToggled && toggleVisorTicks >= StoneyCore.getConfig().combatOptions().getToggleVisorTime()) {
+                toggleProgress = Math.min(1.0f, (float) toggleVisorTicks / (StoneyCore.getConfig().combatOptions().getToggleVisorTime() - 1));
 
-                        // Determine visor state BEFORE toggle
-                        boolean isCurrentlyOpen = false;
+                if (!visorToggled && toggleVisorTicks >= StoneyCore.getConfig().combatOptions().getToggleVisorTime()) {
 
-                        ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
-                        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                            if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
-                                isCurrentlyOpen = Boolean.TRUE.equals(accessoryStack.get(SCDataComponents.VISOR_OPEN.get()));
-                                break;
-                            }
+                    // Determine visor state BEFORE toggle
+                    boolean isCurrentlyOpen = false;
+
+                    ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
+                    for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                        if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
+                            isCurrentlyOpen = Boolean.TRUE.equals(accessoryStack.get(SCDataComponents.VISOR_OPEN.get()));
+                            break;
                         }
-
-                        // Play appropriate sound
-                        if (isCurrentlyOpen) {
-                            localPlayer.playSound(SCSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
-                        } else {
-                            localPlayer.playSound(SCSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
-                        }
-
-                        PacketDistributor.sendToServer(new ToggleVisorC2SPacket());
-                        visorToggled = true;
-                        isTogglingVisor = false;
-                        toggleProgress = 0.0f;
                     }
+
+                    // Play appropriate sound
+                    if (isCurrentlyOpen) {
+                        localPlayer.playSound(SCSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
+                    } else {
+                        localPlayer.playSound(SCSounds.VISOR_OPEN.get(), 1.0F, 1.0F);
+                    }
+
+                    PacketDistributor.sendToServer(new ToggleVisorC2SPacket());
+                    visorToggled = true;
+                    isTogglingVisor = false;
+                    toggleProgress = 0.0f;
                 }
             } else {
                 isTogglingVisor = false;

@@ -17,7 +17,7 @@ public record ToggleVisorC2SPacket() implements CustomPacketPayload {
 
     @Override public Type<? extends CustomPacketPayload> type() { return ID; }
 
-    public static void handle(ToggleVisorC2SPacket payload, ServerPlayNetworking.Context context) {
+    public void handle(ServerPlayNetworking.Context context) {
         context.server().execute(() -> {
             ItemStack itemStack = context.player().getItemBySlot(EquipmentSlot.HEAD);
             for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {

@@ -1,7 +1,6 @@
 package banduty.stoneycore.util.data.itemdata;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.armor.deco.Deco;
 import banduty.stoneycore.items.custom.armor.deco.DecoContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.platform.Services;

@@ -11,7 +11,6 @@ import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.render.OutlineClaimRenderer;
 import banduty.stoneycore.util.servertick.*;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -81,10 +80,6 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
     }
 
     private static void handleFreezeImmunity(ServerPlayer player) {
-        if (!FabricLoader.getInstance().isModLoaded("accessories")) {
-            return;
-        }
-
         for (ItemStack itemStack : player.getArmorSlots()) {
             for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
                 if (accessoryStack.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) {

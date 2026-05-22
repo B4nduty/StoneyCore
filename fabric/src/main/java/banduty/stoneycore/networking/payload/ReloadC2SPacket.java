@@ -16,7 +16,7 @@ public record ReloadC2SPacket() implements CustomPacketPayload {
     @Override
     public Type<? extends CustomPacketPayload> type() { return ID; }
 
-    public static void handle(ReloadC2SPacket payload, ServerPlayNetworking.Context context) {
+    public void handle(ServerPlayNetworking.Context context) {
         context.server().execute(() -> {
             ItemStack itemStack = context.player().getMainHandItem();
             if (WeaponDefinitionsStorage.isRanged(itemStack) &&
