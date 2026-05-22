@@ -2,11 +2,8 @@ package banduty.stoneycore;
 
 import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
-import banduty.stoneycore.client.SCAccessoryItemRenderer;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.entity.SCEntities;
-import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
-import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.model.UnderArmourBootsModel;
@@ -20,20 +17,16 @@ import banduty.stoneycore.platform.*;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.SCScreenHandlers;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.render.ForgeRenderTypeHelper;
-import io.wispforest.accessories.api.client.AccessoriesRendererRegistry;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.component.DyedItemColor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 
@@ -44,19 +37,13 @@ public class StoneyCoreNeoForgeClient {
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             ClientPlatform.setClientPlaformHelper(new NeoForgeClientPlatformHelper());
-            ClientPlatform.setSCRenderTypeHelper(new ForgeRenderTypeHelper());
             ClientPlatform.setHumanoidModelSetupAnimHelper(new NeoForgeHumanoidModelSetupAnimHelper());
             ClientPlatform.setKeyInputHelper(new NeoForgeKeyInputHelper());
-            ClientPlatform.setRenderFirstPersonAccessoryArmorHelper(new NeoForgeRenderFirstPersonAccessoryArmorHelper());
 
             BlockEntityRenderers.register(
                     SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(),
                     CraftmanAnvilBlockRenderer::new
             );
-
-            BuiltInRegistries.ITEM.stream()
-                    .filter(item -> item instanceof SCAccessoryItem)
-                    .forEach(item -> AccessoriesRendererRegistry.registerRenderer(item, SCAccessoryItemRenderer::new));
 
             for (Item item : BuiltInRegistries.ITEM) {
                 ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "broken"),
@@ -100,28 +87,6 @@ public class StoneyCoreNeoForgeClient {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(SCEntities.SC_BULLET.get(), SCBulletEntityRenderer::new);
-    }
-
-    @SubscribeEvent
-    public static void registerItemColors(RegisterColorHandlersEvent.Item event) {
-        for (Item item : BuiltInRegistries.ITEM) {
-            if (item instanceof SCDyeableUnderArmor || item instanceof SCAccessoryItem) {
-                event.register((stack, tintIndex) -> {
-                    if (tintIndex != 0) {
-                        return -1;
-                    }
-
-                    int defaultColor = -1;
-                    if (stack.getItem() instanceof SCDyeableUnderArmor dyeable) {
-                        defaultColor = dyeable.getDefaultColor();
-                    } else if (stack.getItem() instanceof SCAccessoryItem accessory) {
-                        defaultColor = accessory.getDefaultColor();
-                    }
-
-                    return DyedItemColor.getOrDefault(stack, defaultColor);
-                }, item);
-            }
-        }
     }
 
     @SubscribeEvent

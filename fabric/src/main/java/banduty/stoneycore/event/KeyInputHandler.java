@@ -1,14 +1,13 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
+import banduty.stoneycore.items.custom.armor.SCAccessory;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.networking.payload.ReloadC2SPacket;
 import banduty.stoneycore.networking.payload.ToggleVisorC2SPacket;
 import banduty.stoneycore.sounds.SCSounds;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import com.mojang.blaze3d.platform.InputConstants;
-import io.wispforest.accessories.api.AccessoriesCapability;
-import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -16,6 +15,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
@@ -48,14 +48,11 @@ public class KeyInputHandler {
                 if (toggleVisor.isDown()) {
                     if (FabricLoader.getInstance().isModLoaded("accessories")) {
                         if (!isTogglingVisor) {
-                            if (AccessoriesCapability.getOptionally(localPlayer).isPresent()) {
-                                for (SlotEntryReference equipped : AccessoriesCapability.get(localPlayer).getAllEquipped()) {
-                                    ItemStack itemStack = equipped.stack();
-                                    if (!itemStack.isEmpty() && itemStack.getItem() instanceof SCAccessoryItem scAccessoryItem &&
-                                            scAccessoryItem.hasOpenVisor(itemStack)) {
-                                        isTogglingVisor = true;
-                                        break;
-                                    }
+                            ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
+                            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                                if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
+                                    isTogglingVisor = true;
+                                    break;
                                 }
                             }
                             if (!isTogglingVisor) return;
@@ -70,15 +67,11 @@ public class KeyInputHandler {
                             // Determine visor state BEFORE toggle
                             boolean isCurrentlyOpen = false;
 
-                            if (AccessoriesCapability.getOptionally(localPlayer).isPresent()) {
-                                for (SlotEntryReference equipped : AccessoriesCapability.get(localPlayer).getAllEquipped()) {
-                                    ItemStack stack = equipped.stack();
-                                    if (!stack.isEmpty() && stack.getItem() instanceof SCAccessoryItem accessory) {
-                                        if (accessory.hasOpenVisor(stack)) {
-                                            isCurrentlyOpen = Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN.get()));
-                                            break;
-                                        }
-                                    }
+                            ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
+                            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                                if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
+                                    isCurrentlyOpen = Boolean.TRUE.equals(accessoryStack.get(SCDataComponents.VISOR_OPEN.get()));
+                                    break;
                                 }
                             }
 

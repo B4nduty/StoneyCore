@@ -10,7 +10,6 @@ import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.*;
-import io.wispforest.accessories.api.events.AdjustAttributeModifierCallback;
 import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -46,10 +45,6 @@ public class StoneyCoreFabric implements ModInitializer {
         ServerLivingEntityEvents.AFTER_DEATH.register(new VisitorDeath());
         if (FabricLoader.getInstance().isModLoaded("bettercombat")) {
             BetterCombatClientEvents.ATTACK_HIT.register(new PlayerAttackHitHandler());
-        }
-
-        if (FabricLoader.getInstance().isModLoaded("accessories")) {
-            AdjustAttributeModifierCallback.EVENT.register(new AdjustAttributeModifierEvent());
         }
 
         UseEntityCallback.EVENT.register(new UseEntityHandler());

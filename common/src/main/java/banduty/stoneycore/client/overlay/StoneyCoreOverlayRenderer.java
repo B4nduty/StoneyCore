@@ -2,8 +2,8 @@ package banduty.stoneycore.client.overlay;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.StoneyCoreClient;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.platform.ClientPlatform;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.opengl.GL11;
 
@@ -54,11 +55,13 @@ public class StoneyCoreOverlayRenderer {
     }
 
     private void renderVisor(GuiGraphics guiGraphics, LocalPlayer player, int width, int height) {
-        for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(player)) {
-            var data = AccessoriesDefinitionsStorage.getData(itemStack);
+
+        ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
+        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+            var data = AccessoriesDefinitionsStorage.getData(accessoryStack);
             ResourceLocation visorId = data.visoredHelmet();
 
-            if (!Boolean.TRUE.equals(itemStack.get(SCDataComponents.VISOR_OPEN.get()))
+            if (!Boolean.TRUE.equals(accessoryStack.get(SCDataComponents.VISOR_OPEN.get()))
                     && !(visorId.getPath().isEmpty() || visorId.getPath().equals("empty"))
                     && StoneyCore.getConfig().visualOptions().getVisoredHelmet()) {
 

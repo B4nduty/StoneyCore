@@ -1,9 +1,9 @@
 package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.client.render.AccessoryRenderManager;
+import banduty.stoneycore.items.custom.armor.deco.Deco;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;
-import banduty.stoneycore.platform.ClientPlatform;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.DyeUtil;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -114,9 +114,21 @@ public class ItemInHandRendererMixin {
             }
         }
 
-        // Accessories rendering support
-        for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(player)) {
-            ClientPlatform.getRenderFirstPersonAccessoryArmorHelper().onRenderInFirstPerson(player, itemStack, poseStack, multiBufferSource, light, arm);
+        for (ItemStack itemStack : player.getArmorSlots()) {
+            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                AccessoryRenderManager.getOrLookUp(itemStack.getItem())
+                        .ifPresent(renderer -> {
+                            renderer.onRenderInFirstPerson(player, accessoryStack, poseStack, multiBufferSource, light, arm);
+                        });
+
+                for (ItemStack subDecoStack : Deco.getDeco(itemStack)) {
+                    if (!subDecoStack.isEmpty()) {
+                        AccessoryRenderManager.getOrLookUp(subDecoStack.getItem()).ifPresent(render ->
+                                render.onRenderInFirstPerson(player, accessoryStack, poseStack, multiBufferSource, light, arm)
+                        );
+                    }
+                }
+            }
         }
     }
 

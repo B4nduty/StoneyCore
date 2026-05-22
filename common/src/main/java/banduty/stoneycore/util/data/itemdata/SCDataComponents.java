@@ -1,6 +1,9 @@
 package banduty.stoneycore.util.data.itemdata;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.items.custom.armor.deco.Deco;
+import banduty.stoneycore.items.custom.armor.deco.DecoContents;
+import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.platform.Services;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.Registry;
@@ -38,6 +41,12 @@ public interface SCDataComponents {
     Supplier<DataComponentType<Boolean>> RELOADING = register("is_reloading", b -> b.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
     Supplier<DataComponentType<Boolean>> CHARGED = register("is_charged", b -> b.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
     Supplier<DataComponentType<Boolean>> SHOOTING = register("is_shooting", b -> b.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
+
+    Supplier<DataComponentType<UnderArmorContents>> UNDER_ARMOR_CONTENTS = register("under_armor_contents",
+            builder -> builder.persistent(UnderArmorContents.CODEC).networkSynchronized(UnderArmorContents.STREAM_CODEC));
+
+    Supplier<DataComponentType<DecoContents>> DECO_CONTENTS = register("helmet_deco_contents",
+            builder -> builder.persistent(DecoContents.CODEC).networkSynchronized(DecoContents.STREAM_CODEC));
 
     @SuppressWarnings("unchecked")
     private static <T> Supplier<DataComponentType<T>> register(String name, UnaryOperator<DataComponentType.Builder<T>> builderOperator) {

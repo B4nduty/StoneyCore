@@ -3,9 +3,9 @@ package banduty.stoneycore.mixin;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.melee.CombatSelect;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.DeflectChanceHelper;
 import banduty.stoneycore.util.EntityDamageUtil;
@@ -36,6 +36,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -304,13 +305,15 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             EquipmentSlot slot = livingEntity.getEquipmentSlotForItem(armorStack);
             boolean slotProtected = false;
 
-            for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(livingEntity)) {
-                if (!itemStack.isEmpty() && AccessoriesDefinitionsStorage.containsItem(itemStack)) {
-                    String slotFromJson = AccessoriesDefinitionsStorage.getData(itemStack.getItem()).armorSlot();
+            for (ItemStack itemStack : livingEntity.getArmorSlots()) {
+                for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                    if (!accessoryStack.isEmpty() && AccessoriesDefinitionsStorage.containsItem(accessoryStack)) {
+                        String slotFromJson = AccessoriesDefinitionsStorage.getData(accessoryStack.getItem()).armorSlot();
 
-                    if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(slot.getName())) {
-                        slotProtected = true;
-                        itemStack.hurtAndBreak((int) amount, livingEntity, EquipmentSlot.MAINHAND);
+                        if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(slot.getName())) {
+                            slotProtected = true;
+                            accessoryStack.hurtAndBreak((int) amount, livingEntity, ((ArmorItem) accessoryStack.getItem()).getEquipmentSlot());
+                        }
                     }
                 }
             }

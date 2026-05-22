@@ -1,6 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.lands.util.ClaimWorker;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
@@ -9,8 +10,6 @@ import banduty.stoneycore.lands.visitor.VisitorTracker;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.render.OutlineClaimRenderer;
 import banduty.stoneycore.util.servertick.*;
-import io.wispforest.accessories.api.AccessoriesCapability;
-import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
@@ -85,10 +84,10 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
         if (!FabricLoader.getInstance().isModLoaded("accessories")) {
             return;
         }
-        if (AccessoriesCapability.getOptionally(player).isPresent()) {
-            for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
-                ItemStack equippedStack = equipped.stack();
-                if (equippedStack.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) {
+
+        for (ItemStack itemStack : player.getArmorSlots()) {
+            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                if (accessoryStack.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) {
                     player.setTicksFrozen(0);
                     AttributeInstance entityAttributeInstance = player.getAttribute(Attributes.MOVEMENT_SPEED);
                     if (entityAttributeInstance != null) {

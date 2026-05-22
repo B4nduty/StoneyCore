@@ -1,6 +1,6 @@
 package banduty.stoneycore.util;
 
-import banduty.stoneycore.platform.Services;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
@@ -17,10 +17,12 @@ public class WeightUtil {
     private static double calculateWeight(LivingEntity livingEntity) {
         double weight = 0.0;
 
-        for (ItemStack equippedStack : Services.PLATFORM.getEquippedAccessories(livingEntity)) {
-            if (!equippedStack.isEmpty()) {
-                var data = AccessoriesDefinitionsStorage.getData(equippedStack);
-                if (data != null) weight += data.weight();
+        for (ItemStack itemStack : livingEntity.getArmorSlots()) {
+            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                if (!accessoryStack.isEmpty()) {
+                    var data = AccessoriesDefinitionsStorage.getData(accessoryStack);
+                    if (data != null) weight += data.weight();
+                }
             }
         }
 

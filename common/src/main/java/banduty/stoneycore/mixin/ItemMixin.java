@@ -2,34 +2,27 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
-import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
-import banduty.stoneycore.util.patterns.PatternHelper;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
 import banduty.stoneycore.util.weaponutil.TooltipClientSide;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Tuple;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.CraftingMenu;
-import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
@@ -45,7 +38,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.function.IntFunction;
 
 @Mixin(Item.class)
 public abstract class ItemMixin {
@@ -102,9 +94,10 @@ public abstract class ItemMixin {
         ItemStack stack = player.getItemInHand(hand);
 
         if ((getUseAnimation(stack) == UseAnim.DRINK || getUseAnimation(stack) == UseAnim.EAT)) {
-            for (ItemStack itemStack : Services.PLATFORM.getEquippedAccessories(player)) {
+            ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
+            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
                 if (player.isCreative()) break;
-                if (!Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN.get())) && !AccessoriesDefinitionsStorage.getData(itemStack).visoredHelmet().getPath().isBlank()) {
+                if (!Boolean.TRUE.equals(accessoryStack.get(SCDataComponents.VISOR_OPEN.get()))) {
                     player.displayClientMessage(Component.translatable("component.tooltip.stoneycore.openVisorEatDrink"), true);
                     cir.setReturnValue(InteractionResultHolder.fail(stack));
                     return;

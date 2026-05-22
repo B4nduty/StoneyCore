@@ -7,8 +7,6 @@ import banduty.stoneycore.event.StartTickHandler;
 import banduty.stoneycore.lands.util.ClaimWorker;
 import banduty.stoneycore.networking.payload.LandTitleS2CPacket;
 import banduty.stoneycore.platform.services.IPlatformHelper;
-import io.wispforest.accessories.api.AccessoriesCapability;
-import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -16,7 +14,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
@@ -101,24 +98,6 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     @Override
     public ConfigImpl getConfig() {
         return config;
-    }
-
-    @Override
-    public List<ItemStack> getEquippedAccessories(LivingEntity livingEntity) {
-        List<ItemStack> itemStacks = new ArrayList<>();
-
-        if (!ModList.get().isLoaded("accessories")) {
-            return itemStacks;
-        }
-
-        if (AccessoriesCapability.getOptionally(livingEntity).isPresent()) {
-            for (SlotEntryReference equipped : AccessoriesCapability.get(livingEntity).getAllEquipped()) {
-                ItemStack itemStack = equipped.stack();
-                if (itemStack.isEmpty()) continue;
-                itemStacks.add(itemStack);
-            }
-        }
-        return itemStacks;
     }
 
     @Override

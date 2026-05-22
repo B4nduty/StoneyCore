@@ -7,8 +7,6 @@ import banduty.stoneycore.event.StartTickHandler;
 import banduty.stoneycore.lands.util.ClaimWorker;
 import banduty.stoneycore.networking.payload.LandTitleS2CPacket;
 import banduty.stoneycore.platform.services.IPlatformHelper;
-import io.wispforest.accessories.api.AccessoriesCapability;
-import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.fabricmc.loader.api.FabricLoader;
@@ -22,7 +20,6 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
@@ -31,8 +28,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -95,22 +90,6 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public ConfigImpl getConfig() {
         return config;
-    }
-
-    @Override
-    public List<ItemStack> getEquippedAccessories(LivingEntity livingEntity) {
-        List<ItemStack> itemStacks = new ArrayList<>();
-        if (!FabricLoader.getInstance().isModLoaded("accessories")) {
-            return itemStacks;
-        }
-        if (AccessoriesCapability.getOptionally(livingEntity).isPresent()) {
-            for (SlotEntryReference equipped : AccessoriesCapability.get(livingEntity).getAllEquipped()) {
-                ItemStack itemStack = equipped.stack();
-                if (itemStack.isEmpty()) continue;
-                itemStacks.add(itemStack);
-            }
-        }
-        return itemStacks;
     }
 
     @Override

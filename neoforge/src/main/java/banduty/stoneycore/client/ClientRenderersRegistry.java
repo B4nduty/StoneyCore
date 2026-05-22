@@ -12,7 +12,7 @@ import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsE
 
 @EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRenderersRegistry {
-    private static final SCUnderArmourRenderer ARMOR_RENDERER = new SCUnderArmourRenderer();
+    private static final NeoForgeUnderArmourRenderer ARMOR_RENDERER = new NeoForgeUnderArmourRenderer();
     private static final CrownClientExtensions CROWN_RENDERER = new CrownClientExtensions();
 
     @SubscribeEvent

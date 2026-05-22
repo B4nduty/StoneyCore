@@ -1,14 +1,11 @@
 package banduty.stoneycore.util.render;
 
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.networking.payload.OutlineClaimS2CPacket;
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
-import io.wispforest.accessories.api.AccessoriesCapability;
-import io.wispforest.accessories.api.slot.SlotEntryReference;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,15 +33,11 @@ public class FabricOutlineClaimRenderer implements OutlineClaimRendererHelper {
             shouldRender = true;
         }
 
-        if (FabricLoader.getInstance().isModLoaded("accessories")) {
-            if (AccessoriesCapability.getOptionally(player).isPresent()) {
-                for (SlotEntryReference equipped : AccessoriesCapability.get(player).getAllEquipped()) {
-                    ItemStack equippedStack = equipped.stack();
-                    if (equippedStack.getComponents().has(SCDataComponents.TARGET_STACK.get()) &&
-                            equippedStack.get(SCDataComponents.TARGET_STACK.get()).stack().getItem() == land.getLandType().coreItem()) {
-                        shouldRender = true;
-                    }
-                }
+        ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
+        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+            if (accessoryStack.getItem() == land.getLandType().coreItem()) {
+                shouldRender = true;
+                break;
             }
         }
 

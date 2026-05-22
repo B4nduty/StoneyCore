@@ -1,7 +1,6 @@
 package banduty.stoneycore.util.servertick;
 
-import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
-import banduty.stoneycore.platform.Services;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import net.minecraft.ChatFormatting;
@@ -12,11 +11,10 @@ import net.minecraft.world.item.ItemStack;
 
 public class ArmorUtil {
     public static void startArmorCheck(ServerPlayer player) {
-        for (ItemStack equippedStack : Services.PLATFORM.getEquippedAccessories(player)) {
-            if (!(equippedStack.getItem() instanceof SCAccessoryItem)) continue;
-
+        ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
+        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
             // Get the armor slot this accessory is related to
-            String slotFromJson = AccessoriesDefinitionsStorage.getData(equippedStack.getItem()).armorSlot();
+            String slotFromJson = AccessoriesDefinitionsStorage.getData(accessoryStack.getItem()).armorSlot();
             if (slotFromJson.isBlank()) continue;
 
             // Convert to EquipmentSlot
@@ -32,14 +30,14 @@ public class ArmorUtil {
             player.displayClientMessage(
                     Component.translatable(
                             "component.warning.stoneycore.armor_needed_for_accessory",
-                            equippedStack.getDisplayName(),
+                            accessoryStack.getDisplayName(),
                             targetSlot
                     ).withStyle(ChatFormatting.DARK_RED),
                     true
             );
 
             // Armor is missing → remove the accessory
-            ItemStack copy = equippedStack.copy();
+            ItemStack copy = accessoryStack.copy();
 
             // Try to add to inventory
             boolean added = player.addItem(copy);
@@ -49,7 +47,7 @@ public class ArmorUtil {
                 player.drop(copy, false);
             }
 
-            equippedStack.setCount(0);
+            accessoryStack.setCount(0);
         }
     }
 }

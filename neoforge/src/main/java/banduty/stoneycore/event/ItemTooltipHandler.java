@@ -2,7 +2,8 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
-import banduty.stoneycore.items.custom.armor.SCAccessoryItem;
+import banduty.stoneycore.items.custom.armor.SCAccessory;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
@@ -16,6 +17,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -42,11 +44,13 @@ public class ItemTooltipHandler {
         }
 
         for (LandType landType : LandTypeRegistry.getAll()) {
-            if (stack.is(landType.coreItem()) || (stack.getComponents().has(SCDataComponents.TARGET_STACK.get()) &&
-                    stack.get(SCDataComponents.TARGET_STACK.get()).stack().getItem() == landType.coreItem())) {
+            ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
+            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+                if (stack.is(landType.coreItem()) || (accessoryStack.getItem() == landType.coreItem())) {
 
-                lines.add(Component.translatable("component.tooltip.stoneycore.coreItem").withStyle(ChatFormatting.GOLD));
-                break;
+                    lines.add(Component.translatable("component.tooltip.stoneycore.coreItem").withStyle(ChatFormatting.GOLD));
+                    break;
+                }
             }
         }
 
@@ -110,7 +114,7 @@ public class ItemTooltipHandler {
             }
         }
 
-        if (stack.getItem() instanceof SCAccessoryItem scAccessoryItem && scAccessoryItem.getModels(stack).visorOpen().isPresent()) {
+        if (stack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(stack)) {
             lines.add(Component.translatable("component.tooltip.stoneycore.openVisor").withStyle(ChatFormatting.WHITE));
             if (!Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN))) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.openVisorDeflectChance").withStyle(ChatFormatting.AQUA));

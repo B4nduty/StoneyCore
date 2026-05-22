@@ -9,7 +9,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
@@ -19,7 +18,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.List;
 import java.util.Queue;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -69,8 +67,6 @@ public interface IPlatformHelper {
     <T> Holder<T> registerHolder(ResourceKey<Registry<T>> registryKey, String name, java.util.function.Supplier<T> value);
 
     ConfigImpl getConfig();
-
-    List<ItemStack> getEquippedAccessories(LivingEntity livingEntity);
 
     <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlockEntityType(
             String name,

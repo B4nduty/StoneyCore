@@ -80,8 +80,6 @@ neoForge {
 
 
 dependencies {
-    compileOnly "io.wispforest:accessories-neoforge:${accessories}"
-
     implementation "dev.kosmx.player-anim:player-animation-lib-forge:${player_anim}"
     compileOnly "dev.kosmx.player-anim:player-animation-lib-forge:${player_anim}"
 
