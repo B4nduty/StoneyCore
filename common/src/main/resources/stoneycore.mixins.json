@@ -29,6 +29,7 @@
     "GuiMixin",
     "HorseModelMixin",
     "ItemInHandLayerMixin",
+    "ItemInHandRendererMixin",
     "MinecraftClientMixin",
     "PlayerEntityRendererMixin"
   ],
