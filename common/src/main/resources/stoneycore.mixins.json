@@ -28,6 +28,7 @@
     "CameraMixin",
     "GuiMixin",
     "HorseModelMixin",
+    "HumanoidArmorLayerMixin",
     "ItemInHandLayerMixin",
     "ItemInHandRendererMixin",
     "ItemRendererMixin",

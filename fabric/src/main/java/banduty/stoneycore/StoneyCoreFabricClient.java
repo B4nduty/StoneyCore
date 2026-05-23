@@ -11,7 +11,6 @@ import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.custom.armor.deco.DecoContents;
 import banduty.stoneycore.items.custom.armor.deco.DecoTooltip;
-import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
@@ -111,10 +110,6 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         EntityRendererRegistry.register(SCEntities.SC_BULLET.get(), SCBulletEntityRenderer::new);
         ClientOutlineRenderer.register();
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item instanceof SCUnderArmor) {
-                ArmorRenderer.register(new FabricUnderArmourRenderer(), item);
-            }
-
             ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID,"broken"),
                     (stack, world, entity, seed) ->
                             stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f ? 1.0F : 0.0F);

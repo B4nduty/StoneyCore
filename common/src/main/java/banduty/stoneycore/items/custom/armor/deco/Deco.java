@@ -2,6 +2,7 @@ package banduty.stoneycore.items.custom.armor.deco;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
+import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -15,9 +16,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public record Deco(Item item, List<Integer> colors, int group, List<ArmorItem.Type> allowedArmorTypes) {
-    private static final Map<Item, Deco> REGISTRY = new HashMap<>();
+    private static final Map<Item, Deco> REGISTRY = new ConcurrentHashMap<>();
 
     private static final Codec<ArmorItem.Type> ARMOR_TYPE_CODEC =
             StringRepresentable.fromValues(ArmorItem.Type::values);
@@ -53,10 +55,14 @@ public record Deco(Item item, List<Integer> colors, int group, List<ArmorItem.Ty
 
     public static void register(Item item, int group, ArmorItem.Type... allowedArmorTypes) {
         if (REGISTRY.containsKey(item)) {
-            throw new IllegalArgumentException("Item " + item + " is already registered as a HelmetDeco!");
+            if (!Services.PLATFORM.getPlatformName().equals("NeoForge")) StoneyCore.LOG.warn("Item {} is already registered as a Deco!", item);
+            return;
         }
 
-        if (allowedArmorTypes.length == 0) StoneyCore.LOG.warn("Item {} needs at least one armor slot!", item);
+        if (allowedArmorTypes.length == 0) {
+            StoneyCore.LOG.warn("Item {} needs at least one armor slot!", item);
+            return;
+        }
         REGISTRY.put(item, new Deco(item, new ArrayList<>(), group, List.of(allowedArmorTypes)));
     }
 

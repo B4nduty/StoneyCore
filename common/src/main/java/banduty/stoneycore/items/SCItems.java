@@ -8,7 +8,6 @@ import banduty.stoneycore.items.custom.manuscript.Manuscript;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 
 import java.util.function.Supplier;

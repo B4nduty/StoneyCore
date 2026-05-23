@@ -17,7 +17,7 @@ import net.minecraft.world.item.component.DyedItemColor;
 
 public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
     @Override
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, LivingEntity entity, ItemStack armorAttachmentStack, HumanoidModel<LivingEntity> contextModel) {
+    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, LivingEntity entity, ItemStack itemStack, HumanoidModel<LivingEntity> contextModel, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         HumanoidModel<LivingEntity> crownModel = new CrownModel(CrownModel.getTexturedModelData().bakeRoot());
         contextModel.copyPropertiesTo(crownModel);
         crownModel.setupAnim(entity, entity.walkAnimation.position(), entity.walkAnimation.speed(),
@@ -25,7 +25,7 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
                 entity.getYHeadRot() - entity.yBodyRot,
                 entity.getXRot());
         VertexConsumer baseConsumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/entity/armor/crown.png")));
-        int color = DyedItemColor.getOrDefault(armorAttachmentStack, -1);
+        int color = DyedItemColor.getOrDefault(itemStack, -1);
         crownModel.renderToBuffer(poseStack, baseConsumer, packedLight, OverlayTexture.NO_OVERLAY, color);
     }
 }

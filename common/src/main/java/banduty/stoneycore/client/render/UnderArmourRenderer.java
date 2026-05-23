@@ -29,11 +29,9 @@ public class UnderArmourRenderer {
 
     public static final UnderArmourRenderer INSTANCE = new UnderArmourRenderer();
 
-    /**
-     * Renders the base UnderArmor armor layer.
-     */
     public void renderBaseArmor(PoseStack poseStack, MultiBufferSource bufferSource, ItemStack stack,
-                                int packedLight, HumanoidModel<LivingEntity> contextModel) {
+                                LivingEntity livingEntity, int packedLight, HumanoidModel<LivingEntity> contextModel,
+                                float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!(stack.getItem() instanceof SCUnderArmor scUnderArmor)) return;
 
         HumanoidModel<LivingEntity> model = getModel(scUnderArmor);
@@ -63,17 +61,20 @@ public class UnderArmourRenderer {
     }
 
     public void renderAttachments(PoseStack poseStack, MultiBufferSource bufferSource, ItemStack stack,
-                                  LivingEntity entity, int packedLight, HumanoidModel<LivingEntity> contextModel) {
+                                  LivingEntity entity, int packedLight, HumanoidModel<LivingEntity> contextModel,
+                                  float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         for (ItemStack itemStack : SCUnderArmor.getArmorAttachments(stack)) {
             if (itemStack.getItem() instanceof ArmorAttachment) {
                 ArmorAttachmentRenderManager.getOrLookUp(itemStack.getItem())
                         .ifPresent(renderer ->
-                                renderer.render(poseStack, bufferSource, packedLight, entity, itemStack, contextModel));
+                                renderer.render(poseStack, bufferSource, packedLight, entity, itemStack, contextModel,
+                                        limbSwing, limbSwingAmount, partialTicks,ageInTicks, netHeadYaw, headPitch));
 
                 for (ItemStack subDecoStack : Deco.getDeco(itemStack)) {
                     if (!subDecoStack.isEmpty()) {
                         ArmorAttachmentRenderManager.getOrLookUp(subDecoStack.getItem()).ifPresent(render ->
-                                render.render(poseStack, bufferSource, packedLight, entity, subDecoStack, contextModel));
+                                render.render(poseStack, bufferSource, packedLight, entity, subDecoStack, contextModel,
+                                        limbSwing, limbSwingAmount, partialTicks,ageInTicks, netHeadYaw, headPitch));
                     }
                 }
             }
@@ -108,5 +109,8 @@ public class UnderArmourRenderer {
             }
             default -> null;
         };
+    }
+
+    public <T extends LivingEntity, A extends HumanoidModel<T>> void renderBaseArmor(PoseStack poseStack, MultiBufferSource buffer, ItemStack itemStack, T livingEntity, int packedLight, A a) {
     }
 }

@@ -10,9 +10,9 @@ import net.minecraft.world.item.ItemStack;
 
 public interface ArmorAttachmentRenderer {
     void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
-                LivingEntity entity, ItemStack itemStack, HumanoidModel<LivingEntity> contextModel);
+                LivingEntity entity, ItemStack itemStack, HumanoidModel<LivingEntity> contextModel,
+                float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch);
 
     default void onRenderInFirstPerson(LocalPlayer player, ItemStack itemStack, PoseStack poseStack, MultiBufferSource multiBufferSource, int light, HumanoidArm arm) {
-
     }
 }
