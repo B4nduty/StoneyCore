@@ -1,13 +1,13 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.combat.damagetype.SCDamageType;
-import banduty.stoneycore.items.custom.armor.SCAccessory;
+import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
@@ -35,8 +35,8 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
 
         for (LandType landType : LandTypeRegistry.getAll()) {
             ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
-            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                if (stack.is(landType.coreItem()) || (accessoryStack.getItem() == landType.coreItem())) {
+            for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
+                if (stack.is(landType.coreItem()) || (armorAttachment.getItem() == landType.coreItem())) {
 
                     lines.add(Component.translatable("component.tooltip.stoneycore.coreItem").withStyle(ChatFormatting.GOLD));
                     break;
@@ -87,14 +87,14 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             }
         }
 
-        if (AccessoriesDefinitionsStorage.containsItem(stack)) {
-            double weight = AccessoriesDefinitionsStorage.getData(stack).weight();
+        if (ArmorAttachmentDefinitionsStorage.containsItem(stack)) {
+            double weight = ArmorAttachmentDefinitionsStorage.getData(stack).weight();
             if (weight != 0) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.weight", weight).withStyle(ChatFormatting.BLUE));
             }
         }
 
-        if (stack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(stack)) {
+        if (stack.getItem() instanceof ArmorAttachment armorAttachment && armorAttachment.hasOpenVisor(stack)) {
             lines.add(Component.translatable("component.tooltip.stoneycore.openVisor").withStyle(ChatFormatting.WHITE));
             if (!Boolean.TRUE.equals(stack.get(SCDataComponents.VISOR_OPEN.get()))) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.openVisorDeflectChance").withStyle(ChatFormatting.AQUA));

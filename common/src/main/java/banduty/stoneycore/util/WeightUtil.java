@@ -1,7 +1,7 @@
 package banduty.stoneycore.util;
 
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
-import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,9 +18,9 @@ public class WeightUtil {
         double weight = 0.0;
 
         for (ItemStack itemStack : livingEntity.getArmorSlots()) {
-            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                if (!accessoryStack.isEmpty()) {
-                    var data = AccessoriesDefinitionsStorage.getData(accessoryStack);
+            for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
+                if (!armorAttachment.isEmpty()) {
+                    var data = ArmorAttachmentDefinitionsStorage.getData(armorAttachment);
                     if (data != null) weight += data.weight();
                 }
             }

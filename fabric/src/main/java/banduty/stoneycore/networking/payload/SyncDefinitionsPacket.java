@@ -14,7 +14,7 @@ import java.util.Map;
 
 public record SyncDefinitionsPacket(
         Map<ResourceLocation, ArmorDefinitionData> armor,
-        Map<ResourceLocation, AccessoriesDefinitionData> accessories,
+        Map<ResourceLocation, ArmorAttachmentDefinitionData> armorAttachment,
         Map<ResourceLocation, LandValues> land,
         Map<ResourceLocation, SiegeEngineDefinitionData> siege_engine,
         Map<ResourceLocation, WeaponDefinitionData> weapon
@@ -27,7 +27,7 @@ public record SyncDefinitionsPacket(
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncDefinitionsPacket> CODEC = StreamCodec.composite(
             mapCodec(ArmorDefinitionData.CODEC), SyncDefinitionsPacket::armor,
-            mapCodec(AccessoriesDefinitionData.CODEC), SyncDefinitionsPacket::accessories,
+            mapCodec(ArmorAttachmentDefinitionData.CODEC), SyncDefinitionsPacket::armorAttachment,
             mapCodec(LandValues.CODEC), SyncDefinitionsPacket::land,
             mapCodec(SiegeEngineDefinitionData.CODEC), SyncDefinitionsPacket::siege_engine,
             mapCodec(WeaponDefinitionData.CODEC), SyncDefinitionsPacket::weapon,
@@ -40,8 +40,8 @@ public record SyncDefinitionsPacket(
         ArmorDefinitionsStorage.clearDefinitions();
         armor.forEach(ArmorDefinitionsStorage::addDefinition);
 
-        AccessoriesDefinitionsStorage.clearDefinitions();
-        accessories.forEach(AccessoriesDefinitionsStorage::addDefinition);
+        ArmorAttachmentDefinitionsStorage.clearDefinitions();
+        armorAttachment.forEach(ArmorAttachmentDefinitionsStorage::addDefinition);
 
         LandDefinitionsStorage.clearDefinitions();
         land.forEach(LandDefinitionsStorage::addDefinition);

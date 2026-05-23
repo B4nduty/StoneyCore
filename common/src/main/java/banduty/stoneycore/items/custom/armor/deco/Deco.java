@@ -1,7 +1,7 @@
 package banduty.stoneycore.items.custom.armor.deco;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.armor.SCAccessory;
+import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -61,7 +61,7 @@ public record Deco(Item item, List<Integer> colors, int group, List<ArmorItem.Ty
     }
 
     public boolean canApplyTo(Item targetItem) {
-        if (targetItem instanceof SCAccessory armor) {
+        if (targetItem instanceof ArmorAttachment armor) {
             return this.allowedArmorTypes.contains(armor.getArmorSlot());
         }
         return false;

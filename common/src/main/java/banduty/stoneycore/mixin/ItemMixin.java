@@ -3,7 +3,6 @@ package banduty.stoneycore.mixin;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
@@ -95,9 +94,9 @@ public abstract class ItemMixin {
 
         if ((getUseAnimation(stack) == UseAnim.DRINK || getUseAnimation(stack) == UseAnim.EAT)) {
             ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
-            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
+            for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
                 if (player.isCreative()) break;
-                if (!Boolean.TRUE.equals(accessoryStack.get(SCDataComponents.VISOR_OPEN.get()))) {
+                if (!Boolean.TRUE.equals(armorAttachment.get(SCDataComponents.VISOR_OPEN.get()))) {
                     player.displayClientMessage(Component.translatable("component.tooltip.stoneycore.openVisorEatDrink"), true);
                     cir.setReturnValue(InteractionResultHolder.fail(stack));
                     return;

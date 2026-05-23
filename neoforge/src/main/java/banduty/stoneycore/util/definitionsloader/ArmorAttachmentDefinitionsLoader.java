@@ -22,10 +22,10 @@ import java.util.Map;
 import java.util.Set;
 
 @EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
-public class AccessoriesDefinitionsLoader extends SimplePreparableReloadListener<Void> {
+public class ArmorAttachmentDefinitionsLoader extends SimplePreparableReloadListener<Void> {
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
-        event.addListener(new AccessoriesDefinitionsLoader());
+        event.addListener(new ArmorAttachmentDefinitionsLoader());
     }
 
     @Override
@@ -35,16 +35,16 @@ public class AccessoriesDefinitionsLoader extends SimplePreparableReloadListener
 
     @Override
     protected void apply(Void prepared, ResourceManager resourceManager, ProfilerFiller profiler) {
-        AccessoriesDefinitionsStorage.clearDefinitions();
+        ArmorAttachmentDefinitionsStorage.clearDefinitions();
 
-        Map<ResourceLocation, Resource> resources = resourceManager.listResources("definitions/accessories",
+        Map<ResourceLocation, Resource> resources = resourceManager.listResources("definitions/attachments",
                 id -> id.getPath().endsWith(".json"));
 
         resources.forEach((id, resource) -> {
             try (InputStream stream = resource.open()) {
                 JsonElement element = JsonParser.parseReader(new InputStreamReader(stream));
 
-                DataResult<AccessoriesDefinitionData> result = AccessoriesDefinitionData.CODEC.parse(JsonOps.INSTANCE, element);
+                DataResult<ArmorAttachmentDefinitionData> result = ArmorAttachmentDefinitionData.CODEC.parse(JsonOps.INSTANCE, element);
                 result.resultOrPartial(StoneyCore.LOG::error)
                         .ifPresent(def -> {
                             String armorSlot = def.armorSlot().toUpperCase();
@@ -58,7 +58,7 @@ public class AccessoriesDefinitionsLoader extends SimplePreparableReloadListener
                                                 EquipmentSlot.FEET
                                         )
                                 );
-                                def = new AccessoriesDefinitionData(
+                                def = new ArmorAttachmentDefinitionData(
                                         def.armor(),
                                         def.toughness(),
                                         "",
@@ -71,10 +71,10 @@ public class AccessoriesDefinitionsLoader extends SimplePreparableReloadListener
 
                             ResourceLocation definitionId = ResourceLocation.tryBuild(
                                     id.getNamespace(),
-                                    id.getPath().substring("definitions/accessories/".length(),
+                                    id.getPath().substring("definitions/attachments/".length(),
                                             id.getPath().length() - 5)
                             );
-                            AccessoriesDefinitionsStorage.addDefinition(definitionId, def);
+                            ArmorAttachmentDefinitionsStorage.addDefinition(definitionId, def);
                         });
 
             } catch (Exception e) {
@@ -82,7 +82,7 @@ public class AccessoriesDefinitionsLoader extends SimplePreparableReloadListener
             }
         });
 
-        StoneyCore.LOG.debug("Loaded {} accessory definitions", AccessoriesDefinitionsStorage.DEFINITIONS.size());
+        StoneyCore.LOG.debug("Loaded {} armor attachment definitions", ArmorAttachmentDefinitionsStorage.DEFINITIONS.size());
     }
 
     private boolean isValidArmorSlot(String slot) {

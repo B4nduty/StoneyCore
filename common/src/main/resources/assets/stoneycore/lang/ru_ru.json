@@ -86,8 +86,6 @@
 
   "component.land.stoneycore.expansion.increased": "Зона влияния увеличена: %d → %d",
 
-  "component.warning.stoneycore.armor_needed_for_accessory": "%s требует %s экипированным!",
-
   "attribute.name.generic.stoneycore.hunger_drain_multiplier": "Множитель истощения голода",
   "attribute.name.generic.stoneycore.deflect_chance": "Шанс отражения",
   "sounds.stoneycore.bullet_crack": "Bullet cracking",

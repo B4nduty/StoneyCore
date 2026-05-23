@@ -1,6 +1,6 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.client.render.AccessoryRenderManager;
+import banduty.stoneycore.client.render.ArmorAttachmentRenderManager;
 import banduty.stoneycore.items.custom.armor.deco.Deco;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;
@@ -174,16 +174,16 @@ public class ItemInHandRendererMixin {
         }
 
         for (ItemStack itemStack : player.getArmorSlots()) {
-            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                AccessoryRenderManager.getOrLookUp(accessoryStack.getItem())
+            for (ItemStack armorAttachments : SCUnderArmor.getArmorAttachments(itemStack)) {
+                ArmorAttachmentRenderManager.getOrLookUp(armorAttachments.getItem())
                         .ifPresent(renderer -> {
-                            renderer.onRenderInFirstPerson(player, accessoryStack, poseStack, multiBufferSource, light, arm);
+                            renderer.onRenderInFirstPerson(player, armorAttachments, poseStack, multiBufferSource, light, arm);
                         });
 
                 for (ItemStack subDecoStack : Deco.getDeco(itemStack)) {
                     if (!subDecoStack.isEmpty()) {
-                        AccessoryRenderManager.getOrLookUp(subDecoStack.getItem()).ifPresent(render ->
-                                render.onRenderInFirstPerson(player, accessoryStack, poseStack, multiBufferSource, light, arm)
+                        ArmorAttachmentRenderManager.getOrLookUp(subDecoStack.getItem()).ifPresent(render ->
+                                render.onRenderInFirstPerson(player, subDecoStack, poseStack, multiBufferSource, light, arm)
                         );
                     }
                 }

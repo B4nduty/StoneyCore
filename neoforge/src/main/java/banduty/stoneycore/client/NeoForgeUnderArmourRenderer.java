@@ -39,7 +39,7 @@ public class NeoForgeUnderArmourRenderer implements IClientItemExtensions {
             MultiBufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
             int packedLight = Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(livingEntity, partialTick);
 
-            UnderArmourRenderer.INSTANCE.renderAccessories(poseStack, bufferSource, itemStack, livingEntity, packedLight, (HumanoidModel<LivingEntity>) humanoidModel);
+            UnderArmourRenderer.INSTANCE.renderAttachments(poseStack, bufferSource, itemStack, livingEntity, packedLight, (HumanoidModel<LivingEntity>) humanoidModel);
         }
     }
 }

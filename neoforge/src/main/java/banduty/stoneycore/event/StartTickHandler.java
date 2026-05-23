@@ -20,7 +20,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
@@ -71,7 +70,6 @@ public class StartTickHandler {
             }
             MechanicsUtil.handlePlayerReload(player);
 
-            ArmorUtil.startArmorCheck(player);
             SwallowTailArrowUtil.startSwallowTailTickTrack(player);
 
             LandTracker.trackPlayerLandMovement(player);
@@ -86,8 +84,8 @@ public class StartTickHandler {
 
     private static void handleFreezeImmunity(ServerPlayer player) {
         for (ItemStack itemStack : player.getArmorSlots()) {
-            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                if (accessoryStack.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) {
+            for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
+                if (armorAttachment.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) {
                     player.setTicksFrozen(0);
                     AttributeInstance entityAttributeInstance = player.getAttribute(Attributes.MOVEMENT_SPEED);
                     if (entityAttributeInstance != null) {

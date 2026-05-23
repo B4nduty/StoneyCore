@@ -1,7 +1,7 @@
 package banduty.stoneycore.networking.payload;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.armor.SCAccessory;
+import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -27,10 +27,10 @@ public record ToggleVisorC2SPacket() implements CustomPacketPayload {
     public void handle(IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player) {
             ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
-            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
-                    boolean current = accessoryStack.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false);
-                    accessoryStack.set(SCDataComponents.VISOR_OPEN.get(), !current);
+            for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
+                if (armorAttachment.getItem() instanceof ArmorAttachment armorAttachmentI && armorAttachmentI.hasOpenVisor(armorAttachment)) {
+                    boolean current = armorAttachment.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false);
+                    armorAttachment.set(SCDataComponents.VISOR_OPEN.get(), !current);
                 }
             }
         }

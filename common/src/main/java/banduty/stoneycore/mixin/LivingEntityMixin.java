@@ -14,7 +14,7 @@ import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import net.minecraft.core.BlockPos;
@@ -306,19 +306,19 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             boolean slotProtected = false;
 
             for (ItemStack itemStack : livingEntity.getArmorSlots()) {
-                for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                    if (!accessoryStack.isEmpty() && AccessoriesDefinitionsStorage.containsItem(accessoryStack)) {
-                        String slotFromJson = AccessoriesDefinitionsStorage.getData(accessoryStack.getItem()).armorSlot();
+                for (ItemStack armorAttachments : SCUnderArmor.getArmorAttachments(itemStack)) {
+                    if (!armorAttachments.isEmpty() && ArmorAttachmentDefinitionsStorage.containsItem(armorAttachments)) {
+                        String slotFromJson = ArmorAttachmentDefinitionsStorage.getData(armorAttachments.getItem()).armorSlot();
 
                         if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(slot.getName())) {
                             slotProtected = true;
-                            accessoryStack.hurtAndBreak((int) amount, livingEntity, ((ArmorItem) accessoryStack.getItem()).getEquipmentSlot());
+                            armorAttachments.hurtAndBreak((int) amount, livingEntity, ((ArmorItem) armorAttachments.getItem()).getEquipmentSlot());
                         }
                     }
                 }
             }
 
-            // Damage the armor only if no accessory protects this slot
+            // Damage the armor only if no armor attachment protects this slot
             if (!slotProtected) {
                 armorStack.hurtAndBreak((int) amount, livingEntity, slot);
             }

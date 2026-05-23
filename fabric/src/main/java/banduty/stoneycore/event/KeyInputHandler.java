@@ -1,7 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.armor.SCAccessory;
+import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.networking.payload.ReloadC2SPacket;
 import banduty.stoneycore.networking.payload.ToggleVisorC2SPacket;
@@ -47,8 +47,8 @@ public class KeyInputHandler {
                 if (toggleVisor.isDown()) {
                     if (!isTogglingVisor) {
                         ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
-                        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                            if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
+                        for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
+                            if (armorAttachment.getItem() instanceof ArmorAttachment armorAttachmentItem && armorAttachmentItem.hasOpenVisor(armorAttachment)) {
                                 isTogglingVisor = true;
                                 break;
                             }
@@ -66,10 +66,10 @@ public class KeyInputHandler {
                         boolean isCurrentlyOpen = false;
 
                         ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
-                        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                            if (accessoryStack.getItem() instanceof SCAccessory scAccessory && scAccessory.hasOpenVisor(accessoryStack)) {
-                                isCurrentlyOpen = accessoryStack.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false);
-                                accessoryStack.set(SCDataComponents.VISOR_OPEN.get(), !isCurrentlyOpen);
+                        for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
+                            if (armorAttachment.getItem() instanceof ArmorAttachment armorAttachmentI && armorAttachmentI.hasOpenVisor(armorAttachment)) {
+                                isCurrentlyOpen = armorAttachment.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false);
+                                armorAttachment.set(SCDataComponents.VISOR_OPEN.get(), !isCurrentlyOpen);
                                 break;
                             }
                         }

@@ -14,7 +14,7 @@ import java.util.Map;
 
 public record SyncDefinitionsPacket(
         Map<ResourceLocation, ArmorDefinitionData> armor,
-        Map<ResourceLocation, AccessoriesDefinitionData> accessories,
+        Map<ResourceLocation, ArmorAttachmentDefinitionData> armorAttachment,
         Map<ResourceLocation, LandValues> land,
         Map<ResourceLocation, SiegeEngineDefinitionData> siege_engine,
         Map<ResourceLocation, WeaponDefinitionData> weapon
@@ -26,7 +26,7 @@ public record SyncDefinitionsPacket(
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncDefinitionsPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, ArmorDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::armor,
-            ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, AccessoriesDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::accessories,
+            ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, ArmorAttachmentDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::armorAttachment,
             ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, LandValues.STREAM_CODEC), SyncDefinitionsPacket::land,
             ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, SiegeEngineDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::siege_engine,
             ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, WeaponDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::weapon,
@@ -40,8 +40,8 @@ public record SyncDefinitionsPacket(
         ArmorDefinitionsStorage.clearDefinitions();
         this.armor.forEach(ArmorDefinitionsStorage::addDefinition);
 
-        AccessoriesDefinitionsStorage.clearDefinitions();
-        this.accessories.forEach(AccessoriesDefinitionsStorage::addDefinition);
+        ArmorAttachmentDefinitionsStorage.clearDefinitions();
+        this.armorAttachment.forEach(ArmorAttachmentDefinitionsStorage::addDefinition);
 
         LandDefinitionsStorage.clearDefinitions();
         this.land.forEach(LandDefinitionsStorage::addDefinition);

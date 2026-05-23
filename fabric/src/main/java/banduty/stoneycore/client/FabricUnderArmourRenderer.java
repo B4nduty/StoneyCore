@@ -18,6 +18,6 @@ public class FabricUnderArmourRenderer implements ArmorRenderer {
                        LivingEntity entity, EquipmentSlot slot, int packedLight, HumanoidModel<LivingEntity> contextModel) {
         UnderArmourRenderer.INSTANCE.renderBaseArmor(poseStack, bufferSource, stack, packedLight, contextModel);
 
-        UnderArmourRenderer.INSTANCE.renderAccessories(poseStack, bufferSource, stack, entity, packedLight, contextModel);
+        UnderArmourRenderer.INSTANCE.renderAttachments(poseStack, bufferSource, stack, entity, packedLight, contextModel);
     }
 }

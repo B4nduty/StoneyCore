@@ -3,7 +3,7 @@ package banduty.stoneycore.items.custom.armor.underarmor;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
-import banduty.stoneycore.util.definitionsloader.AccessoriesDefinitionsStorage;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
@@ -44,7 +44,7 @@ public class SCUnderArmor extends ArmorItem {
             ItemStack extracted = mutable.removeLast();
             if (!extracted.isEmpty()) {
                 underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
-                rebuildAccessoryAttributes(underArmorStack);
+                rebuildAttachmentAttributes(underArmorStack);
                 slot.set(extracted);
                 playRemoveSound(player);
                 return true;
@@ -54,7 +54,7 @@ public class SCUnderArmor extends ArmorItem {
             if (inserted > 0) {
                 incomingStack.shrink(inserted);
                 underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
-                rebuildAccessoryAttributes(underArmorStack);
+                rebuildAttachmentAttributes(underArmorStack);
                 playInsertSound(player);
                 return true;
             }
@@ -73,7 +73,7 @@ public class SCUnderArmor extends ArmorItem {
             ItemStack extracted = mutable.removeLast();
             if (!extracted.isEmpty()) {
                 underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
-                rebuildAccessoryAttributes(underArmorStack);
+                rebuildAttachmentAttributes(underArmorStack);
                 access.set(extracted);
                 playRemoveSound(player);
                 return true;
@@ -83,7 +83,7 @@ public class SCUnderArmor extends ArmorItem {
             if (inserted > 0) {
                 incomingStack.shrink(inserted);
                 underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
-                rebuildAccessoryAttributes(underArmorStack);
+                rebuildAttachmentAttributes(underArmorStack);
                 playInsertSound(player);
                 return true;
             }
@@ -113,10 +113,10 @@ public class SCUnderArmor extends ArmorItem {
     @Override
     public void verifyComponentsAfterLoad(ItemStack stack) {
         super.verifyComponentsAfterLoad(stack);
-        rebuildAccessoryAttributes(stack);
+        rebuildAttachmentAttributes(stack);
     }
 
-    public void rebuildAccessoryAttributes(ItemStack stack) {
+    public void rebuildAttachmentAttributes(ItemStack stack) {
         ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
 
         ItemAttributeModifiers staticModifiers = this.getDefaultAttributeModifiers();
@@ -129,9 +129,9 @@ public class SCUnderArmor extends ArmorItem {
         double hungerDrainMultiplier = 0;
         double deflectChance = 0;
 
-        for (ItemStack accessoryStack : getAccessories(stack)) {
-            if (AccessoriesDefinitionsStorage.containsItem(accessoryStack)) {
-                var data = AccessoriesDefinitionsStorage.getData(accessoryStack);
+        for (ItemStack armorAttachment : getArmorAttachments(stack)) {
+            if (ArmorAttachmentDefinitionsStorage.containsItem(armorAttachment)) {
+                var data = ArmorAttachmentDefinitionsStorage.getData(armorAttachment);
                 armor += data.armor();
                 toughness += data.toughness();
                 hungerDrainMultiplier += data.hungerDrainMultiplier();
@@ -154,30 +154,30 @@ public class SCUnderArmor extends ArmorItem {
 
         if (armor != 0) {
             builder.add(Attributes.ARMOR, new AttributeModifier(
-                    ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_accessory_armor"),
+                    ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_attachments_armor"),
                     armor, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.bySlot(slot));
         }
         if (toughness != 0) {
             builder.add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(
-                    ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_accessory_toughness"),
+                    ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_attachments_toughness"),
                     toughness, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.bySlot(slot));
         }
         if (hungerDrainMultiplier != 0) {
             builder.add(SCAttributes.HUNGER_DRAIN_MULTIPLIER, new AttributeModifier(
-                    ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_accessory_hunger"),
+                    ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_attachments_hunger"),
                     hungerDrainMultiplier, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.bySlot(slot));
         }
         if (deflectChance != 0) {
             builder.add(SCAttributes.DEFLECT_CHANCE, new AttributeModifier(
-                    ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_accessory_deflect"),
+                    ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_attachments_deflect"),
                     deflectChance, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.bySlot(slot));
         }
 
         stack.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build());
     }
 
-    public static List<ItemStack> getAccessories(ItemStack stack) {
+    public static List<ItemStack> getArmorAttachments(ItemStack stack) {
         UnderArmorContents contents = stack.get(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
-        return contents != null ? contents.accessories() : List.of();
+        return contents != null ? contents.attachments() : List.of();
     }
 }

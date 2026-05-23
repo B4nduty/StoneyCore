@@ -63,13 +63,13 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
 
                     @Override
                     public int getWidth(Font font) {
-                        return contents.accessories().size() * 18;
+                        return contents.attachments().size() * 18;
                     }
 
                     @Override
                     public void renderImage(Font font, int x, int y, GuiGraphics guiGraphics) {
                         int currentX = x;
-                        for (ItemStack stack : contents.accessories()) {
+                        for (ItemStack stack : contents.attachments()) {
                             guiGraphics.renderItem(stack, currentX, y);
                             guiGraphics.renderItemDecorations(font, stack, currentX, y);
                             currentX += 18;

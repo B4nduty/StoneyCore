@@ -34,8 +34,8 @@ public class FabricOutlineClaimRenderer implements OutlineClaimRendererHelper {
         }
 
         ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
-        for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-            if (accessoryStack.getItem() == land.getLandType().coreItem()) {
+        for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
+            if (armorAttachment.getItem() == land.getLandType().coreItem()) {
                 shouldRender = true;
                 break;
             }

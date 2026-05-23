@@ -1,6 +1,6 @@
 package banduty.stoneycore.client.render;
 
-import banduty.stoneycore.items.custom.armor.SCAccessory;
+import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.items.custom.armor.deco.Deco;
 import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
@@ -62,17 +62,17 @@ public class UnderArmourRenderer {
         }
     }
 
-    public void renderAccessories(PoseStack poseStack, MultiBufferSource bufferSource, ItemStack stack,
+    public void renderAttachments(PoseStack poseStack, MultiBufferSource bufferSource, ItemStack stack,
                                   LivingEntity entity, int packedLight, HumanoidModel<LivingEntity> contextModel) {
-        for (ItemStack itemStack : SCUnderArmor.getAccessories(stack)) {
-            if (itemStack.getItem() instanceof SCAccessory) {
-                AccessoryRenderManager.getOrLookUp(itemStack.getItem())
+        for (ItemStack itemStack : SCUnderArmor.getArmorAttachments(stack)) {
+            if (itemStack.getItem() instanceof ArmorAttachment) {
+                ArmorAttachmentRenderManager.getOrLookUp(itemStack.getItem())
                         .ifPresent(renderer ->
                                 renderer.render(poseStack, bufferSource, packedLight, entity, itemStack, contextModel));
 
                 for (ItemStack subDecoStack : Deco.getDeco(itemStack)) {
                     if (!subDecoStack.isEmpty()) {
-                        AccessoryRenderManager.getOrLookUp(subDecoStack.getItem()).ifPresent(render ->
+                        ArmorAttachmentRenderManager.getOrLookUp(subDecoStack.getItem()).ifPresent(render ->
                                 render.render(poseStack, bufferSource, packedLight, entity, subDecoStack, contextModel));
                     }
                 }

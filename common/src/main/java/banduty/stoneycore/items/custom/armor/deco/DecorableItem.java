@@ -1,6 +1,6 @@
 package banduty.stoneycore.items.custom.armor.deco;
 
-import banduty.stoneycore.items.custom.armor.SCAccessory;
+import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -47,27 +47,27 @@ public class DecorableItem extends Item {
     }
 
     @Override
-    public boolean overrideOtherStackedOnMe(ItemStack helmetStack, ItemStack incomingStack, Slot slot, ClickAction action, Player player, SlotAccess access) {
+    public boolean overrideOtherStackedOnMe(ItemStack itemStack, ItemStack incomingStack, Slot slot, ClickAction action, Player player, SlotAccess access) {
         if (action != ClickAction.SECONDARY || !slot.allowModification(player)) return false;
 
-        DecoContents contents = helmetStack.getOrDefault(SCDataComponents.DECO_CONTENTS.get(), DecoContents.EMPTY);
+        DecoContents contents = itemStack.getOrDefault(SCDataComponents.DECO_CONTENTS.get(), DecoContents.EMPTY);
         DecoContents.Mutable mutable = new DecoContents.Mutable(contents);
 
         if (incomingStack.isEmpty()) {
             ItemStack extracted = mutable.removeLast();
             if (!extracted.isEmpty()) {
                 access.set(extracted);
-                helmetStack.set(SCDataComponents.DECO_CONTENTS.get(), mutable.toImmutable());
+                itemStack.set(SCDataComponents.DECO_CONTENTS.get(), mutable.toImmutable());
                 playRemoveSound(player);
                 return true;
             }
         } else {
             if (Deco.getFromItem(incomingStack.getItem()).isEmpty()) return false;
-            if (!(helmetStack.getItem() instanceof SCAccessory scAccessory && Deco.getFromItem(incomingStack.getItem()).get().allowedArmorTypes().contains(scAccessory.getArmorSlot()))) return false;
-            int inserted = mutable.tryInsert(incomingStack, helmetStack.getItem());
+            if (!(itemStack.getItem() instanceof ArmorAttachment armorAttachment && Deco.getFromItem(incomingStack.getItem()).get().allowedArmorTypes().contains(armorAttachment.getArmorSlot()))) return false;
+            int inserted = mutable.tryInsert(incomingStack, itemStack.getItem());
             if (inserted > 0) {
                 incomingStack.shrink(inserted);
-                helmetStack.set(SCDataComponents.DECO_CONTENTS.get(), mutable.toImmutable());
+                itemStack.set(SCDataComponents.DECO_CONTENTS.get(), mutable.toImmutable());
                 playInsertSound(player);
                 return true;
             }

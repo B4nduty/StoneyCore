@@ -21,9 +21,9 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadListener {
+public class ArmorAttachmentDefinitionsLoader implements IdentifiableResourceReloadListener {
     private static final ResourceLocation RELOAD_LISTENER_ID =
-            ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "accessories_definitions_loader");
+            ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "attachments_definitions_loader");
 
     @Override
     public ResourceLocation getFabricId() {
@@ -38,16 +38,16 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                                                    @NotNull Executor prepareExecutor,
                                                    @NotNull Executor applyExecutor) {
         return CompletableFuture.runAsync(() -> {
-            AccessoriesDefinitionsStorage.clearDefinitions();
+            ArmorAttachmentDefinitionsStorage.clearDefinitions();
 
-            Map<ResourceLocation, Resource> resources = resourceManager.listResources("definitions/accessories",
+            Map<ResourceLocation, Resource> resources = resourceManager.listResources("definitions/attachments",
                     id -> id.getPath().endsWith(".json"));
 
             resources.forEach((id, resource) -> {
                 try (InputStream stream = resource.open()) {
                     JsonElement element = JsonParser.parseReader(new InputStreamReader(stream));
 
-                    DataResult<AccessoriesDefinitionData> result = AccessoriesDefinitionData.CODEC.parse(JsonOps.INSTANCE, element);
+                    DataResult<ArmorAttachmentDefinitionData> result = ArmorAttachmentDefinitionData.CODEC.parse(JsonOps.INSTANCE, element);
                     result.resultOrPartial(StoneyCore.LOG::error)
                             .ifPresent(def -> {
                                 String armorSlot = def.armorSlot().toUpperCase();
@@ -61,7 +61,7 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                                                     EquipmentSlot.FEET
                                             )
                                     );
-                                    def = new AccessoriesDefinitionData(
+                                    def = new ArmorAttachmentDefinitionData(
                                             def.armor(),
                                             def.toughness(),
                                             "",
@@ -74,10 +74,10 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
 
                                 ResourceLocation definitionId = ResourceLocation.tryBuild(
                                         id.getNamespace(),
-                                        id.getPath().substring("definitions/accessories/".length(),
+                                        id.getPath().substring("definitions/attachments/".length(),
                                                 id.getPath().length() - 5)
                                 );
-                                AccessoriesDefinitionsStorage.addDefinition(definitionId, def);
+                                ArmorAttachmentDefinitionsStorage.addDefinition(definitionId, def);
                             });
 
                 } catch (Exception e) {
@@ -85,7 +85,7 @@ public class AccessoriesDefinitionsLoader implements IdentifiableResourceReloadL
                 }
             });
         }, prepareExecutor).thenCompose(synchronizer::wait).thenRunAsync(() -> {
-            StoneyCore.LOG.debug("Loaded {} accessory definitions", AccessoriesDefinitionsStorage.DEFINITIONS.size());
+            StoneyCore.LOG.debug("Loaded {} armor attachment definitions", ArmorAttachmentDefinitionsStorage.DEFINITIONS.size());
         }, applyExecutor);
     }
 

@@ -34,8 +34,8 @@ public abstract class DefinitionsProvider implements DataProvider {
     @Override
     public abstract String getName();
 
-    public abstract static class Accessories extends DefinitionsProvider {
-        public Accessories(PackOutput output) { super(output, "definitions/accessories"); }
+    public abstract static class ArmorAttachment extends DefinitionsProvider {
+        public ArmorAttachment(PackOutput output) { super(output, "definitions/attachments"); }
 
         @Override
         public CompletableFuture<?> run(CachedOutput writer) {
@@ -43,18 +43,18 @@ public abstract class DefinitionsProvider implements DataProvider {
             generateDefinitions((item, definition) -> entries.put(BuiltInRegistries.ITEM.getKey(item), definition));
             List<CompletableFuture<?>> futures = new ArrayList<>();
             for (Map.Entry<ResourceLocation, DefinitionEntry> entry : entries.entrySet()) {
-                Path path = output.getOutputFolder().resolve("data/" + entry.getKey().getNamespace() + "/definitions/accessories/" + entry.getKey().getPath() + ".json");
+                Path path = output.getOutputFolder().resolve("data/" + entry.getKey().getNamespace() + "/definitions/attachments/" + entry.getKey().getPath() + ".json");
                 futures.add(DataProvider.saveStable(writer, DefinitionEntry.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(s -> new IllegalStateException("Failed to encode JSON: " + s)), path));
             }
             return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         }
 
-        @Override public String getName() { return "Accessories Definitions"; }
+        @Override public String getName() { return "Armor Attachment Definitions"; }
 
-        protected abstract void generateDefinitions(AccessoriesConsumer consumer);
+        protected abstract void generateDefinitions(ArmorAttachmentConsumer consumer);
 
         @FunctionalInterface
-        public interface AccessoriesConsumer {
+        public interface ArmorAttachmentConsumer {
             void accept(Item item, DefinitionEntry definition);
 
             default void accept(DefinitionEntry definition, Item... items) {

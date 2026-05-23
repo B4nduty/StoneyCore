@@ -16,7 +16,7 @@ public class SyncDefinitions {
         if (event.getEntity() instanceof ServerPlayer player) {
             PacketDistributor.sendToPlayer(player, new SyncDefinitionsPacket(
                     ArmorDefinitionsStorage.getDefinitions(),
-                    AccessoriesDefinitionsStorage.getDefinitions(),
+                    ArmorAttachmentDefinitionsStorage.getDefinitions(),
                     LandDefinitionsStorage.getDefinitions(),
                     SiegeEngineDefinitionsStorage.getDefinitions(),
                     WeaponDefinitionsStorage.getDefinitions()

@@ -55,7 +55,7 @@ public class StoneyCoreFabric implements ModInitializer {
 
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new WeaponDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ArmorDefinitionsLoader());
-        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new AccessoriesDefinitionsLoader());
+        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ArmorAttachmentDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new LandDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new SiegeEngineDefinitionsLoader());
         ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
@@ -106,7 +106,7 @@ public class StoneyCoreFabric implements ModInitializer {
 
     public static void sendSyncDefinitions(ServerPlayer player) {
         ServerPlayNetworking.send(player, new SyncDefinitionsPacket(ArmorDefinitionsStorage.getDefinitions(),
-                AccessoriesDefinitionsStorage.getDefinitions(), LandDefinitionsStorage.getDefinitions(),
+                ArmorAttachmentDefinitionsStorage.getDefinitions(), LandDefinitionsStorage.getDefinitions(),
                 SiegeEngineDefinitionsStorage.getDefinitions(), WeaponDefinitionsStorage.getDefinitions()));
     }
 }

@@ -8,17 +8,17 @@ import net.minecraft.world.item.ItemStack;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AccessoriesDefinitionsStorage {
-    protected static final Map<ResourceLocation, AccessoriesDefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
+public class ArmorAttachmentDefinitionsStorage {
+    protected static final Map<ResourceLocation, ArmorAttachmentDefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
 
-    public static AccessoriesDefinitionData getData(ItemStack itemStack) {
+    public static ArmorAttachmentDefinitionData getData(ItemStack itemStack) {
         if (itemStack == null || itemStack.isEmpty()) {
             return getDefaultData();
         }
         return getData(itemStack.getItem());
     }
 
-    public static AccessoriesDefinitionData getData(Item item) {
+    public static ArmorAttachmentDefinitionData getData(Item item) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
         return DEFINITIONS.getOrDefault(itemId, getDefaultData());
     }
@@ -37,15 +37,15 @@ public class AccessoriesDefinitionsStorage {
         DEFINITIONS.clear();
     }
 
-    public static void addDefinition(ResourceLocation id, AccessoriesDefinitionData data) {
+    public static void addDefinition(ResourceLocation id, ArmorAttachmentDefinitionData data) {
         DEFINITIONS.put(id, data);
     }
 
-    private static AccessoriesDefinitionData getDefaultData() {
-        return new AccessoriesDefinitionData(0, 0, "", 0, 0, 0, ResourceLocation.fromNamespaceAndPath("", ""));
+    private static ArmorAttachmentDefinitionData getDefaultData() {
+        return new ArmorAttachmentDefinitionData(0, 0, "", 0, 0, 0, ResourceLocation.fromNamespaceAndPath("", ""));
     }
 
-    public static Map<ResourceLocation, AccessoriesDefinitionData> getDefinitions() {
+    public static Map<ResourceLocation, ArmorAttachmentDefinitionData> getDefinitions() {
         return DEFINITIONS;
     }
 }

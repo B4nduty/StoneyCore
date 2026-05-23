@@ -6,7 +6,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
-public interface SCAccessory {
+public interface ArmorAttachment {
     default boolean hasOpenVisor(ItemStack stack) {
         return false;
     }

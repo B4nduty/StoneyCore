@@ -66,7 +66,6 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
             }
             MechanicsUtil.handlePlayerReload(player);
 
-            ArmorUtil.startArmorCheck(player);
             SwallowTailArrowUtil.startSwallowTailTickTrack(player);
 
             LandTracker.trackPlayerLandMovement(player);
@@ -81,8 +80,8 @@ public class StartTickHandler implements ServerTickEvents.StartTick {
 
     private static void handleFreezeImmunity(ServerPlayer player) {
         for (ItemStack itemStack : player.getArmorSlots()) {
-            for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                if (accessoryStack.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) {
+            for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
+                if (armorAttachment.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) {
                     player.setTicksFrozen(0);
                     AttributeInstance entityAttributeInstance = player.getAttribute(Attributes.MOVEMENT_SPEED);
                     if (entityAttributeInstance != null) {

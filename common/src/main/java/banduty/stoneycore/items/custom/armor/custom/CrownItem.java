@@ -1,24 +1,24 @@
 package banduty.stoneycore.items.custom.armor.custom;
 
-import banduty.stoneycore.client.item.CrownAccessoryRenderer;
-import banduty.stoneycore.client.render.AccessoryRenderProvider;
-import banduty.stoneycore.client.render.AccessoryRenderer;
+import banduty.stoneycore.client.item.CrownAttachmentRenderer;
+import banduty.stoneycore.client.render.ArmorAttachmentRenderProvider;
+import banduty.stoneycore.client.render.ArmorAttachmentRenderer;
 import banduty.stoneycore.items.ModArmorMaterials;
-import banduty.stoneycore.items.custom.armor.SCAccessory;
+import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import net.minecraft.world.item.ArmorItem;
 import org.jetbrains.annotations.NotNull;
 
-public class CrownItem extends ArmorItem implements SCAccessory, AccessoryRenderProvider {
+public class CrownItem extends ArmorItem implements ArmorAttachment, ArmorAttachmentRenderProvider {
     public CrownItem(Properties properties) {
         super(ModArmorMaterials.CROWN, ArmorItem.Type.HELMET, properties);
     }
 
-    private AccessoryRenderer cachedRenderer;
+    private ArmorAttachmentRenderer cachedRenderer;
 
     @Override
-    public AccessoryRenderer getRenderer() {
+    public ArmorAttachmentRenderer getRenderer() {
         if (this.cachedRenderer == null) {
-            this.cachedRenderer = new CrownAccessoryRenderer();
+            this.cachedRenderer = new CrownAttachmentRenderer();
         }
         return this.cachedRenderer;
     }
