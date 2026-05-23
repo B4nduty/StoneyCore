@@ -175,7 +175,7 @@ public class ItemInHandRendererMixin {
 
         for (ItemStack itemStack : player.getArmorSlots()) {
             for (ItemStack accessoryStack : SCUnderArmor.getAccessories(itemStack)) {
-                AccessoryRenderManager.getOrLookUp(itemStack.getItem())
+                AccessoryRenderManager.getOrLookUp(accessoryStack.getItem())
                         .ifPresent(renderer -> {
                             renderer.onRenderInFirstPerson(player, accessoryStack, poseStack, multiBufferSource, light, arm);
                         });
