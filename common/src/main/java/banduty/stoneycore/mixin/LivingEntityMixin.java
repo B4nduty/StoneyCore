@@ -36,7 +36,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -312,7 +311,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
                         if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(slot.getName())) {
                             slotProtected = true;
-                            armorAttachments.hurtAndBreak((int) amount, livingEntity, ((ArmorItem) armorAttachments.getItem()).getEquipmentSlot());
+                            armorAttachments.hurtAndBreak((int) amount, livingEntity, slot);
                         }
                     }
                 }
