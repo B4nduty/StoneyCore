@@ -7,6 +7,7 @@
   "mixins": [
     "AbstractArrowAccessor",
     "AbstractBlockMixin",
+    "CreativeModeTabMixin",
     "FoodDataMixin",
     "ItemEntityMixin",
     "ItemMixin",
@@ -26,6 +27,7 @@
     "BipedEntityModelMixin",
     "CameraAccessor",
     "CameraMixin",
+    "CreativeModeInventoryScreenMixin",
     "GuiMixin",
     "HorseModelMixin",
     "HumanoidArmorLayerMixin",
