@@ -47,8 +47,8 @@ public class UnderArmourRenderer {
         VertexConsumer vertexConsumer = bufferSource.getBuffer(
                 RenderType.armorCutoutNoCull(ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + ".png")));
 
-        if (scUnderArmor instanceof SCDyeableUnderArmor) {
-            int color = DyedItemColor.getOrDefault(stack, -1);
+        if (scUnderArmor instanceof SCDyeableUnderArmor scDyeableUnderArmor) {
+            int color = DyedItemColor.getOrDefault(stack, scDyeableUnderArmor.getDefaultColor());
             ResourceLocation textureOverlayPath = ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + "_overlay.png");
 
             model.renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY, color);

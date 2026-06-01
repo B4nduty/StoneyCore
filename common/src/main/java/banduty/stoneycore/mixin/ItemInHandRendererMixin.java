@@ -2,9 +2,9 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.client.render.ArmorAttachmentRenderManager;
 import banduty.stoneycore.items.custom.armor.deco.Deco;
+import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;
-import banduty.stoneycore.util.DyeUtil;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -26,6 +26,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -135,8 +136,8 @@ public class ItemInHandRendererMixin {
 
             // Handle color if it's dyeable
             int color = -1;
-            if (chestStack.getItem() instanceof SCUnderArmor && chestStack.has(DataComponents.DYED_COLOR)) {
-                color = DyeUtil.getDyeColorARGB(chestStack);
+            if (chestStack.getItem() instanceof SCDyeableUnderArmor scDyeableUnderArmor) {
+                color = DyedItemColor.getOrDefault(chestStack, scDyeableUnderArmor.getDefaultColor());
             }
 
             // Render the arm part based on left/right

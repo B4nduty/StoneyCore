@@ -6,13 +6,15 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.BannerItem;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BannerPatternLayers;
 
 public class BannerPatternRecipe extends ShapelessRecipe {
     public BannerPatternRecipe(String group, CraftingBookCategory category, ItemStack result, NonNullList<Ingredient> ingredients) {
@@ -22,6 +24,31 @@ public class BannerPatternRecipe extends ShapelessRecipe {
     @Override
     public RecipeSerializer<?> getSerializer() {
         return SCRecipes.BANNER_SERIALIZER.get();
+    }
+
+    @Override
+    public boolean matches(CraftingInput input, Level level) {
+        if (!super.matches(input, level)) {
+            return false;
+        }
+
+        boolean hasBanner = false;
+        boolean hasArmor = false;
+        int count = 0;
+
+        for (int i = 0; i < input.size(); i++) {
+            ItemStack stack = input.getItem(i);
+            if (stack.isEmpty()) continue;
+            count++;
+
+            if (stack.getItem() instanceof BannerItem) {
+                hasBanner = true;
+            } else {
+                hasArmor = true;
+            }
+        }
+
+        return count == 2 && hasBanner && hasArmor;
     }
 
     @Override
@@ -44,12 +71,15 @@ public class BannerPatternRecipe extends ShapelessRecipe {
 
         ItemStack result = otherInput.copyWithCount(1);
 
-        banner.getComponents().forEach(component -> {
-            if (component.type() == DataComponents.BANNER_PATTERNS ||
-                    component.type() == DataComponents.BASE_COLOR) {
-                result.set((DataComponentType) component.type(), component.value());
-            }
-        });
+        BannerPatternLayers patterns = banner.get(DataComponents.BANNER_PATTERNS);
+        if (patterns != null) {
+            result.set(DataComponents.BANNER_PATTERNS, patterns);
+        }
+
+        DyeColor baseColor = banner.get(DataComponents.BASE_COLOR);
+        if (baseColor != null) {
+            result.set(DataComponents.BASE_COLOR, baseColor);
+        }
 
         return result;
     }

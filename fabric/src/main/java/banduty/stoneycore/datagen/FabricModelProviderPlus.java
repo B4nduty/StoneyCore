@@ -197,9 +197,15 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
 
     protected void generateBannerPatternModels(Item item, ModelTemplate model, ItemModelGenerators itemModelGenerator) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
-        String[] bannerPatternNames = { "bl", "bo", "br", "bri", "bs", "bt", "bts", "cbo", "cr", "cre", "cs", "dls",
-                "drs", "flo", "glb", "gra", "gru", "hh", "hhb", "ld", "ls", "lud", "mc", "moj", "mr", "ms", "pig", "rd",
-                "rs", "rud", "sc", "sku", "ss", "tl", "tr", "ts", "tt", "tts", "vh", "vhr" };
+        String[] bannerPatternNames = {
+                "border", "bricks", "circle", "creeper", "cross", "curly_border", "diagonal_left", "diagonal_right",
+                "diagonal_up_left", "diagonal_up_right", "flow", "flower", "globe", "gradient", "gradient_up", "guster", "half_horizontal",
+                "half_horizontal_bottom", "half_vertical", "half_vertical_right", "mojang", "piglin", "rhombus", "skull",
+                "small_stripes", "square_bottom_left", "square_bottom_right", "square_top_left", "square_top_right",
+                "straight_cross", "stripe_bottom", "stripe_center", "stripe_downleft", "stripe_downright", "stripe_left",
+                "stripe_middle", "stripe_right", "stripe_top", "triangle_bottom", "triangle_top", "triangles_bottom",
+                "triangles_top"
+        };
 
         for (String pattern : bannerPatternNames) {
             ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + itemId.getPath() + "/" + pattern);
