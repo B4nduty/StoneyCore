@@ -34,6 +34,10 @@ public abstract class HumanoidArmorLayerMixin<T extends LivingEntity, M extends 
     )
     private void onRenderArmorPiece(PoseStack poseStack, MultiBufferSource buffer, int packedLight, T livingEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (!slot.isArmor()) {
+                continue;
+            }
+
             ItemStack itemStack = livingEntity.getItemBySlot(slot);
             A model = getArmorModel(slot);
 
