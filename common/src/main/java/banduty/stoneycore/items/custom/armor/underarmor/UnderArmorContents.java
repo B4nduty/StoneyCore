@@ -1,6 +1,7 @@
 package banduty.stoneycore.items.custom.armor.underarmor;
 
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionsStorage;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -43,7 +44,9 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
             for (ItemStack existing : this.attachments) {
                 if (existing.getItem() == incoming.getItem()) return 0;
-                if (((ArmorAttachment) existing.getItem()).numberSlot() == armorAttachment.numberSlot()) return 0;
+                if (ArmorAttachmentSlotDefinitionsStorage.shareSameSlot(existing, incoming)) {
+                    return 0;
+                }
             }
 
             ItemStack singleItem = incoming.copyWithCount(1);

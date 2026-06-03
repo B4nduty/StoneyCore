@@ -27,9 +27,4 @@ public class CrownItem extends ArmorItem implements ArmorAttachment, ArmorAttach
     public @NotNull Type getArmorSlot() {
         return Type.HELMET;
     }
-
-    @Override
-    public int numberSlot() {
-        return 1;
-    }
 }

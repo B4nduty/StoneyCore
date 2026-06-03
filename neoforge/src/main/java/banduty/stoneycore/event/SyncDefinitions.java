@@ -17,6 +17,7 @@ public class SyncDefinitions {
             PacketDistributor.sendToPlayer(player, new SyncDefinitionsPacket(
                     ArmorDefinitionsStorage.getDefinitions(),
                     ArmorAttachmentDefinitionsStorage.getDefinitions(),
+                    ArmorAttachmentSlotDefinitionsStorage.getDefinitions(),
                     LandDefinitionsStorage.getDefinitions(),
                     SiegeEngineDefinitionsStorage.getDefinitions(),
                     WeaponDefinitionsStorage.getDefinitions()

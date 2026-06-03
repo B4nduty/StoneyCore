@@ -13,7 +13,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Range;
 
 public interface ArmorAttachment {
     default boolean hasOpenVisor(ItemStack stack) {
@@ -24,10 +23,6 @@ public interface ArmorAttachment {
 
     default boolean canEquip(ItemStack underArmorStack, Player player) {
         return true;
-    }
-
-    default @Range(from = 0, to = Integer.MAX_VALUE) int numberSlot() {
-        return 0;
     }
 
     default void applyAttachmentAttributes(ItemStack attachmentStack, ItemStack underArmorStack, AttributeAccumulator accumulator) {

@@ -2,7 +2,6 @@ package banduty.stoneycore.items.custom.armor.deco;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
-import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -55,7 +54,7 @@ public record Deco(Item item, List<Integer> colors, int group, List<ArmorItem.Ty
 
     public static void register(Item item, int group, ArmorItem.Type... allowedArmorTypes) {
         if (REGISTRY.containsKey(item)) {
-            if (!Services.PLATFORM.getPlatformName().equals("NeoForge")) StoneyCore.LOG.warn("Item {} is already registered as a Deco!", item);
+            StoneyCore.LOG.warn("Item {} is already registered as a Deco!", item);
             return;
         }
 

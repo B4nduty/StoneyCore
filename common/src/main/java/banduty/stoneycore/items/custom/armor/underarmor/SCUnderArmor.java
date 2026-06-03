@@ -77,7 +77,7 @@ public class SCUnderArmor extends ArmorItem {
     @Override
     public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
         UnderArmorContents contents = stack.get(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
-        return (contents == null || contents.isEmpty()) ? Optional.empty() : Optional.of(new UnderArmorTooltip(contents));
+        return Optional.of(new UnderArmorTooltip(contents, this.getType()));
     }
 
     private void playSound(Player player, net.minecraft.sounds.SoundEvent sound) {

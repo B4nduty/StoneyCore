@@ -3,6 +3,8 @@ package banduty.stoneycore;
 import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.*;
+import banduty.stoneycore.client.item.ClientDecoTooltip;
+import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.event.AttackCancelHandler;
 import banduty.stoneycore.event.ClientTickHandler;
@@ -31,23 +33,15 @@ import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
 import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-
-import java.util.List;
 
 public class StoneyCoreFabricClient implements ClientModInitializer {
-    private static final ResourceLocation BACKGROUND_SPRITE = ResourceLocation.withDefaultNamespace("container/bundle/background");
-
     @Override
     public void onInitializeClient() {
         ClientPlatform.setClientPlaformHelper(new FabricClientPlatformHelper());
@@ -58,88 +52,11 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         ItemTooltipCallback.EVENT.register(new ItemTooltipHandler());
         ClientTickEvents.END_CLIENT_TICK.register(new ClientTickHandler());
         TooltipComponentCallback.EVENT.register(data -> {
-            if (data instanceof UnderArmorTooltip(UnderArmorContents contents)) {
-                return new ClientTooltipComponent() {
-                    private final List<ItemStack> items = contents.attachments();
-
-                    private int gridSizeX() {
-                        return Math.max(2, (int) Math.ceil(Math.sqrt((double) items.size() + 1.0D)));
-                    }
-
-                    private int gridSizeY() {
-                        return (int) Math.ceil(((double) items.size() + 1.0D) / (double) this.gridSizeX());
-                    }
-
-                    @Override
-                    public int getHeight() {
-                        return this.gridSizeY() * 20 + 2 + 4;
-                    }
-
-                    @Override
-                    public int getWidth(Font font) {
-                        return this.gridSizeX() * 18 + 2;
-                    }
-
-                    @Override
-                    public void renderImage(Font font, int x, int y, GuiGraphics guiGraphics) {
-                        int columns = this.gridSizeX();
-                        int rows = this.gridSizeY();
-                        guiGraphics.blitSprite(BACKGROUND_SPRITE, x, y, this.getWidth(font), this.getHeight() - 4);
-
-                        int itemIndex = 0;
-                        for (int r = 0; r < rows; ++r) {
-                            for (int c = 0; c < columns; ++c) {
-                                int slotX = x + c * 18 + 1;
-                                int slotY = y + r * 20 + 1;
-                                ItemStack stack = itemIndex < items.size() ? items.get(itemIndex) : ItemStack.EMPTY;
-                                renderSlot(slotX, slotY, itemIndex++, false, guiGraphics, font, items.size(), stack);
-                            }
-                        }
-                    }
-                };
+            if (data instanceof UnderArmorTooltip(UnderArmorContents contents, ArmorItem.Type armorType)) {
+                return new ClientUnderArmorTooltip(contents, armorType);
             }
-            return null;
-        });
-
-        TooltipComponentCallback.EVENT.register(data -> {
             if (data instanceof DecoTooltip(DecoContents contents)) {
-                return new ClientTooltipComponent() {private final List<ItemStack> items = contents.items();
-
-                    private int gridSizeX() {
-                        return Math.max(2, (int) Math.ceil(Math.sqrt((double) items.size() + 1.0D)));
-                    }
-
-                    private int gridSizeY() {
-                        return (int) Math.ceil(((double) items.size() + 1.0D) / (double) this.gridSizeX());
-                    }
-
-                    @Override
-                    public int getHeight() {
-                        return this.gridSizeY() * 20 + 2 + 4;
-                    }
-
-                    @Override
-                    public int getWidth(Font font) {
-                        return this.gridSizeX() * 18 + 2;
-                    }
-
-                    @Override
-                    public void renderImage(Font font, int x, int y, GuiGraphics guiGraphics) {
-                        int columns = this.gridSizeX();
-                        int rows = this.gridSizeY();
-                        guiGraphics.blitSprite(BACKGROUND_SPRITE, x, y, this.getWidth(font), this.getHeight() - 4);
-
-                        int itemIndex = 0;
-                        for (int r = 0; r < rows; ++r) {
-                            for (int c = 0; c < columns; ++c) {
-                                int slotX = x + c * 18 + 1;
-                                int slotY = y + r * 20 + 1;
-                                ItemStack stack = itemIndex < items.size() ? items.get(itemIndex) : ItemStack.EMPTY;
-                                renderSlot(slotX, slotY, itemIndex++, false, guiGraphics, font, items.size(), stack);
-                            }
-                        }
-                    }
-                };
+                return new ClientDecoTooltip(contents);
             }
             return null;
         });
@@ -175,38 +92,5 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         BlockEntityRenderers.register(SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(), CraftmanAnvilBlockRenderer::new);
 
         MenuScreens.register(SCScreenHandlers.BLUEPRINT_SCREEN_HANDLER.get(), BlueprintScreen::new);
-    }
-
-    private void renderSlot(int x, int y, int itemIndex, boolean isBundleFull, GuiGraphics guiGraphics, Font font, int size, ItemStack itemStack) {
-        if (itemIndex >= size) {
-            this.blit(guiGraphics, x, y, isBundleFull ? Texture.BLOCKED_SLOT : Texture.SLOT);
-        } else {
-            this.blit(guiGraphics, x, y, Texture.SLOT);
-            guiGraphics.renderItem(itemStack, x + 1, y + 1, itemIndex);
-            guiGraphics.renderItemDecorations(font, itemStack, x + 1, y + 1);
-            if (itemIndex == 0) {
-                AbstractContainerScreen.renderSlotHighlight(guiGraphics, x + 1, y + 1, 0);
-            }
-        }
-
-    }
-
-    private void blit(GuiGraphics guiGraphics, int x, int y, Texture texture) {
-        guiGraphics.blitSprite(texture.sprite, x, y, 0, texture.w, texture.h);
-    }
-
-    enum Texture {
-        BLOCKED_SLOT(ResourceLocation.withDefaultNamespace("container/bundle/blocked_slot"), 18, 20),
-        SLOT(ResourceLocation.withDefaultNamespace("container/bundle/slot"), 18, 20);
-
-        public final ResourceLocation sprite;
-        public final int w;
-        public final int h;
-
-        Texture(ResourceLocation sprite, int w, int h) {
-            this.sprite = sprite;
-            this.w = w;
-            this.h = h;
-        }
     }
 }

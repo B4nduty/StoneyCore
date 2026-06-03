@@ -3,6 +3,8 @@ package banduty.stoneycore;
 import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
+import banduty.stoneycore.client.item.ClientDecoTooltip;
+import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.items.custom.armor.deco.DecoContents;
 import banduty.stoneycore.items.custom.armor.deco.DecoTooltip;
@@ -21,15 +23,12 @@ import banduty.stoneycore.platform.*;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.SCScreenHandlers;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -107,54 +106,14 @@ public class StoneyCoreNeoForgeClient {
     @SubscribeEvent
     public static void onRegisterClientTooltipComponents(RegisterClientTooltipComponentFactoriesEvent event) {
         event.register(UnderArmorTooltip.class, data -> {
-            if (data instanceof UnderArmorTooltip(UnderArmorContents contents)) {
-                return new ClientTooltipComponent() {
-                    @Override
-                    public int getHeight() {
-                        return 20;
-                    }
-
-                    @Override
-                    public int getWidth(Font font) {
-                        return contents.attachments().size() * 18;
-                    }
-
-                    @Override
-                    public void renderImage(Font font, int x, int y, GuiGraphics guiGraphics) {
-                        int currentX = x;
-                        for (ItemStack stack : contents.attachments()) {
-                            guiGraphics.renderItem(stack, currentX, y);
-                            guiGraphics.renderItemDecorations(font, stack, currentX, y);
-                            currentX += 18;
-                        }
-                    }
-                };
+            if (data instanceof UnderArmorTooltip(UnderArmorContents contents, ArmorItem.Type type)) {
+                return new ClientUnderArmorTooltip(contents, type);
             }
             return null;
         });
         event.register(DecoTooltip.class, data -> {
             if (data instanceof DecoTooltip(DecoContents contents)) {
-                return new ClientTooltipComponent() {
-                    @Override
-                    public int getHeight() {
-                        return 20;
-                    }
-
-                    @Override
-                    public int getWidth(Font font) {
-                        return contents.size() * 18;
-                    }
-
-                    @Override
-                    public void renderImage(Font font, int x, int y, GuiGraphics guiGraphics) {
-                        int currentX = x;
-                        for (ItemStack stack : contents.items()) {
-                            guiGraphics.renderItem(stack, currentX, y);
-                            guiGraphics.renderItemDecorations(font, stack, currentX, y);
-                            currentX += 18;
-                        }
-                    }
-                };
+                return new ClientDecoTooltip(contents);
             }
             return null;
         });

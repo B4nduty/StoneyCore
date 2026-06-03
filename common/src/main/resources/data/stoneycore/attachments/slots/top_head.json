@@ -1,0 +1,6 @@
+{
+  "slot": "top_head",
+  "armor": "helmet",
+  "items": ["stoneycore:crown"],
+  "icon": "stoneycore:container/icon/top_head"
+}

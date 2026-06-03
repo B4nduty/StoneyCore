@@ -15,6 +15,7 @@ import java.util.Map;
 public record SyncDefinitionsPacket(
         Map<ResourceLocation, ArmorDefinitionData> armor,
         Map<ResourceLocation, ArmorAttachmentDefinitionData> armorAttachment,
+        Map<String, ArmorAttachmentSlotDefinitionData> armorSlotAttachment,
         Map<ResourceLocation, LandValues> land,
         Map<ResourceLocation, SiegeEngineDefinitionData> siege_engine,
         Map<ResourceLocation, WeaponDefinitionData> weapon
@@ -27,6 +28,7 @@ public record SyncDefinitionsPacket(
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncDefinitionsPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, ArmorDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::armor,
             ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, ArmorAttachmentDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::armorAttachment,
+            ByteBufCodecs.map(HashMap::new, ByteBufCodecs.STRING_UTF8, ArmorAttachmentSlotDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::armorSlotAttachment,
             ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, LandValues.STREAM_CODEC), SyncDefinitionsPacket::land,
             ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, SiegeEngineDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::siege_engine,
             ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, WeaponDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::weapon,
@@ -42,6 +44,9 @@ public record SyncDefinitionsPacket(
 
         ArmorAttachmentDefinitionsStorage.clearDefinitions();
         this.armorAttachment.forEach(ArmorAttachmentDefinitionsStorage::addDefinition);
+
+        ArmorAttachmentSlotDefinitionsStorage.clearDefinitions();
+        armorSlotAttachment.values().forEach(ArmorAttachmentSlotDefinitionsStorage::mergeAndAddDefinition);
 
         LandDefinitionsStorage.clearDefinitions();
         this.land.forEach(LandDefinitionsStorage::addDefinition);

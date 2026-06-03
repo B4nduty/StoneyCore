@@ -2,6 +2,7 @@ package banduty.stoneycore.networking.payload;
 
 import banduty.stoneycore.networking.SCPayloads;
 import banduty.stoneycore.util.definitionsloader.*;
+import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -15,19 +16,21 @@ import java.util.Map;
 public record SyncDefinitionsPacket(
         Map<ResourceLocation, ArmorDefinitionData> armor,
         Map<ResourceLocation, ArmorAttachmentDefinitionData> armorAttachment,
+        Map<String, ArmorAttachmentSlotDefinitionData> armorSlotAttachment,
         Map<ResourceLocation, LandValues> land,
         Map<ResourceLocation, SiegeEngineDefinitionData> siege_engine,
         Map<ResourceLocation, WeaponDefinitionData> weapon
 ) implements CustomPacketPayload {
     public static final Type<SyncDefinitionsPacket> ID = new Type<>(SCPayloads.SYNC_DEFINITIONS);
 
-    private static <T> StreamCodec<RegistryFriendlyByteBuf, Map<ResourceLocation, T>> mapCodec(com.mojang.serialization.Codec<T> codec) {
+    private static <T> StreamCodec<RegistryFriendlyByteBuf, Map<ResourceLocation, T>> mapCodec(Codec<T> codec) {
         return ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, ByteBufCodecs.fromCodec(codec));
     }
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncDefinitionsPacket> CODEC = StreamCodec.composite(
             mapCodec(ArmorDefinitionData.CODEC), SyncDefinitionsPacket::armor,
             mapCodec(ArmorAttachmentDefinitionData.CODEC), SyncDefinitionsPacket::armorAttachment,
+            ByteBufCodecs.map(HashMap::new, ByteBufCodecs.STRING_UTF8, ArmorAttachmentSlotDefinitionData.STREAM_CODEC), SyncDefinitionsPacket::armorSlotAttachment,
             mapCodec(LandValues.CODEC), SyncDefinitionsPacket::land,
             mapCodec(SiegeEngineDefinitionData.CODEC), SyncDefinitionsPacket::siege_engine,
             mapCodec(WeaponDefinitionData.CODEC), SyncDefinitionsPacket::weapon,
@@ -42,6 +45,9 @@ public record SyncDefinitionsPacket(
 
         ArmorAttachmentDefinitionsStorage.clearDefinitions();
         armorAttachment.forEach(ArmorAttachmentDefinitionsStorage::addDefinition);
+
+        ArmorAttachmentSlotDefinitionsStorage.clearDefinitions();
+        armorSlotAttachment.values().forEach(ArmorAttachmentSlotDefinitionsStorage::mergeAndAddDefinition);
 
         LandDefinitionsStorage.clearDefinitions();
         land.forEach(LandDefinitionsStorage::addDefinition);
