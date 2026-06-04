@@ -68,6 +68,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                 boolean isSameSlot = incomingSlotDef != null && ArmorAttachmentSlotDefinitionsStorage.shareSameSlot(existing, incoming);
 
                 if (isSameItem || isSameSlot) {
+                    player.containerMenu.setCarried(existing);
                     this.attachments.set(i, singleItem);
                     return 1;
                 }
