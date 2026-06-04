@@ -44,7 +44,7 @@ public class ArmorAttachmentSlotDefinitionsStorage {
         }
     }
 
-    private static ArmorAttachmentSlotDefinitionData getDefaultData() {
+    public static ArmorAttachmentSlotDefinitionData getDefaultData() {
         return new ArmorAttachmentSlotDefinitionData("", "", new ArrayList<>(), "", false, "");
     }
 

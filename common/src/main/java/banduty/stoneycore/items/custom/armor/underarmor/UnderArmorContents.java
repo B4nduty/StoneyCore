@@ -13,6 +13,7 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public record UnderArmorContents(List<ItemStack> attachments) {
     public static final UnderArmorContents EMPTY = new UnderArmorContents(List.of());
@@ -45,18 +46,18 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
             ArmorAttachmentSlotDefinitionData incomingSlotDef = ArmorAttachmentSlotDefinitionsStorage.getData(incoming);
 
-            if (incomingSlotDef != null) {
-                if (incomingSlotDef.requiredSlot() != null && !incomingSlotDef.requiredSlot().isEmpty()) {
-                    boolean hasRequiredAttachment = false;
-                    for (ItemStack existing : this.attachments) {
-                        ArmorAttachmentSlotDefinitionData existingDef = ArmorAttachmentSlotDefinitionsStorage.getData(existing);
-                        if (existingDef != null && existingDef.slot().equals(incomingSlotDef.requiredSlot())) {
-                            hasRequiredAttachment = true;
-                            break;
-                        }
+            if (Objects.equals(incomingSlotDef, ArmorAttachmentSlotDefinitionsStorage.getDefaultData())) return 0;
+
+            if (incomingSlotDef.requiredSlot() != null && !incomingSlotDef.requiredSlot().isEmpty()) {
+                boolean hasRequiredAttachment = false;
+                for (ItemStack existing : this.attachments) {
+                    ArmorAttachmentSlotDefinitionData existingDef = ArmorAttachmentSlotDefinitionsStorage.getData(existing);
+                    if (existingDef != null && existingDef.slot().equals(incomingSlotDef.requiredSlot())) {
+                        hasRequiredAttachment = true;
+                        break;
                     }
-                    if (!hasRequiredAttachment) return 0;
                 }
+                if (!hasRequiredAttachment) return 0;
             }
 
             ItemStack singleItem = incoming.copyWithCount(1);
@@ -65,7 +66,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                 ItemStack existing = this.attachments.get(i);
 
                 boolean isSameItem = existing.getItem() == incoming.getItem();
-                boolean isSameSlot = incomingSlotDef != null && ArmorAttachmentSlotDefinitionsStorage.shareSameSlot(existing, incoming);
+                boolean isSameSlot = ArmorAttachmentSlotDefinitionsStorage.shareSameSlot(existing, incoming);
 
                 if (isSameItem || isSameSlot) {
                     player.containerMenu.setCarried(existing);
