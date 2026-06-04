@@ -45,26 +45,34 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
             ArmorAttachmentSlotDefinitionData incomingSlotDef = ArmorAttachmentSlotDefinitionsStorage.getData(incoming);
 
-            if (!incomingSlotDef.requiredSlot().isEmpty()) {
-                boolean hasRequiredAttachment = false;
-                for (ItemStack existing : this.attachments) {
-                    ArmorAttachmentSlotDefinitionData existingDef = ArmorAttachmentSlotDefinitionsStorage.getData(existing);
-                    if (existingDef.slot().equals(incomingSlotDef.requiredSlot())) {
-                        hasRequiredAttachment = true;
-                        break;
+            if (incomingSlotDef != null) {
+                if (incomingSlotDef.requiredSlot() != null && !incomingSlotDef.requiredSlot().isEmpty()) {
+                    boolean hasRequiredAttachment = false;
+                    for (ItemStack existing : this.attachments) {
+                        ArmorAttachmentSlotDefinitionData existingDef = ArmorAttachmentSlotDefinitionsStorage.getData(existing);
+                        if (existingDef != null && existingDef.slot().equals(incomingSlotDef.requiredSlot())) {
+                            hasRequiredAttachment = true;
+                            break;
+                        }
                     }
-                }
-                if (!hasRequiredAttachment) return 0; // The slot is locked!
-            }
-
-            for (ItemStack existing : this.attachments) {
-                if (existing.getItem() == incoming.getItem()) return 0;
-                if (ArmorAttachmentSlotDefinitionsStorage.shareSameSlot(existing, incoming)) {
-                    return 0;
+                    if (!hasRequiredAttachment) return 0;
                 }
             }
 
             ItemStack singleItem = incoming.copyWithCount(1);
+
+            for (int i = 0; i < this.attachments.size(); i++) {
+                ItemStack existing = this.attachments.get(i);
+
+                boolean isSameItem = existing.getItem() == incoming.getItem();
+                boolean isSameSlot = incomingSlotDef != null && ArmorAttachmentSlotDefinitionsStorage.shareSameSlot(existing, incoming);
+
+                if (isSameItem || isSameSlot) {
+                    this.attachments.set(i, singleItem);
+                    return 1;
+                }
+            }
+
             this.attachments.add(singleItem);
             return 1;
         }
