@@ -34,13 +34,18 @@ public class ArmorAttachmentSlotDefinitionsStorage {
                     incomingData.armor().isEmpty() ? existingData.armor() : incomingData.armor(),
                     combinedItems,
                     incomingData.icon().isEmpty() ? existingData.icon() : incomingData.icon(),
-                    false
+                    false,
+                    incomingData.requiredSlot().isEmpty() ? existingData.requiredSlot() : incomingData.requiredSlot()
             );
 
             DEFINITIONS.put(incomingData.slot(), merged);
         } else {
             DEFINITIONS.put(incomingData.slot(), incomingData);
         }
+    }
+
+    private static ArmorAttachmentSlotDefinitionData getDefaultData() {
+        return new ArmorAttachmentSlotDefinitionData("", "", new ArrayList<>(), "", false, "");
     }
 
     public static ArmorAttachmentSlotDefinitionData getData(ItemStack itemStack) {
@@ -73,10 +78,6 @@ public class ArmorAttachmentSlotDefinitionsStorage {
 
     public static void clearDefinitions() {
         DEFINITIONS.clear();
-    }
-
-    private static ArmorAttachmentSlotDefinitionData getDefaultData() {
-        return new ArmorAttachmentSlotDefinitionData("", "", new ArrayList<>(), "", false);
     }
 
     public static Map<String, ArmorAttachmentSlotDefinitionData> getDefinitions() {

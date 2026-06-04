@@ -1,6 +1,7 @@
 package banduty.stoneycore.items.custom.armor.underarmor;
 
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionData;
 import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionsStorage;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -41,6 +42,20 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
             if (((ArmorItem) underArmorStack.getItem()).getType() != armorAttachment.getArmorSlot()) return 0;
             if (!armorAttachment.canEquip(underArmorStack, player)) return 0;
+
+            ArmorAttachmentSlotDefinitionData incomingSlotDef = ArmorAttachmentSlotDefinitionsStorage.getData(incoming);
+
+            if (!incomingSlotDef.requiredSlot().isEmpty()) {
+                boolean hasRequiredAttachment = false;
+                for (ItemStack existing : this.attachments) {
+                    ArmorAttachmentSlotDefinitionData existingDef = ArmorAttachmentSlotDefinitionsStorage.getData(existing);
+                    if (existingDef.slot().equals(incomingSlotDef.requiredSlot())) {
+                        hasRequiredAttachment = true;
+                        break;
+                    }
+                }
+                if (!hasRequiredAttachment) return 0; // The slot is locked!
+            }
 
             for (ItemStack existing : this.attachments) {
                 if (existing.getItem() == incoming.getItem()) return 0;
