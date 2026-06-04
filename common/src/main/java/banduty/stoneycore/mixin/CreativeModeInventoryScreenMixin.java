@@ -2,6 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.items.itemgroup.SCTextureData;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.network.chat.Component;
@@ -12,6 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class CreativeModeInventoryScreenMixin extends AbstractContainerScreen<CreativeModeInventoryScreen.ItemPickerMenu> {
@@ -31,24 +33,40 @@ public abstract class CreativeModeInventoryScreenMixin extends AbstractContainer
             )
     )
     private ResourceLocation injectCustomGroupTexture(ResourceLocation original) {
-        if (selectedTab != null && ((SCTextureData) selectedTab).isCustom()) {
-            return selectedTab.getBackgroundTexture();
+        if (selectedTab == null || !((SCTextureData) selectedTab).isCustom()) {
+            return original;
         }
-        return original;
+        return selectedTab.getBackgroundTexture();
     }
 
-    @ModifyArg(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"))
-    private ResourceLocation injectCustomScrollbarTexture(ResourceLocation texture) {
+    @Redirect(
+            method = "renderBg",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"
+            )
+    )
+    private void redirectScrollbarSprite(GuiGraphics instance, ResourceLocation texture, int x, int y, int width, int height) {
         if (selectedTab == null || !((SCTextureData) selectedTab).isCustom()) {
-            return texture;
+            if (texture != null) {
+                instance.blitSprite(texture, x, y, width, height);
+            }
+            return;
         }
+
         SCTextureData holder = (SCTextureData) selectedTab;
-        return this.canScroll() ? holder.getScrollerSprite() : holder.getScrollerDisabledSprite();
+        ResourceLocation customScroll = this.canScroll() ? holder.getScrollerSprite() : holder.getScrollerDisabledSprite();
+
+        if (customScroll != null) {
+            instance.blitSprite(customScroll, x, y, width, height);
+        } else if (texture != null) {
+            instance.blitSprite(texture, x, y, width, height);
+        }
     }
 
     @ModifyArg(method = "renderTabButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"))
     private ResourceLocation injectCustomTabTexture(ResourceLocation texture, @Local(argsOnly = true) CreativeModeTab currentTab) {
-        if (currentTab == null || !((SCTextureData) selectedTab).isCustom()) {
+        if (currentTab == null || selectedTab == null || !((SCTextureData) selectedTab).isCustom()) {
             return texture;
         }
         SCTextureData holder = (SCTextureData) selectedTab;
@@ -57,16 +75,13 @@ public abstract class CreativeModeInventoryScreenMixin extends AbstractContainer
         boolean isTopRow = (currentTab.row() == CreativeModeTab.Row.TOP);
         int column = Math.min(currentTab.column(), 6);
 
-        ResourceLocation[] selectedArr;
-        ResourceLocation[] unselectedArr;
-        if (isTopRow) {
-            selectedArr = holder.getSelectedTopTabs();
-            unselectedArr = holder.getUnselectedTopTabs();
-        } else {
-            selectedArr = holder.getSelectedBottomTabs();
-            unselectedArr = holder.getUnselectedBottomTabs();
-        }
-        return isSelected ? selectedArr[column] : unselectedArr[column];
+        ResourceLocation[] selectedArr = isTopRow ? holder.getSelectedTopTabs() : holder.getSelectedBottomTabs();
+        ResourceLocation[] unselectedArr = isTopRow ? holder.getUnselectedTopTabs() : holder.getUnselectedBottomTabs();
+
+        if (selectedArr == null || unselectedArr == null) return texture;
+
+        ResourceLocation customTexture = isSelected ? selectedArr[column] : unselectedArr[column];
+        return customTexture != null ? customTexture : texture;
     }
 
     public CreativeModeInventoryScreenMixin(CreativeModeInventoryScreen.ItemPickerMenu screenHandler, Inventory playerInventory, Component text) {
