@@ -27,7 +27,6 @@
     "BipedEntityModelMixin",
     "CameraAccessor",
     "CameraMixin",
-    "CreativeModeInventoryScreenMixin",
     "GuiMixin",
     "HorseModelMixin",
     "HumanoidArmorLayerMixin",

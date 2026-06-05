@@ -10,6 +10,7 @@
     "FPlayerMixin"
   ],
   "client": [
+    "CreativeModeInventoryScreenMixin",
     "FGuiMixin"
   ],
   "server": [

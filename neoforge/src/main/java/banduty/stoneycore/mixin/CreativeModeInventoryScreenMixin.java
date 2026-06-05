@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.CreativeModeTab;
+import net.neoforged.neoforge.client.gui.CreativeTabsScreenPage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class CreativeModeInventoryScreenMixin extends AbstractContainerScreen<CreativeModeInventoryScreen.ItemPickerMenu> {
 
+    @Shadow
+    private CreativeTabsScreenPage currentPage;
     @Shadow
     private static CreativeModeTab selectedTab;
 
@@ -72,8 +75,8 @@ public abstract class CreativeModeInventoryScreenMixin extends AbstractContainer
         SCTextureData holder = (SCTextureData) selectedTab;
 
         boolean isSelected = (currentTab == selectedTab);
-        boolean isTopRow = (currentTab.row() == CreativeModeTab.Row.TOP);
-        int column = Math.min(currentTab.column(), 6);
+        boolean isTopRow = this.currentPage.isTop(currentTab);
+        int column = this.currentPage.getColumn(currentTab);
 
         ResourceLocation[] selectedArr = isTopRow ? holder.getSelectedTopTabs() : holder.getSelectedBottomTabs();
         ResourceLocation[] unselectedArr = isTopRow ? holder.getUnselectedTopTabs() : holder.getUnselectedBottomTabs();
