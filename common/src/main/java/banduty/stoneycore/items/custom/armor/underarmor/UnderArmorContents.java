@@ -1,6 +1,7 @@
 package banduty.stoneycore.items.custom.armor.underarmor;
 
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionData;
 import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionsStorage;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -12,6 +13,7 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public record UnderArmorContents(List<ItemStack> attachments) {
     public static final UnderArmorContents EMPTY = new UnderArmorContents(List.of());
@@ -42,14 +44,37 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             if (((ArmorItem) underArmorStack.getItem()).getType() != armorAttachment.getArmorSlot()) return 0;
             if (!armorAttachment.canEquip(underArmorStack, player)) return 0;
 
-            for (ItemStack existing : this.attachments) {
-                if (existing.getItem() == incoming.getItem()) return 0;
-                if (ArmorAttachmentSlotDefinitionsStorage.shareSameSlot(existing, incoming)) {
-                    return 0;
+            ArmorAttachmentSlotDefinitionData incomingSlotDef = ArmorAttachmentSlotDefinitionsStorage.getData(incoming);
+
+            if (Objects.equals(incomingSlotDef, ArmorAttachmentSlotDefinitionsStorage.getDefaultData())) return 0;
+
+            if (incomingSlotDef.requiredSlot() != null && !incomingSlotDef.requiredSlot().isEmpty()) {
+                boolean hasRequiredAttachment = false;
+                for (ItemStack existing : this.attachments) {
+                    ArmorAttachmentSlotDefinitionData existingDef = ArmorAttachmentSlotDefinitionsStorage.getData(existing);
+                    if (existingDef != null && existingDef.slot().equals(incomingSlotDef.requiredSlot())) {
+                        hasRequiredAttachment = true;
+                        break;
+                    }
                 }
+                if (!hasRequiredAttachment) return 0;
             }
 
             ItemStack singleItem = incoming.copyWithCount(1);
+
+            for (int i = 0; i < this.attachments.size(); i++) {
+                ItemStack existing = this.attachments.get(i);
+
+                boolean isSameItem = existing.getItem() == incoming.getItem();
+                boolean isSameSlot = ArmorAttachmentSlotDefinitionsStorage.shareSameSlot(existing, incoming);
+
+                if (isSameItem || isSameSlot) {
+                    player.containerMenu.setCarried(existing);
+                    this.attachments.set(i, singleItem);
+                    return 1;
+                }
+            }
+
             this.attachments.add(singleItem);
             return 1;
         }
