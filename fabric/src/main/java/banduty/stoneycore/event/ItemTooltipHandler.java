@@ -75,9 +75,9 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             double bludgeoning = SCArmorUtil.getResistance(SCDamageType.BLUDGEONING, armorItem) * 100;
             double piercing = SCArmorUtil.getResistance(SCDamageType.PIERCING, armorItem) * 100;
 
-            if (slashing != 0) lines.add(Component.translatable("component.tooltip.stoneycore.slashingResistance", slashing).withStyle(ChatFormatting.BLUE));
-            if (bludgeoning != 0) lines.add(Component.translatable("component.tooltip.stoneycore.bludgeoningResistance", bludgeoning).withStyle(ChatFormatting.BLUE));
-            if (piercing != 0) lines.add(Component.translatable("component.tooltip.stoneycore.piercingResistance", piercing).withStyle(ChatFormatting.BLUE));
+            if (slashing != 0) lines.add(Component.translatable("component.tooltip.stoneycore.slashingResistance", String.format("%.1f", slashing)).withStyle(ChatFormatting.BLUE));
+            if (bludgeoning != 0) lines.add(Component.translatable("component.tooltip.stoneycore.bludgeoningResistance", String.format("%.1f", bludgeoning)).withStyle(ChatFormatting.BLUE));
+            if (piercing != 0) lines.add(Component.translatable("component.tooltip.stoneycore.piercingResistance", String.format("%.1f", piercing)).withStyle(ChatFormatting.BLUE));
         }
 
         if (ArmorDefinitionsStorage.containsItem(stack)) {
