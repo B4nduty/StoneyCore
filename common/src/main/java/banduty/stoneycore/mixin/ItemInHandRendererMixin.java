@@ -19,15 +19,12 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -117,12 +114,11 @@ public class ItemInHandRendererMixin {
         LocalPlayer player = this.stoneyCore$client.player;
         if (player == null) return;
 
-        ItemStack chestStack = player.getInventory().getArmor(2); // Chestplate
+        ItemStack chestStack = player.getInventory().getArmor(2);
         if (chestStack.getItem() instanceof ArmorItem armorItem &&
                 ArmorDefinitionsStorage.containsItem(armorItem) &&
                 armorItem.getEquipmentSlot() == ArmorItem.Type.CHESTPLATE.getSlot()) {
 
-            // Load your custom model
             UnderArmourArmModel model = new UnderArmourArmModel(UnderArmourArmModel.getTexturedModelData().bakeRoot());
 
             var materialKey = armorItem.getMaterial().unwrapKey().orElse(null);
@@ -130,21 +126,18 @@ public class ItemInHandRendererMixin {
             String namespace = materialKey.location().getNamespace();
             String path = materialKey.location().getPath();
 
-            // Get structureId for the base layer
             ResourceLocation baseTexture = ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + ".png");
             VertexConsumer baseConsumer = multiBufferSource.getBuffer(RenderType.armorCutoutNoCull(baseTexture));
 
-            // Handle color if it's dyeable
             int color = -1;
             if (chestStack.getItem() instanceof SCDyeableUnderArmor scDyeableUnderArmor) {
                 color = DyedItemColor.getOrDefault(chestStack, scDyeableUnderArmor.getDefaultColor());
             }
 
-            // Render the arm part based on left/right
             PlayerModel<?> playerModel = ((PlayerModel<?>) ((LivingEntityRenderer<?, ?>)
                     Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(player)).getModel());
 
-            float armOffset = 0.0625f; // This is 1px in model units
+            float armOffset = 0.0625f;
 
             poseStack.pushPose();
             if (arm == HumanoidArm.RIGHT) {
@@ -158,18 +151,17 @@ public class ItemInHandRendererMixin {
             }
             poseStack.popPose();
 
-            // Render overlay if available
-            ResourceLocation overlayTexture = stoneyCore$getOverlayIdentifier(chestStack);
-            VertexConsumer overlayConsumer = multiBufferSource.getBuffer(RenderType.armorCutoutNoCull(overlayTexture));
-            if (!overlayTexture.getPath().isEmpty()) {
+            if (chestStack.getItem() instanceof SCDyeableUnderArmor) {
+                ResourceLocation overlayTexture = ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + "_overlay.png");
+                VertexConsumer overlayConsumer = multiBufferSource.getBuffer(RenderType.armorCutoutNoCull(overlayTexture));
                 if (arm == HumanoidArm.RIGHT) {
                     poseStack.translate(-armOffset, 0.0F, 0.0F);
                     model.armorRightArm.copyFrom(playerModel.rightArm);
-                    model.armorRightArm.render(poseStack, overlayConsumer, light, OverlayTexture.NO_OVERLAY, color);
+                    model.armorRightArm.render(poseStack, overlayConsumer, light, OverlayTexture.NO_OVERLAY, -1);
                 } else {
                     poseStack.translate(armOffset, 0.0F, 0.0F);
                     model.armorLeftArm.copyFrom(playerModel.leftArm);
-                    model.armorLeftArm.render(poseStack, overlayConsumer, light, OverlayTexture.NO_OVERLAY, color);
+                    model.armorLeftArm.render(poseStack, overlayConsumer, light, OverlayTexture.NO_OVERLAY, -1);
                 }
             }
         }
@@ -190,34 +182,5 @@ public class ItemInHandRendererMixin {
                 }
             }
         }
-    }
-
-    @Unique
-    private @NotNull ResourceLocation stoneyCore$getOverlayIdentifier(ItemStack itemStack) {
-        if (!(itemStack.getItem() instanceof ArmorItem armorItem)) {
-            return ResourceLocation.fromNamespaceAndPath("","");
-        }
-
-        var materialHolder = armorItem.getMaterial();
-
-        String materialName = materialHolder.unwrapKey()
-                .map(key -> key.location().getPath())
-                .orElse("default");
-
-        String path = "textures/models/armor/" + materialName + ".png";
-        ResourceLocation originalIdentifier = ResourceLocation.fromNamespaceAndPath(
-                BuiltInRegistries.ITEM.getKey(itemStack.getItem()).getNamespace(),
-                path
-        );
-
-        String textureOverlayString = originalIdentifier.getPath();
-
-        if (textureOverlayString.endsWith(".png") && itemStack.has(DataComponents.DYED_COLOR)) {
-            textureOverlayString = textureOverlayString.substring(0, textureOverlayString.length() - 4);
-        } else {
-            return ResourceLocation.fromNamespaceAndPath("","");
-        }
-
-        return ResourceLocation.fromNamespaceAndPath(originalIdentifier.getNamespace(), textureOverlayString);
     }
 }
