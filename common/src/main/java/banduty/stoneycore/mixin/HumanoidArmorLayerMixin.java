@@ -28,8 +28,10 @@ public abstract class HumanoidArmorLayerMixin<T extends LivingEntity, M extends 
 
     @SuppressWarnings("unchecked")
     @Inject(
+            // Changing target from HEAD to TAIL ensures animation mods
+            // have already manipulated the entity and its parent model's limbs.
             method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/LivingEntity;FFFFFF)V",
-            at = @At("HEAD")
+            at = @At("TAIL")
     )
     private void onRender(PoseStack poseStack, MultiBufferSource buffer, int packedLight, T livingEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
@@ -41,10 +43,18 @@ public abstract class HumanoidArmorLayerMixin<T extends LivingEntity, M extends 
 
             if (itemStack.getItem() instanceof SCUnderArmor) {
                 A model = getArmorModel(slot);
+
                 this.getParentModel().copyPropertiesTo(model);
                 HumanoidModel<LivingEntity> humanoidModel = (HumanoidModel<LivingEntity>) model;
 
-                humanoidModel.setupAnim(livingEntity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+                M parent = this.getParentModel();
+                humanoidModel.head.copyFrom(parent.head);
+                humanoidModel.hat.copyFrom(parent.hat);
+                humanoidModel.body.copyFrom(parent.body);
+                humanoidModel.rightArm.copyFrom(parent.rightArm);
+                humanoidModel.leftArm.copyFrom(parent.leftArm);
+                humanoidModel.rightLeg.copyFrom(parent.rightLeg);
+                humanoidModel.leftLeg.copyFrom(parent.leftLeg);
 
                 UnderArmourRenderer.INSTANCE.renderBaseArmor(poseStack, buffer, itemStack, livingEntity, packedLight, humanoidModel,
                         limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
