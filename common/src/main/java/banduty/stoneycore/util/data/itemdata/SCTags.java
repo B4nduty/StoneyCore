@@ -85,7 +85,6 @@ public enum SCTags {
      */
     GEO_2D_ITEMS("geo_2d_items"),
     BROKEN_WEAPONS("broken_weapons"),
-    BYPASS_MELEE_USE("broken_weapons"),
 
     // Armor Tags
     /**

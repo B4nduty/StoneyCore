@@ -92,10 +92,6 @@ public abstract class ItemMixin {
     public void stoneycore$use(Level level, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
         ItemStack stack = player.getItemInHand(hand);
 
-        if (stack.is(SCTags.BYPASS_MELEE_USE.getTag())) {
-            return;
-        }
-
         if ((getUseAnimation(stack) == UseAnim.DRINK || getUseAnimation(stack) == UseAnim.EAT)) {
             ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
             for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
