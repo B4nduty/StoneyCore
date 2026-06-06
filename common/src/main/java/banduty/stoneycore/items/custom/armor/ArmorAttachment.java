@@ -1,11 +1,9 @@
 package banduty.stoneycore.items.custom.armor;
 
-import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -45,22 +43,14 @@ public interface ArmorAttachment {
             baseAttachmentDeflect -= 0.05;
         }
 
-        accumulator.accept(Attributes.ARMOR, new AttributeModifier(
-                ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_attachments_armor"),
-                baseAttachmentArmor, AttributeModifier.Operation.ADD_VALUE));
-        accumulator.accept(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(
-                ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_attachments_toughness"),
-                baseAttachmentToughness, AttributeModifier.Operation.ADD_VALUE));
-        accumulator.accept(SCAttributes.HUNGER_DRAIN_MULTIPLIER, new AttributeModifier(
-                ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_attachments_hunger"),
-                baseAttachmentHunger, AttributeModifier.Operation.ADD_VALUE));
-        accumulator.accept(SCAttributes.DEFLECT_CHANCE, new AttributeModifier(
-                ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_attachments_deflect"),
-                baseAttachmentDeflect, AttributeModifier.Operation.ADD_VALUE));
+        accumulator.accept(Attributes.ARMOR, baseAttachmentArmor, AttributeModifier.Operation.ADD_VALUE);
+        accumulator.accept(Attributes.ARMOR_TOUGHNESS, baseAttachmentToughness, AttributeModifier.Operation.ADD_VALUE);
+        accumulator.accept(SCAttributes.HUNGER_DRAIN_MULTIPLIER, baseAttachmentHunger, AttributeModifier.Operation.ADD_VALUE);
+        accumulator.accept(SCAttributes.DEFLECT_CHANCE, baseAttachmentDeflect, AttributeModifier.Operation.ADD_VALUE);
     }
 
     @FunctionalInterface
     interface AttributeAccumulator {
-        void accept(Holder<Attribute> attribute, AttributeModifier modifier);
+        void accept(Holder<Attribute> attribute, double amount, AttributeModifier.Operation operation);
     }
 }
