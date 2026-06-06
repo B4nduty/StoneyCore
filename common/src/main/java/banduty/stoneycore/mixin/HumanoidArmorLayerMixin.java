@@ -29,28 +29,41 @@ public abstract class HumanoidArmorLayerMixin<T extends LivingEntity, M extends 
     @SuppressWarnings("unchecked")
     @Inject(
             method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/LivingEntity;FFFFFF)V",
-            at = @At("HEAD"),
-            cancellable = true
+            at = @At("HEAD")
     )
-    private void onRenderArmorPiece(PoseStack poseStack, MultiBufferSource buffer, int packedLight, T livingEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
+    private void onRender(PoseStack poseStack, MultiBufferSource buffer, int packedLight, T livingEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (!slot.isArmor()) {
                 continue;
             }
 
             ItemStack itemStack = livingEntity.getItemBySlot(slot);
-            A model = getArmorModel(slot);
 
             if (itemStack.getItem() instanceof SCUnderArmor) {
+                A model = getArmorModel(slot);
                 this.getParentModel().copyPropertiesTo(model);
                 HumanoidModel<LivingEntity> humanoidModel = (HumanoidModel<LivingEntity>) model;
+
                 humanoidModel.setupAnim(livingEntity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+
                 UnderArmourRenderer.INSTANCE.renderBaseArmor(poseStack, buffer, itemStack, livingEntity, packedLight, humanoidModel,
                         limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
                 UnderArmourRenderer.INSTANCE.renderAttachments(poseStack, buffer, itemStack, livingEntity, packedLight, humanoidModel,
                         limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
-                ci.cancel();
             }
+        }
+    }
+
+    @Inject(
+            method = "renderArmorPiece(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;ILnet/minecraft/client/model/HumanoidModel;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private void onRenderArmorPiece(PoseStack poseStack, MultiBufferSource buffer, T livingEntity, EquipmentSlot slot, int packedLight, A model, CallbackInfo ci) {
+        ItemStack itemStack = livingEntity.getItemBySlot(slot);
+
+        if (itemStack.getItem() instanceof SCUnderArmor) {
+            ci.cancel();
         }
     }
 }
