@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.ItemModelShaper;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -20,6 +21,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -34,6 +36,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
+import java.util.Objects;
 
 @Mixin(ItemRenderer.class)
 public abstract class ItemRendererMixin {
@@ -72,7 +75,11 @@ public abstract class ItemRendererMixin {
                 ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
                 ModelResourceLocation model3dId = ModelResourceLocation.inventory(
                         ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), itemId.getPath()));
-                return getItemModelShaper().getModelManager().getModel(model3dId);
+                BakedModel base3dModel = this.itemModelShaper.getModelManager().getModel(model3dId);
+
+                BakedModel overriddenModel = base3dModel.getOverrides().resolve(base3dModel, stack, null, null, 0);
+                return Objects.requireNonNullElse(overriddenModel, base3dModel);
+
             }
         }
 
@@ -84,12 +91,17 @@ public abstract class ItemRendererMixin {
             at = @At(value = "STORE"),
             ordinal = 1
     )
-    public BakedModel getHeldItemModelMixin(BakedModel bakedModel, @Local(argsOnly = true) ItemStack stack) {
+    public BakedModel getHeldItemModelMixin(BakedModel bakedModel, @Local(argsOnly = true) ItemStack stack, @Local(argsOnly = true) LivingEntity entity) {
         if (stack.is(SCTags.WEAPONS_3D.getTag())) {
             ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
             ModelResourceLocation model3dId = ModelResourceLocation.inventory(
                     ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), itemId.getPath() + "_3d"));
-            return this.itemModelShaper.getModelManager().getModel(model3dId);
+            BakedModel base3dModel = this.itemModelShaper.getModelManager().getModel(model3dId);
+
+            ClientLevel level = entity != null ? (ClientLevel) entity.level() : null;
+            BakedModel overriddenModel = base3dModel.getOverrides().resolve(base3dModel, stack, level, entity, 0);
+            return Objects.requireNonNullElse(overriddenModel, base3dModel);
+
         }
 
         return bakedModel;
