@@ -62,16 +62,27 @@ public class SCUnderArmor extends ArmorItem {
                 underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
                 rebuildAttachmentAttributes(underArmorStack);
                 outputCons.accept(extracted);
-                playSound(player, SoundEvents.BUNDLE_REMOVE_ONE);
+                playSound(player, SoundEvents.ARMOR_EQUIP_GENERIC.value());
                 return true;
             }
         } else {
-            int inserted = mutable.tryInsert(incomingStack, player, underArmorStack);
-            if (inserted > 0) {
-                incomingStack.shrink(inserted);
-                underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
+            ItemStack result = mutable.tryInsert(incomingStack, player, underArmorStack);
+
+            if (result != null) {
+                incomingStack.shrink(1);
+
+                // if swap happened, give old item back
+                if (!result.isEmpty()) {
+                    outputCons.accept(result);
+                }
+
+                underArmorStack.set(
+                        SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                        mutable.toImmutable()
+                );
+
                 rebuildAttachmentAttributes(underArmorStack);
-                playSound(player, SoundEvents.BUNDLE_INSERT);
+                playSound(player, SoundEvents.ARMOR_EQUIP_GENERIC.value());
                 return true;
             }
         }

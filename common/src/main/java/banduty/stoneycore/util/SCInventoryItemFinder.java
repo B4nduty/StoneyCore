@@ -1,6 +1,9 @@
 package banduty.stoneycore.util;
 
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -50,5 +53,16 @@ public class SCInventoryItemFinder {
         }
 
         return count;
+    }
+
+    public static ItemStack findUnderArmor(Player player, ArmorItem.Type type) {
+        for (ItemStack stack : player.getArmorSlots()) {
+            if (stack.getItem() instanceof SCUnderArmor underArmor &&
+                    underArmor.getType() == type) {
+                return stack;
+            }
+        }
+
+        return ItemStack.EMPTY;
     }
 }

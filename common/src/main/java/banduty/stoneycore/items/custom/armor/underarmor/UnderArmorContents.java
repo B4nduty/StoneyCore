@@ -11,6 +11,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,45 +39,64 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             this.attachments = new ArrayList<>(contents.attachments());
         }
 
-        public int tryInsert(ItemStack incoming, Player player, ItemStack underArmorStack) {
-            if (incoming.isEmpty() || !(incoming.getItem() instanceof ArmorAttachment armorAttachment)) return 0;
+        public ItemStack tryInsert(ItemStack incoming, Player player, ItemStack underArmorStack) {
+            if (incoming.isEmpty() || !(incoming.getItem() instanceof ArmorAttachment armorAttachment))
+                return ItemStack.EMPTY;
 
-            if (((ArmorItem) underArmorStack.getItem()).getType() != armorAttachment.getArmorSlot()) return 0;
-            if (!armorAttachment.canEquip(underArmorStack, player)) return 0;
+            if (((ArmorItem) underArmorStack.getItem()).getType() != armorAttachment.getArmorSlot())
+                return ItemStack.EMPTY;
+            if (!armorAttachment.canEquip(underArmorStack, player)) return ItemStack.EMPTY;
 
-            ArmorAttachmentSlotDefinitionData incomingSlotDef = ArmorAttachmentSlotDefinitionsStorage.getData(incoming);
+            ArmorAttachmentSlotDefinitionData incomingSlotDef =
+                    ArmorAttachmentSlotDefinitionsStorage.getData(incoming);
 
-            if (Objects.equals(incomingSlotDef, ArmorAttachmentSlotDefinitionsStorage.getDefaultData())) return 0;
+            if (Objects.equals(incomingSlotDef, ArmorAttachmentSlotDefinitionsStorage.getDefaultData())) {
+                return ItemStack.EMPTY;
+            }
 
             if (incomingSlotDef.requiredSlot() != null && !incomingSlotDef.requiredSlot().isEmpty()) {
                 boolean hasRequiredAttachment = false;
+
                 for (ItemStack existing : this.attachments) {
-                    ArmorAttachmentSlotDefinitionData existingDef = ArmorAttachmentSlotDefinitionsStorage.getData(existing);
-                    if (existingDef != null && existingDef.slot().equals(incomingSlotDef.requiredSlot())) {
+                    ArmorAttachmentSlotDefinitionData existingDef =
+                            ArmorAttachmentSlotDefinitionsStorage.getData(existing);
+
+                    if (existingDef != null &&
+                            Objects.equals(existingDef.slot(), incomingSlotDef.requiredSlot())) {
                         hasRequiredAttachment = true;
                         break;
                     }
                 }
-                if (!hasRequiredAttachment) return 0;
+
+                if (!hasRequiredAttachment) return ItemStack.EMPTY;
             }
 
             ItemStack singleItem = incoming.copyWithCount(1);
+            String incomingSlot = incomingSlotDef.slot();
 
+            // 🔥 SLOT SWAP LOGIC
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack existing = this.attachments.get(i);
 
-                boolean isSameItem = existing.getItem() == incoming.getItem();
-                boolean isSameSlot = ArmorAttachmentSlotDefinitionsStorage.shareSameSlot(existing, incoming);
+                ArmorAttachmentSlotDefinitionData existingDef =
+                        ArmorAttachmentSlotDefinitionsStorage.getData(existing);
 
-                if (isSameItem || isSameSlot) {
-                    player.containerMenu.setCarried(existing);
+                if (existingDef != null &&
+                        Objects.equals(existingDef.slot(), incomingSlot)) {
+
+                    ItemStack old = existing;
+
+                    // swap
                     this.attachments.set(i, singleItem);
-                    return 1;
+
+                    // return replaced item (IMPORTANT)
+                    return old;
                 }
             }
 
+            // no slot match → normal insert
             this.attachments.add(singleItem);
-            return 1;
+            return ItemStack.EMPTY;
         }
 
         public ItemStack removeLast() {
