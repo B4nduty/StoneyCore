@@ -12,7 +12,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -23,13 +22,8 @@ public abstract class HumanoidArmorLayerMixin<T extends LivingEntity, M extends 
         super(renderer);
     }
 
-    @Shadow
-    protected abstract A getArmorModel(EquipmentSlot slot);
-
     @SuppressWarnings("unchecked")
     @Inject(
-            // Changing target from HEAD to TAIL ensures animation mods
-            // have already manipulated the entity and its parent model's limbs.
             method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/LivingEntity;FFFFFF)V",
             at = @At("TAIL")
     )
@@ -42,19 +36,9 @@ public abstract class HumanoidArmorLayerMixin<T extends LivingEntity, M extends 
             ItemStack itemStack = livingEntity.getItemBySlot(slot);
 
             if (itemStack.getItem() instanceof SCUnderArmor) {
-                A model = getArmorModel(slot);
-
-                this.getParentModel().copyPropertiesTo(model);
-                HumanoidModel<LivingEntity> humanoidModel = (HumanoidModel<LivingEntity>) model;
-
                 M parent = this.getParentModel();
-                humanoidModel.head.copyFrom(parent.head);
-                humanoidModel.hat.copyFrom(parent.hat);
-                humanoidModel.body.copyFrom(parent.body);
-                humanoidModel.rightArm.copyFrom(parent.rightArm);
-                humanoidModel.leftArm.copyFrom(parent.leftArm);
-                humanoidModel.rightLeg.copyFrom(parent.rightLeg);
-                humanoidModel.leftLeg.copyFrom(parent.leftLeg);
+
+                HumanoidModel<LivingEntity> humanoidModel = (HumanoidModel<LivingEntity>) parent;
 
                 UnderArmourRenderer.INSTANCE.renderBaseArmor(poseStack, buffer, itemStack, livingEntity, packedLight, humanoidModel,
                         limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
