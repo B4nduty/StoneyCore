@@ -32,6 +32,29 @@ public record UnderArmorContents(List<ItemStack> attachments) {
         return this.attachments.isEmpty();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof UnderArmorContents(List<ItemStack> attachments1))) return false;
+        if (this.attachments.size() != attachments1.size()) return false;
+
+        for (int i = 0; i < this.attachments.size(); i++) {
+            if (!ItemStack.matches(this.attachments.get(i), attachments1.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        for (ItemStack stack : attachments) {
+            result = 31 * result + (stack.isEmpty() ? 0 : stack.getItem().hashCode());
+        }
+        return result;
+    }
+
     public static class Mutable {
         private final List<ItemStack> attachments;
 
@@ -74,7 +97,6 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             ItemStack singleItem = incoming.copyWithCount(1);
             String incomingSlot = incomingSlotDef.slot();
 
-            // 🔥 SLOT SWAP LOGIC
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack existing = this.attachments.get(i);
 
@@ -89,7 +111,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                     // swap
                     this.attachments.set(i, singleItem);
 
-                    // return replaced item (IMPORTANT)
+                    // return replaced item
                     return old;
                 }
             }
