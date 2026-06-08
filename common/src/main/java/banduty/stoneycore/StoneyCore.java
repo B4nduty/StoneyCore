@@ -7,6 +7,7 @@ import banduty.stoneycore.combat.range.MusketHandler;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.config.IConfig;
 import banduty.stoneycore.entity.SCEntities;
+import banduty.stoneycore.items.ModArmorMaterials;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.particle.SCParticles;
 import banduty.stoneycore.platform.Services;
@@ -28,6 +29,7 @@ public class StoneyCore {
     private static StrEq strEq;
 
     public static void init() {
+        ModArmorMaterials.init();
         SCBlocks.register();
         SCEntities.register();
         SCItems.register();
