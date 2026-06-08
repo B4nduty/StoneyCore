@@ -64,9 +64,9 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
         public ItemStack tryInsert(ItemStack incoming, Player player, ItemStack underArmorStack) {
             if (incoming.isEmpty() || !(incoming.getItem() instanceof ArmorAttachment armorAttachment))
-                return ItemStack.EMPTY;
+                return null;
 
-            if (!armorAttachment.canEquip(underArmorStack, player)) return ItemStack.EMPTY;
+            if (!armorAttachment.canEquip(underArmorStack, player)) return null;
 
             ArmorItem.Type armorType;
             if (underArmorStack.getItem() instanceof ArmorItem armorItem) {
