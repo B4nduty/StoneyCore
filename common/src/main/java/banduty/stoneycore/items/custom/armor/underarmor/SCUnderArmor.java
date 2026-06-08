@@ -9,7 +9,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
@@ -62,7 +61,7 @@ public class SCUnderArmor extends ArmorItem {
                 underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
                 rebuildAttachmentAttributes(underArmorStack);
                 outputCons.accept(extracted);
-                playSound(player, SoundEvents.ARMOR_EQUIP_GENERIC.value());
+                playSound(player, this.getMaterial().value().equipSound().value());
                 return true;
             }
         } else {
@@ -82,7 +81,7 @@ public class SCUnderArmor extends ArmorItem {
                 );
 
                 rebuildAttachmentAttributes(underArmorStack);
-                playSound(player, SoundEvents.ARMOR_EQUIP_GENERIC.value());
+                playSound(player, this.getMaterial().value().equipSound().value());
                 return true;
             }
         }

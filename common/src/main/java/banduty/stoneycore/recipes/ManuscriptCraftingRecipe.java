@@ -1,5 +1,6 @@
 package banduty.stoneycore.recipes;
 
+import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.custom.SmithingHammer;
 import banduty.stoneycore.items.custom.manuscript.Manuscript;
 import banduty.stoneycore.mixin.ShapelessRecipeAccessor;
@@ -31,9 +32,7 @@ public class ManuscriptCraftingRecipe extends ShapelessRecipe {
         for (int i = 0; i < input.size(); i++) {
             ItemStack stack = input.getItem(i);
 
-            if (!stack.isEmpty()
-                    && !(stack.getItem() instanceof SmithingHammer)
-                    && !stack.is(net.minecraft.world.item.Items.PAPER)) {
+            if (isValidManuscriptInput(stack)) {
                 itemInput = stack;
                 break;
             }
@@ -66,7 +65,30 @@ public class ManuscriptCraftingRecipe extends ShapelessRecipe {
         public static final MapCodec<ManuscriptCraftingRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 Codec.STRING.optionalFieldOf("group", "").forGetter(ShapelessRecipe::getGroup),
                 CraftingBookCategory.CODEC.fieldOf("category").orElse(CraftingBookCategory.MISC).forGetter(ShapelessRecipe::category),
-                ItemStack.STRICT_CODEC.fieldOf("result").forGetter(recipe -> ((ShapelessRecipeAccessor) recipe).stoneycore$getResult()),
+                ItemStack.STRICT_CODEC.fieldOf("result").forGetter(recipe -> {
+                    ItemStack result = ((ShapelessRecipeAccessor) recipe).stoneycore$getResult();
+
+                    if (result.is(SCItems.MANUSCRIPT.get()) && !Manuscript.hasTargetStack(result)) {
+
+                        // derive from ingredients safely
+                        ItemStack display = ItemStack.EMPTY;
+
+                        for (Ingredient ing : recipe.getIngredients()) {
+                            ItemStack[] stacks = ing.getItems();
+                            for (ItemStack stack : stacks) {
+                                if (isValidManuscriptInput(stack)) {
+                                    display = stack.copyWithCount(1);
+                                    break;
+                                }
+                            }
+                            if (!display.isEmpty()) break;
+                        }
+
+                        result = Manuscript.createForStack(display);
+                    }
+
+                    return result;
+                }),
                 Ingredient.CODEC_NONEMPTY.listOf().fieldOf("ingredients").xmap(list -> {
                     NonNullList<Ingredient> nonnulllist = NonNullList.create();
                     nonnulllist.addAll(list);
@@ -97,6 +119,24 @@ public class ManuscriptCraftingRecipe extends ShapelessRecipe {
                 ingredients.set(j, Ingredient.CONTENTS_STREAM_CODEC.decode(buffer));
             }
             ItemStack result = ItemStack.STREAM_CODEC.decode(buffer);
+
+            ItemStack display = ItemStack.EMPTY;
+
+            for (Ingredient ing : ingredients) {
+                ItemStack[] stacks = ing.getItems();
+                for (ItemStack stack : stacks) {
+                    if (isValidManuscriptInput(stack)) {
+                        display = stack.copyWithCount(1);
+                        break;
+                    }
+                }
+                if (!display.isEmpty()) break;
+            }
+
+            if (result.is(SCItems.MANUSCRIPT.get())) {
+                result = Manuscript.createForStack(display);
+            }
+
             return new ManuscriptCraftingRecipe(group, category, result, ingredients);
         }
 
@@ -109,5 +149,11 @@ public class ManuscriptCraftingRecipe extends ShapelessRecipe {
             }
             ItemStack.STREAM_CODEC.encode(buffer, ((ShapelessRecipeAccessor) recipe).stoneycore$getResult());
         }
+    }
+
+    private static boolean isValidManuscriptInput(ItemStack stack) {
+        return !stack.isEmpty()
+                && !(stack.getItem() instanceof SmithingHammer)
+                && !stack.is(net.minecraft.world.item.Items.PAPER);
     }
 }
