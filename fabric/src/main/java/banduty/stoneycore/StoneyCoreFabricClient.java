@@ -3,7 +3,6 @@ package banduty.stoneycore;
 import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.*;
-import banduty.stoneycore.client.item.ClientDecoTooltip;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.event.AttackCancelHandler;
@@ -11,8 +10,6 @@ import banduty.stoneycore.event.ClientTickHandler;
 import banduty.stoneycore.event.ItemTooltipHandler;
 import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.items.SCItems;
-import banduty.stoneycore.items.custom.armor.deco.DecoContents;
-import banduty.stoneycore.items.custom.armor.deco.DecoTooltip;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
@@ -54,9 +51,6 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         TooltipComponentCallback.EVENT.register(data -> {
             if (data instanceof UnderArmorTooltip(UnderArmorContents contents, ArmorItem.Type armorType)) {
                 return new ClientUnderArmorTooltip(contents, armorType);
-            }
-            if (data instanceof DecoTooltip(DecoContents contents)) {
-                return new ClientDecoTooltip(contents);
             }
             return null;
         });

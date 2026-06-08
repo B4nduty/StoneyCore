@@ -1,7 +1,6 @@
 package banduty.stoneycore.util.data.itemdata;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.armor.deco.DecoContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.platform.Services;
 import com.mojang.serialization.Codec;
@@ -43,9 +42,6 @@ public interface SCDataComponents {
 
     Supplier<DataComponentType<UnderArmorContents>> UNDER_ARMOR_CONTENTS = register("under_armor_contents",
             builder -> builder.persistent(UnderArmorContents.CODEC).networkSynchronized(UnderArmorContents.STREAM_CODEC));
-
-    Supplier<DataComponentType<DecoContents>> DECO_CONTENTS = register("helmet_deco_contents",
-            builder -> builder.persistent(DecoContents.CODEC).networkSynchronized(DecoContents.STREAM_CODEC));
 
     @SuppressWarnings("unchecked")
     private static <T> Supplier<DataComponentType<T>> register(String name, UnaryOperator<DataComponentType.Builder<T>> builderOperator) {

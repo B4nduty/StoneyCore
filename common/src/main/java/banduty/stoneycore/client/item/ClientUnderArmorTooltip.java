@@ -90,7 +90,7 @@ public class ClientUnderArmorTooltip implements ClientTooltipComponent {
                 boolean unlocked = false;
                 if (this.contents != null && !this.contents.isEmpty()) {
                     for (ItemStack stack : this.contents.attachments()) {
-                        ArmorAttachmentSlotDefinitionData activeDef = ArmorAttachmentSlotDefinitionsStorage.getData(stack);
+                        ArmorAttachmentSlotDefinitionData activeDef = ArmorAttachmentSlotDefinitionsStorage.getData(stack, armorType);
                         if (activeDef.slot().equals(slotDef.requiredSlot())) {
                             unlocked = true;
                             break;

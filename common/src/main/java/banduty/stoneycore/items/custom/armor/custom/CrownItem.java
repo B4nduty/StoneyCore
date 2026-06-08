@@ -6,7 +6,6 @@ import banduty.stoneycore.client.render.ArmorAttachmentRenderer;
 import banduty.stoneycore.items.ModArmorMaterials;
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import net.minecraft.world.item.ArmorItem;
-import org.jetbrains.annotations.NotNull;
 
 public class CrownItem extends ArmorItem implements ArmorAttachment, ArmorAttachmentRenderProvider {
     public CrownItem(Properties properties) {
@@ -21,10 +20,5 @@ public class CrownItem extends ArmorItem implements ArmorAttachment, ArmorAttach
             this.cachedRenderer = new CrownAttachmentRenderer();
         }
         return this.cachedRenderer;
-    }
-
-    @Override
-    public @NotNull Type getArmorSlot() {
-        return Type.HELMET;
     }
 }

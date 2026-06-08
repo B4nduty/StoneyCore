@@ -3,11 +3,8 @@ package banduty.stoneycore;
 import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
-import banduty.stoneycore.client.item.ClientDecoTooltip;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
 import banduty.stoneycore.entity.SCEntities;
-import banduty.stoneycore.items.custom.armor.deco.DecoContents;
-import banduty.stoneycore.items.custom.armor.deco.DecoTooltip;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
@@ -108,12 +105,6 @@ public class StoneyCoreNeoForgeClient {
         event.register(UnderArmorTooltip.class, data -> {
             if (data instanceof UnderArmorTooltip(UnderArmorContents contents, ArmorItem.Type type)) {
                 return new ClientUnderArmorTooltip(contents, type);
-            }
-            return null;
-        });
-        event.register(DecoTooltip.class, data -> {
-            if (data instanceof DecoTooltip(DecoContents contents)) {
-                return new ClientDecoTooltip(contents);
             }
             return null;
         });

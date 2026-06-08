@@ -8,16 +8,12 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 public interface ArmorAttachment {
     default boolean hasOpenVisor(ItemStack stack) {
         return false;
     }
-
-    @NotNull ArmorItem.Type getArmorSlot();
 
     default boolean canEquip(ItemStack underArmorStack, Player player) {
         return true;

@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,18 +49,20 @@ public class ArmorAttachmentSlotDefinitionsStorage {
         return new ArmorAttachmentSlotDefinitionData("", "", new ArrayList<>(), "", false, "");
     }
 
-    public static ArmorAttachmentSlotDefinitionData getData(ItemStack itemStack) {
-        if (itemStack == null || itemStack.isEmpty()) {
+
+
+    public static ArmorAttachmentSlotDefinitionData getData(ItemStack attachmentStack, @NotNull ArmorItem.Type armorType) {
+        if (attachmentStack == null || attachmentStack.isEmpty()) {
             return getDefaultData();
         }
-        return getData(itemStack.getItem());
+        return getData(attachmentStack.getItem(), armorType);
     }
 
-    public static ArmorAttachmentSlotDefinitionData getData(Item item) {
+    public static ArmorAttachmentSlotDefinitionData getData(Item item, ArmorItem.Type armorType) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
 
         return DEFINITIONS.values().stream()
-                .filter(def -> def.items().contains(itemId))
+                .filter(def -> getArmorType(def) == armorType && def.items().contains(itemId))
                 .findFirst()
                 .orElse(getDefaultData());
     }
@@ -82,13 +85,6 @@ public class ArmorAttachmentSlotDefinitionsStorage {
 
     public static Map<String, ArmorAttachmentSlotDefinitionData> getDefinitions() {
         return DEFINITIONS;
-    }
-
-    public static boolean shareSameSlot(ItemStack stack1, ItemStack stack2) {
-        String armor1 = getData(stack1).slot();
-        String armor2 = getData(stack2).slot();
-
-        return armor1.equals(armor2);
     }
 
     public static List<ArmorAttachmentSlotDefinitionData> getAllAvailableSlots() {

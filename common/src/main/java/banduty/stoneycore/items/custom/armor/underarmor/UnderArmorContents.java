@@ -66,23 +66,32 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             if (incoming.isEmpty() || !(incoming.getItem() instanceof ArmorAttachment armorAttachment))
                 return ItemStack.EMPTY;
 
-            if (((ArmorItem) underArmorStack.getItem()).getType() != armorAttachment.getArmorSlot())
-                return ItemStack.EMPTY;
             if (!armorAttachment.canEquip(underArmorStack, player)) return ItemStack.EMPTY;
 
+            ArmorItem.Type armorType;
+            if (underArmorStack.getItem() instanceof ArmorItem armorItem) {
+                armorType = armorItem.getType();
+            } else {
+                return ItemStack.EMPTY;
+            }
+
             ArmorAttachmentSlotDefinitionData incomingSlotDef =
-                    ArmorAttachmentSlotDefinitionsStorage.getData(incoming);
+                    ArmorAttachmentSlotDefinitionsStorage.getData(incoming, armorType);
 
             if (Objects.equals(incomingSlotDef, ArmorAttachmentSlotDefinitionsStorage.getDefaultData())) {
                 return ItemStack.EMPTY;
             }
+
+            ArmorItem.Type targetType = ArmorAttachmentSlotDefinitionsStorage.getArmorType(incomingSlotDef);
+
+            if (armorItem.getType() != targetType) return ItemStack.EMPTY;
 
             if (incomingSlotDef.requiredSlot() != null && !incomingSlotDef.requiredSlot().isEmpty()) {
                 boolean hasRequiredAttachment = false;
 
                 for (ItemStack existing : this.attachments) {
                     ArmorAttachmentSlotDefinitionData existingDef =
-                            ArmorAttachmentSlotDefinitionsStorage.getData(existing);
+                            ArmorAttachmentSlotDefinitionsStorage.getData(existing, armorType);
 
                     if (existingDef != null &&
                             Objects.equals(existingDef.slot(), incomingSlotDef.requiredSlot())) {
@@ -101,7 +110,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                 ItemStack existing = this.attachments.get(i);
 
                 ArmorAttachmentSlotDefinitionData existingDef =
-                        ArmorAttachmentSlotDefinitionsStorage.getData(existing);
+                        ArmorAttachmentSlotDefinitionsStorage.getData(existing, armorType);
 
                 if (existingDef != null &&
                         Objects.equals(existingDef.slot(), incomingSlot)) {

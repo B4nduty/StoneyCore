@@ -1,7 +1,6 @@
 package banduty.stoneycore.client.render;
 
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
-import banduty.stoneycore.items.custom.armor.deco.Deco;
 import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.model.UnderArmourBootsModel;
@@ -69,14 +68,6 @@ public class UnderArmourRenderer {
                         .ifPresent(renderer ->
                                 renderer.render(poseStack, bufferSource, packedLight, entity, itemStack, contextModel,
                                         limbSwing, limbSwingAmount, partialTicks,ageInTicks, netHeadYaw, headPitch));
-
-                for (ItemStack subDecoStack : Deco.getDeco(itemStack)) {
-                    if (!subDecoStack.isEmpty()) {
-                        ArmorAttachmentRenderManager.getOrLookUp(subDecoStack.getItem()).ifPresent(render ->
-                                render.render(poseStack, bufferSource, packedLight, entity, subDecoStack, contextModel,
-                                        limbSwing, limbSwingAmount, partialTicks,ageInTicks, netHeadYaw, headPitch));
-                    }
-                }
             }
         }
     }
