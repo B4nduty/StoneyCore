@@ -1,6 +1,7 @@
 package banduty.stoneycore.items.custom.armor.underarmor;
 
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionData;
 import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionsStorage;
 import com.mojang.serialization.Codec;
@@ -8,6 +9,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
@@ -137,6 +140,29 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
         public UnderArmorContents toImmutable() {
             return new UnderArmorContents(List.copyOf(this.attachments));
+        }
+
+        public boolean damageAttachment(String armorSlotName, int damageAmount, LivingEntity entity, EquipmentSlot slot) {
+            boolean anyDamageApplied = false;
+
+            for (int i = 0; i < this.attachments.size(); i++) {
+                ItemStack attachmentStack = this.attachments.get(i);
+
+                if (!attachmentStack.isEmpty() && ArmorAttachmentDefinitionsStorage.containsItem(attachmentStack)) {
+                    String slotFromJson = ArmorAttachmentDefinitionsStorage.getData(attachmentStack.getItem()).armorSlot();
+
+                    if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(armorSlotName)) {
+                        ItemStack modifiableCopy = attachmentStack.copy();
+
+                        modifiableCopy.hurtAndBreak(damageAmount, entity, slot);
+
+                        this.attachments.set(i, modifiableCopy);
+                        anyDamageApplied = true;
+                    }
+                }
+            }
+
+            return anyDamageApplied;
         }
     }
 }

@@ -4,6 +4,7 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.melee.CombatSelect;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
+import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.siege.SiegeManager;
@@ -13,8 +14,8 @@ import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import net.minecraft.core.BlockPos;
@@ -304,20 +305,22 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             EquipmentSlot slot = livingEntity.getEquipmentSlotForItem(armorStack);
             boolean slotProtected = false;
 
-            for (ItemStack itemStack : livingEntity.getArmorSlots()) {
-                for (ItemStack armorAttachments : SCUnderArmor.getArmorAttachments(itemStack)) {
-                    if (!armorAttachments.isEmpty() && ArmorAttachmentDefinitionsStorage.containsItem(armorAttachments)) {
-                        String slotFromJson = ArmorAttachmentDefinitionsStorage.getData(armorAttachments.getItem()).armorSlot();
+            UnderArmorContents contents = armorStack.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
 
-                        if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(slot.getName())) {
-                            slotProtected = true;
-                            armorAttachments.hurtAndBreak((int) amount, livingEntity, slot);
-                        }
+            if (!contents.isEmpty()) {
+                UnderArmorContents.Mutable mutableContents = new UnderArmorContents.Mutable(contents);
+
+                slotProtected = mutableContents.damageAttachment(slot.getName(), (int) Math.ceil(amount), livingEntity, slot);
+
+                if (slotProtected) {
+                    armorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutableContents.toImmutable());
+
+                    if (armorStack.getItem() instanceof SCUnderArmor underArmor) {
+                        underArmor.rebuildAttachmentAttributes(armorStack);
                     }
                 }
             }
 
-            // Damage the armor only if no armor attachment protects this slot
             if (!slotProtected) {
                 armorStack.hurtAndBreak((int) amount, livingEntity, slot);
             }
