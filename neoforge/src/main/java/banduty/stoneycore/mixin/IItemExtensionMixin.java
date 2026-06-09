@@ -2,6 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.SCItems;
+import banduty.stoneycore.items.custom.armor.custom.CrownItem;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -19,8 +20,14 @@ public interface IItemExtensionMixin {
 
     @Inject(method = "getCraftingRemainingItem", at = @At("HEAD"), cancellable = true)
     private void stoneycore$getCraftingRemainingItem(ItemStack itemStack, CallbackInfoReturnable<ItemStack> cir) {
-        if (itemStack.getItem() == SCItems.MANUSCRIPT) { cir.setReturnValue(itemStack); return; }
-        if (itemStack.getItem() == SCItems.TONGS) { cir.setReturnValue(itemStack); return; }
+        if (itemStack.getItem() == SCItems.MANUSCRIPT) {
+            cir.setReturnValue(itemStack);
+            return;
+        }
+        if (itemStack.getItem() == SCItems.TONGS) {
+            cir.setReturnValue(itemStack);
+            return;
+        }
         if (itemStack.getItem() == SCItems.SMITHING_HAMMER) {
             ItemStack newStack = itemStack.copy();
             newStack.setDamageValue(itemStack.getDamageValue() + 1);
@@ -34,15 +41,22 @@ public interface IItemExtensionMixin {
 
     @Inject(method = "getArmorTexture", at = @At("HEAD"), cancellable = true)
     private void getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, ArmorMaterial.Layer layer, boolean innerModel, CallbackInfoReturnable<ResourceLocation> cir) {
+        ResourceLocation customTexture = ResourceLocation.fromNamespaceAndPath(
+                StoneyCore.MOD_ID,
+                "textures/models/armor/a_layer_1.png"
+        );
+        if (stack.getItem() instanceof CrownItem) {
+            cir.setReturnValue(
+                    ResourceLocation.fromNamespaceAndPath(
+                            StoneyCore.MOD_ID,
+                            "textures/entity/armor/crown.png"
+                    )
+            );
+            return;
+        }
         if (stack.getItem() instanceof SCUnderArmor scUnderArmor) {
-
             var materialKey = scUnderArmor.getMaterial().unwrapKey().orElse(null);
             if (materialKey != null) {
-                ResourceLocation customTexture = ResourceLocation.fromNamespaceAndPath(
-                        StoneyCore.MOD_ID,
-                        "textures/models/armor/a_layer_1.png"
-                );
-
                 cir.setReturnValue(customTexture);
             }
         }

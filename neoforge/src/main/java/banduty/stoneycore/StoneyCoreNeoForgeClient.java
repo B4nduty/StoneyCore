@@ -9,14 +9,14 @@ import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
 import banduty.stoneycore.items.custom.tongs.Tongs;
-import banduty.stoneycore.model.UnderArmourBootsModel;
-import banduty.stoneycore.model.UnderArmourChestplateModel;
-import banduty.stoneycore.model.UnderArmourHelmetModel;
-import banduty.stoneycore.model.UnderArmourLeggingsModel;
+import banduty.stoneycore.model.*;
 import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
 import banduty.stoneycore.particle.SCParticles;
-import banduty.stoneycore.platform.*;
+import banduty.stoneycore.platform.ClientPlatform;
+import banduty.stoneycore.platform.NeoForgeClientPlatformHelper;
+import banduty.stoneycore.platform.NeoForgeHumanoidModelSetupAnimHelper;
+import banduty.stoneycore.platform.NeoForgeKeyInputHelper;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.SCScreenHandlers;
 import banduty.stoneycore.util.data.itemdata.SCTags;
@@ -87,6 +87,7 @@ public class StoneyCoreNeoForgeClient {
         event.registerLayerDefinition(UnderArmourChestplateModel.LAYER_LOCATION, UnderArmourChestplateModel::getTexturedModelData);
         event.registerLayerDefinition(UnderArmourLeggingsModel.LAYER_LOCATION, UnderArmourLeggingsModel::getTexturedModelData);
         event.registerLayerDefinition(UnderArmourBootsModel.LAYER_LOCATION, UnderArmourBootsModel::getTexturedModelData);
+        event.registerLayerDefinition(CrownModel.LAYER_LOCATION, CrownModel::getTexturedModelData);
     }
 
     @SubscribeEvent
