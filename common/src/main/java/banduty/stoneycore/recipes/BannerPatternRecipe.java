@@ -35,12 +35,10 @@ public class BannerPatternRecipe extends ShapelessRecipe {
 
         boolean hasBanner = false;
         boolean hasArmor = false;
-        int count = 0;
 
         for (int i = 0; i < input.size(); i++) {
             ItemStack stack = input.getItem(i);
             if (stack.isEmpty()) continue;
-            count++;
 
             if (stack.getItem() instanceof BannerItem) {
                 hasBanner = true;
@@ -49,7 +47,7 @@ public class BannerPatternRecipe extends ShapelessRecipe {
             }
         }
 
-        return count == 2 && hasBanner && hasArmor;
+        return hasBanner && hasArmor;
     }
 
     @Override
@@ -73,12 +71,14 @@ public class BannerPatternRecipe extends ShapelessRecipe {
 
         ItemStack result = otherInput.copyWithCount(1);
 
-        BannerPatternLayers patterns = banner.get(DataComponents.BANNER_PATTERNS);
-        if (patterns != null) {
-            result.set(DataComponents.BANNER_PATTERNS, patterns);
-        }
+        BannerPatternLayers patterns =
+                banner.getOrDefault(
+                        DataComponents.BANNER_PATTERNS,
+                        BannerPatternLayers.EMPTY
+                );
+        result.set(DataComponents.BANNER_PATTERNS, patterns);
 
-        result.set(DataComponents.DYED_COLOR, new DyedItemColor(dye.getFireworkColor(), true));
+        result.set(DataComponents.DYED_COLOR, new DyedItemColor(dye.getTextColor(), false));
 
         return result;
     }
@@ -87,7 +87,41 @@ public class BannerPatternRecipe extends ShapelessRecipe {
         private static final MapCodec<BannerPatternRecipe> CODEC = RecordCodecBuilder.mapCodec((inst) -> inst.group(
                 Codec.STRING.optionalFieldOf("group", "").forGetter(ShapelessRecipe::getGroup),
                 CraftingBookCategory.CODEC.fieldOf("category").orElse(CraftingBookCategory.MISC).forGetter(ShapelessRecipe::category),
-                ItemStack.STRICT_CODEC.fieldOf("result").forGetter(recipe -> ((ShapelessRecipeAccessor) recipe).stoneycore$getResult()),
+                ItemStack.STRICT_CODEC.fieldOf("result").forGetter(recipe -> {
+                    ItemStack result = ((ShapelessRecipeAccessor) recipe).stoneycore$getResult().copy();
+                    ItemStack banner = ItemStack.EMPTY;
+                    ItemStack otherInput = ItemStack.EMPTY;
+                    DyeColor dye = DyeColor.WHITE;
+
+                    for (Ingredient ing : recipe.getIngredients()) {
+                        ItemStack[] stacks = ing.getItems();
+                        for (ItemStack stack : stacks) {
+                            if (stack.isEmpty()) continue;
+
+                            if (stack.getItem() instanceof BannerItem bannerItem) {
+                                dye = bannerItem.getColor();
+                                banner = stack;
+                            } else {
+                                otherInput = stack;
+                            }
+                        }
+                    }
+
+                    if (banner.isEmpty() || otherInput.isEmpty())
+                        result = ((ShapelessRecipeAccessor) recipe).stoneycore$getResult();
+                    else {
+                        BannerPatternLayers patterns =
+                                banner.getOrDefault(
+                                        DataComponents.BANNER_PATTERNS,
+                                        BannerPatternLayers.EMPTY
+                                );
+                        result.set(DataComponents.BANNER_PATTERNS, patterns);
+
+                        result.set(DataComponents.DYED_COLOR, new DyedItemColor(dye.getTextColor(), false));
+                    }
+
+                    return result;
+                }),
                 Ingredient.CODEC_NONEMPTY.listOf().fieldOf("ingredients").xmap(list -> {
                     NonNullList<Ingredient> nonnulllist = NonNullList.create();
                     nonnulllist.addAll(list);
@@ -118,6 +152,37 @@ public class BannerPatternRecipe extends ShapelessRecipe {
                 ingredients.set(j, Ingredient.CONTENTS_STREAM_CODEC.decode(buffer));
             }
             ItemStack result = ItemStack.STREAM_CODEC.decode(buffer);
+
+            ItemStack banner = ItemStack.EMPTY;
+            ItemStack otherInput = ItemStack.EMPTY;
+            DyeColor dye = DyeColor.WHITE;
+
+            for (Ingredient ing : ingredients) {
+                for (ItemStack stack : ing.getItems()) {
+                    if (stack.isEmpty()) continue;
+
+                    if (stack.getItem() instanceof BannerItem bannerItem) {
+                        dye = bannerItem.getColor();
+                        banner = stack;
+                    } else {
+                        otherInput = stack;
+                    }
+                }
+            }
+
+            if (!banner.isEmpty() && !otherInput.isEmpty()) {
+                BannerPatternLayers patterns =
+                        banner.getOrDefault(
+                                DataComponents.BANNER_PATTERNS,
+                                BannerPatternLayers.EMPTY
+                        );
+                result.set(DataComponents.BANNER_PATTERNS, patterns);
+
+                result.set(
+                        DataComponents.DYED_COLOR,
+                        new DyedItemColor(dye.getTextColor(), false)
+                );
+            }
             return new BannerPatternRecipe(s, category, result, ingredients);
         }
 

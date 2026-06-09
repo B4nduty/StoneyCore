@@ -66,7 +66,7 @@ public class ManuscriptCraftingRecipe extends ShapelessRecipe {
                 Codec.STRING.optionalFieldOf("group", "").forGetter(ShapelessRecipe::getGroup),
                 CraftingBookCategory.CODEC.fieldOf("category").orElse(CraftingBookCategory.MISC).forGetter(ShapelessRecipe::category),
                 ItemStack.STRICT_CODEC.fieldOf("result").forGetter(recipe -> {
-                    ItemStack result = ((ShapelessRecipeAccessor) recipe).stoneycore$getResult();
+                    ItemStack result = ((ShapelessRecipeAccessor) recipe).stoneycore$getResult().copy();
 
                     if (result.is(SCItems.MANUSCRIPT.get()) && !Manuscript.hasTargetStack(result)) {
 

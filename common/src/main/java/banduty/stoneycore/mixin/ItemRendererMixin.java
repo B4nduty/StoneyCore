@@ -1,8 +1,8 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.items.custom.manuscript.Manuscript;
-import com.llamalad7.mixinextras.sugar.Local;
 import banduty.stoneycore.util.data.itemdata.SCTags;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -22,9 +22,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -146,12 +146,14 @@ public abstract class ItemRendererMixin {
         RenderType rendertype = ItemBlockRenderTypes.getRenderType(itemStack, true);
         VertexConsumer vertexconsumer = ItemRenderer.getFoilBufferDirect(bufferSource, rendertype, true, itemStack.hasFoil());
 
-        // 5. Render the Base Layer (e.g. your base armor or shield item texture)
+        // 5. Render the Base Layer WITH the dyed color
         float[] baseRGB = new float[]{1.0F, 1.0F, 1.0F};
-        DyeColor baseColor = itemStack.get(DataComponents.BASE_COLOR);
-        if (baseColor != null) {
-            baseRGB = stoneycore$unpackIntColor(baseColor.getTextureDiffuseColor());
+
+        DyedItemColor dyedColor = itemStack.get(DataComponents.DYED_COLOR);
+        if (dyedColor != null) {
+            baseRGB = stoneycore$unpackIntColor(dyedColor.rgb());
         }
+
         stoneycore$renderBakedQuadsDirect(baseModel, combinedLight, combinedOverlay, poseStack, vertexconsumer, baseRGB);
 
         // 6. Loop and composite each Banner Pattern Layer directly on top
