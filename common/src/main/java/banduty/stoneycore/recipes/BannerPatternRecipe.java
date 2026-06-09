@@ -12,6 +12,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.BannerItem;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
@@ -55,12 +56,13 @@ public class BannerPatternRecipe extends ShapelessRecipe {
     public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
         ItemStack banner = ItemStack.EMPTY;
         ItemStack otherInput = ItemStack.EMPTY;
-
+        DyeColor dye = DyeColor.WHITE;
         for (int i = 0; i < input.size(); i++) {
             ItemStack stack = input.getItem(i);
             if (stack.isEmpty()) continue;
 
-            if (stack.getItem() instanceof BannerItem) {
+            if (stack.getItem() instanceof BannerItem bannerItem) {
+                dye = bannerItem.getColor();
                 banner = stack;
             } else {
                 otherInput = stack;
@@ -76,10 +78,7 @@ public class BannerPatternRecipe extends ShapelessRecipe {
             result.set(DataComponents.BANNER_PATTERNS, patterns);
         }
 
-        DyeColor baseColor = banner.get(DataComponents.BASE_COLOR);
-        if (baseColor != null) {
-            result.set(DataComponents.BASE_COLOR, baseColor);
-        }
+        result.set(DataComponents.DYED_COLOR, new DyedItemColor(dye.getFireworkColor(), true));
 
         return result;
     }
