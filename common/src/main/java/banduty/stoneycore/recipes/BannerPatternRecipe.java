@@ -61,9 +61,9 @@ public class BannerPatternRecipe extends ShapelessRecipe {
 
             if (stack.getItem() instanceof BannerItem bannerItem) {
                 dye = bannerItem.getColor();
-                banner = stack;
+                banner = stack.copy();
             } else {
-                otherInput = stack;
+                otherInput = stack.copy();
             }
         }
 
@@ -71,14 +71,13 @@ public class BannerPatternRecipe extends ShapelessRecipe {
 
         ItemStack result = otherInput.copyWithCount(1);
 
+        result.set(DataComponents.DYED_COLOR, new DyedItemColor(dye.getTextureDiffuseColor(), false));
         BannerPatternLayers patterns =
                 banner.getOrDefault(
                         DataComponents.BANNER_PATTERNS,
                         BannerPatternLayers.EMPTY
                 );
         result.set(DataComponents.BANNER_PATTERNS, patterns);
-
-        result.set(DataComponents.DYED_COLOR, new DyedItemColor(dye.getTextColor(), false));
 
         return result;
     }
@@ -100,9 +99,9 @@ public class BannerPatternRecipe extends ShapelessRecipe {
 
                             if (stack.getItem() instanceof BannerItem bannerItem) {
                                 dye = bannerItem.getColor();
-                                banner = stack;
+                                banner = stack.copy();
                             } else {
-                                otherInput = stack;
+                                otherInput = stack.copy();
                             }
                         }
                     }
@@ -110,14 +109,14 @@ public class BannerPatternRecipe extends ShapelessRecipe {
                     if (banner.isEmpty() || otherInput.isEmpty())
                         result = ((ShapelessRecipeAccessor) recipe).stoneycore$getResult();
                     else {
+                        result.set(DataComponents.DYED_COLOR, new DyedItemColor(dye.getTextureDiffuseColor(), false));
+
                         BannerPatternLayers patterns =
                                 banner.getOrDefault(
                                         DataComponents.BANNER_PATTERNS,
                                         BannerPatternLayers.EMPTY
                                 );
                         result.set(DataComponents.BANNER_PATTERNS, patterns);
-
-                        result.set(DataComponents.DYED_COLOR, new DyedItemColor(dye.getTextColor(), false));
                     }
 
                     return result;
@@ -163,25 +162,25 @@ public class BannerPatternRecipe extends ShapelessRecipe {
 
                     if (stack.getItem() instanceof BannerItem bannerItem) {
                         dye = bannerItem.getColor();
-                        banner = stack;
+                        banner = stack.copy();
                     } else {
-                        otherInput = stack;
+                        otherInput = stack.copy();
                     }
                 }
             }
 
             if (!banner.isEmpty() && !otherInput.isEmpty()) {
+                result.set(
+                        DataComponents.DYED_COLOR,
+                        new DyedItemColor(dye.getTextureDiffuseColor(), false)
+                );
+
                 BannerPatternLayers patterns =
                         banner.getOrDefault(
                                 DataComponents.BANNER_PATTERNS,
                                 BannerPatternLayers.EMPTY
                         );
                 result.set(DataComponents.BANNER_PATTERNS, patterns);
-
-                result.set(
-                        DataComponents.DYED_COLOR,
-                        new DyedItemColor(dye.getTextColor(), false)
-                );
             }
             return new BannerPatternRecipe(s, category, result, ingredients);
         }
