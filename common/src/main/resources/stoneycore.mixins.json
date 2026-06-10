@@ -8,6 +8,7 @@
     "AbstractArrowAccessor",
     "AbstractBlockMixin",
     "CreativeModeTabMixin",
+    "EnderManMixin",
     "FoodDataMixin",
     "ItemEntityMixin",
     "ItemMixin",

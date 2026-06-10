@@ -1,6 +1,5 @@
 package banduty.stoneycore.client.render;
 
-import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.model.UnderArmourBootsModel;
@@ -19,6 +18,8 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class UnderArmourRenderer {
     private UnderArmourHelmetModel helmetModel;
@@ -43,12 +44,12 @@ public class UnderArmourRenderer {
         String namespace = materialKey.location().getNamespace();
         String path = materialKey.location().getPath();
 
-        VertexConsumer vertexConsumer = bufferSource.getBuffer(
-                RenderType.armorCutoutNoCull(ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + ".png")));
+        ResourceLocation baseTex = ArmorTextureCache.getBaseTexture(namespace, path);
+        VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(baseTex));
 
         if (scUnderArmor instanceof SCDyeableUnderArmor scDyeableUnderArmor) {
             int color = DyedItemColor.getOrDefault(stack, scDyeableUnderArmor.getDefaultColor());
-            ResourceLocation textureOverlayPath = ResourceLocation.fromNamespaceAndPath(namespace, "textures/models/armor/" + path + "_overlay.png");
+            ResourceLocation textureOverlayPath = ArmorTextureCache.getOverlayTexture(namespace, path);
 
             model.renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY, color);
 
@@ -62,12 +63,15 @@ public class UnderArmourRenderer {
     public void renderAttachments(PoseStack poseStack, MultiBufferSource bufferSource, ItemStack stack,
                                   LivingEntity entity, int packedLight, HumanoidModel<LivingEntity> contextModel,
                                   float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        for (ItemStack itemStack : SCUnderArmor.getArmorAttachments(stack)) {
-            if (itemStack.getItem() instanceof ArmorAttachment) {
-                ArmorAttachmentRenderManager.getOrLookUp(itemStack.getItem())
-                        .ifPresent(renderer ->
-                                renderer.render(poseStack, bufferSource, packedLight, entity, itemStack, contextModel,
-                                        limbSwing, limbSwingAmount, partialTicks,ageInTicks, netHeadYaw, headPitch));
+
+        if (stack.isEmpty() || !(stack.getItem() instanceof SCUnderArmor)) return;
+
+        List<ItemStack> attachments = SCUnderArmor.getArmorAttachments(stack);
+        for (ItemStack itemStack : attachments) {
+            ArmorAttachmentRenderer renderer = ArmorAttachmentRenderManager.getRenderer(itemStack.getItem());
+            if (renderer != null) {
+                renderer.render(poseStack, bufferSource, packedLight, entity, itemStack, contextModel,
+                        limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch);
             }
         }
     }

@@ -61,7 +61,7 @@ public class StoneyCoreOverlayRenderer {
             var data = ArmorAttachmentDefinitionsStorage.getData(armorAttachments);
             ResourceLocation visorId = data.visoredHelmet();
 
-            if (!Boolean.TRUE.equals(armorAttachments.get(SCDataComponents.VISOR_OPEN.get()))
+            if (!armorAttachments.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false)
                     && !(visorId.getPath().isEmpty() || visorId.getPath().equals("empty"))
                     && StoneyCore.getConfig().visualOptions().getVisoredHelmet()) {
 

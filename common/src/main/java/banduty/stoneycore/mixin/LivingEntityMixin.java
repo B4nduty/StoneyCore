@@ -185,9 +185,10 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             cir.cancel();
         }
 
-        if (DeflectChanceHelper.shouldDeflect(livingEntity)) {
-            cir.cancel();
-        }
+//        Melee deflect chance
+//        if (DeflectChanceHelper.shouldDeflect(livingEntity)) {
+//            cir.cancel();
+//        }
 
         LandState stateManager = LandState.get(serverLevel);
         Optional<Land> maybeLand = stateManager.getLandAt(source.getEntity().getOnPos());
