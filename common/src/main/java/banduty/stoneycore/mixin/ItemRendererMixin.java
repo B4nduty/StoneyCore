@@ -1,8 +1,8 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.items.custom.manuscript.Manuscript;
-import com.llamalad7.mixinextras.sugar.Local;
 import banduty.stoneycore.util.data.itemdata.SCTags;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -22,9 +22,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -116,17 +116,21 @@ public abstract class ItemRendererMixin {
         if (itemStack.isEmpty()) return;
         if (!itemStack.is(SCTags.BANNER_COMPATIBLE.getTag())) return;
 
-        // 1. Fetch patterns from modern 1.21 Data Components
+        // Fetch patterns and dyed color
         BannerPatternLayers patterns = itemStack.get(DataComponents.BANNER_PATTERNS);
+        DyedItemColor dyedColor = itemStack.get(DataComponents.DYED_COLOR);
 
-        // If there are no custom patterns, allow vanilla/@ModifyVariable logic to proceed normally
-        if (patterns == null || patterns.layers().isEmpty()) {
+        // If there are no patterns AND no dyed color, let vanilla handle it
+        if ((patterns == null || patterns.layers().isEmpty()) && dyedColor == null) {
             return;
         }
 
+        // If there's a dyed color but no patterns, we still need to render with the tint
+        boolean hasPatterns = patterns != null && !patterns.layers().isEmpty();
+
         poseStack.pushPose();
 
-        // 2. Determine base model variant (handling your 3D / Icon systems safely)
+        // Determine base model variant
         BakedModel baseModel = model;
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(itemStack.getItem());
 
@@ -138,55 +142,56 @@ public abstract class ItemRendererMixin {
                     ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), itemId.getPath() + "_3d")));
         }
 
-        // 3. Apply positional orientations
+        // Apply positional orientations
         baseModel.getTransforms().getTransform(displayContext).apply(leftHand, poseStack);
         poseStack.translate(-0.5F, -0.5F, -0.5F);
 
-        // 4. Setup rendering consumers
+        // Setup rendering consumers
         RenderType rendertype = ItemBlockRenderTypes.getRenderType(itemStack, true);
         VertexConsumer vertexconsumer = ItemRenderer.getFoilBufferDirect(bufferSource, rendertype, true, itemStack.hasFoil());
 
-        // 5. Render the Base Layer (e.g. your base armor or shield item texture)
+        // Render the Base Layer WITH the dyed color
         float[] baseRGB = new float[]{1.0F, 1.0F, 1.0F};
-        DyeColor baseColor = itemStack.get(DataComponents.BASE_COLOR);
-        if (baseColor != null) {
-            baseRGB = stoneycore$unpackIntColor(baseColor.getTextureDiffuseColor());
+        if (dyedColor != null) {
+            baseRGB = stoneycore$unpackIntColor(dyedColor.rgb());
         }
         stoneycore$renderBakedQuadsDirect(baseModel, combinedLight, combinedOverlay, poseStack, vertexconsumer, baseRGB);
 
-        // 6. Loop and composite each Banner Pattern Layer directly on top
-        ModelManager modelManager = this.itemModelShaper.getModelManager();
+        // If there are patterns, render them on top
+        if (hasPatterns) {
+            ModelManager modelManager = this.itemModelShaper.getModelManager();
 
-        for (BannerPatternLayers.Layer layer : patterns.layers()) {
-            ResourceLocation patternId = layer.pattern().unwrapKey().map(ResourceKey::location).orElse(null);
-            if (patternId == null) continue;
+            for (BannerPatternLayers.Layer layer : patterns.layers()) {
+                ResourceLocation patternId = layer.pattern().unwrapKey().map(ResourceKey::location).orElse(null);
+                if (patternId == null) continue;
 
-            // Isolate short-code string name matching your ModelBakeryMixin setup (e.g. "ss", "tl")
-            String patternName = patternId.getPath();
-            if (patternName.contains("/")) {
-                patternName = patternName.substring(patternName.lastIndexOf('/') + 1);
-            }
+                // Isolate short-code string name matching your ModelBakeryMixin setup (e.g. "ss", "tl")
+                String patternName = patternId.getPath();
+                if (patternName.contains("/")) {
+                    patternName = patternName.substring(patternName.lastIndexOf('/') + 1);
+                }
 
-            // Path format mapping: "namespace:item_path/pattern_shortname"
-            String compositePath = itemId.getPath() + "/" + patternName;
-            ModelResourceLocation layerModelId = ModelResourceLocation.inventory(
-                    ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), compositePath)
-            );
+                // Path format mapping: "namespace:item_path/pattern_shortname"
+                String compositePath = itemId.getPath() + "/" + patternName;
+                ModelResourceLocation layerModelId = ModelResourceLocation.inventory(
+                        ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), compositePath)
+                );
 
-            BakedModel layerModel = modelManager.getModel(layerModelId);
+                BakedModel layerModel = modelManager.getModel(layerModelId);
 
-            if (layerModel != modelManager.getMissingModel()) {
-                float[] patternRGB = stoneycore$unpackIntColor(layer.color().getTextureDiffuseColor());
+                if (layerModel != modelManager.getMissingModel()) {
+                    float[] patternRGB = stoneycore$unpackIntColor(layer.color().getTextureDiffuseColor());
 
-                // Get fresh foil consumer layer to stack cleanly
-                VertexConsumer patternConsumer = ItemRenderer.getFoilBufferDirect(bufferSource, rendertype, true, itemStack.hasFoil());
-                stoneycore$renderBakedQuadsDirect(layerModel, combinedLight, combinedOverlay, poseStack, patternConsumer, patternRGB);
+                    // Get fresh foil consumer layer to stack cleanly
+                    VertexConsumer patternConsumer = ItemRenderer.getFoilBufferDirect(bufferSource, rendertype, true, itemStack.hasFoil());
+                    stoneycore$renderBakedQuadsDirect(layerModel, combinedLight, combinedOverlay, poseStack, patternConsumer, patternRGB);
+                }
             }
         }
 
         poseStack.popPose();
 
-        // 7. Cancel standard execution to lock in the multi-layered texture assembly
+        // Cancel standard execution to use our custom rendering
         ci.cancel();
     }
 

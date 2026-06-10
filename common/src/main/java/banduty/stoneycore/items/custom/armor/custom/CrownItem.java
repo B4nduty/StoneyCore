@@ -21,4 +21,6 @@ public class CrownItem extends ArmorItem implements ArmorAttachment, ArmorAttach
         }
         return this.cachedRenderer;
     }
+
+
 }
