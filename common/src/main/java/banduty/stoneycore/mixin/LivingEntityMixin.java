@@ -18,6 +18,7 @@ import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
+import banduty.stoneycore.util.servertick.AttackSpeedHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -385,5 +386,14 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             }
         }
         return false;
+    }
+
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void onEntityTick(CallbackInfo ci) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+
+        if (!entity.level().isClientSide()) {
+            AttackSpeedHelper.changeAttackSpeed(entity);
+        }
     }
 }

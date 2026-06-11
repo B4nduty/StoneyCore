@@ -1,10 +1,8 @@
 package banduty.stoneycore.datagen;
 
 import banduty.stoneycore.combat.damagetype.SCDamageType;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
-import com.mojang.serialization.Codec;
+import banduty.stoneycore.util.definitionsloader.*;
 import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
@@ -39,12 +37,12 @@ public abstract class DefinitionsProvider implements DataProvider {
 
         @Override
         public CompletableFuture<?> run(CachedOutput writer) {
-            Map<ResourceLocation, DefinitionEntry> entries = new TreeMap<>();
+            Map<ResourceLocation, ArmorAttachmentDefinitionData> entries = new TreeMap<>();
             generateDefinitions((item, definition) -> entries.put(BuiltInRegistries.ITEM.getKey(item), definition));
             List<CompletableFuture<?>> futures = new ArrayList<>();
-            for (Map.Entry<ResourceLocation, DefinitionEntry> entry : entries.entrySet()) {
+            for (Map.Entry<ResourceLocation, ArmorAttachmentDefinitionData> entry : entries.entrySet()) {
                 Path path = output.getOutputFolder().resolve("data/" + entry.getKey().getNamespace() + "/definitions/attachments/" + entry.getKey().getPath() + ".json");
-                futures.add(DataProvider.saveStable(writer, DefinitionEntry.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(s -> new IllegalStateException("Failed to encode JSON: " + s)), path));
+                futures.add(DataProvider.saveStable(writer, ArmorAttachmentDefinitionData.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(s -> new IllegalStateException("Failed to encode JSON: " + s)), path));
             }
             return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         }
@@ -55,29 +53,18 @@ public abstract class DefinitionsProvider implements DataProvider {
 
         @FunctionalInterface
         public interface ArmorAttachmentConsumer {
-            void accept(Item item, DefinitionEntry definition);
+            void accept(Item item, ArmorAttachmentDefinitionData definition);
 
-            default void accept(DefinitionEntry definition, Item... items) {
+            default void accept(ArmorAttachmentDefinitionData definition, Item... items) {
                 for (Item item : items) {
                     accept(item, definition);
                 }
             }
         }
 
-        public record DefinitionEntry(double armor, double toughness, String armorSlot, double hungerDrainMultiplier, double deflectChance, double weight, ResourceLocation visoredHelmet) {
-            public static final Codec<DefinitionEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                    Codec.DOUBLE.optionalFieldOf("armor", 0.0).forGetter(DefinitionEntry::armor),
-                    Codec.DOUBLE.optionalFieldOf("toughness", 0.0).forGetter(DefinitionEntry::toughness),
-                    Codec.STRING.optionalFieldOf("armorSlot", "").forGetter(DefinitionEntry::armorSlot),
-                    Codec.DOUBLE.optionalFieldOf("hungerDrainMultiplier", 0.0).forGetter(DefinitionEntry::hungerDrainMultiplier),
-                    Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(DefinitionEntry::deflectChance),
-                    Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(DefinitionEntry::weight),
-                    ResourceLocation.CODEC.optionalFieldOf("visoredHelmet", ResourceLocation.fromNamespaceAndPath("","")).forGetter(DefinitionEntry::visoredHelmet)
-            ).apply(instance, DefinitionEntry::new));
-        }
-
         public static class Builder {
             private double armor, toughness, hunger, deflect, weight;
+            private float attackSpeed;
             private String slot = "";
             private ResourceLocation visor = ResourceLocation.fromNamespaceAndPath("","");
             public static Builder create() { return new Builder(); }
@@ -86,8 +73,9 @@ public abstract class DefinitionsProvider implements DataProvider {
             public Builder slot(String s) { this.slot = s; return this; }
             public Builder hunger(double h) { this.hunger = h; return this; }
             public Builder deflect(double d) { this.deflect = d; return this; }
+            public Builder attackSpeed(float f) { this.attackSpeed = f; return this; }
             public Builder visor(ResourceLocation v) { this.visor = v; return this; }
-            public DefinitionEntry build() { return new DefinitionEntry(armor, toughness, slot, hunger, deflect, weight, visor); }
+            public ArmorAttachmentDefinitionData build() { return new ArmorAttachmentDefinitionData(armor, toughness, slot, hunger, deflect, weight, attackSpeed, visor); }
         }
     }
 
@@ -96,12 +84,12 @@ public abstract class DefinitionsProvider implements DataProvider {
 
         @Override
         public CompletableFuture<?> run(CachedOutput writer) {
-            Map<ResourceLocation, DefinitionEntry> entries = new TreeMap<>();
+            Map<ResourceLocation, ArmorDefinitionData> entries = new TreeMap<>();
             generateDefinitions((item, definition) -> entries.put(BuiltInRegistries.ITEM.getKey(item), definition));
             List<CompletableFuture<?>> futures = new ArrayList<>();
-            for (Map.Entry<ResourceLocation, DefinitionEntry> entry : entries.entrySet()) {
+            for (Map.Entry<ResourceLocation, ArmorDefinitionData> entry : entries.entrySet()) {
                 Path path = output.getOutputFolder().resolve("data/" + entry.getKey().getNamespace() + "/definitions/armor/" + entry.getKey().getPath() + ".json");
-                futures.add(DataProvider.saveStable(writer, DefinitionEntry.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(s -> new IllegalStateException("Failed to encode JSON: " + s)), path));
+                futures.add(DataProvider.saveStable(writer, ArmorDefinitionData.CODEC.encodeStart(JsonOps.INSTANCE, entry.getValue()).getOrThrow(s -> new IllegalStateException("Failed to encode JSON: " + s)), path));
             }
             return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         }
@@ -112,21 +100,13 @@ public abstract class DefinitionsProvider implements DataProvider {
 
         @FunctionalInterface
         public interface ArmorConsumer {
-            void accept(Item item, DefinitionEntry definition);
+            void accept(Item item, ArmorDefinitionData definition);
 
-            default void accept(DefinitionEntry definition, Item... items) {
+            default void accept(ArmorDefinitionData definition, Item... items) {
                 for (Item item : items) {
                     accept(item, definition);
                 }
             }
-        }
-
-        public record DefinitionEntry(Map<String, Double> damageResistance, double deflectChance, double weight) {
-            public static final Codec<DefinitionEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                    Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("damageResistance", Map.of()).forGetter(DefinitionEntry::damageResistance),
-                    Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(DefinitionEntry::deflectChance),
-                    Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(DefinitionEntry::weight)
-            ).apply(instance, DefinitionEntry::new));
         }
 
         public static class Builder {
@@ -142,7 +122,7 @@ public abstract class DefinitionsProvider implements DataProvider {
                 this.deflectChance = deflectChance;
                 return this;
             }
-            public DefinitionEntry build() { return new DefinitionEntry(res, deflectChance, weight); }
+            public ArmorDefinitionData build() { return new ArmorDefinitionData(res, deflectChance, weight); }
         }
     }
 
@@ -294,30 +274,14 @@ public abstract class DefinitionsProvider implements DataProvider {
     public abstract static class Land extends DefinitionsProvider {
         public Land(PackOutput output) { super(output, "definitions/lands"); }
         @Override public CompletableFuture<?> run(CachedOutput writer) {return CompletableFuture.completedFuture(null); }
-        protected abstract void generateDefinitions(BiConsumer<DefinitionEntry, List<Item>> consumer);
+        protected abstract void generateDefinitions(BiConsumer<LandValues, List<Item>> consumer);
         @Override public String getName() { return "Land Definitions"; }
-        public record DefinitionEntry(int baseRadius, Map<Item, Integer> itemsToExpand, String expandFormula, int maxAllies) {
-            public static final Codec<DefinitionEntry> CODEC = RecordCodecBuilder.create(i -> i.group(
-                    Codec.INT.fieldOf("base_radius").forGetter(DefinitionEntry::baseRadius),
-                    Codec.unboundedMap(BuiltInRegistries.ITEM.byNameCodec(), Codec.INT).fieldOf("items_to_expand").forGetter(DefinitionEntry::itemsToExpand),
-                    Codec.STRING.fieldOf("expand_formula").forGetter(DefinitionEntry::expandFormula),
-                    Codec.INT.fieldOf("maxAllies").forGetter(DefinitionEntry::maxAllies)
-            ).apply(i, DefinitionEntry::new));
-        }
     }
 
     public abstract static class SiegeEngine extends DefinitionsProvider {
         public SiegeEngine(PackOutput output) { super(output, "definitions/siege_engines"); }
         @Override public CompletableFuture<?> run(CachedOutput writer) {return CompletableFuture.completedFuture(null); }
-        protected abstract void generateDefinitions(BiConsumer<DefinitionEntry, List<Item>> consumer);
+        protected abstract void generateDefinitions(BiConsumer<SiegeEngineDefinitionData, List<Item>> consumer);
         @Override public String getName() { return "Siege Engine Definitions"; }
-        public record DefinitionEntry(double playerSpeed, double horseSpeed, double baseDamage, int baseReload) {
-            public static final Codec<DefinitionEntry> CODEC = RecordCodecBuilder.create(i -> i.group(
-                    Codec.DOUBLE.fieldOf("playerSpeed").forGetter(DefinitionEntry::playerSpeed),
-                    Codec.DOUBLE.fieldOf("horseSpeed").forGetter(DefinitionEntry::horseSpeed),
-                    Codec.DOUBLE.fieldOf("baseDamage").forGetter(DefinitionEntry::baseDamage),
-                    Codec.INT.fieldOf("baseReload").forGetter(DefinitionEntry::baseReload)
-            ).apply(i, DefinitionEntry::new));
-        }
     }
 }

@@ -42,7 +42,7 @@ public class ArmorAttachmentDefinitionsStorage {
     }
 
     private static ArmorAttachmentDefinitionData getDefaultData() {
-        return new ArmorAttachmentDefinitionData(0, 0, "", 0, 0, 0, ResourceLocation.fromNamespaceAndPath("", ""));
+        return new ArmorAttachmentDefinitionData(0, 0, "", 0, 0, 0, 0, ResourceLocation.fromNamespaceAndPath("", ""));
     }
 
     public static Map<ResourceLocation, ArmorAttachmentDefinitionData> getDefinitions() {

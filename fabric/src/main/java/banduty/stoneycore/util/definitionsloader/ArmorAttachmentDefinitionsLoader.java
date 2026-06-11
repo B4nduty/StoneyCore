@@ -68,6 +68,7 @@ public class ArmorAttachmentDefinitionsLoader implements IdentifiableResourceRel
                                             def.hungerDrainMultiplier(),
                                             def.deflectChance(),
                                             def.weight(),
+                                            def.attackSpeed(),
                                             def.visoredHelmet()
                                     );
                                 }

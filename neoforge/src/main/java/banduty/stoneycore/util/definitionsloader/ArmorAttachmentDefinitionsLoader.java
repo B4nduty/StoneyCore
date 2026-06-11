@@ -65,6 +65,7 @@ public class ArmorAttachmentDefinitionsLoader extends SimplePreparableReloadList
                                         def.hungerDrainMultiplier(),
                                         def.deflectChance(),
                                         def.weight(),
+                                        def.attackSpeed(),
                                         def.visoredHelmet()
                                 );
                             }
