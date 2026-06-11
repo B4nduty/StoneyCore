@@ -75,19 +75,19 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             if (underArmorStack.getItem() instanceof ArmorItem armorItem) {
                 armorType = armorItem.getType();
             } else {
-                return ItemStack.EMPTY;
+                return null;
             }
 
             ArmorAttachmentSlotDefinitionData incomingSlotDef =
                     ArmorAttachmentSlotDefinitionsStorage.getData(incoming, armorType);
 
             if (Objects.equals(incomingSlotDef, ArmorAttachmentSlotDefinitionsStorage.getDefaultData())) {
-                return ItemStack.EMPTY;
+                return null;
             }
 
             ArmorItem.Type targetType = ArmorAttachmentSlotDefinitionsStorage.getArmorType(incomingSlotDef);
 
-            if (armorItem.getType() != targetType) return ItemStack.EMPTY;
+            if (armorItem.getType() != targetType) return null;
 
             if (incomingSlotDef.requiredSlot() != null && !incomingSlotDef.requiredSlot().isEmpty()) {
                 boolean hasRequiredAttachment = false;
@@ -103,7 +103,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                     }
                 }
 
-                if (!hasRequiredAttachment) return ItemStack.EMPTY;
+                if (!hasRequiredAttachment) return null;
             }
 
             ItemStack singleItem = incoming.copyWithCount(1);

@@ -69,18 +69,18 @@ public class ItemTooltipHandler {
         if (WeaponDefinitionsStorage.isMelee(stack)) {
             double bonusKnockback = WeaponDefinitionsStorage.getData(stack).melee().bonusKnockback();
             if (bonusKnockback != 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.bonusKnockback", bonusKnockback).withStyle(ChatFormatting.AQUA));
+                lines.add(Component.translatable("component.tooltip.stoneycore.bonusKnockback", formatValue(bonusKnockback, true)).withStyle(ChatFormatting.AQUA));
             }
             double deflectChance = WeaponDefinitionsStorage.getData(stack).melee().deflectChance();
             if (deflectChance > 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).withStyle(ChatFormatting.AQUA));
+                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", formatValue(deflectChance * 100, false)).withStyle(ChatFormatting.AQUA));
             }
         }
 
         if (WeaponDefinitionsStorage.isAmmo(stack)) {
             double deflectChance = WeaponDefinitionsStorage.getData(stack).ammo().deflectChance();
             if (deflectChance != 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", (int) (deflectChance * 100)).withStyle(ChatFormatting.AQUA));
+                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", formatValue(deflectChance * 100, false)).withStyle(ChatFormatting.AQUA));
             }
         }
 
@@ -90,36 +90,69 @@ public class ItemTooltipHandler {
             double piercing = SCArmorUtil.getResistance(SCDamageType.PIERCING, armorItem) * 100;
 
             if (slashing != 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.slashingResistance", slashing).withStyle(ChatFormatting.BLUE));
+                lines.add(Component.translatable("component.tooltip.stoneycore.slashingResistance", formatValue(slashing, false)).withStyle(ChatFormatting.BLUE));
             }
             if (bludgeoning != 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.bludgeoningResistance", bludgeoning).withStyle(ChatFormatting.BLUE));
+                lines.add(Component.translatable("component.tooltip.stoneycore.bludgeoningResistance", formatValue(bludgeoning, false)).withStyle(ChatFormatting.BLUE));
             }
             if (piercing != 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.piercingResistance", piercing).withStyle(ChatFormatting.BLUE));
+                lines.add(Component.translatable("component.tooltip.stoneycore.piercingResistance", formatValue(piercing, false)).withStyle(ChatFormatting.BLUE));
             }
         }
 
         if (ArmorDefinitionsStorage.containsItem(stack)) {
             double weight = ArmorDefinitionsStorage.getData(stack).weight();
+            float attackSpeed = 0;
+            int rechargeTime = 0;
+            for (ItemStack attachment : SCUnderArmor.getArmorAttachments(stack)) {
+                if (ArmorAttachmentDefinitionsStorage.containsItem(attachment)) {
+                    weight += ArmorAttachmentDefinitionsStorage.getData(attachment).weight();
+                    attackSpeed += ArmorAttachmentDefinitionsStorage.getData(attachment).attackSpeed();
+                    rechargeTime += ArmorAttachmentDefinitionsStorage.getData(attachment).rechargeTime();
+                }
+            }
             if (weight != 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.weight", weight).withStyle(ChatFormatting.BLUE));
+                lines.add(Component.translatable("component.tooltip.stoneycore.weight", formatValue(weight, true)).withStyle(ChatFormatting.BLUE));
             }
-            float attackSpeed = ArmorAttachmentDefinitionsStorage.getData(stack).attackSpeed();
             if (attackSpeed != 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.attackSpeed", attackSpeed).withStyle(ChatFormatting.BLUE));
+                lines.add(Component.translatable("component.tooltip.stoneycore.attackSpeed", formatValue(attackSpeed, true)).withStyle(ChatFormatting.BLUE));
             }
-            int rechargeTime = ArmorAttachmentDefinitionsStorage.getData(stack).rechargeTime();
             if (rechargeTime != 0) {
                 double recharge = (double) rechargeTime / 20;
-                lines.add(Component.translatable("component.tooltip.stoneycore.rechargeTime", recharge).withStyle(ChatFormatting.BLUE));
+                lines.add(Component.translatable("component.tooltip.stoneycore.rechargeTime", formatValue(recharge, true)).withStyle(ChatFormatting.BLUE));
             }
         }
 
         if (ArmorAttachmentDefinitionsStorage.containsItem(stack)) {
-            double weight = ArmorAttachmentDefinitionsStorage.getData(stack).weight();
+            var data = ArmorAttachmentDefinitionsStorage.getData(stack);
+            double weight = data.weight();
             if (weight != 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.weight", weight).withStyle(ChatFormatting.BLUE));
+                lines.add(Component.translatable("component.tooltip.stoneycore.weight", formatValue(weight, true)).withStyle(ChatFormatting.BLUE));
+            }
+            float attackSpeed = data.attackSpeed();
+            if (attackSpeed != 0) {
+                lines.add(Component.translatable("component.tooltip.stoneycore.attackSpeed", formatValue(attackSpeed, true)).withStyle(ChatFormatting.BLUE));
+            }
+            int rechargeTime = data.rechargeTime();
+            if (rechargeTime != 0) {
+                double recharge = (double) rechargeTime / 20;
+                lines.add(Component.translatable("component.tooltip.stoneycore.rechargeTime", formatValue(recharge, true)).withStyle(ChatFormatting.BLUE));
+            }
+            double armor = data.armor();
+            if (armor != 0) {
+                lines.add(Component.translatable("component.tooltip.stoneycore.armor", formatValue(armor, true)).withStyle(ChatFormatting.BLUE));
+            }
+            double toughness = data.toughness();
+            if (toughness != 0) {
+                lines.add(Component.translatable("component.tooltip.stoneycore.toughness", formatValue(toughness, true)).withStyle(ChatFormatting.BLUE));
+            }
+            double hunger = data.hungerDrainMultiplier();
+            if (hunger != 0) {
+                lines.add(Component.translatable("component.tooltip.stoneycore.hunger", formatValue(hunger, true)).withStyle(ChatFormatting.BLUE));
+            }
+            double deflectChance = data.deflectChance();
+            if (deflectChance != 0) {
+                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", formatValue(deflectChance * 100, false)).withStyle(ChatFormatting.BLUE));
             }
         }
 
@@ -131,5 +164,13 @@ public class ItemTooltipHandler {
                 lines.add(Component.translatable("component.tooltip.stoneycore.openVisorToughness").withStyle(ChatFormatting.AQUA));
             }
         }
+    }
+
+    private static String formatValue(double value, boolean useDecimal) {
+        String formatted = useDecimal ? String.format("%.1f", value) : String.format("%.0f", value);
+        if (value > 0) {
+            return "+" + formatted;
+        }
+        return formatted;
     }
 }
