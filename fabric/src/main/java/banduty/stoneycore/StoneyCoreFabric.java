@@ -3,6 +3,7 @@ package banduty.stoneycore;
 import banduty.stoneycore.commands.FabricSCCommandsHandler;
 import banduty.stoneycore.event.*;
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
+import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.networking.SCC2SNetworking;
 import banduty.stoneycore.networking.SCPayloads;
 import banduty.stoneycore.networking.payload.SyncDefinitionsPacket;
@@ -20,6 +21,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -28,6 +31,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.world.item.CreativeModeTabs;
 
 public class StoneyCoreFabric implements ModInitializer {
 
@@ -37,6 +41,8 @@ public class StoneyCoreFabric implements ModInitializer {
         SCPayloads.registerPayloads();
         SCC2SNetworking.registerC2SNetworking();
         HotIronCoolingHandler.init();
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(StoneyCoreFabric::addItemsToIngredientItemGroup);
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(StoneyCoreFabric::addItemsToToolsItemGroup);
 
         ServerTickEvents.START_SERVER_TICK.register(new StartTickHandler());
         PlayerBlockBreakEvents.AFTER.register(new PlayerBlockBreakAfterHandler());
@@ -110,5 +116,17 @@ public class StoneyCoreFabric implements ModInitializer {
                 ArmorAttachmentDefinitionsStorage.getDefinitions(), ArmorAttachmentSlotDefinitionsStorage.getDefinitions(),
                 LandDefinitionsStorage.getDefinitions(), SiegeEngineDefinitionsStorage.getDefinitions(),
                 WeaponDefinitionsStorage.getDefinitions()));
+    }
+
+    private static void addItemsToToolsItemGroup(FabricItemGroupEntries entries) {
+        entries.accept(SCItems.SMITHING_HAMMER.get());
+        entries.accept(SCItems.TONGS.get());
+        entries.accept(SCItems.MANUSCRIPT.get());
+    }
+
+    private static void addItemsToIngredientItemGroup(FabricItemGroupEntries entries) {
+        entries.accept(SCItems.BLACK_POWDER.get());
+        entries.accept(SCItems.HOT_IRON.get());
+        entries.accept(SCItems.CROWN.get());
     }
 }
