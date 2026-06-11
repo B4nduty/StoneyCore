@@ -65,6 +65,7 @@ public abstract class DefinitionsProvider implements DataProvider {
         public static class Builder {
             private double armor, toughness, hunger, deflect, weight;
             private float attackSpeed;
+            private int rechargeTime;
             private String slot = "";
             private ResourceLocation visor = ResourceLocation.fromNamespaceAndPath("","");
             public static Builder create() { return new Builder(); }
@@ -74,8 +75,9 @@ public abstract class DefinitionsProvider implements DataProvider {
             public Builder hunger(double h) { this.hunger = h; return this; }
             public Builder deflect(double d) { this.deflect = d; return this; }
             public Builder attackSpeed(float f) { this.attackSpeed = f; return this; }
+            public Builder rechargeTime(int i) { this.rechargeTime = i; return this; }
             public Builder visor(ResourceLocation v) { this.visor = v; return this; }
-            public ArmorAttachmentDefinitionData build() { return new ArmorAttachmentDefinitionData(armor, toughness, slot, hunger, deflect, weight, attackSpeed, visor); }
+            public ArmorAttachmentDefinitionData build() { return new ArmorAttachmentDefinitionData(armor, toughness, slot, hunger, deflect, weight, attackSpeed, rechargeTime, visor); }
         }
     }
 

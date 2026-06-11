@@ -69,6 +69,7 @@ public class ArmorAttachmentDefinitionsLoader implements IdentifiableResourceRel
                                             def.deflectChance(),
                                             def.weight(),
                                             def.attackSpeed(),
+                                            def.rechargeTime(),
                                             def.visoredHelmet()
                                     );
                                 }

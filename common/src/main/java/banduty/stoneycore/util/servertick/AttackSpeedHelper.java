@@ -3,6 +3,7 @@ package banduty.stoneycore.util.servertick;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -34,5 +35,15 @@ public class AttackSpeedHelper {
 
             attackSpeedAttr.addTransientModifier(modifier);
         }
+    }
+
+    public static int getReloadSpeedModified(LivingEntity livingEntity, ItemStack rangedItem) {
+        int rechargeTime = WeaponDefinitionsStorage.getData(rangedItem).ranged().rechargeTime();
+        for (ItemStack itemStack : livingEntity.getArmorSlots()) {
+            for (ItemStack attachment : SCUnderArmor.getArmorAttachments(itemStack)) {
+                rechargeTime += ArmorAttachmentDefinitionsStorage.getData(attachment).rechargeTime();
+            }
+        }
+        return rechargeTime;
     }
 }

@@ -4,6 +4,7 @@ import banduty.stoneycore.combat.damagetype.SCDamageApplier;
 import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.entity.SCEntities;
+import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.sounds.SCSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -30,6 +31,7 @@ public class SCBulletEntity extends AbstractArrow {
 
     public SCBulletEntity(EntityType<? extends AbstractArrow> type, Level level) {
         super(type, level);
+        this.pickup = AbstractArrow.Pickup.DISALLOWED;
     }
 
     public SCBulletEntity(Level level, LivingEntity shooter) {
@@ -39,12 +41,12 @@ public class SCBulletEntity extends AbstractArrow {
 
     @Override
     protected ItemStack getPickupItem() {
-        return ItemStack.EMPTY;
+        return new ItemStack(SCItems.BLACK_POWDER.get());
     }
 
     @Override
     protected ItemStack getDefaultPickupItem() {
-        return ItemStack.EMPTY;
+        return new ItemStack(SCItems.BLACK_POWDER.get());
     }
 
     @Override

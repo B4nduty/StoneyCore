@@ -7,6 +7,7 @@ import banduty.stoneycore.particle.SCParticles;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
+import banduty.stoneycore.util.servertick.AttackSpeedHelper;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -208,10 +209,10 @@ public final class SCRangeWeaponUtil {
         return Math.min(pull, 1.0F);
     }
 
-    public static float getCrossbowPullProgress(int useTicks, ItemStack itemStack) {
+    public static float getCrossbowPullProgress(int useTicks, ItemStack itemStack, LivingEntity livingEntity) {
         var definitionData = WeaponDefinitionsStorage.getData(itemStack);
         if (definitionData == null || definitionData.ranged() == null) return 0;
-        int chargeTime = Math.max(1, definitionData.ranged().rechargeTime() * 20);
+        int chargeTime = Math.max(1, AttackSpeedHelper.getReloadSpeedModified(livingEntity, itemStack));
         float progress = Math.min((float) useTicks / chargeTime, 1.0F);
         if (useTicks <= 1) progress = 0f;
         return Math.min(progress, 1.0F);

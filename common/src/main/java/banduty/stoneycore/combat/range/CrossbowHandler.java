@@ -54,7 +54,7 @@ public class CrossbowHandler implements IRangedWeaponHandler {
 
     @Override
     public void handleRelease(ItemStack stack, Level level, Player player, int useTime, ItemStack arrowStack) {
-        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack);
+        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack, player);
         if (pullProgress < 1.0F) {
             SCRangeWeaponUtil.WeaponState currentState = SCRangeWeaponUtil.getWeaponState(stack);
             SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(
@@ -72,8 +72,8 @@ public class CrossbowHandler implements IRangedWeaponHandler {
         if (level.isClientSide()) return;
         if (useTime <= 1) return;
 
-        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack);
-        float prevProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime - 1, stack);
+        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack, player);
+        float prevProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime - 1, stack, player);
 
         boolean hasAmmo = SCRangeWeaponUtil.getArrowFromInventory(player).isPresent();
         if (player.isCreative()) hasAmmo = true;

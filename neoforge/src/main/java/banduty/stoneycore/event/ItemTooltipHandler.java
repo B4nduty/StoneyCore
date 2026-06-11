@@ -105,6 +105,15 @@ public class ItemTooltipHandler {
             if (weight != 0) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.weight", weight).withStyle(ChatFormatting.BLUE));
             }
+            float attackSpeed = ArmorAttachmentDefinitionsStorage.getData(stack).attackSpeed();
+            if (attackSpeed != 0) {
+                lines.add(Component.translatable("component.tooltip.stoneycore.attackSpeed", attackSpeed).withStyle(ChatFormatting.BLUE));
+            }
+            int rechargeTime = ArmorAttachmentDefinitionsStorage.getData(stack).rechargeTime();
+            if (rechargeTime != 0) {
+                double recharge = (double) rechargeTime / 20;
+                lines.add(Component.translatable("component.tooltip.stoneycore.rechargeTime", recharge).withStyle(ChatFormatting.BLUE));
+            }
         }
 
         if (ArmorAttachmentDefinitionsStorage.containsItem(stack)) {

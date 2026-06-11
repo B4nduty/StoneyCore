@@ -82,8 +82,24 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
 
         if (ArmorDefinitionsStorage.containsItem(stack)) {
             double weight = ArmorDefinitionsStorage.getData(stack).weight();
+            float attackSpeed = 0;
+            int rechargeTime = 0;
+            for (ItemStack attachment : SCUnderArmor.getArmorAttachments(stack)) {
+                if (ArmorAttachmentDefinitionsStorage.containsItem(attachment)) {
+                    weight += ArmorAttachmentDefinitionsStorage.getData(attachment).weight();
+                    attackSpeed += ArmorAttachmentDefinitionsStorage.getData(attachment).attackSpeed();
+                    rechargeTime += ArmorAttachmentDefinitionsStorage.getData(attachment).rechargeTime();
+                }
+            }
             if (weight != 0) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.weight", weight).withStyle(ChatFormatting.BLUE));
+            }
+            if (attackSpeed != 0) {
+                lines.add(Component.translatable("component.tooltip.stoneycore.attackSpeed", attackSpeed).withStyle(ChatFormatting.BLUE));
+            }
+            if (rechargeTime != 0) {
+                double recharge = (double) rechargeTime / 20;
+                lines.add(Component.translatable("component.tooltip.stoneycore.rechargeTime", recharge).withStyle(ChatFormatting.BLUE));
             }
         }
 
@@ -91,6 +107,15 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             double weight = ArmorAttachmentDefinitionsStorage.getData(stack).weight();
             if (weight != 0) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.weight", weight).withStyle(ChatFormatting.BLUE));
+            }
+            float attackSpeed = ArmorAttachmentDefinitionsStorage.getData(stack).attackSpeed();
+            if (attackSpeed != 0) {
+                lines.add(Component.translatable("component.tooltip.stoneycore.attackSpeed", attackSpeed).withStyle(ChatFormatting.BLUE));
+            }
+            int rechargeTime = ArmorAttachmentDefinitionsStorage.getData(stack).rechargeTime();
+            if (rechargeTime != 0) {
+                double recharge = (double) rechargeTime / 20;
+                lines.add(Component.translatable("component.tooltip.stoneycore.rechargeTime", recharge).withStyle(ChatFormatting.BLUE));
             }
         }
 

@@ -67,7 +67,7 @@ public class MechanicsUtil {
 
         incrementRechargeTime(player);
 
-        int requiredTicks = WeaponDefinitionsStorage.getData(currentItem).ranged().rechargeTime() * 20;
+        int requiredTicks = AttackSpeedHelper.getReloadSpeedModified(player, currentItem);
         if (getRechargeTime(player) >= requiredTicks) {
             completeReload(player, currentItem);
         }

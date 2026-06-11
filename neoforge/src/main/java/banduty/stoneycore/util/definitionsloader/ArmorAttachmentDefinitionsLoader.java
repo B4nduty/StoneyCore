@@ -66,6 +66,7 @@ public class ArmorAttachmentDefinitionsLoader extends SimplePreparableReloadList
                                         def.deflectChance(),
                                         def.weight(),
                                         def.attackSpeed(),
+                                        def.rechargeTime(),
                                         def.visoredHelmet()
                                 );
                             }
