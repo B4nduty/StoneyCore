@@ -7,16 +7,14 @@ import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
@@ -84,30 +82,24 @@ public abstract class PlayerMixin {
             ),
             index = 2
     )
-    private float stoneycore$modifyDamage(float f, Entity target) {
-        if (!(target instanceof LivingEntity living) || living.level().isClientSide()) return f;
+    private float stoneycore$modifyDamage(float originalBaseDamage, Entity target) {
+        if (!(target instanceof LivingEntity livingTarget) || livingTarget.level().isClientSide()) return originalBaseDamage;
 
         ItemStack weaponStack = CombatSelect.getWeaponStack(playerEntity, playerEntity.getMainHandItem());
 
-        if (!WeaponDefinitionsStorage.isMelee(weaponStack)) return f;
+        if (weaponStack == null || weaponStack.isEmpty() || weaponStack.is(Items.AIR)) {
+            return originalBaseDamage;
+        }
+        if (!WeaponDefinitionsStorage.isMelee(weaponStack)) {
+            return originalBaseDamage;
+        }
 
-        float weaponDamage = (float) stoneyCore$getBaseAttackDamage(weaponStack);
+        double damage = EntityDamageUtil.onDamage(livingTarget, playerEntity, weaponStack);
 
-        double extra = EntityDamageUtil.onDamage(living, playerEntity, weaponStack);
+        if (weaponStack.is(SCTags.BROKEN_WEAPONS.getTag()) && weaponStack.getDamageValue() >= weaponStack.getMaxDamage() * 0.9f) {
+            damage *= 0.2f;
+        }
 
-        if (weaponStack.is(SCTags.BROKEN_WEAPONS.getTag()) && weaponStack.getDamageValue() >= weaponStack.getMaxDamage() * 0.9f) extra *= 0.2f;
-
-        return f + (float)extra - weaponDamage - 1;
-    }
-
-    @Unique
-    private static double stoneyCore$getBaseAttackDamage(ItemStack stack) {
-        ItemAttributeModifiers modifiers = stack.get(DataComponents.ATTRIBUTE_MODIFIERS);
-        if (modifiers == null) return 0.0;
-
-        return modifiers.modifiers().stream()
-                .filter(mod -> mod.attribute().is(Attributes.ATTACK_DAMAGE))
-                .mapToDouble(mod -> mod.modifier().amount())
-                .sum();
+        return (float) Math.max(0.0, damage);
     }
 }

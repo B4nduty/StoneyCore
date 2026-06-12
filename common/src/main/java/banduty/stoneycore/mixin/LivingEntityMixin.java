@@ -8,7 +8,6 @@ import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
 import banduty.stoneycore.siege.SiegeManager;
-import banduty.stoneycore.util.DeflectChanceHelper;
 import banduty.stoneycore.util.EntityDamageUtil;
 import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
