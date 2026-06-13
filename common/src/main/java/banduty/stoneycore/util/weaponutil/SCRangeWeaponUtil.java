@@ -114,7 +114,7 @@ public final class SCRangeWeaponUtil {
         var definitionData = WeaponDefinitionsStorage.getData(stack);
         if (definitionData == null || definitionData.ranged() == null) return;
 
-        SCBulletEntity bulletEntity = new SCBulletEntity(level, player);
+        SCBulletEntity bulletEntity = new SCBulletEntity(level, player, stack);
         bulletEntity.setDamageAmount(definitionData.ranged().baseDamage());
         bulletEntity.setDamageType(definitionData.ranged().damageType());
         bulletEntity.setOwner(player);

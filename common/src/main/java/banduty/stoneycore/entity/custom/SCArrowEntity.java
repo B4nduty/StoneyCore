@@ -17,13 +17,22 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class SCArrowEntity extends AbstractArrow {
+
     private SCDamageType damageType;
 
-    public SCArrowEntity(EntityType<? extends SCArrowEntity> scArrow, LivingEntity shooter, Level level) {
-        super(scArrow, level);
-        this.setOwner(shooter);
+    public SCArrowEntity(EntityType<? extends SCArrowEntity> type, Level level) {
+        super(type, level);
+    }
+
+    public SCArrowEntity(EntityType<? extends SCArrowEntity> type, LivingEntity shooter, Level level) {
+        super(type, shooter, level, ItemStack.EMPTY, null);
+    }
+
+    public SCArrowEntity(EntityType<? extends SCArrowEntity> type, LivingEntity shooter, Level level, ItemStack stack, @Nullable ItemStack firedFromWeapon) {
+        super(type, shooter, level, stack, firedFromWeapon);
     }
 
     public void setDamageType(SCDamageType damageType) {

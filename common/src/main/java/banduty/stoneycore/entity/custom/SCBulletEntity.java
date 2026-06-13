@@ -24,6 +24,7 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 public class SCBulletEntity extends AbstractArrow {
     private SCDamageType damageType;
@@ -34,9 +35,13 @@ public class SCBulletEntity extends AbstractArrow {
         this.pickup = AbstractArrow.Pickup.DISALLOWED;
     }
 
-    public SCBulletEntity(Level level, LivingEntity shooter) {
-        this(SCEntities.SC_BULLET.get(), level);
-        this.setOwner(shooter);
+    public SCBulletEntity(EntityType<? extends AbstractArrow> type, LivingEntity shooter, Level level, @Nullable ItemStack firedFromWeapon) {
+        super(type, shooter, level, ItemStack.EMPTY, firedFromWeapon);
+        this.pickup = AbstractArrow.Pickup.DISALLOWED;
+    }
+
+    public SCBulletEntity(Level level, LivingEntity shooter, @Nullable ItemStack firedFromWeapon) {
+        this(SCEntities.SC_BULLET.get(), shooter, level, firedFromWeapon);
     }
 
     @Override
