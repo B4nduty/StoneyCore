@@ -47,12 +47,7 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
                        float headPitch) {
 
         contextModel.copyPropertiesTo(crownModel);
-
-        crownModel.setupAnim(entity, entity.walkAnimation.position(), entity.walkAnimation.speed(),
-                (float) entity.tickCount + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true),
-                entity.getYHeadRot() - entity.yBodyRot,
-                entity.getXRot());
-
+        
         VertexConsumer consumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(TEXTURE));
 
         int color = DyedItemColor.getOrDefault(itemStack, -1);
