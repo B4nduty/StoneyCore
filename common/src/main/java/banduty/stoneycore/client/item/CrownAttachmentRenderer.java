@@ -5,7 +5,6 @@ import banduty.stoneycore.client.render.ArmorAttachmentRenderer;
 import banduty.stoneycore.model.CrownModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -25,11 +24,7 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
     private final CrownModel crownModel;
 
     public CrownAttachmentRenderer() {
-        this.crownModel = new CrownModel(
-                Minecraft.getInstance()
-                        .getEntityModels()
-                        .bakeLayer(CrownModel.LAYER_LOCATION)
-        );
+        this.crownModel = new CrownModel(CrownModel.getTexturedModelData().bakeRoot());
     }
 
     @Override
@@ -51,6 +46,10 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
         VertexConsumer consumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(TEXTURE));
 
         int color = DyedItemColor.getOrDefault(itemStack, -1);
+
+        crownModel.copyFromHead();
+
+        crownModel.moveModel(0, -3.0F, 0);
 
         crownModel.renderToBuffer(
                 poseStack,

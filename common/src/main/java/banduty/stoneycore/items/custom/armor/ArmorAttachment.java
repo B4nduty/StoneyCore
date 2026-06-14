@@ -20,6 +20,7 @@ import net.minecraft.world.level.Level;
 import static banduty.stoneycore.util.SCInventoryItemFinder.findUnderArmor;
 
 public interface ArmorAttachment {
+
     default boolean hasOpenVisor(ItemStack stack) {
         return false;
     }
@@ -28,30 +29,31 @@ public interface ArmorAttachment {
         return true;
     }
 
-    default void applyAttachmentAttributes(ItemStack attachmentStack, ItemStack underArmorStack, AttributeAccumulator accumulator) {
-        double baseAttachmentArmor = 0;
-        double baseAttachmentToughness = 0;
-        double baseAttachmentHunger = 0;
-        double baseAttachmentDeflect = 0;
+    default void applyAttachmentAttributes(ItemStack attachmentStack, ItemStack underArmorStack,
+                                           AttributeAccumulator accumulator) {
+        double baseArmor = 0;
+        double baseToughness = 0;
+        double baseHunger = 0;
+        double baseDeflect = 0;
 
         if (ArmorAttachmentDefinitionsStorage.containsItem(attachmentStack)) {
             var data = ArmorAttachmentDefinitionsStorage.getData(attachmentStack);
-            baseAttachmentArmor += data.armor();
-            baseAttachmentToughness += data.toughness();
-            baseAttachmentHunger += data.hungerDrainMultiplier();
-            baseAttachmentDeflect += data.deflectChance();
+            baseArmor += data.armor();
+            baseToughness += data.toughness();
+            baseHunger += data.hungerDrainMultiplier();
+            baseDeflect += data.deflectChance();
         }
 
         if (Boolean.TRUE.equals(attachmentStack.get(SCDataComponents.VISOR_OPEN.get()))) {
-            baseAttachmentArmor -= 1.0;
-            baseAttachmentToughness -= 1.0;
-            baseAttachmentDeflect -= 0.05;
+            baseArmor -= 1.0;
+            baseToughness -= 1.0;
+            baseDeflect -= 0.05;
         }
 
-        accumulator.accept(Attributes.ARMOR, baseAttachmentArmor, AttributeModifier.Operation.ADD_VALUE);
-        accumulator.accept(Attributes.ARMOR_TOUGHNESS, baseAttachmentToughness, AttributeModifier.Operation.ADD_VALUE);
-        accumulator.accept(SCAttributes.HUNGER_DRAIN_MULTIPLIER, baseAttachmentHunger, AttributeModifier.Operation.ADD_VALUE);
-        accumulator.accept(SCAttributes.DEFLECT_CHANCE, baseAttachmentDeflect, AttributeModifier.Operation.ADD_VALUE);
+        accumulator.accept(Attributes.ARMOR, baseArmor, AttributeModifier.Operation.ADD_VALUE);
+        accumulator.accept(Attributes.ARMOR_TOUGHNESS, baseToughness, AttributeModifier.Operation.ADD_VALUE);
+        accumulator.accept(SCAttributes.HUNGER_DRAIN_MULTIPLIER, baseHunger, AttributeModifier.Operation.ADD_VALUE);
+        accumulator.accept(SCAttributes.DEFLECT_CHANCE, baseDeflect, AttributeModifier.Operation.ADD_VALUE);
     }
 
     @FunctionalInterface
@@ -59,51 +61,40 @@ public interface ArmorAttachment {
         void accept(Holder<Attribute> attribute, double amount, AttributeModifier.Operation operation);
     }
 
-    default InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand, ArmorItem.Type type) {
-        ItemStack stack = player.getItemInHand(hand);
+    default InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand,
+                                                   ArmorItem.Type type) {
+        ItemStack stack  = player.getItemInHand(hand);
+        ItemStack target = findUnderArmor(player, type);
+
         if (level.isClientSide) {
-            ItemStack target = findUnderArmor(player, type);
-            if (!target.isEmpty()) {
-                return InteractionResultHolder.sidedSuccess(stack, true);
-            }
+            return target.isEmpty()
+                    ? InteractionResultHolder.pass(stack)
+                    : InteractionResultHolder.sidedSuccess(stack, true);
+        }
+
+        if (target.isEmpty() || !(target.getItem() instanceof SCUnderArmor underArmor)) {
             return InteractionResultHolder.pass(stack);
         }
 
-        ItemStack target = findUnderArmor(player, type);
+        UnderArmorContents contents = target.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                UnderArmorContents.EMPTY);
+        UnderArmorContents.Mutable mutable = new UnderArmorContents.Mutable(contents);
 
-        if (!target.isEmpty() && target.getItem() instanceof SCUnderArmor underArmor) {
+        ItemStack result = mutable.tryInsert(stack, player, target);
 
-            UnderArmorContents contents =
-                    target.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
-
-            UnderArmorContents.Mutable mutable = new UnderArmorContents.Mutable(contents);
-
-            ItemStack result = mutable.tryInsert(stack, player, target);
-
+        if (result != null) {
             if (!result.isEmpty()) {
                 player.getInventory().placeItemBackInInventory(result);
             }
-
-            target.set(
-                    SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
-                    mutable.toImmutable()
-            );
-
+            target.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
             underArmor.rebuildAttachmentAttributes(target);
 
-            level.playSound(
-                    null,
-                    player.blockPosition(),
+            level.playSound(null, player.blockPosition(),
                     underArmor.getMaterial().value().equipSound().value(),
-                    SoundSource.PLAYERS,
-                    1.0F,
-                    1.0F
-            );
+                    SoundSource.PLAYERS, 1.0F, 1.0F);
 
             stack.shrink(1);
-
             return InteractionResultHolder.success(stack);
-
         }
 
         return InteractionResultHolder.pass(stack);

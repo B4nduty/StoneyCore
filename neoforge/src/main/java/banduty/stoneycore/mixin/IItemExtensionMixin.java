@@ -55,10 +55,7 @@ public interface IItemExtensionMixin {
             return;
         }
         if (stack.getItem() instanceof SCUnderArmor scUnderArmor) {
-            var materialKey = scUnderArmor.getMaterial().unwrapKey().orElse(null);
-            if (materialKey != null) {
-                cir.setReturnValue(customTexture);
-            }
+            scUnderArmor.getMaterial().unwrapKey().ifPresent(materialKey -> cir.setReturnValue(customTexture));
         }
     }
 }

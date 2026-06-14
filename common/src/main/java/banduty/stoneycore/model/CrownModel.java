@@ -13,19 +13,21 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 
 public class CrownModel extends HumanoidModel<LivingEntity> {
-    private final ModelPart head;
+    private final ModelPart headCrown;
+    private final ModelPart crown;
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "crown"), "main");
 
     public CrownModel(ModelPart root) {
         super(root);
 
-        this.head = root.getChild("head");
+        this.headCrown = root.getChild("head");
+        this.crown = this.headCrown.getChild("crown_r1");
     }
 
     @Override
     protected Iterable<ModelPart> headParts() {
-        return ImmutableList.of(this.head);
+        return ImmutableList.of(this.headCrown);
     }
 
     @Override
@@ -38,12 +40,22 @@ public class CrownModel extends HumanoidModel<LivingEntity> {
         PartDefinition modelPartData = modelData.getRoot();
         PartDefinition head = modelPartData.addOrReplaceChild("head", CubeListBuilder.create(), PartPose.offset(0.0F, 0.0F, 0.0F));
 
-        head.addOrReplaceChild("crown_r1", CubeListBuilder.create().texOffs(64, 0).addBox(-5.5F, -9.0F, -5.75F, 11.0F, 5.0F, 11.0F, new CubeDeformation(-0.4F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -0.0436F, 0.0F, 0.0F));
+        PartDefinition crown = head.addOrReplaceChild("crown_r1", CubeListBuilder.create().texOffs(64, 0).addBox(-5.5F, -9.0F, -5.75F, 11.0F, 5.0F, 11.0F, new CubeDeformation(-0.4F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -0.0436F, 0.0F, 0.0F));
         return LayerDefinition.create(modelData, 128, 64);
     }
 
     @Override
     public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
-        head.render(poseStack, buffer, packedLight, packedOverlay, color);
+        headCrown.render(poseStack, buffer, packedLight, packedOverlay, color);
+    }
+
+    public void copyFromHead() {
+        this.headCrown.copyFrom(this.head);
+    }
+
+    public void moveModel(float x, float y, float z) {
+        this.crown.x = x;
+        this.crown.y = y;
+        this.crown.z = z;
     }
 }

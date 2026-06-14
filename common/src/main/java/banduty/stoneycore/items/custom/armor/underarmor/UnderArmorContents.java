@@ -26,10 +26,11 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             ItemStack.CODEC.listOf().fieldOf("attachments").forGetter(UnderArmorContents::attachments)
     ).apply(instance, UnderArmorContents::new));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, UnderArmorContents> STREAM_CODEC = StreamCodec.composite(
-            ItemStack.STREAM_CODEC.apply(ByteBufCodecs.list()), UnderArmorContents::attachments,
-            UnderArmorContents::new
-    );
+    public static final StreamCodec<RegistryFriendlyByteBuf, UnderArmorContents> STREAM_CODEC =
+            StreamCodec.composite(
+                    ItemStack.STREAM_CODEC.apply(ByteBufCodecs.list()), UnderArmorContents::attachments,
+                    UnderArmorContents::new
+            );
 
     public boolean isEmpty() {
         return this.attachments.isEmpty();
@@ -40,11 +41,8 @@ public record UnderArmorContents(List<ItemStack> attachments) {
         if (this == obj) return true;
         if (!(obj instanceof UnderArmorContents(List<ItemStack> attachments1))) return false;
         if (this.attachments.size() != attachments1.size()) return false;
-
         for (int i = 0; i < this.attachments.size(); i++) {
-            if (!ItemStack.matches(this.attachments.get(i), attachments1.get(i))) {
-                return false;
-            }
+            if (!ItemStack.matches(this.attachments.get(i), attachments1.get(i))) return false;
         }
         return true;
     }
@@ -53,7 +51,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
     public int hashCode() {
         int result = 1;
         for (ItemStack stack : attachments) {
-            result = 31 * result + (stack.isEmpty() ? 0 : stack.getItem().hashCode());
+            result = 31 * result + (stack.isEmpty() ? 0 : ItemStack.hashItemAndComponents(stack));
         }
         return result;
     }
@@ -71,64 +69,47 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
             if (!armorAttachment.canEquip(underArmorStack, player)) return null;
 
-            ArmorItem.Type armorType;
-            if (underArmorStack.getItem() instanceof ArmorItem armorItem) {
-                armorType = armorItem.getType();
-            } else {
-                return null;
-            }
+            if (!(underArmorStack.getItem() instanceof ArmorItem armorItem)) return null;
+            ArmorItem.Type armorType = armorItem.getType();
 
             ArmorAttachmentSlotDefinitionData incomingSlotDef =
                     ArmorAttachmentSlotDefinitionsStorage.getData(incoming, armorType);
 
-            if (Objects.equals(incomingSlotDef, ArmorAttachmentSlotDefinitionsStorage.getDefaultData())) {
+            if (Objects.equals(incomingSlotDef, ArmorAttachmentSlotDefinitionsStorage.getDefaultData()))
                 return null;
-            }
 
             ArmorItem.Type targetType = ArmorAttachmentSlotDefinitionsStorage.getArmorType(incomingSlotDef);
-
-            if (armorItem.getType() != targetType) return null;
+            if (armorType != targetType) return null;
 
             if (incomingSlotDef.requiredSlot() != null && !incomingSlotDef.requiredSlot().isEmpty()) {
-                boolean hasRequiredAttachment = false;
-
+                boolean hasRequired = false;
                 for (ItemStack existing : this.attachments) {
                     ArmorAttachmentSlotDefinitionData existingDef =
                             ArmorAttachmentSlotDefinitionsStorage.getData(existing, armorType);
-
-                    if (existingDef != null &&
-                            Objects.equals(existingDef.slot(), incomingSlotDef.requiredSlot())) {
-                        hasRequiredAttachment = true;
+                    if (existingDef != null && Objects.equals(existingDef.slot(), incomingSlotDef.requiredSlot())) {
+                        hasRequired = true;
                         break;
                     }
                 }
-
-                if (!hasRequiredAttachment) return null;
+                if (!hasRequired) return null;
             }
 
-            ItemStack singleItem = incoming.copyWithCount(1);
-            String incomingSlot = incomingSlotDef.slot();
+            ItemStack singleItem   = incoming.copyWithCount(1);
+            String    incomingSlot = incomingSlotDef.slot();
 
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack existing = this.attachments.get(i);
-
                 ArmorAttachmentSlotDefinitionData existingDef =
                         ArmorAttachmentSlotDefinitionsStorage.getData(existing, armorType);
 
-                if (existingDef != null &&
-                        Objects.equals(existingDef.slot(), incomingSlot)) {
-
+                if (existingDef != null && Objects.equals(existingDef.slot(), incomingSlot)) {
                     ItemStack old = existing;
-
-                    // swap
                     this.attachments.set(i, singleItem);
-
-                    // return replaced item
-                    return old;
+                    return old; // swap: return displaced item
                 }
             }
 
-            // no slot match → normal insert
+            // No slot conflict → append
             this.attachments.add(singleItem);
             return ItemStack.EMPTY;
         }
@@ -142,26 +123,22 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             return new UnderArmorContents(List.copyOf(this.attachments));
         }
 
-        public boolean damageAttachment(String armorSlotName, int damageAmount, LivingEntity entity, EquipmentSlot slot) {
+        public boolean damageAttachment(String armorSlotName, int damageAmount,
+                                        LivingEntity entity, EquipmentSlot slot) {
             boolean anyDamageApplied = false;
-
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack attachmentStack = this.attachments.get(i);
-
                 if (!attachmentStack.isEmpty() && ArmorAttachmentDefinitionsStorage.containsItem(attachmentStack)) {
-                    String slotFromJson = ArmorAttachmentDefinitionsStorage.getData(attachmentStack.getItem()).armorSlot();
-
+                    String slotFromJson = ArmorAttachmentDefinitionsStorage
+                            .getData(attachmentStack.getItem()).armorSlot();
                     if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(armorSlotName)) {
-                        ItemStack modifiableCopy = attachmentStack.copy();
-
-                        modifiableCopy.hurtAndBreak(damageAmount, entity, slot);
-
-                        this.attachments.set(i, modifiableCopy);
+                        ItemStack copy = attachmentStack.copy();
+                        copy.hurtAndBreak(damageAmount, entity, slot);
+                        this.attachments.set(i, copy);
                         anyDamageApplied = true;
                     }
                 }
             }
-
             return anyDamageApplied;
         }
     }

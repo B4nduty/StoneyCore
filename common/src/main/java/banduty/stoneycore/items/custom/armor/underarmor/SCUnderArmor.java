@@ -7,7 +7,6 @@ import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -43,7 +42,8 @@ public class SCUnderArmor extends ArmorItem {
     }
 
     @Override
-    public boolean overrideOtherStackedOnMe(ItemStack underArmorStack, ItemStack incomingStack, Slot slot, ClickAction action, Player player, SlotAccess access) {
+    public boolean overrideOtherStackedOnMe(ItemStack underArmorStack, ItemStack incomingStack, Slot slot,
+                                            ClickAction action, Player player, SlotAccess access) {
         return handleStackInteraction(underArmorStack, action, player, () -> incomingStack, access::set);
     }
 
@@ -52,7 +52,8 @@ public class SCUnderArmor extends ArmorItem {
         if (action != ClickAction.SECONDARY) return false;
 
         ItemStack incomingStack = incomingSupplier.get();
-        UnderArmorContents contents = underArmorStack.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
+        UnderArmorContents contents = underArmorStack.getOrDefault(
+                SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
         UnderArmorContents.Mutable mutable = new UnderArmorContents.Mutable(contents);
 
         if (incomingStack.isEmpty()) {
@@ -66,20 +67,10 @@ public class SCUnderArmor extends ArmorItem {
             }
         } else {
             ItemStack result = mutable.tryInsert(incomingStack, player, underArmorStack);
-
             if (result != null) {
                 incomingStack.shrink(1);
-
-                // if swap happened, give old item back
-                if (!result.isEmpty()) {
-                    outputCons.accept(result);
-                }
-
-                underArmorStack.set(
-                        SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
-                        mutable.toImmutable()
-                );
-
+                if (!result.isEmpty()) outputCons.accept(result);
+                underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
                 rebuildAttachmentAttributes(underArmorStack);
                 playSound(player, this.getMaterial().value().equipSound().value());
                 return true;
@@ -90,7 +81,8 @@ public class SCUnderArmor extends ArmorItem {
 
     @Override
     public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
-        UnderArmorContents contents = stack.get(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
+        UnderArmorContents contents = stack.getOrDefault(
+                SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
         return Optional.of(new UnderArmorTooltip(contents, this.getType()));
     }
 
@@ -108,10 +100,10 @@ public class SCUnderArmor extends ArmorItem {
     public void rebuildAttachmentAttributes(ItemStack stack) {
         ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
 
-        EquipmentSlot slot = this.getType().getSlot();
+        EquipmentSlot slot   = this.getType().getSlot();
         EquipmentSlotGroup group = EquipmentSlotGroup.bySlot(slot);
 
-        Map<Holder<Attribute>, Double> addValueModifiers = new HashMap<>();
+        Map<Holder<Attribute>, Double> addValueModifiers      = new HashMap<>();
         Map<Holder<Attribute>, Double> addMultipliedModifiers = new HashMap<>();
 
         this.getDefaultAttributeModifiers().modifiers().forEach(entry -> {
@@ -133,7 +125,6 @@ public class SCUnderArmor extends ArmorItem {
             if (armorAttachmentStack.getItem() instanceof ArmorAttachment attachment) {
                 attachment.applyAttachmentAttributes(armorAttachmentStack, stack, (attribute, amount, operation) -> {
                     if (amount == 0) return;
-
                     if (operation == AttributeModifier.Operation.ADD_VALUE) {
                         addValueModifiers.merge(attribute, amount, Double::sum);
                     } else {
@@ -145,27 +136,36 @@ public class SCUnderArmor extends ArmorItem {
 
         addValueModifiers.forEach((attribute, totalAmount) -> {
             if (totalAmount == 0) return;
-
-            ResourceLocation modifierId = createModifierId(attribute, slot.getName());
-            builder.add(attribute, new AttributeModifier(modifierId, totalAmount, AttributeModifier.Operation.ADD_VALUE), group);
+            builder.add(attribute,
+                    new AttributeModifier(createModifierId(attribute, slot.getName()),
+                            totalAmount, AttributeModifier.Operation.ADD_VALUE),
+                    group);
         });
 
         addMultipliedModifiers.forEach((attribute, totalAmount) -> {
             if (totalAmount == 0) return;
-
-            ResourceLocation modifierId = createModifierId(attribute, slot.getName() + "_multiplier");
-            builder.add(attribute, new AttributeModifier(modifierId, totalAmount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL), group);
+            builder.add(attribute,
+                    new AttributeModifier(createModifierId(attribute, slot.getName() + "_multiplier"),
+                            totalAmount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL),
+                    group);
         });
 
         stack.set(DataComponents.ATTRIBUTE_MODIFIERS, builder.build());
     }
 
     private ResourceLocation createModifierId(Holder<Attribute> attribute, String suffix) {
-        ResourceLocation attributeKey = attribute.unwrapKey().map(ResourceKey::location).orElse(null);
-        if (attributeKey != null && attributeKey.getNamespace().equals("minecraft")) {
-            return ResourceLocation.withDefaultNamespace(attributeKey.getPath() + "." + suffix);
-        }
-        return ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "underarmor_combined_" + suffix);
+        return attribute.unwrapKey()
+                .map(k -> {
+                    ResourceLocation loc  = k.location();
+                    String sanitizedPath = loc.getPath().replace('/', '_') + "." + suffix;
+                    return loc.getNamespace().equals("minecraft")
+                            ? ResourceLocation.withDefaultNamespace(sanitizedPath)
+                            : ResourceLocation.fromNamespaceAndPath(loc.getNamespace(), sanitizedPath);
+                })
+                .orElseGet(() ->
+                        ResourceLocation.fromNamespaceAndPath(
+                                StoneyCore.MOD_ID,
+                                "underarmor_" + System.identityHashCode(attribute) + "_" + suffix));
     }
 
     public static List<ItemStack> getArmorAttachments(ItemStack stack) {
