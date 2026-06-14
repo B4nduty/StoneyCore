@@ -48,14 +48,10 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
 
         contextModel.copyPropertiesTo(crownModel);
 
-        crownModel.setupAnim(
-                entity,
-                limbSwing,
-                limbSwingAmount,
-                ageInTicks,
-                netHeadYaw,
-                headPitch
-        );
+        crownModel.setupAnim(entity, entity.walkAnimation.position(), entity.walkAnimation.speed(),
+                (float) entity.tickCount + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true),
+                entity.getYHeadRot() - entity.yBodyRot,
+                entity.getXRot());
 
         VertexConsumer consumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(TEXTURE));
 
