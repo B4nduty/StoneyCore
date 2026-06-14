@@ -49,10 +49,6 @@ public class CrownModel extends HumanoidModel<LivingEntity> {
         headCrown.render(poseStack, buffer, packedLight, packedOverlay, color);
     }
 
-    public void copyFromHead() {
-        this.headCrown.copyFrom(this.head);
-    }
-
     public void moveModel(float x, float y, float z) {
         this.crown.x = x;
         this.crown.y = y;
