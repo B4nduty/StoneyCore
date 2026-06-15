@@ -98,7 +98,7 @@ public class StoneyCoreOverlayRenderer {
 
             if (StoneyCore.getConfig().combatOptions().getRealisticCombat()) {
                 if (noiseTextures == null) initNoiseTextures();
-                renderBlurEffect(guiGraphics, width, height, staminaPercentage);
+                renderNoise(guiGraphics, width, height, staminaPercentage);
             } else {
                 int opacity = (int) ((Math.max(0, 0.4f - staminaPercentage) * 255));
                 int green = StaminaData.isStaminaBlocked((IEntityDataSaver) player) ? 0 : (int)(stamina / secondLevel);
@@ -116,19 +116,9 @@ public class StoneyCoreOverlayRenderer {
         }
     }
 
-    private void renderBlurEffect(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
-        float blurStrength = (float) (Math.max(0.1f, 1.0f - staminaPercentage) * 0.4f);
-
-        try {
-            ClientPlatform.getClientPlaformHelper().startBlurService(blurStrength * 12.0f);
-        } catch (Exception ignored) {}
-
-        renderTunnelVision(guiGraphics, width, height, staminaPercentage);
-        if (StoneyCore.getConfig().visualOptions().getNoiseEffect())
-            renderNoise(guiGraphics, width, height, staminaPercentage);
-    }
-
     private void renderNoise(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
+        renderTunnelVision(guiGraphics, width, height, staminaPercentage);
+        if (!StoneyCore.getConfig().visualOptions().getNoiseEffect()) return;
         if (noiseTextures == null) return;
 
         ResourceLocation noiseTexture = noiseTextures[currentNoiseTexture];
@@ -138,10 +128,12 @@ public class StoneyCoreOverlayRenderer {
             currentNoiseTexture = (currentNoiseTexture + 1) % noiseTextures.length;
             currentNoiseTextureTime = 10;
         }
-
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1.0f, 0.5f, 0.5f, alpha);
         guiGraphics.blit(noiseTexture, 0, 0, 0, 0, width, height, width, height);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderSystem.disableBlend();
     }
 
     private void renderTunnelVision(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {

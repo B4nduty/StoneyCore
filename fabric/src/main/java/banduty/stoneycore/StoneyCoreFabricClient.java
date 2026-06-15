@@ -22,7 +22,6 @@ import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
 import banduty.stoneycore.particle.SCParticles;
 import banduty.stoneycore.platform.ClientPlatform;
-import banduty.stoneycore.platform.FabricClientPlatformHelper;
 import banduty.stoneycore.platform.FabricHumanoidModelSetupAnimHelper;
 import banduty.stoneycore.platform.FabricKeyInputHelper;
 import banduty.stoneycore.screen.BlueprintScreen;
@@ -48,7 +47,6 @@ import net.minecraft.world.item.Item;
 public class StoneyCoreFabricClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        ClientPlatform.setClientPlaformHelper(new FabricClientPlatformHelper());
         ClientPlatform.setHumanoidModelSetupAnimHelper(new FabricHumanoidModelSetupAnimHelper());
         ClientPlatform.setKeyInputHelper(new FabricKeyInputHelper());
         SCS2CNetworking.registerS2CNetworking();
