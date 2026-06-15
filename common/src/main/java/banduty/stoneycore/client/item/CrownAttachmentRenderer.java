@@ -42,13 +42,11 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
                        float headPitch) {
 
         contextModel.copyPropertiesTo(crownModel);
-        
+
         VertexConsumer consumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(TEXTURE));
 
         int color = DyedItemColor.getOrDefault(itemStack, -1);
-
-        crownModel.copyFromHead();
-
+        
         crownModel.moveModel(0, -3.0F, 0);
 
         crownModel.renderToBuffer(
