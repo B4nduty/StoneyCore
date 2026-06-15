@@ -20,6 +20,7 @@ public class PlayerAttackHitHandler {
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void onPlayerAttack(AttackEntityEvent event) {
+        if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
         Player player = event.getEntity();
 
         if (player.level().isClientSide() && player instanceof LocalPlayer localPlayer) {

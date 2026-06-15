@@ -45,6 +45,7 @@ public abstract class PlayerMixin {
             playerEntity.awardStat(Stats.ITEM_USED.get(playerEntity.getUseItem().getItem()));
             ci.cancel();
 
+            if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
             StaminaData.removeStamina(playerEntity, StoneyCore.getConfig().combatOptions().onBlockStaminaConstant() * WeightUtil.getWeight(playerEntity));
         }
     }

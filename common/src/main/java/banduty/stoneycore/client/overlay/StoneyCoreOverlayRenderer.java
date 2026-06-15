@@ -55,7 +55,6 @@ public class StoneyCoreOverlayRenderer {
     }
 
     private void renderVisor(GuiGraphics guiGraphics, LocalPlayer player, int width, int height) {
-
         ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
         for (ItemStack armorAttachments : SCUnderArmor.getArmorAttachments(itemStack)) {
             var data = ArmorAttachmentDefinitionsStorage.getData(armorAttachments);
@@ -86,6 +85,7 @@ public class StoneyCoreOverlayRenderer {
     }
 
     private void renderStaminaEffects(GuiGraphics guiGraphics, LocalPlayer player, int width, int height) {
+        if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
         double stamina = StaminaData.getStamina(player);
         double maxStamina = player.getAttributeValue(SCAttributes.MAX_STAMINA);
         double secondLevel = maxStamina * 0.15d;

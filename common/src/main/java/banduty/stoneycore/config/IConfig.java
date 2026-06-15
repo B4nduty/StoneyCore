@@ -25,6 +25,8 @@ public interface IConfig {
         double attackStaminaConstant();
 
         int getStaminaRecoverTime();
+
+        boolean disableStamina();
     }
 
     interface VisualOptions {

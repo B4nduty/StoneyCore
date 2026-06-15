@@ -21,6 +21,8 @@ public class SCConfigs {
 
     public static final ModConfigSpec.IntValue staminaRecoverTime;
 
+    public static final ModConfigSpec.BooleanValue disableStamina;
+
     // Technical settings
     public static final ModConfigSpec.IntValue maxWorkPerTick;
     public static final ModConfigSpec.IntValue maxLandExpandRadius;
@@ -84,6 +86,10 @@ public class SCConfigs {
         staminaRecoverTime = builder
                 .comment("Stamina Time to Replenish after Using | Default: 60")
                 .defineInRange("staminaRecoverTime", 60, 0, 99999);
+
+        disableStamina = builder
+                .comment("Disable Stamina | Default: false")
+                .define("disableStamina", false);
 
         builder.pop();
 

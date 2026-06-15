@@ -1,6 +1,7 @@
 package banduty.stoneycore;
 
 import banduty.stoneycore.commands.FabricSCCommandsHandler;
+import banduty.stoneycore.config.SCConfigs;
 import banduty.stoneycore.event.*;
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
 import banduty.stoneycore.items.SCItems;
@@ -9,9 +10,10 @@ import banduty.stoneycore.networking.SCPayloads;
 import banduty.stoneycore.networking.payload.SyncDefinitionsPacket;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
-import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.definitionsloader.*;
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -34,6 +36,7 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.world.item.CreativeModeTabs;
 
 public class StoneyCoreFabric implements ModInitializer {
+    public static SCConfigs CONFIG;
 
     @Override
     public void onInitialize() {
@@ -103,10 +106,12 @@ public class StoneyCoreFabric implements ModInitializer {
                         false);
 
                 ((IEntityDataSaver) player).stoneycore$getPersistentData().putBoolean("firstJoin", true);
-
-                StaminaData.setStamina(player, player.getAttributeValue(SCAttributes.MAX_STAMINA));
             });
         });
+
+        AutoConfig.register(SCConfigs.class, GsonConfigSerializer::new);
+        CONFIG = AutoConfig.getConfigHolder(SCConfigs.class).getConfig();
+
         StoneyCore.LOG.info("Hello Fabric world!");
         StoneyCore.init();
     }

@@ -63,6 +63,11 @@ public class NeoForgeConfigImpl extends ConfigImpl {
             public int getStaminaRecoverTime() {
                 return SCConfigs.staminaRecoverTime.get();
             }
+
+            @Override
+            public boolean disableStamina() {
+                return SCConfigs.disableStamina.get();
+            }
         };
     }
 

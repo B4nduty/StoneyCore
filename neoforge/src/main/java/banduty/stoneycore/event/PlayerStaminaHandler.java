@@ -2,7 +2,6 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
-import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -28,8 +27,6 @@ public class PlayerStaminaHandler {
                     false);
 
             ((IEntityDataSaver) player).stoneycore$getPersistentData().putBoolean("firstJoin", true);
-
-            StaminaData.setStamina(player, player.getAttributeValue(SCAttributes.MAX_STAMINA));
         }
     }
 

@@ -1,5 +1,6 @@
 package banduty.stoneycore.event;
 
+import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.networking.payload.AttackC2SPacket;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.SCAttributes;
@@ -17,6 +18,7 @@ import java.util.List;
 public class PlayerAttackHitHandler implements BetterCombatClientEvents.PlayerAttackHit {
     @Override
     public void onPlayerAttackStart(LocalPlayer player, AttackHand attackHand, List<Entity> list, @Nullable Entity entity) {
+        if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
         if (WeaponDefinitionsStorage.isMelee(player.getMainHandItem())) {
             IEntityDataSaver dataSaver = (IEntityDataSaver) player;
 

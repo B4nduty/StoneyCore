@@ -1,73 +1,74 @@
 package banduty.stoneycore.config;
 
+import banduty.stoneycore.StoneyCoreFabric;
+
 public class FabricConfigImpl extends ConfigImpl {
-    private final banduty.stoneycore.config.StoneyCoreConfig config;
-
-    public FabricConfigImpl() {
-        this.config = banduty.stoneycore.config.StoneyCoreConfig.createAndLoad();
-    }
-
     @Override
     public IConfig.CombatOptions combatOptions() {
         return new IConfig.CombatOptions() {
             @Override
             public boolean getRealisticCombat() {
-                return config.combatOptions.getRealisticCombat();
+                return StoneyCoreFabric.CONFIG.getRealisticCombat;
             }
 
             @Override
             public int getToggleVisorTime() {
-                return config.combatOptions.getToggleVisorTime();
+                return StoneyCoreFabric.CONFIG.getToggleVisorTime;
             }
 
             @Override
             public boolean getParry() {
-                return config.combatOptions.getParry();
+                return StoneyCoreFabric.CONFIG.getParry;
             }
 
             @Override
             public String staminaRecoveryFormula() {
-                return config.combatOptions.staminaRecoveryFormula();
+                return StoneyCoreFabric.CONFIG.staminaRecoveryFormula;
             }
 
             @Override
             public double blockingStaminaConstant() {
-                return config.combatOptions.blockingStaminaConstant();
+                return StoneyCoreFabric.CONFIG.blockingStaminaConstant;
             }
 
             @Override
             public double onBlockStaminaConstant() {
-                return config.combatOptions.onBlockStaminaConstant();
+                return StoneyCoreFabric.CONFIG.onBlockStaminaConstant;
             }
 
             @Override
             public double onParryStaminaConstant() {
-                return config.combatOptions.onParryStaminaConstant();
+                return StoneyCoreFabric.CONFIG.onParryStaminaConstant;
             }
 
             @Override
             public double sprintingStaminaConstant() {
-                return config.combatOptions.sprintingStaminaConstant();
+                return StoneyCoreFabric.CONFIG.sprintingStaminaConstant;
             }
 
             @Override
             public double jumpingStaminaConstant() {
-                return config.combatOptions.jumpingStaminaConstant();
+                return StoneyCoreFabric.CONFIG.jumpingStaminaConstant;
             }
 
             @Override
             public double swimmingStaminaConstant() {
-                return config.combatOptions.swimmingStaminaConstant();
+                return StoneyCoreFabric.CONFIG.swimmingStaminaConstant;
             }
 
             @Override
             public double attackStaminaConstant() {
-                return config.combatOptions.attackStaminaConstant();
+                return StoneyCoreFabric.CONFIG.attackStaminaConstant;
             }
 
             @Override
             public int getStaminaRecoverTime() {
-                return config.combatOptions.getStaminaRecoverTime();
+                return StoneyCoreFabric.CONFIG.getStaminaRecoverTime;
+            }
+
+            @Override
+            public boolean disableStamina() {
+                return StoneyCoreFabric.CONFIG.disableStamina;
             }
         };
     }
@@ -77,57 +78,57 @@ public class FabricConfigImpl extends ConfigImpl {
         return new IConfig.VisualOptions() {
             @Override
             public boolean getDamageIndicator() {
-                return config.visualOptions.getDamageIndicator();
+                return StoneyCoreFabric.CONFIG.getDamageIndicator;
             }
 
             @Override
             public boolean getVisoredHelmet() {
-                return config.visualOptions.getVisoredHelmet();
+                return StoneyCoreFabric.CONFIG.getVisoredHelmet;
             }
 
             @Override
             public float getVisoredHelmetAlphaCreative() {
-                return config.visualOptions.getVisoredHelmetAlphaCreative();
+                return StoneyCoreFabric.CONFIG.getVisoredHelmetAlphaCreative;
             }
 
             @Override
             public float getVisoredHelmetAlphaSurvival() {
-                return config.visualOptions.getVisoredHelmetAlphaSurvival();
+                return StoneyCoreFabric.CONFIG.getVisoredHelmetAlphaSurvival;
             }
 
             @Override
             public boolean overlayThirdPerson() {
-                return config.visualOptions.getOverlayThirdPerson();
+                return StoneyCoreFabric.CONFIG.getOverlayThirdPerson;
             }
 
             @Override
             public boolean getLowStaminaIndicator() {
-                return config.visualOptions.getLowStaminaIndicator();
+                return StoneyCoreFabric.CONFIG.getLowStaminaIndicator;
             }
 
             @Override
             public boolean getNoiseEffect() {
-                return config.visualOptions.getNoiseEffect();
+                return StoneyCoreFabric.CONFIG.getNoiseEffect;
             }
 
             @Override
             public int getMuzzlesSmokeParticlesTime() {
-                return config.visualOptions.getMuzzlesSmokeParticlesTime();
+                return StoneyCoreFabric.CONFIG.getMuzzlesSmokeParticlesTime;
             }
 
             @Override
             public int getStaminaBarYOffset() {
-                return config.visualOptions.getStaminaBarYOffset();
+                return StoneyCoreFabric.CONFIG.getStaminaBarYOffset;
             }
 
             @Override
             public int hexColorTooFarClose() {
-                return hexToInt(config.visualOptions.hexColorTooFarClose());
+                return hexToInt(StoneyCoreFabric.CONFIG.hexColorTooFarClose);
             }
 
             @Override
             public int claimOutlineColor() {
-                return hexToInt(config.visualOptions.claimOutlineColor());
+                return hexToInt(StoneyCoreFabric.CONFIG.claimOutlineColor);
             }
         };
     }
@@ -154,17 +155,17 @@ public class FabricConfigImpl extends ConfigImpl {
         return new IConfig.TechnicalOptions() {
             @Override
             public int maxWorkPerTick() {
-                return config.technicalOptions.maxWorkPerTick();
+                return StoneyCoreFabric.CONFIG.maxWorkPerTick;
             }
 
             @Override
             public int maxLandExpandRadius() {
-                return config.technicalOptions.maxLandExpandRadius();
+                return StoneyCoreFabric.CONFIG.maxLandExpandRadius;
             }
 
             @Override
             public boolean breakOrRemoveSiegeDestroy() {
-                return config.technicalOptions.breakOrRemoveSiegeDestroy();
+                return StoneyCoreFabric.CONFIG.breakOrRemoveSiegeDestroy;
             }
         };
     }
@@ -174,22 +175,22 @@ public class FabricConfigImpl extends ConfigImpl {
         return new IConfig.LandOptions() {
             @Override
             public boolean claimLand() {
-                return config.landOptions.claimLand();
+                return StoneyCoreFabric.CONFIG.claimLand;
             }
 
             @Override
             public boolean removeClaimedSiege() {
-                return config.landOptions.removeClaimedSiege();
+                return StoneyCoreFabric.CONFIG.removeClaimedSiege;
             }
 
             @Override
             public boolean hungerSiege() {
-                return config.landOptions.hungerSiege();
+                return StoneyCoreFabric.CONFIG.hungerSiege;
             }
 
             @Override
             public boolean landVisitors() {
-                return config.landOptions.landVisitors();
+                return StoneyCoreFabric.CONFIG.landVisitors;
             }
         };
     }

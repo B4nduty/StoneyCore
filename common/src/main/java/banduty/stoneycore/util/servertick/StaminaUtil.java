@@ -19,6 +19,7 @@ import java.util.Map;
 
 public class StaminaUtil {
     public static void startStaminaTrack(LivingEntity entity) {
+        if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
         double maxStamina = entity.getAttributeValue(SCAttributes.MAX_STAMINA);
         double currentStamina = StaminaData.getStamina(entity);
         boolean isCreativeOrSpectator = entity instanceof Player player &&

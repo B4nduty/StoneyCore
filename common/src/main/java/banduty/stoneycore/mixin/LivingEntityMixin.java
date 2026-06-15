@@ -236,6 +236,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         if (source.getDirectEntity() == null) return false;
 
         stoneyCore$performParryEffects(player, source.getDirectEntity());
+        if (StoneyCore.getConfig().combatOptions().disableStamina()) return true;
         StaminaData.removeStamina(player, StoneyCore.getConfig().combatOptions().onParryStaminaConstant() * WeightUtil.getWeight(player));
         return true;
     }
@@ -352,6 +353,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
     @Inject(method = "jumpFromGround", at = @At("HEAD"))
     private void stoneycore$jumpFromGround(CallbackInfo ci) {
+        if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
         if ((Object) this instanceof LivingEntity livingEntity) {
             if (livingEntity.level().isClientSide()) return;
             IEntityDataSaver dataSaver = (IEntityDataSaver) livingEntity;

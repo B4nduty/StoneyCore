@@ -46,6 +46,7 @@ public class FGuiMixin {
 
     @Inject(method = "renderPlayerHealth", at = @At("HEAD"))
     private void stoneycore$renderPlayerHealth(GuiGraphics guiGraphics, CallbackInfo ci) {
+        if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         if (player == null || player.isSpectator() || player.isCreative() || !stoneyCore$ableStaminaOverlay(player))

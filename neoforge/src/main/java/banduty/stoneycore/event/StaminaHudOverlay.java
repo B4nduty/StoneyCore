@@ -33,6 +33,7 @@ public class StaminaHudOverlay {
     private static final int STAMINA_BAR_HEIGHT = 9;
 
     public static final LayeredDraw.Layer STAMINA_LAYER = (guiGraphics, deltaTracker) -> {
+        if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
 
