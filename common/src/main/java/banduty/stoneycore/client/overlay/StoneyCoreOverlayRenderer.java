@@ -2,6 +2,7 @@ package banduty.stoneycore.client.overlay;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.StoneyCoreClient;
+import banduty.stoneycore.config.IConfig;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.platform.ClientPlatform;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
@@ -18,9 +19,14 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.opengl.GL11;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class StoneyCoreOverlayRenderer {
     private static final ResourceLocation VISOR_PROGRESS_BACKGROUND = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/visor_progress_background.png");
     private static final ResourceLocation VISOR_PROGRESS_BAR = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/visor_progress_bar.png");
+
+    private static final Map<String, ResourceLocation> VISOR_TEXTURE_CACHE = new HashMap<>();
 
     private ResourceLocation[] noiseTextures;
     private int currentNoiseTexture = 0;
@@ -34,7 +40,9 @@ public class StoneyCoreOverlayRenderer {
         if (player == null || player.isSpectator()) return;
         if (client.options.hideGui) return;
 
-        if (!client.options.getCameraType().isFirstPerson() && !StoneyCore.getConfig().visualOptions().overlayThirdPerson())
+        IConfig config = StoneyCore.getConfig();
+
+        if (!client.options.getCameraType().isFirstPerson() && !config.visualOptions().overlayThirdPerson())
             return;
 
         int width = guiGraphics.guiWidth();
@@ -44,9 +52,9 @@ public class StoneyCoreOverlayRenderer {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableDepthTest();
 
-        renderVisor(guiGraphics, player, width, height);
-        renderStaminaEffects(guiGraphics, player, width, height);
-        renderVisorToggleProgress(guiGraphics, tickDelta);
+        renderVisor(guiGraphics, player, width, height, config);
+        renderStaminaEffects(guiGraphics, player, width, height, config);
+        renderVisorToggleProgress(guiGraphics, tickDelta, config);
 
         StoneyCoreClient.LAND_TITLE_RENDERER.render(guiGraphics);
 
@@ -54,7 +62,7 @@ public class StoneyCoreOverlayRenderer {
         RenderSystem.enableDepthTest();
     }
 
-    private void renderVisor(GuiGraphics guiGraphics, LocalPlayer player, int width, int height) {
+    private void renderVisor(GuiGraphics guiGraphics, LocalPlayer player, int width, int height, IConfig config) {
         ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
         for (ItemStack armorAttachments : SCUnderArmor.getArmorAttachments(itemStack)) {
             var data = ArmorAttachmentDefinitionsStorage.getData(armorAttachments);
@@ -62,10 +70,17 @@ public class StoneyCoreOverlayRenderer {
 
             if (!armorAttachments.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false)
                     && !(visorId.getPath().isEmpty() || visorId.getPath().equals("empty"))
-                    && StoneyCore.getConfig().visualOptions().getVisoredHelmet()) {
+                    && config.visualOptions().getVisoredHelmet()) {
 
-                String namespace = visorId.getNamespace().isEmpty() ? "stoneycore" : visorId.getNamespace();
-                ResourceLocation visorTexture = ResourceLocation.fromNamespaceAndPath(namespace, "textures/overlay/visor/" + visorId.getPath() + ".png");
+                String ns = visorId.getNamespace();
+                String namespace = ns.isEmpty() ? "stoneycore" : ns;
+
+                String cacheKey = namespace + ":" + visorId.getPath();
+                ResourceLocation visorTexture = VISOR_TEXTURE_CACHE.computeIfAbsent(
+                        cacheKey,
+                        k -> ResourceLocation.fromNamespaceAndPath(namespace,
+                                "textures/overlay/visor/" + visorId.getPath() + ".png")
+                );
 
                 RenderSystem.setShaderTexture(0, visorTexture);
 
@@ -73,8 +88,8 @@ public class StoneyCoreOverlayRenderer {
                 RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 
                 float alpha = player.isCreative()
-                        ? StoneyCore.getConfig().visualOptions().getVisoredHelmetAlphaCreative()
-                        : StoneyCore.getConfig().visualOptions().getVisoredHelmetAlphaSurvival();
+                        ? config.visualOptions().getVisoredHelmetAlphaCreative()
+                        : config.visualOptions().getVisoredHelmetAlphaSurvival();
 
                 RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
                 guiGraphics.blit(visorTexture, 0, 0, 0, 0, width, height, width, height);
@@ -84,25 +99,27 @@ public class StoneyCoreOverlayRenderer {
         }
     }
 
-    private void renderStaminaEffects(GuiGraphics guiGraphics, LocalPlayer player, int width, int height) {
-        if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
+    private void renderStaminaEffects(GuiGraphics guiGraphics, LocalPlayer player, int width, int height, IConfig config) {
+        if (config.combatOptions().disableStamina()) return;
+
         double stamina = StaminaData.getStamina(player);
         double maxStamina = player.getAttributeValue(SCAttributes.MAX_STAMINA);
         double secondLevel = maxStamina * 0.15d;
 
-        if (!player.isCreative()
-                && StaminaData.isStaminaBlocked((IEntityDataSaver) player)
-                && StoneyCore.getConfig().visualOptions().getLowStaminaIndicator()) {
+        IEntityDataSaver dataSaver = (IEntityDataSaver) player;
+
+        boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
+
+        if (!player.isCreative() && staminaBlocked && config.visualOptions().getLowStaminaIndicator()) {
 
             double staminaPercentage = stamina / secondLevel;
 
-            if (StoneyCore.getConfig().combatOptions().getRealisticCombat()) {
+            if (config.combatOptions().getRealisticCombat()) {
                 if (noiseTextures == null) initNoiseTextures();
-                renderNoise(guiGraphics, width, height, staminaPercentage);
+                renderNoise(guiGraphics, width, height, staminaPercentage, config);
             } else {
-                int opacity = (int) ((Math.max(0, 0.4f - staminaPercentage) * 255));
-                int green = StaminaData.isStaminaBlocked((IEntityDataSaver) player) ? 0 : (int)(stamina / secondLevel);
-                int gradientColorEnd = opacity << 24 | green | 0x00FF0000;
+                int opacity = (int) (Math.max(0.0, 0.4 - staminaPercentage) * 255);
+                int gradientColorEnd = opacity << 24 | 0x00FF0000;
 
                 guiGraphics.fillGradient(0, 0, width, height, 0x00FFFFFF, gradientColorEnd);
             }
@@ -112,17 +129,19 @@ public class StoneyCoreOverlayRenderer {
     private void initNoiseTextures() {
         noiseTextures = new ResourceLocation[12];
         for (int i = 0; i < noiseTextures.length; i++) {
-            noiseTextures[i] = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/overlay/noise/noise_" + i + ".png");
+            noiseTextures[i] = ResourceLocation.fromNamespaceAndPath(
+                    StoneyCore.MOD_ID,
+                    String.format("textures/overlay/noise/noise_%d.png", i)
+            );
         }
     }
 
-    private void renderNoise(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
+    private void renderNoise(GuiGraphics guiGraphics, int width, int height, double staminaPercentage, IConfig config) {
         renderTunnelVision(guiGraphics, width, height, staminaPercentage);
-        if (!StoneyCore.getConfig().visualOptions().getNoiseEffect()) return;
-        if (noiseTextures == null) return;
+        if (!config.visualOptions().getNoiseEffect()) return;
 
         ResourceLocation noiseTexture = noiseTextures[currentNoiseTexture];
-        float alpha = (float) Math.max(0, 1.0f - staminaPercentage);
+        float alpha = (float) Math.max(0.0, 1.0 - staminaPercentage);
 
         if (currentNoiseTextureTime-- <= 0 && !Minecraft.getInstance().isPaused()) {
             currentNoiseTexture = (currentNoiseTexture + 1) % noiseTextures.length;
@@ -137,13 +156,13 @@ public class StoneyCoreOverlayRenderer {
     }
 
     private void renderTunnelVision(GuiGraphics guiGraphics, int width, int height, double staminaPercentage) {
-        int opacity = (int) ((Math.max(0, 0.2f - staminaPercentage) * 255));
-        int opacity2 = (int) ((Math.max(0, 0.6f - staminaPercentage) * 255));
+        int opacity  = (int) (Math.max(0.0, 0.2 - staminaPercentage) * 255);
+        int opacity2 = (int) (Math.max(0.0, 0.6 - staminaPercentage) * 255);
         guiGraphics.fillGradient(0, 0, width, height, opacity << 24, opacity2 << 24);
     }
 
-    private void renderVisorToggleProgress(GuiGraphics guiGraphics, float tickDelta) {
-        if (StoneyCore.getConfig().combatOptions().getToggleVisorTime() == 0
+    private void renderVisorToggleProgress(GuiGraphics guiGraphics, float tickDelta, IConfig config) {
+        if (config.combatOptions().getToggleVisorTime() == 0
                 || !ClientPlatform.getKeyInputHelper().isTogglingVisor()
                 || ClientPlatform.getKeyInputHelper().isVisorToggled()
                 || ClientPlatform.getKeyInputHelper().toggleVisorTicks() <= 0.0f) {
