@@ -11,6 +11,7 @@ import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
+import org.joml.Vector3f;
 
 public class CrownModel extends HumanoidModel<LivingEntity> {
     private final ModelPart headCrown;
@@ -49,19 +50,19 @@ public class CrownModel extends HumanoidModel<LivingEntity> {
         headCrown.render(poseStack, buffer, packedLight, packedOverlay, color);
     }
 
-    public void moveModel(float x, float y, float z) {
-        this.crown.x = x;
-        this.crown.y = y;
-        this.crown.z = z;
-    }
-
-    public void rotateModel(float x, float y, float z) {
-        this.crown.xRot = x;
-        this.crown.yRot = y;
-        this.crown.zRot = z;
-    }
-
     public void resetModel() {
         this.crown.getAllParts().forEach(ModelPart::resetPose);
+    }
+
+    public void moveModel(Vector3f offset) {
+        this.crown.x = offset.x;
+        this.crown.y = offset.y;
+        this.crown.z = offset.z;
+    }
+
+    public void rotateModel(Vector3f rotation) {
+        this.crown.xRot = rotation.x;
+        this.crown.yRot = rotation.y;
+        this.crown.zRot = rotation.z;
     }
 }

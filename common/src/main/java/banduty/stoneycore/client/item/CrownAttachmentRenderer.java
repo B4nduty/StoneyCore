@@ -60,16 +60,10 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
             UnderArmorContents contents = target.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
                     UnderArmorContents.EMPTY);
             for (ItemStack item : contents.getAttachments()) {
-                if (item.getItem() instanceof ArmorAttachmentPosition position) {
+                if (!(item.getItem() instanceof ArmorAttachmentPosition position)) continue;
 
-                    float x = position.getOffsetX();
-                    float y = position.getOffsetY();
-                    float z = position.getOffsetZ();
-
-                    if (x != 0 || y != 0 || z != 0) {
-                        crownModel.moveModel(x, y, z);
-                    }
-                }
+                crownModel.moveModel(position.getOffset(itemStack, entity));
+                crownModel.rotateModel(position.getRotation(itemStack, entity));
             }
         }
 
