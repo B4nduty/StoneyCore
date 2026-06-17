@@ -216,18 +216,18 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
     @Unique
     private static boolean stoneyCore$handleParry(LivingEntity target, DamageSource source) {
-        if (!StoneyCore.getConfig().combatOptions().getParry() || !(target instanceof Player player)) {
+        if (!StoneyCore.getConfig().combatOptions().getParry()) {
             return false;
         }
 
-        if (!player.isBlocking()) {
+        if (!target.isBlocking()) {
             return false;
         }
 
         if (source.getDirectEntity() instanceof AbstractArrow) return false;
 
-        long blockStartTick = ((IEntityDataSaver) player).stoneycore$getPersistentData().getLong("blockStartTick");
-        long currentTick = player.level().getGameTime();
+        long blockStartTick = target.getTicksUsingItem();
+        long currentTick = target.level().getGameTime();
 
         if (currentTick - blockStartTick > PARRY_WINDOW_TICKS) {
             return false;
@@ -235,23 +235,23 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
         if (source.getDirectEntity() == null) return false;
 
-        stoneyCore$performParryEffects(player, source.getDirectEntity());
+        stoneyCore$performParryEffects(target, source.getDirectEntity());
         if (StoneyCore.getConfig().combatOptions().disableStamina()) return true;
-        StaminaData.removeStamina(player, StoneyCore.getConfig().combatOptions().onParryStaminaConstant() * WeightUtil.getWeight(player));
+        StaminaData.removeStamina(target, StoneyCore.getConfig().combatOptions().onParryStaminaConstant() * WeightUtil.getWeight(target));
         return true;
     }
 
     @Unique
-    private static void stoneyCore$performParryEffects(Player player, Entity source) {
+    private static void stoneyCore$performParryEffects(LivingEntity target, Entity source) {
         if (source instanceof LivingEntity livingEntity) {
-            Vec3 playerPos = player.position();
+            Vec3 playerPos = target.position();
             Vec3 attackerPos = source.position();
             Vec3 knockbackDirection = playerPos.subtract(attackerPos).normalize();
 
             livingEntity.knockback(PARRY_KNOCKBACK_STRENGTH, knockbackDirection.x, knockbackDirection.z);
         }
 
-        player.level().playSound(
+        target.level().playSound(
                 null, source.getX(), source.getY(), source.getZ(),
                 SoundEvents.ZOMBIE_ATTACK_IRON_DOOR, SoundSource.PLAYERS, 1.0F, 1.5F
         );

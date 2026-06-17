@@ -65,9 +65,6 @@ public class StartTickHandler {
         if (!isDead) {
             handleFreezeImmunity(player);
 
-            if (StoneyCore.getConfig().combatOptions().getParry()) {
-                MechanicsUtil.handleParry(player);
-            }
             MechanicsUtil.handlePlayerReload(player);
 
             SwallowTailArrowUtil.startSwallowTailTickTrack(player);

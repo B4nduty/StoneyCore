@@ -2,7 +2,6 @@ package banduty.stoneycore.util.servertick;
 
 import banduty.stoneycore.util.SCInventoryItemFinder;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
-import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,19 +16,6 @@ import java.util.WeakHashMap;
 public class MechanicsUtil {
     private static final Map<LivingEntity, ItemStack> LAST_ITEMSTACK_MAP =
             Collections.synchronizedMap(new WeakHashMap<>());
-
-    public static void handleParry(ServerPlayer player) {
-        if (((IEntityDataSaver) player).stoneycore$getPersistentData().getLong("blockStartTick") > 0) return;
-        ItemStack activeItem = player.getUseItem();
-        boolean isBlocking = player.isBlocking();
-        boolean usingCustomShield = activeItem.is(SCTags.WEAPONS_SHIELD.getTag());
-
-        if (isBlocking && usingCustomShield) {
-            ((IEntityDataSaver) player).stoneycore$getPersistentData().putLong("blockStartTick", player.level().getGameTime());
-        } else {
-            ((IEntityDataSaver) player).stoneycore$getPersistentData().putLong("blockStartTick", 0L);;
-        }
-    }
 
     public static void handlePlayerReload(ServerPlayer player) {
         ItemStack currentItem = player.getMainHandItem();

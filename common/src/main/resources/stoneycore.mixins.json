@@ -33,7 +33,6 @@
     "GuiMixin",
     "HorseModelMixin",
     "HumanoidArmorLayerMixin",
-    "ItemInHandLayerMixin",
     "ItemInHandRendererMixin",
     "ItemRendererMixin",
     "MinecraftClientMixin",

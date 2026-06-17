@@ -1,5 +1,6 @@
 package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.client.render.ArmorAttachmentRenderManager;
 import banduty.stoneycore.client.render.ArmorAttachmentRenderer;
 import banduty.stoneycore.client.render.ArmorTextureCache;
@@ -36,6 +37,10 @@ import java.util.List;
 
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin {
+    @Unique
+    private static final int PARRY_WINDOW_TICKS = 10;
+    @Unique
+    private static final float TRANSITION_DURATION_TICKS = 5.0F;
     @Inject(
             method = "renderArmWithItem",
             at = @At(
@@ -50,20 +55,9 @@ public class ItemInHandRendererMixin {
                             "I)V"
             )
     )
-    private void stoneycore$shieldBlockTransform(
-            AbstractClientPlayer player,
-            float partialTick,
-            float pitch,
-            InteractionHand hand,
-            float swingProgress,
-            ItemStack stack,
-            float equipProgress,
-            PoseStack poseStack,
-            MultiBufferSource buffer,
-            int packedLight,
-            CallbackInfo ci
-    ) {
-
+    private void stoneycore$shieldBlockTransform(AbstractClientPlayer player, float partialTick, float pitch,
+            InteractionHand hand, float swingProgress, ItemStack stack, float equipProgress, PoseStack poseStack,
+            MultiBufferSource buffer, int packedLight, CallbackInfo ci) {
         if (!stack.is(SCTags.WEAPONS_SHIELD.getTag())) {
             return;
         }
@@ -72,24 +66,33 @@ public class ItemInHandRendererMixin {
             return;
         }
 
+        float tr = 0.0F;
+        int useTicks = player.getTicksUsingItem();
+        float totalTicksElapsed = useTicks + partialTick;
+
+        if (StoneyCore.getConfig().combatOptions().getParry() && totalTicksElapsed > PARRY_WINDOW_TICKS) {
+            float transitionProgress = totalTicksElapsed - PARRY_WINDOW_TICKS;
+            tr = Math.min(1.0F, transitionProgress / TRANSITION_DURATION_TICKS);
+        }
+
         HumanoidArm arm = hand == InteractionHand.MAIN_HAND
                 ? player.getMainArm()
                 : player.getMainArm().getOpposite();
 
         boolean rightArm = arm == HumanoidArm.RIGHT;
+        float sideMultiplier = rightArm ? 1.0F : -1.0F;
 
-        // Vanilla-like sword blocking pose
-        if (rightArm) {
-            poseStack.translate(-0.1F, 0.1F, 0);
-            poseStack.mulPose(Axis.YP.rotationDegrees(5.0F));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-80.0F));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(60.0F));
-        } else {
-            poseStack.translate(0.1F, 0.1F, 0);
-            poseStack.mulPose(Axis.YP.rotationDegrees(-5.0F));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-80.0F));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(-60.0F));
-        }
+        float currentX = (-0.05F + tr * (-0.1F - (-0.05F))) * sideMultiplier;
+        float currentY = 0.05F + tr * (0.1F - 0.05F);
+
+        float currentYRot = (2.0F + tr * (5.0F - 2.0F)) * sideMultiplier;
+        float currentXRot = -40.0F + tr * (-80.0F - (-40.0F));
+        float currentZRot = (30.0F + tr * (60.0F - 30.0F)) * sideMultiplier;
+
+        poseStack.translate(currentX, currentY, 0.0F);
+        poseStack.mulPose(Axis.YP.rotationDegrees(currentYRot));
+        poseStack.mulPose(Axis.XP.rotationDegrees(currentXRot));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(currentZRot));
     }
 
     @Unique
