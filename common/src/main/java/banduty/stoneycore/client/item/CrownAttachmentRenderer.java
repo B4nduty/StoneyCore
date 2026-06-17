@@ -53,18 +53,15 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
         poseStack.pushPose();
 
         crownModel.resetModel();
-        
+
         ItemStack target = findUnderArmor(entity, ArmorItem.Type.HELMET);
 
         if (!target.isEmpty() && (target.getItem() instanceof SCUnderArmor)) {
             UnderArmorContents contents = target.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
                     UnderArmorContents.EMPTY);
-            for (ItemStack item : contents.getAttachments()) {
-                if (!(item.getItem() instanceof ArmorAttachmentPosition position)) continue;
 
-                crownModel.moveModel(position.getOffset(itemStack, entity));
-                crownModel.rotateModel(position.getRotation(itemStack, entity));
-            }
+            ArmorAttachmentPosition.applyPositionAndRotation(contents, itemStack, entity, itemStack.getItem(),
+                    crownModel::moveModel, crownModel::rotateModel);
         }
 
         VertexConsumer consumer = bufferSource.getBuffer(
