@@ -220,16 +220,19 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             return false;
         }
 
-        if (!target.isBlocking()) {
+        if (!target.getMainHandItem().is(SCTags.WEAPONS_SHIELD.getTag())) {
+            return false;
+        }
+
+        if (!target.isUsingItem() || target.getUseItem() != target.getMainHandItem()) {
             return false;
         }
 
         if (source.getDirectEntity() instanceof AbstractArrow) return false;
 
         long blockStartTick = target.getTicksUsingItem();
-        long currentTick = target.level().getGameTime();
 
-        if (currentTick - blockStartTick > PARRY_WINDOW_TICKS) {
+        if (blockStartTick > PARRY_WINDOW_TICKS) {
             return false;
         }
 
