@@ -36,6 +36,10 @@ public record UnderArmorContents(List<ItemStack> attachments) {
         return this.attachments.isEmpty();
     }
 
+    public List<ItemStack> getAttachments() {
+        return this.attachments;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -94,8 +98,8 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                 if (!hasRequired) return null;
             }
 
-            ItemStack singleItem   = incoming.copyWithCount(1);
-            String    incomingSlot = incomingSlotDef.slot();
+            ItemStack singleItem = incoming.copyWithCount(1);
+            String incomingSlot = incomingSlotDef.slot();
 
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack existing = this.attachments.get(i);
@@ -141,5 +145,35 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             }
             return anyDamageApplied;
         }
+
+        public ItemStack getSameSlot(ItemStack input, ArmorItem.Type armorType) {
+            if (input.isEmpty()) return ItemStack.EMPTY;
+
+            ArmorAttachmentSlotDefinitionData inputDef =
+                    ArmorAttachmentSlotDefinitionsStorage.getData(input, armorType);
+
+            if (inputDef == null || Objects.equals(
+                    inputDef,
+                    ArmorAttachmentSlotDefinitionsStorage.getDefaultData()
+            )) {
+                return ItemStack.EMPTY;
+            }
+
+            String targetSlot = inputDef.slot();
+
+            for (ItemStack stack : this.attachments) {
+                if (stack.isEmpty()) continue;
+
+                ArmorAttachmentSlotDefinitionData def =
+                        ArmorAttachmentSlotDefinitionsStorage.getData(stack, armorType);
+
+                if (def != null && Objects.equals(def.slot(), targetSlot)) {
+                    return stack;
+                }
+            }
+
+            return ItemStack.EMPTY;
+        }
     }
+
 }

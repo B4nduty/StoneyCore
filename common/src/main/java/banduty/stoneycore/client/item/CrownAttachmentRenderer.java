@@ -1,8 +1,12 @@
 package banduty.stoneycore.client.item;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.client.render.ArmorAttachmentPosition;
 import banduty.stoneycore.client.render.ArmorAttachmentRenderer;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
+import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.model.CrownModel;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.HumanoidModel;
@@ -11,8 +15,11 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
+
+import static banduty.stoneycore.util.SCInventoryItemFinder.findUnderArmor;
 
 public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
 
@@ -43,11 +50,34 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
 
         contextModel.copyPropertiesTo(crownModel);
 
-        VertexConsumer consumer = bufferSource.getBuffer(RenderType.armorCutoutNoCull(TEXTURE));
+        poseStack.pushPose();
+
+        crownModel.resetModel();
+        
+        ItemStack target = findUnderArmor(entity, ArmorItem.Type.HELMET);
+
+        if (!target.isEmpty() && (target.getItem() instanceof SCUnderArmor)) {
+            UnderArmorContents contents = target.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                    UnderArmorContents.EMPTY);
+            for (ItemStack item : contents.getAttachments()) {
+                if (item.getItem() instanceof ArmorAttachmentPosition position) {
+
+                    float x = position.getOffsetX();
+                    float y = position.getOffsetY();
+                    float z = position.getOffsetZ();
+
+                    if (x != 0 || y != 0 || z != 0) {
+                        crownModel.moveModel(x, y, z);
+                    }
+                }
+            }
+        }
+
+        VertexConsumer consumer = bufferSource.getBuffer(
+                RenderType.armorCutoutNoCull(TEXTURE)
+        );
 
         int color = DyedItemColor.getOrDefault(itemStack, -1);
-        
-        crownModel.moveModel(0, -3.0F, 0);
 
         crownModel.renderToBuffer(
                 poseStack,
@@ -56,5 +86,7 @@ public class CrownAttachmentRenderer implements ArmorAttachmentRenderer {
                 OverlayTexture.NO_OVERLAY,
                 color
         );
+
+        poseStack.popPose();
     }
 }

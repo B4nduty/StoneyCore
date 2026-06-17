@@ -58,7 +58,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     protected abstract void checkFallDamage(double heightDifference, boolean onGround, BlockState state, BlockPos landedPosition);
 
     @Unique
-    private CompoundTag persistentData;
+    private CompoundTag stoneyCore$persistentData;
 
     @Unique
     private boolean stoneycore$droppedThisHit = false;
@@ -69,23 +69,23 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
     @Override
     public CompoundTag stoneycore$getPersistentData() {
-        if (persistentData == null) {
-            persistentData = new CompoundTag();
+        if (stoneyCore$persistentData == null) {
+            stoneyCore$persistentData = new CompoundTag();
         }
-        return persistentData;
+        return stoneyCore$persistentData;
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("HEAD"))
     protected void stoneycore$addAdditionalSaveData(CompoundTag compoundTag, CallbackInfo ci) {
-        if (persistentData != null) {
-            compoundTag.put("stoneycore.data", persistentData);
+        if (stoneyCore$persistentData != null) {
+            compoundTag.put("stoneycore.data", stoneyCore$persistentData);
         }
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("HEAD"))
     protected void stoneycore$readAdditionalSaveData(CompoundTag compoundTag, CallbackInfo info) {
         if (compoundTag.contains("stoneycore.data", 10)) {
-            persistentData = compoundTag.getCompound("stoneycore.data");
+            stoneyCore$persistentData = compoundTag.getCompound("stoneycore.data");
         }
     }
 

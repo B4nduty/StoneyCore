@@ -54,4 +54,14 @@ public class CrownModel extends HumanoidModel<LivingEntity> {
         this.crown.y = y;
         this.crown.z = z;
     }
+
+    public void rotateModel(float x, float y, float z) {
+        this.crown.xRot = x;
+        this.crown.yRot = y;
+        this.crown.zRot = z;
+    }
+
+    public void resetModel() {
+        this.crown.getAllParts().forEach(ModelPart::resetPose);
+    }
 }
