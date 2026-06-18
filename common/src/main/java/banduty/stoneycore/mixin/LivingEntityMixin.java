@@ -97,9 +97,6 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
                 .add(SCAttributes.MAX_STAMINA).add(SCAttributes.DEFLECT_CHANCE);
     }
 
-    @Unique
-    private boolean blockShield = true;
-
     @Inject(method = "onEquipItem", at = @At("HEAD"))
     private void stoneycore$onEquipItem(CallbackInfo ci) {
         LivingEntity livingEntity = (LivingEntity) (Object) this;
@@ -148,22 +145,6 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     @Inject(method = "hurt", at = @At("HEAD"))
     private void stoneycore$resetDropFlag(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         stoneycore$droppedThisHit = false;
-    }
-
-    @Inject(method = "hurt", at = @At("HEAD"))
-    private void stoneycore$injectDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (this.level().isClientSide()) return;
-        if (source.getEntity() instanceof LivingEntity attacker) {
-            if (attacker.getMainHandItem().is(SCTags.WEAPONS_BYPASS_BLOCK.getTag())) {
-                this.blockShield = false;
-            }
-        }
-
-        LivingEntity livingEntity = (LivingEntity) (Object) this;
-
-        if (livingEntity.getUseItem().is(SCTags.WEAPONS_SHIELD.getTag()) && source.getDirectEntity() instanceof AbstractArrow) {
-            this.blockShield = false;
-        }
     }
 
     @Unique
@@ -370,11 +351,31 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
     @Inject(method = "isDamageSourceBlocked", at = @At("HEAD"), cancellable = true)
     private void stoneycore$blockedByShield(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
-        if (this.level().isClientSide()) return;
-        if (!blockShield) {
-            cir.setReturnValue(false);
-            cir.cancel();
+        LivingEntity self = (LivingEntity) (Object) this;
+
+        if (self.level().isClientSide()) return;
+
+        ItemStack shield = self.getUseItem();
+
+        if (shield.isEmpty()
+                || !shield.is(SCTags.WEAPONS_SHIELD.getTag())
+                || !self.isUsingItem()) {
+            return;
         }
+
+        if (source.getEntity() instanceof LivingEntity attacker
+                && attacker.getMainHandItem().is(SCTags.WEAPONS_BYPASS_BLOCK.getTag())) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        if (source.getDirectEntity() instanceof AbstractArrow arrow
+                && arrow.getPierceLevel() > 0) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        cir.setReturnValue(true);
     }
 
     @Unique
