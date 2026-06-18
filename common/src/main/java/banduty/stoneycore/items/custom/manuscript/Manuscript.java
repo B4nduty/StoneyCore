@@ -30,18 +30,33 @@ public class Manuscript extends Item {
 
     public static ItemStack createForStack(ItemStack targetStack) {
         ItemStack manuscript = new ItemStack(SCItems.MANUSCRIPT.get());
-        setTargetStack(manuscript, targetStack);
+
+        if (!targetStack.isEmpty()) {
+            setTargetStack(manuscript, targetStack.copyWithCount(1));
+        }
+
         return manuscript;
     }
 
     public static void setTargetStack(ItemStack manuscript, ItemStack targetStack) {
-        manuscript.set(SCDataComponents.TARGET_STACK.get(), new ItemStackHolder(targetStack));
+        if (targetStack.isEmpty()) {
+            removeTargetStack(manuscript);
+            return;
+        }
+
+        manuscript.set(
+                SCDataComponents.TARGET_STACK.get(),
+                new ItemStackHolder(targetStack.copyWithCount(1))
+        );
     }
 
     public static ItemStack getTargetStack(ItemStack manuscript) {
-        if (manuscript.has(SCDataComponents.TARGET_STACK.get())) {
-            return manuscript.get(SCDataComponents.TARGET_STACK.get()).stack();
+        ItemStackHolder holder = manuscript.get(SCDataComponents.TARGET_STACK.get());
+
+        if (holder != null && !holder.stack().isEmpty()) {
+            return holder.stack();
         }
+
         return ItemStack.EMPTY;
     }
 

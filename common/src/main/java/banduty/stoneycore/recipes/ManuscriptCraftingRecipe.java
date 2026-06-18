@@ -27,18 +27,15 @@ public class ManuscriptCraftingRecipe extends ShapelessRecipe {
 
     @Override
     public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
-        ItemStack itemInput = ItemStack.EMPTY;
-
         for (int i = 0; i < input.size(); i++) {
             ItemStack stack = input.getItem(i);
 
             if (isValidManuscriptInput(stack)) {
-                itemInput = stack;
-                break;
+                return Manuscript.createForStack(stack);
             }
         }
 
-        return Manuscript.createForStack(itemInput);
+        return ItemStack.EMPTY;
     }
 
     @Override
