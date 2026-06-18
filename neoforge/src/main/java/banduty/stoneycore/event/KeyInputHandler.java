@@ -91,6 +91,7 @@ public class KeyInputHandler {
                     for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
                         if (armorAttachment.getItem() instanceof ArmorAttachment armorAttachmentI && armorAttachmentI.hasOpenVisor(armorAttachment)) {
                             isCurrentlyOpen = Boolean.TRUE.equals(armorAttachment.get(SCDataComponents.VISOR_OPEN.get()));
+                            armorAttachment.set(SCDataComponents.VISOR_OPEN.get(), !isCurrentlyOpen);
                             break;
                         }
                     }
