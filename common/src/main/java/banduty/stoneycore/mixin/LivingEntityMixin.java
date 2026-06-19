@@ -39,6 +39,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -126,10 +127,39 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     }
 
     @Inject(method = "startUsingItem", at = @At("HEAD"), cancellable = true)
-    private void stoneycore$startUsingItem(InteractionHand interactionHand, CallbackInfo ci) {
+    private void stoneycore$startUsingItem(InteractionHand hand, CallbackInfo ci) {
         LivingEntity livingEntity = (LivingEntity) (Object) this;
         if (stoneyCore$isStaminaBlocked(livingEntity)) {
             ci.cancel();
+        }
+
+        if (!(livingEntity instanceof Player player)) return;
+        if (player.isCreative()) return;
+
+        ItemStack stack = player.getItemInHand(hand);
+
+        if (stack.getUseAnimation() != UseAnim.EAT
+                && stack.getUseAnimation() != UseAnim.DRINK) {
+            return;
+        }
+
+        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
+
+        for (ItemStack attachment : SCUnderArmor.getArmorAttachments(helmet)) {
+            Boolean visorOpen = attachment.get(SCDataComponents.VISOR_OPEN.get());
+
+            // Not a visor attachment
+            if (visorOpen == null) continue;
+
+            if (!visorOpen) {
+                player.displayClientMessage(
+                        Component.translatable("component.tooltip.stoneycore.openVisorEatDrink"),
+                        true
+                );
+
+                ci.cancel();
+                return;
+            }
         }
     }
 
