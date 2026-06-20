@@ -35,6 +35,11 @@ public abstract class AbstractSiegeProjectile extends AbstractArrow {
     }
 
     @Override
+    protected ItemStack getDefaultPickupItem() {
+        return new ItemStack(Items.ARROW);
+    }
+
+    @Override
     protected void onHitEntity(EntityHitResult entityHitResult) {
         super.onHitEntity(entityHitResult);
         if (entityHitResult.getEntity().level().isClientSide()) return;
