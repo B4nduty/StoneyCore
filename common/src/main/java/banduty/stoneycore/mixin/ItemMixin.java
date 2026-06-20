@@ -2,7 +2,6 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
-import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
@@ -19,7 +18,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
@@ -91,18 +89,6 @@ public abstract class ItemMixin {
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     public void stoneycore$use(Level level, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
         ItemStack stack = player.getItemInHand(hand);
-
-        if ((getUseAnimation(stack) == UseAnim.DRINK || getUseAnimation(stack) == UseAnim.EAT)) {
-            ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
-            for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
-                if (player.isCreative()) break;
-                if (!Boolean.TRUE.equals(armorAttachment.get(SCDataComponents.VISOR_OPEN.get()))) {
-                    player.displayClientMessage(Component.translatable("component.tooltip.stoneycore.openVisorEatDrink"), true);
-                    cir.setReturnValue(InteractionResultHolder.fail(stack));
-                    return;
-                }
-            }
-        }
 
         if (hand == InteractionHand.MAIN_HAND && !player.getOffhandItem().isEmpty() && WeaponDefinitionsStorage.isMelee(stack)) {
             cir.setReturnValue(InteractionResultHolder.fail(stack));
