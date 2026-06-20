@@ -1,5 +1,6 @@
 package banduty.stoneycore;
 
+import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.commands.FabricSCCommandsHandler;
 import banduty.stoneycore.config.SCConfigs;
 import banduty.stoneycore.event.*;
@@ -46,6 +47,7 @@ public class StoneyCoreFabric implements ModInitializer {
         HotIronCoolingHandler.init();
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(StoneyCoreFabric::addItemsToIngredientItemGroup);
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(StoneyCoreFabric::addItemsToToolsItemGroup);
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(StoneyCoreFabric::addBlocksToFunctionalBlocksItemGroup);
 
         ServerTickEvents.START_SERVER_TICK.register(new StartTickHandler());
         PlayerBlockBreakEvents.AFTER.register(new PlayerBlockBreakAfterHandler());
@@ -133,5 +135,9 @@ public class StoneyCoreFabric implements ModInitializer {
         entries.accept(SCItems.BLACK_POWDER.get());
         entries.accept(SCItems.HOT_IRON.get());
         entries.accept(SCItems.CROWN.get());
+    }
+
+    private static void addBlocksToFunctionalBlocksItemGroup(FabricItemGroupEntries entries) {
+        entries.accept(SCBlocks.CRAFTMAN_ANVIL.get());
     }
 }

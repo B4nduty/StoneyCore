@@ -1,5 +1,6 @@
 package banduty.stoneycore;
 
+import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.config.SCConfigs;
 import banduty.stoneycore.config.SCVisualConfigs;
 import banduty.stoneycore.items.SCItems;
@@ -35,6 +36,9 @@ public class StoneyCoreNeoForge {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(SCItems.SMITHING_HAMMER.get());
             event.accept(SCItems.TONGS.get());
+        }
+        if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
+            event.accept(SCBlocks.CRAFTMAN_ANVIL.get());
         }
     }
 }
