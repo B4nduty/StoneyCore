@@ -20,15 +20,31 @@ import java.util.List;
 import java.util.Objects;
 
 public record UnderArmorContents(List<ItemStack> attachments) {
+
     public static final UnderArmorContents EMPTY = new UnderArmorContents(List.of());
 
-    public static final Codec<UnderArmorContents> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            ItemStack.CODEC.listOf().fieldOf("attachments").forGetter(UnderArmorContents::attachments)
-    ).apply(instance, UnderArmorContents::new));
+    private static List<ItemStack> sanitize(List<ItemStack> input) {
+        List<ItemStack> out = new ArrayList<>();
+        for (ItemStack stack : input) {
+            if (stack != null && !stack.isEmpty()) {
+                out.add(stack);
+            }
+        }
+        return out;
+    }
+
+    public static final Codec<UnderArmorContents> CODEC =
+            RecordCodecBuilder.create(instance -> instance.group(
+                    ItemStack.OPTIONAL_CODEC.listOf()
+                            .xmap(UnderArmorContents::sanitize, l -> l)
+                            .fieldOf("attachments")
+                            .forGetter(UnderArmorContents::attachments)
+            ).apply(instance, UnderArmorContents::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, UnderArmorContents> STREAM_CODEC =
             StreamCodec.composite(
-                    ItemStack.STREAM_CODEC.apply(ByteBufCodecs.list()), UnderArmorContents::attachments,
+                    ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list()),
+                    UnderArmorContents::attachments,
                     UnderArmorContents::new
             );
 
@@ -43,10 +59,11 @@ public record UnderArmorContents(List<ItemStack> attachments) {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof UnderArmorContents(List<ItemStack> attachments1))) return false;
-        if (this.attachments.size() != attachments1.size()) return false;
+        if (!(obj instanceof UnderArmorContents(List<ItemStack> other))) return false;
+        if (this.attachments.size() != other.size()) return false;
+
         for (int i = 0; i < this.attachments.size(); i++) {
-            if (!ItemStack.matches(this.attachments.get(i), attachments1.get(i))) return false;
+            if (!ItemStack.matches(this.attachments.get(i), other.get(i))) return false;
         }
         return true;
     }
@@ -55,7 +72,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
     public int hashCode() {
         int result = 1;
         for (ItemStack stack : attachments) {
-            result = 31 * result + (stack.isEmpty() ? 0 : ItemStack.hashItemAndComponents(stack));
+            result = 31 * result + ItemStack.hashItemAndComponents(stack);
         }
         return result;
     }
@@ -64,7 +81,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
         private final List<ItemStack> attachments;
 
         public Mutable(UnderArmorContents contents) {
-            this.attachments = new ArrayList<>(contents.attachments());
+            this.attachments = new ArrayList<>(sanitize(contents.attachments()));
         }
 
         public ItemStack tryInsert(ItemStack incoming, Player player, ItemStack underArmorStack) {
@@ -109,11 +126,10 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                 if (existingDef != null && Objects.equals(existingDef.slot(), incomingSlot)) {
                     ItemStack old = existing;
                     this.attachments.set(i, singleItem);
-                    return old; // swap: return displaced item
+                    return old;
                 }
             }
 
-            // No slot conflict → append
             this.attachments.add(singleItem);
             return ItemStack.EMPTY;
         }
@@ -124,17 +140,22 @@ public record UnderArmorContents(List<ItemStack> attachments) {
         }
 
         public UnderArmorContents toImmutable() {
-            return new UnderArmorContents(List.copyOf(this.attachments));
+            return new UnderArmorContents(List.copyOf(sanitize(this.attachments)));
         }
 
         public boolean damageAttachment(String armorSlotName, int damageAmount,
                                         LivingEntity entity, EquipmentSlot slot) {
             boolean anyDamageApplied = false;
+
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack attachmentStack = this.attachments.get(i);
-                if (!attachmentStack.isEmpty() && ArmorAttachmentDefinitionsStorage.containsItem(attachmentStack)) {
+
+                if (attachmentStack.isEmpty()) continue;
+
+                if (ArmorAttachmentDefinitionsStorage.containsItem(attachmentStack)) {
                     String slotFromJson = ArmorAttachmentDefinitionsStorage
                             .getData(attachmentStack.getItem()).armorSlot();
+
                     if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(armorSlotName)) {
                         ItemStack copy = attachmentStack.copy();
                         copy.hurtAndBreak(damageAmount, entity, slot);
@@ -143,6 +164,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                     }
                 }
             }
+
             return anyDamageApplied;
         }
 
@@ -175,5 +197,4 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             return ItemStack.EMPTY;
         }
     }
-
 }
