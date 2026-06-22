@@ -48,7 +48,8 @@ public class StaminaUtil {
 
         boolean canRecoverStamina = StaminaData.getStaminaUseTime(dataSaver) <= 0;
 
-        if (StaminaData.getStaminaUseTime(dataSaver) > 0) StaminaData.setStaminaUseTime(dataSaver, StaminaData.getStaminaUseTime(dataSaver) - 1);
+        if (StaminaData.getStaminaUseTime(dataSaver) > 0)
+            StaminaData.setStaminaUseTime(dataSaver, StaminaData.getStaminaUseTime(dataSaver) - 1);
 
         boolean skipDrain = !StoneyCore.getConfig().combatOptions().getRealisticCombat() ||
                 !wasUsingStamina ||
@@ -113,6 +114,8 @@ public class StaminaUtil {
         }
 
         if (!isWearingSCArmor(entity)) return usingStamina;
+
+        if (entity.isPassenger()) return usingStamina;
 
         if (entity.isSprinting()) { // Running
             StaminaData.removeStamina(entity, config.sprintingStaminaConstant() * WeightUtil.getWeight(entity) / 20.0);
