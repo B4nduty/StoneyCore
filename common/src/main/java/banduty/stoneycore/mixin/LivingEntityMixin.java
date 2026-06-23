@@ -329,7 +329,16 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
                 slotProtected = mutableContents.damageAttachment(slot.getName(), (int) Math.ceil(amount), livingEntity, slot);
 
                 if (slotProtected) {
-                    armorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutableContents.toImmutable());
+                    UnderArmorContents newContents = mutableContents.toImmutable();
+
+                    if (newContents.isEmpty()) {
+                        armorStack.remove(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
+                    } else {
+                        armorStack.set(
+                                SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                                newContents
+                        );
+                    }
 
                     if (armorStack.getItem() instanceof SCUnderArmor underArmor) {
                         underArmor.rebuildAttachmentAttributes(armorStack);

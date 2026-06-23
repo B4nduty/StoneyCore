@@ -158,8 +158,16 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
                     if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(armorSlotName)) {
                         ItemStack copy = attachmentStack.copy();
+
                         copy.hurtAndBreak(damageAmount, entity, slot);
-                        this.attachments.set(i, copy);
+
+                        if (copy.isEmpty()) {
+                            this.attachments.remove(i);
+                            i--;
+                        } else {
+                            this.attachments.set(i, copy);
+                        }
+
                         anyDamageApplied = true;
                     }
                 }

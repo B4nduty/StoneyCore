@@ -59,7 +59,20 @@ public class SCUnderArmor extends ArmorItem {
         if (incomingStack.isEmpty()) {
             ItemStack extracted = mutable.removeLast();
             if (!extracted.isEmpty()) {
-                underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
+
+                UnderArmorContents newContents = mutable.toImmutable();
+
+                if (newContents.isEmpty()) {
+                    underArmorStack.remove(
+                            SCDataComponents.UNDER_ARMOR_CONTENTS.get()
+                    );
+                } else {
+                    underArmorStack.set(
+                            SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                            newContents
+                    );
+                }
+
                 rebuildAttachmentAttributes(underArmorStack);
                 outputCons.accept(extracted);
                 playSound(player, this.getMaterial().value().equipSound().value());
@@ -70,7 +83,18 @@ public class SCUnderArmor extends ArmorItem {
             if (result != null) {
                 incomingStack.shrink(1);
                 if (!result.isEmpty()) outputCons.accept(result);
-                underArmorStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), mutable.toImmutable());
+                UnderArmorContents newContents = mutable.toImmutable();
+
+                if (newContents.isEmpty()) {
+                    underArmorStack.remove(
+                            SCDataComponents.UNDER_ARMOR_CONTENTS.get()
+                    );
+                } else {
+                    underArmorStack.set(
+                            SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                            newContents
+                    );
+                }
                 rebuildAttachmentAttributes(underArmorStack);
                 playSound(player, this.getMaterial().value().equipSound().value());
                 return true;
@@ -94,16 +118,39 @@ public class SCUnderArmor extends ArmorItem {
     @Override
     public void verifyComponentsAfterLoad(ItemStack stack) {
         super.verifyComponentsAfterLoad(stack);
+
+        UnderArmorContents contents =
+                stack.get(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
+
+        if (contents != null) {
+            UnderArmorContents cleaned =
+                    new UnderArmorContents(
+                            contents.attachments()
+                                    .stream()
+                                    .filter(item -> !item.isEmpty())
+                                    .toList()
+                    );
+
+            if (cleaned.isEmpty()) {
+                stack.remove(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
+            } else {
+                stack.set(
+                        SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                        cleaned
+                );
+            }
+        }
+
         rebuildAttachmentAttributes(stack);
     }
 
     public void rebuildAttachmentAttributes(ItemStack stack) {
         ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
 
-        EquipmentSlot slot   = this.getType().getSlot();
+        EquipmentSlot slot = this.getType().getSlot();
         EquipmentSlotGroup group = EquipmentSlotGroup.bySlot(slot);
 
-        Map<Holder<Attribute>, Double> addValueModifiers      = new HashMap<>();
+        Map<Holder<Attribute>, Double> addValueModifiers = new HashMap<>();
         Map<Holder<Attribute>, Double> addMultipliedModifiers = new HashMap<>();
 
         this.getDefaultAttributeModifiers().modifiers().forEach(entry -> {
@@ -156,7 +203,7 @@ public class SCUnderArmor extends ArmorItem {
     private ResourceLocation createModifierId(Holder<Attribute> attribute, String suffix) {
         return attribute.unwrapKey()
                 .map(k -> {
-                    ResourceLocation loc  = k.location();
+                    ResourceLocation loc = k.location();
                     String sanitizedPath = loc.getPath().replace('/', '_') + "." + suffix;
                     return loc.getNamespace().equals("minecraft")
                             ? ResourceLocation.withDefaultNamespace(sanitizedPath)
@@ -169,7 +216,16 @@ public class SCUnderArmor extends ArmorItem {
     }
 
     public static List<ItemStack> getArmorAttachments(ItemStack stack) {
-        UnderArmorContents contents = stack.get(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
-        return contents != null ? contents.attachments() : List.of();
+        UnderArmorContents contents =
+                stack.get(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
+
+        if (contents == null || contents.isEmpty()) {
+            return List.of();
+        }
+
+        return contents.attachments()
+                .stream()
+                .filter(item -> !item.isEmpty())
+                .toList();
     }
 }
