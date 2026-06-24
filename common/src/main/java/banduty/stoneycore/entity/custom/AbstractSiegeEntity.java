@@ -62,6 +62,7 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     public float lastRiderPitch;
     public float wheelRotation;
     protected int moveTick;
+    protected boolean reloadSoundPlaying = false;
     protected final Random random = new Random();
     protected final Set<UUID> playersNotified = new HashSet<>();
     protected Entity owner;
@@ -224,6 +225,7 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
 
         updateEntityRotation();
         updateTimers();
+        handleReloadSound(serverLevel);
         handleMovementSounds(serverLevel);
 
         onSiegeTick(serverLevel);
@@ -258,6 +260,14 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     private void updateTimers() {
         setCooldown(getCooldown() - 1);
         setReloadTime(getReloadTime() - 1);
+    }
+
+    private void handleReloadSound(ServerLevel serverLevel) {
+        if (getReloadTime() > 0) {
+            playReloadSound(serverLevel);
+        } else {
+            stopReloadSound(serverLevel);
+        }
     }
 
     protected void handleMovementSounds(ServerLevel serverLevel) {
@@ -295,7 +305,27 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     }
 
     protected void playReloadSound(ServerLevel serverLevel) {
-        playSoundToNearbyPlayers(serverLevel, getReloadSound(), getProperties().reloadSoundRange(), 1.0f);
+        if (reloadSoundPlaying) return;
+
+        reloadSoundPlaying = true;
+
+        playSoundToNearbyPlayers(
+                serverLevel,
+                getReloadSound(),
+                getProperties().reloadSoundRange(),
+                1.0f
+        );
+    }
+
+    protected void stopReloadSound(ServerLevel serverLevel) {
+        if (!reloadSoundPlaying) return;
+
+        reloadSoundPlaying = false;
+
+        stopSoundForNearbyPlayers(
+                serverLevel,
+                getReloadSound()
+        );
     }
 
     protected void playShootSound(ServerLevel serverLevel) {
