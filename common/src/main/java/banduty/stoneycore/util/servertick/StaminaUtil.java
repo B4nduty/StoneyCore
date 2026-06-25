@@ -108,7 +108,7 @@ public class StaminaUtil {
         boolean usingStamina = false;
         IConfig.CombatOptions config = StoneyCore.getConfig().combatOptions();
 
-        if (isSCWeapon(entity.getMainHandItem()) && entity.isBlocking()) { // Blocking
+        if (isSCWeapon(entity.getMainHandItem()) && !entity.isUsingItem() && entity.getUseItem() == entity.getMainHandItem()) { // Blocking
             StaminaData.removeStamina(entity, config.blockingStaminaConstant() * WeightUtil.getWeight(entity) / 20.0);
             usingStamina = true;
         }
