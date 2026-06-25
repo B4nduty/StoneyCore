@@ -23,6 +23,9 @@ public class SCConfigs {
 
     public static final ModConfigSpec.BooleanValue disableStamina;
 
+    public static final ModConfigSpec.IntValue parryWindowTicks;
+    public static final ModConfigSpec.DoubleValue parryKnockbackStrength;
+
     // Technical settings
     public static final ModConfigSpec.IntValue maxWorkPerTick;
     public static final ModConfigSpec.IntValue maxLandExpandRadius;
@@ -90,6 +93,14 @@ public class SCConfigs {
         disableStamina = builder
                 .comment("Disable Stamina | Default: false")
                 .define("disableStamina", false);
+
+        parryWindowTicks = builder
+                .comment("Parry Window Ticks | Default: 10")
+                .defineInRange("parryWindowTicks", 10, 0, 99999);
+
+        parryKnockbackStrength = builder
+                .comment("Parry Knockback Strength | Default: 0.75")
+                .defineInRange("parryKnockbackStrength", 0.75, 0, 99999);
 
         builder.pop();
 

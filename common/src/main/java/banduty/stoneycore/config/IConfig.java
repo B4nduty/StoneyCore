@@ -27,6 +27,10 @@ public interface IConfig {
         int getStaminaRecoverTime();
 
         boolean disableStamina();
+
+        int getParryWindowTicks();
+
+        double getParryKnockbackStrength();
     }
 
     interface VisualOptions {

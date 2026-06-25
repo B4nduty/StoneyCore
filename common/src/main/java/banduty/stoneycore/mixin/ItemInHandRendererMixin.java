@@ -38,8 +38,6 @@ import java.util.List;
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin {
     @Unique
-    private static final int PARRY_WINDOW_TICKS = 10;
-    @Unique
     private static final float TRANSITION_DURATION_TICKS = 5.0F;
     @Inject(
             method = "renderArmWithItem",
@@ -70,8 +68,8 @@ public class ItemInHandRendererMixin {
         int useTicks = player.getTicksUsingItem();
         float totalTicksElapsed = useTicks + partialTick;
 
-        if (StoneyCore.getConfig().combatOptions().getParry() && totalTicksElapsed > PARRY_WINDOW_TICKS) {
-            float transitionProgress = totalTicksElapsed - PARRY_WINDOW_TICKS;
+        if (StoneyCore.getConfig().combatOptions().getParry() && totalTicksElapsed > StoneyCore.getConfig().combatOptions().getParryWindowTicks()) {
+            float transitionProgress = totalTicksElapsed - StoneyCore.getConfig().combatOptions().getParryWindowTicks();
             tr = Math.min(1.0F, transitionProgress / TRANSITION_DURATION_TICKS);
         }
 

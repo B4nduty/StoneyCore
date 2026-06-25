@@ -179,10 +179,6 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
     @Unique
     private DamageSource stoneycore$currentDamageSource;
-    @Unique
-    private static final int PARRY_WINDOW_TICKS = 10;
-    @Unique
-    private static final float PARRY_KNOCKBACK_STRENGTH = 0.5F;
 
     @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
     private void stoneycore$captureDamageSource(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
@@ -243,7 +239,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
         long blockStartTick = target.getTicksUsingItem();
 
-        if (blockStartTick > PARRY_WINDOW_TICKS) {
+        if (blockStartTick > StoneyCore.getConfig().combatOptions().getParryWindowTicks()) {
             return false;
         }
 
@@ -262,7 +258,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             Vec3 attackerPos = source.position();
             Vec3 knockbackDirection = playerPos.subtract(attackerPos).normalize();
 
-            livingEntity.knockback(PARRY_KNOCKBACK_STRENGTH, knockbackDirection.x, knockbackDirection.z);
+            livingEntity.knockback(StoneyCore.getConfig().combatOptions().getParryKnockbackStrength(), knockbackDirection.x, knockbackDirection.z);
         }
 
         target.level().playSound(
