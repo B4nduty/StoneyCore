@@ -256,8 +256,8 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     }
 
     private void updateTimers() {
-        setCooldown(getCooldown() - 1);
-        setReloadTime(getReloadTime() - 1);
+        if (getCooldown() > 0) setCooldown(getCooldown() - 1);
+        if (getReloadTime() > 0) setReloadTime(getReloadTime() - 1);
     }
 
     protected void handleMovementSounds(ServerLevel serverLevel) {
