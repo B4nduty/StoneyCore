@@ -25,7 +25,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 
 public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanAnvilBlockEntity> {
 
@@ -42,14 +45,59 @@ public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanA
         BlockState blockState = entity.getBlockState();
         Direction facing = blockState.getValue(CraftmanAnvilBlock.FACING);
 
-        for (int i = 0; i < itemStacks.size(); i++) {
-            ItemStack itemStack = itemStacks.get(i);
-            if (itemStack.isEmpty()) continue;
+        // Create a combined list with both input and output slots
+        List<ItemStack> allItems = new ArrayList<>();
+        List<Integer> allSlotIndices = new ArrayList<>();
+
+        // Add output slot (index 0) - treat it as part of the grid
+        ItemStack outputStack = itemStacks.getFirst();
+        if (!outputStack.isEmpty()) {
+            allItems.add(outputStack);
+            allSlotIndices.add(0);
+        }
+
+        // Add input slots (indices 1-6)
+        for (int i = 1; i < itemStacks.size(); i++) {
+            ItemStack stack = itemStacks.get(i);
+            if (!stack.isEmpty()) {
+                allItems.add(stack);
+                allSlotIndices.add(i);
+            }
+        }
+
+        // Render all items using the same rendering logic
+        renderItems(entity, allItems, allSlotIndices, facing, poseStack, vertexConsumers, itemRenderer);
+
+        Optional<RecipeHolder<CraftmanAnvilRecipe>> recipe = entity.getRecipe();
+        recipe.ifPresent(anvilRecipe -> renderHitSquares(entity, poseStack, vertexConsumers, recipe.get().value().hitTimes(), facing));
+    }
+
+    private void renderItems(CraftmanAnvilBlockEntity entity, List<ItemStack> itemsToRender,
+                             List<Integer> slotIndices, Direction facing, PoseStack poseStack,
+                             MultiBufferSource vertexConsumers, ItemRenderer itemRenderer) {
+        // If no items to render, return early
+        if (itemsToRender.isEmpty()) return;
+
+        int itemCount = itemsToRender.size();
+
+        // Fixed 2 rows, 3 columns max
+        int maxCols = 3;
+        int maxRows = 2;
+
+        float spacingX = 0.3f;
+        float spacingZ = 0.24f;
+
+        // Render each item
+        for (int idx = 0; idx < itemCount; idx++) {
+            ItemStack itemStack = itemsToRender.get(idx);
+            int originalSlot = slotIndices.get(idx);
 
             poseStack.pushPose();
 
+            // Base position on the anvil
             poseStack.translate(0.5f, 0.66f, 0.5f);
 
+            // Apply facing rotation
             switch (facing) {
                 case NORTH -> poseStack.translate(-0.1f, 0f, 0f);
                 case SOUTH -> {
@@ -66,43 +114,42 @@ public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanA
                 }
             }
 
-            boolean twoRows = itemStacks.stream().filter(stack -> !stack.isEmpty()).count() > 3;
-            int row = (twoRows && i >= 3) ? 1 : 0;
+            // Calculate position in 2x3 grid
+            int row = idx / maxCols;
+            int col = idx % maxCols;
 
-            if (twoRows && row == 0) {
-                poseStack.translate(0f, 0f, -0.12f);
-            } else if (twoRows) {
-                poseStack.translate(0f, 0f, 0.12f);
-            }
+            // Get the actual number of items in this row
+            int itemsInCurrentRow = Math.min(maxCols, itemCount - (row * maxCols));
 
-            int indexInRow = (twoRows ? i % 3 : i);
-            switch (indexInRow) {
-                case 1 -> poseStack.translate(0.3f, 0f, 0f);
-                case 2 -> poseStack.translate(-0.3f, 0f, 0f);
-                default -> {}
-            }
+            // Calculate the number of rows actually used
+            int usedRows = (int) Math.ceil(itemCount / (double) maxCols);
 
-            long seed = (long) BuiltInRegistries.ITEM.getKey(itemStack.getItem()).hashCode() + (row * 101) + indexInRow * 37L;
+            // Center the grid horizontally and vertically
+            float xOffset = (col - (itemsInCurrentRow - 1) / 2.0f) * spacingX;
+            float zOffset = (row - (usedRows - 1) / 2.0f) * spacingZ;
+
+            poseStack.translate(xOffset, 0f, zOffset);
+
+            // Random rotation for variety (but consistent per slot)
+            long seed = (long) BuiltInRegistries.ITEM.getKey(itemStack.getItem()).hashCode() + originalSlot * 37L;
             Random rand = new Random(seed);
 
             float offsetX = -0.06f + rand.nextFloat() * 0.12f;
             float offsetZ = -0.02f + rand.nextFloat() * 0.04f;
-
             float rotY = -50f + rand.nextFloat() * 100f;
 
             poseStack.translate(offsetX, 0f, offsetZ);
             poseStack.mulPose(Axis.YP.rotationDegrees(rotY));
 
+            // Same scale for all items
             poseStack.scale(0.25f, 0.25f, 0.25f);
+
             poseStack.mulPose(Axis.XP.rotationDegrees(270));
 
             itemRenderer.renderStatic(itemStack, ItemDisplayContext.GUI, getLightLevel(entity.getLevel(),
                     entity.getBlockPos()), OverlayTexture.NO_OVERLAY, poseStack, vertexConsumers, entity.getLevel(), 1);
             poseStack.popPose();
         }
-
-        Optional<RecipeHolder<CraftmanAnvilRecipe>> recipe = entity.getRecipe();
-        recipe.ifPresent(anvilRecipe -> renderHitSquares(entity, poseStack, vertexConsumers, recipe.get().value().hitTimes(), facing));
     }
 
     private void renderHitSquares(CraftmanAnvilBlockEntity entity, PoseStack poseStack, MultiBufferSource vertexConsumers, int totalHits, Direction facing) {
@@ -134,100 +181,94 @@ public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanA
         float squareSize = 8f;
         float spacing = 4f;
 
-        int rows = (int) Math.ceil(totalHits / 10.0f) - 1;
-
-        int squaresInLastRow = totalHits % 10;
-        if (squaresInLastRow == 0) squaresInLastRow = 10;
+        int squaresPerRow = 10;
+        int rows = (int) Math.ceil(totalHits / (float) squaresPerRow);
+        int squaresInLastRow = totalHits % squaresPerRow;
+        if (squaresInLastRow == 0) squaresInLastRow = squaresPerRow;
 
         VertexConsumer bufferBuilder = vertexConsumers.getBuffer(RenderType.gui());
 
-        List<SquareData> squaresToDraw = new ArrayList<>();
-        Set<Integer> usedIndices = new HashSet<>();
+        for (int row = 0; row < rows; row++) {
+            int squaresInThisRow = (row == rows - 1) ? squaresInLastRow : squaresPerRow;
 
-        for (int colorGroup = rows; colorGroup >= 0; colorGroup--) {
-            int squaresInThisRow = (colorGroup == rows) ? squaresInLastRow : 10;
-            int a1 = Math.min(totalHits, 10);
-
-            float totalWidth = (a1 * squareSize) + ((a1 - 1) * spacing);
+            // Calculate starting X position to center the row
+            float totalWidth = (squaresInThisRow * squareSize) + ((squaresInThisRow - 1) * spacing);
             float startX = -totalWidth / 2f;
 
-            for (int i = 0; i < squaresInThisRow; i++) {
-                float x = startX + ((i + (10 - squaresInThisRow)) * (squareSize + spacing));
-                float y = 0;
+            // Y position: higher rows (lower index) are higher on screen
+            float yPos = row * (squareSize + spacing);
+
+            for (int col = 0; col < squaresInThisRow; col++) {
+                float xPos = startX + col * (squareSize + spacing);
+
+                // Calculate which absolute hit index this represents
+                int absoluteIndex = row * squaresPerRow + col;
 
                 float r, g, b, a = 1.0f;
 
-                int absoluteHitIndex = ((rows - colorGroup) * 10) + i;
+                // Determine if this square should be visible (not yet hit)
+                boolean isVisible = absoluteIndex >= hitsDone;
 
-                if (usedIndices.contains(i)) {
-                    continue;
-                }
-
-                int silr = 10 - squaresInLastRow;
-                if (squaresInLastRow == 10 || squaresInLastRow == squaresInThisRow) silr = 0;
-                if (absoluteHitIndex < hitsDone + silr) {
-                    if (rows - colorGroup != rows) continue;
-                    r = g = b = 0.3f;
+                if (isVisible) {
+                    // White squares that haven't been hit yet
+                    r = g = b = 1.0f;
                 } else {
-                    if (colorGroup == 0) {
-                        r = g = b = 1.0f;
-                    } else {
-                        Random rand = new Random((long) totalHits * 101L + colorGroup * 37L);
-
-                        float hue = (colorGroup * 0.618033988749895f) % 1.0f;
-                        float saturation = 0.7f + rand.nextFloat() * 0.2f;
-                        float value = 0.8f + rand.nextFloat() * 0.15f;
-
-                        float[] color = hsvToRgb(hue, saturation, value);
-                        r = color[0];
-                        g = color[1];
-                        b = color[2];
-
-                        float variation = 0.08f;
-                        r = clampColor(r + (rand.nextFloat() * variation * 2 - variation));
-                        g = clampColor(g + (rand.nextFloat() * variation * 2 - variation));
-                        b = clampColor(b + (rand.nextFloat() * variation * 2 - variation));
-                    }
+                    // Transparent/removed squares that have been hit
+                    a = 0.0f;
+                    r = g = b = 0.0f;
                 }
 
-                int i2 = i;
-                if (squaresInThisRow < 10) i2 += (10 - squaresInThisRow);
-                squaresToDraw.add(new SquareData(x, y, r, g, b, a, i2));
-                usedIndices.add(i2);
+                renderSingleSquare(bufferBuilder, poseStack.last().pose(), poseStack.last().normal(),
+                        xPos, yPos, squareSize, r, g, b, a);
             }
-        }
-
-        for (int i = squaresToDraw.size() - 1; i >= 0; i--) {
-            SquareData square = squaresToDraw.get(i);
-
-            Matrix4f matrix = poseStack.last().pose();
-            Matrix3f normalMatrix = poseStack.last().normal();
-            renderSingleSquare(bufferBuilder, matrix, normalMatrix,
-                    square.x, square.y, squareSize,
-                    square.r, square.g, square.b, square.a);
         }
 
         poseStack.popPose();
     }
 
-    private record SquareData(float x, float y, float r, float g, float b, float a, int index) { }
+    private record SquareData(float x, float y, float r, float g, float b, float a, int index) {
+    }
 
     private float[] hsvToRgb(float hue, float saturation, float value) {
         float[] rgb = new float[3];
 
-        int h = (int)(hue * 6);
+        int h = (int) (hue * 6);
         float f = hue * 6 - h;
         float p = value * (1 - saturation);
         float q = value * (1 - f * saturation);
         float t = value * (1 - (1 - f) * saturation);
 
         switch (h % 6) {
-            case 0 -> { rgb[0] = value; rgb[1] = t; rgb[2] = p; }
-            case 1 -> { rgb[0] = q; rgb[1] = value; rgb[2] = p; }
-            case 2 -> { rgb[0] = p; rgb[1] = value; rgb[2] = t; }
-            case 3 -> { rgb[0] = p; rgb[1] = q; rgb[2] = value; }
-            case 4 -> { rgb[0] = t; rgb[1] = p; rgb[2] = value; }
-            case 5 -> { rgb[0] = value; rgb[1] = p; rgb[2] = q; }
+            case 0 -> {
+                rgb[0] = value;
+                rgb[1] = t;
+                rgb[2] = p;
+            }
+            case 1 -> {
+                rgb[0] = q;
+                rgb[1] = value;
+                rgb[2] = p;
+            }
+            case 2 -> {
+                rgb[0] = p;
+                rgb[1] = value;
+                rgb[2] = t;
+            }
+            case 3 -> {
+                rgb[0] = p;
+                rgb[1] = q;
+                rgb[2] = value;
+            }
+            case 4 -> {
+                rgb[0] = t;
+                rgb[1] = p;
+                rgb[2] = value;
+            }
+            case 5 -> {
+                rgb[0] = value;
+                rgb[1] = p;
+                rgb[2] = q;
+            }
         }
 
         return rgb;

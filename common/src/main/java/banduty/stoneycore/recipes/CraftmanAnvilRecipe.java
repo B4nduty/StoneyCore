@@ -1,5 +1,6 @@
 package banduty.stoneycore.recipes;
 
+import banduty.stoneycore.items.custom.hotiron.HotIron;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -21,18 +22,26 @@ public record CraftmanAnvilRecipe(List<StackIngredient> ingredients, ItemStack o
 
     @Override
     public boolean matches(AnvilInput input, Level level) {
-        /*for (int i = 0; i < input.size(); i++) {
-            ItemStack stack = input.getItem(i);
-            if (!stack.isEmpty() && stack.getItem() instanceof HotIron) {
-                ItemStack target = HotIron.getTargetStack(stack);
-                if (!target.isEmpty()) return false;
-            }
-        }*/
-
         List<ItemStack> remaining = new ArrayList<>();
+
         for (int i = 0; i < input.size(); i++) {
             ItemStack stack = input.getItem(i);
-            if (!stack.isEmpty()) remaining.add(stack.copy());
+
+            if (stack.getItem() instanceof HotIron) {
+                ItemStack target = HotIron.getTargetStack(stack);
+
+                if (!target.isEmpty()) {
+                    return false;
+                }
+            }
+
+            if (!stack.isEmpty()) {
+                remaining.add(stack.copy());
+            }
+        }
+
+        if (remaining.size() != ingredients.size()) {
+            return false;
         }
 
         for (StackIngredient ingredient : ingredients) {
