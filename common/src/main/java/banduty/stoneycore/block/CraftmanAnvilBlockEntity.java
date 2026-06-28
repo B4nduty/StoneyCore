@@ -224,6 +224,9 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
                 if (!remainder.isEmpty()) {
                     remainders.set(i, remainder.copy());
                 }
+                if (!stack.isEmpty() && stack.getItem() instanceof Manuscript) {
+                    remainders.set(i, stack.copy());
+                }
             }
         }
 

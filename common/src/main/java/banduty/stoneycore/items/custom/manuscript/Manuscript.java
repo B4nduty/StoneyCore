@@ -38,11 +38,6 @@ public class Manuscript extends Item {
         return manuscript;
     }
 
-    @Override
-    public boolean hasCraftingRemainingItem() {
-        return true;
-    }
-
     public static void setTargetStack(ItemStack manuscript, ItemStack targetStack) {
         if (targetStack.isEmpty()) {
             removeTargetStack(manuscript);

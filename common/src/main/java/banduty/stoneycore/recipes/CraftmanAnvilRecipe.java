@@ -1,10 +1,12 @@
 package banduty.stoneycore.recipes;
 
 import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.manuscript.Manuscript;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -63,6 +65,31 @@ public record CraftmanAnvilRecipe(List<StackIngredient> ingredients, ItemStack o
         }
 
         return true;
+    }
+
+    @Override
+    public NonNullList<ItemStack> getRemainingItems(AnvilInput input) {
+        NonNullList<ItemStack> remainingItems = NonNullList.withSize(input.size(), ItemStack.EMPTY);
+
+        // Vanilla remainders
+        NonNullList<ItemStack> vanillaRemaining = Recipe.super.getRemainingItems(input);
+
+        for (int i = 0; i < input.size(); i++) {
+            ItemStack remainder = vanillaRemaining.get(i);
+
+            if (!remainder.isEmpty()) {
+                remainingItems.set(i, remainder.copy());
+            }
+
+            // Restore manuscript from input slot
+            ItemStack stack = input.getItem(i);
+
+            if (!stack.isEmpty() && stack.getItem() instanceof Manuscript) {
+                remainingItems.set(i, stack.copy());
+            }
+        }
+
+        return remainingItems;
     }
 
     @Override
