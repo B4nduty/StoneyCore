@@ -76,8 +76,8 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         if (level == null) return Optional.empty();
 
         AnvilInput input = new AnvilInput(
-                items.get(1), items.get(2), items.get(3),
-                items.get(4), items.get(5), items.get(6)
+                items.get(0), items.get(1), items.get(2),
+                items.get(3), items.get(4), items.get(5)  // Changed to slots 0-5
         );
 
         return level.getRecipeManager()
@@ -92,7 +92,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         if (level == null || level.isClientSide()) return;
 
         boolean hasItems = false;
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {  // Check slots 0-5
             if (!items.get(i).isEmpty()) {
                 hasItems = true;
                 break;
@@ -340,8 +340,8 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         boolean isIncomingManuscript = stack.getItem() instanceof Manuscript;
 
         if (isIncomingManuscript) {
-            // Look for existing manuscript
-            for (int i = 0; i < 6; i++) {
+            // Look for existing manuscript in input slots (1-6)
+            for (int i = 1; i < 7; i++) {
                 ItemStack existing = items.get(i);
 
                 if (!existing.isEmpty() && existing.getItem() instanceof Manuscript) {
@@ -365,7 +365,8 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
             }
         }
 
-        for (int i = 0; i < 6; i++) {
+        // Add item to input slots (1-6) only
+        for (int i = 1; i < 7; i++) {
             if (items.get(i).isEmpty()) {
                 items.set(i, stack.split(1));
                 setChanged();
@@ -383,7 +384,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         hitCount = 0;
         boolean itemsRemoved = false;
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 7; i++) {
             ItemStack stack = items.get(i);
             if (!stack.isEmpty() && stack.getCount() > 0) {
                 ItemStack copy = stack.copy();

@@ -1,6 +1,5 @@
 package banduty.stoneycore.recipes;
 
-import banduty.stoneycore.items.custom.hotiron.HotIron;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -22,41 +21,39 @@ public record CraftmanAnvilRecipe(List<StackIngredient> ingredients, ItemStack o
 
     @Override
     public boolean matches(AnvilInput input, Level level) {
-        for (int i = 0; i < input.size(); i++) {
+        /*for (int i = 0; i < input.size(); i++) {
             ItemStack stack = input.getItem(i);
             if (!stack.isEmpty() && stack.getItem() instanceof HotIron) {
                 ItemStack target = HotIron.getTargetStack(stack);
                 if (!target.isEmpty()) return false;
             }
-        }
+        }*/
 
-        List<ItemStack> remainingInputs = new ArrayList<>();
+        List<ItemStack> remaining = new ArrayList<>();
         for (int i = 0; i < input.size(); i++) {
             ItemStack stack = input.getItem(i);
-            if (!stack.isEmpty()) remainingInputs.add(stack.copy());
+            if (!stack.isEmpty()) remaining.add(stack.copy());
         }
 
         for (StackIngredient ingredient : ingredients) {
-            // Use the new count field instead of the stack's count
-            int neededCount = ingredient.count();
+            boolean found = false;
 
-            for (int i = 0; i < remainingInputs.size() && neededCount > 0; i++) {
-                ItemStack inputStack = remainingInputs.get(i);
-                if (ingredient.test(inputStack)) {
-                    int available = inputStack.getCount();
-                    int toTake = Math.min(available, neededCount);
-                    inputStack.shrink(toTake);
-                    neededCount -= toTake;
-                    if (inputStack.isEmpty()) {
-                        remainingInputs.remove(i);
-                        i--;
-                    }
+            for (int i = 0; i < remaining.size(); i++) {
+                ItemStack stack = remaining.get(i);
+
+                if (ingredient.test(stack)) {
+                    remaining.remove(i);
+                    found = true;
+                    break;
                 }
             }
-            if (neededCount > 0) return false;
+
+            if (!found) {
+                return false;
+            }
         }
 
-        return remainingInputs.isEmpty();
+        return true;
     }
 
     @Override
