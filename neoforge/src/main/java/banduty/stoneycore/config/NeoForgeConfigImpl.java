@@ -68,6 +68,16 @@ public class NeoForgeConfigImpl extends ConfigImpl {
             public boolean disableStamina() {
                 return SCConfigs.disableStamina.get();
             }
+
+            @Override
+            public int getParryWindowTicks() {
+                return SCConfigs.parryWindowTicks.get();
+            }
+
+            @Override
+            public double getParryKnockbackStrength() {
+                return SCConfigs.parryKnockbackStrength.get();
+            }
         };
     }
 

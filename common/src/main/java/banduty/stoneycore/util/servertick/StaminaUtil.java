@@ -6,6 +6,7 @@ import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.SCAttributes;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
+import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -108,7 +109,7 @@ public class StaminaUtil {
         boolean usingStamina = false;
         IConfig.CombatOptions config = StoneyCore.getConfig().combatOptions();
 
-        if (isSCWeapon(entity.getMainHandItem()) && entity.isBlocking()) { // Blocking
+        if (isSCWeapon(entity.getMainHandItem()) && entity.getMainHandItem().is(SCTags.WEAPONS_SHIELD.getTag()) && entity.isUsingItem() && entity.getUseItem() == entity.getMainHandItem()) { // Blocking
             StaminaData.removeStamina(entity, config.blockingStaminaConstant() * WeightUtil.getWeight(entity) / 20.0);
             usingStamina = true;
         }

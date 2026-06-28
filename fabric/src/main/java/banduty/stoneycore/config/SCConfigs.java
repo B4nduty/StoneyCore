@@ -34,6 +34,10 @@ public class SCConfigs implements ConfigData {
     public int getStaminaRecoverTime = 60;
     @ConfigEntry.Gui.Tooltip
     public boolean disableStamina = false;
+    @ConfigEntry.Gui.Tooltip
+    public int getParryWindowTicks = 10;
+    @ConfigEntry.Gui.Tooltip
+    public double getParryKnockbackStrength = 0.75D;
 
     @ConfigEntry.Gui.Tooltip
     public boolean getDamageIndicator = false;

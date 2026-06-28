@@ -70,6 +70,16 @@ public class FabricConfigImpl extends ConfigImpl {
             public boolean disableStamina() {
                 return StoneyCoreFabric.CONFIG.disableStamina;
             }
+
+            @Override
+            public int getParryWindowTicks() {
+                return StoneyCoreFabric.CONFIG.getParryWindowTicks;
+            }
+
+            @Override
+            public double getParryKnockbackStrength() {
+                return StoneyCoreFabric.CONFIG.getParryKnockbackStrength;
+            }
         };
     }
 
