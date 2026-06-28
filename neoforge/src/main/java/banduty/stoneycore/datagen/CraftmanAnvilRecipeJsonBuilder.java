@@ -35,12 +35,12 @@ public class CraftmanAnvilRecipeJsonBuilder implements RecipeBuilder {
     }
 
     public CraftmanAnvilRecipeJsonBuilder requires(ItemStack stack) {
-        this.ingredients.add(new StackIngredient(stack, Optional.empty(), stack.getCount()));
+        this.ingredients.add(new StackIngredient(stack, Optional.empty()));
         return this;
     }
 
     public CraftmanAnvilRecipeJsonBuilder requires(TagKey<Item> tag, int count) {
-        this.ingredients.add(new StackIngredient(ItemStack.EMPTY, Optional.of(tag), count));
+        this.ingredients.add(new StackIngredient(ItemStack.EMPTY, Optional.of(tag)));
         return this;
     }
 
