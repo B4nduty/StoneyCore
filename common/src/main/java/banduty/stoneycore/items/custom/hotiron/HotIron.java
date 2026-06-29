@@ -2,6 +2,7 @@ package banduty.stoneycore.items.custom.hotiron;
 
 import banduty.stoneycore.client.MinecraftS4S;
 import banduty.stoneycore.items.SCItems;
+import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.util.data.itemdata.ItemStackHolder;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.core.BlockPos;
@@ -46,11 +47,18 @@ public class HotIron extends Item {
 
         if (level.isClientSide()) return;
 
-        ItemStack target = getTargetStack(stack);
-        if (!target.isEmpty()) {
+        ItemStackHolder holder = stack.get(SCDataComponents.TARGET_STACK.get());
+        ItemStack target = ItemStack.EMPTY;
+
+        if (holder != null) {
+            target = holder.stack();
+
             target.getItem().inventoryTick(target, level, entity, slot, selected);
+
             if (target.isEmpty()) {
-                removeTargetStack(stack);
+                stack.remove(SCDataComponents.TARGET_STACK.get());
+            } else {
+                stack.set(SCDataComponents.TARGET_STACK.get(), new ItemStackHolder(target));
             }
         }
 
@@ -59,39 +67,51 @@ public class HotIron extends Item {
             return;
         }
 
-        if (!stack.has(SCDataComponents.IGNITE_TIME.get()))
+        if (stack.get(SCDataComponents.IGNITE_TIME.get()) == null) {
             igniteHotIron(stack, entity);
+        }
 
-        if (!isHeldByTongs(stack)) {
+        if (!isHeldInTongs(entity)) {
             entity.setSharedFlagOnFire(true);
             entity.setRemainingFireTicks(20);
         }
 
-        long igniteTime = stack.get(SCDataComponents.IGNITE_TIME.get());
-        long currentTime = level.getGameTime();
-        if (isFinished(stack)) currentTime -= IGNITE_DURATION_TICKS_AFTER_FINISH;
+        Long igniteTime = stack.get(SCDataComponents.IGNITE_TIME.get());
+        if (igniteTime == null) return;
 
-        if (currentTime - igniteTime >= IGNITE_DURATION_TICKS) {
+        long currentTime = level.getGameTime();
+
+        if (isFinished(stack)) {
+            currentTime -= IGNITE_DURATION_TICKS_AFTER_FINISH;
+        }
+
+        long elapsed = currentTime - igniteTime;
+
+        if (elapsed >= IGNITE_DURATION_TICKS) {
             stack.shrink(1);
+
             if (!target.isEmpty()) {
                 entity.spawnAtLocation(target.copy());
             } else {
                 entity.spawnAtLocation(Items.IRON_INGOT);
             }
 
-            level.playSound(null, entity.getX(), entity.getY(), entity.getZ(),
-                    SoundEvents.GENERIC_EXTINGUISH_FIRE, entity.getSoundSource(), 0.5f,
+            level.playSound(
+                    null,
+                    entity.getX(), entity.getY(), entity.getZ(),
+                    SoundEvents.GENERIC_EXTINGUISH_FIRE,
+                    entity.getSoundSource(),
+                    0.5f,
                     1.8f + level.getRandom().nextFloat() * (3.4f - 1.8f)
             );
         }
     }
 
-    public static void setHeldByTongs(ItemStack stack, boolean held) {
-        stack.set(SCDataComponents.HELD_BY_TONGS_KEY.get(), held);
-    }
+    private static boolean isHeldInTongs(Entity entity) {
+        if (!(entity instanceof Player player)) return false;
 
-    public static boolean isHeldByTongs(ItemStack stack) {
-        return Boolean.TRUE.equals(stack.get(SCDataComponents.HELD_BY_TONGS_KEY.get()));
+        return Tongs.isHolding(player.getMainHandItem())
+                || Tongs.isHolding(player.getOffhandItem());
     }
 
     public static void removeTargetStack(ItemStack stack) {

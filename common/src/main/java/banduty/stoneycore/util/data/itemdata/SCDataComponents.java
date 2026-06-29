@@ -24,9 +24,6 @@ public interface SCDataComponents {
             builder -> builder.persistent(ItemStackHolder.CODEC)
                     .networkSynchronized(ItemStackHolder.STREAM_CODEC));
 
-    Supplier<DataComponentType<Boolean>> HELD_BY_TONGS_KEY = register("held_by_tongs_key",
-            builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
-
     Supplier<DataComponentType<Boolean>> BLUDGEONING = register("bludgeoning",
             builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
 

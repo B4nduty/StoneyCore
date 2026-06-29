@@ -90,70 +90,133 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (!level.isClientSide()) {
-            BlockEntity blockEntity = level.getBlockEntity(pos);
+    protected ItemInteractionResult useItemOn(
+            ItemStack stack,
+            BlockState state,
+            Level level,
+            BlockPos pos,
+            Player player,
+            InteractionHand hand,
+            BlockHitResult hit
+    ) {
+        if (level.isClientSide()) {
+            return ItemInteractionResult.sidedSuccess(true);
+        }
 
-            if (!(blockEntity instanceof CraftmanAnvilBlockEntity anvilEntity)) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+
+        if (!(blockEntity instanceof CraftmanAnvilBlockEntity anvilEntity)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        if (stack.getItem() instanceof SmithingHammer) {
+            if (anvilEntity.getRecipe().isEmpty()) {
                 return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
             }
 
-            if (!(player instanceof ServerPlayer serverPlayer)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+            anvilEntity.hitAnvil(serverPlayer);
 
-            if (stack.getItem() instanceof SmithingHammer && anvilEntity.getRecipe().isPresent()) {
-                anvilEntity.hitAnvil(serverPlayer);
-                if (player.isCreative()) return ItemInteractionResult.SUCCESS;
-                stack.hurtAndBreak(1, serverPlayer, LivingEntity.getSlotForHand(hand));
-                if (stack.getDamageValue() >= stack.getMaxDamage()) stack.shrink(1);
-                return ItemInteractionResult.SUCCESS;
-            }
+            if (!player.isCreative()) {
+                stack.hurtAndBreak(
+                        1,
+                        serverPlayer,
+                        LivingEntity.getSlotForHand(hand)
+                );
 
-            if (hand == InteractionHand.MAIN_HAND) {
-                if (stack.isEmpty() || (Tongs.getTargetStack(stack).isEmpty() &&
-                        (player.getMainHandItem().getItem() instanceof Tongs ||
-                                player.getOffhandItem().getItem() instanceof Tongs))) {
-                    NonNullList<ItemStack> itemStacks = anvilEntity.getItems();
-                    for (ItemStack itemStack : itemStacks) {
-                        Optional<ItemStack> tongs = getTongsFromInventory(player);
-                        if (tongs.isEmpty() && player.getMainHandItem().getItem() instanceof Tongs)
-                            tongs = Optional.of(player.getMainHandItem());
-                        if (tongs.isEmpty() && player.getOffhandItem().getItem() instanceof Tongs)
-                            tongs = Optional.of(player.getOffhandItem());
-                        if (tongs.isEmpty()) continue;
-                        if (!Tongs.getTargetStack(tongs.get()).isEmpty()) continue;
-                        if (itemStack.isEmpty()) continue;
-
-                        if (!(itemStack.getItem() instanceof HotIron))
-                            continue;
-
-                        Tongs.setTargetStack(tongs.get(), itemStack.copy());
-                        itemStack.shrink(1);
-
-                        if (itemStack.isEmpty()) {
-                            itemStacks.set(itemStacks.indexOf(itemStack), ItemStack.EMPTY);
-                        }
-                    }
-                    anvilEntity.removeItems(serverPlayer);
-                    return ItemInteractionResult.SUCCESS;
-                }
-
-                if (stack.getItem() instanceof SmithingHammer) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-
-                ItemStack newStack = stack;
-
-                if (stack.getItem() instanceof CraftmanAnvilHelper helper) {
-                    newStack = helper.acceptCraftmanAnvilItem(stack);
-                }
-
-                boolean wasAdded = anvilEntity.addItem(newStack, player);
-                if (wasAdded) {
-                    level.playSound(null, pos, SoundEvents.METAL_PLACE, SoundSource.BLOCKS, 0.5f, 1.0f);
-                    anvilEntity.checkAndSpawnRecipeParticles();
+                if (stack.getDamageValue() >= stack.getMaxDamage()) {
+                    stack.shrink(1);
                 }
             }
+
+            return ItemInteractionResult.SUCCESS;
         }
 
-        return ItemInteractionResult.sidedSuccess(level.isClientSide());
+        ItemStack tongsStack = ItemStack.EMPTY;
+
+        if (player.getMainHandItem().getItem() instanceof Tongs) {
+            tongsStack = player.getMainHandItem();
+        } else if (player.getOffhandItem().getItem() instanceof Tongs) {
+            tongsStack = player.getOffhandItem();
+        }
+
+        boolean usingTongs = !tongsStack.isEmpty();
+
+
+        if (usingTongs || stack.isEmpty()) {
+            if (Tongs.getTargetStack(tongsStack).isEmpty()) {
+                NonNullList<ItemStack> items = anvilEntity.getItems();
+
+                for (int i = 0; i < items.size(); i++) {
+
+                    ItemStack item = items.get(i);
+
+                    if (item.isEmpty()) continue;
+                    if (!(item.getItem() instanceof HotIron)) continue;
+
+                    if (usingTongs) {
+                        Tongs.setTargetStack(tongsStack, item.copy());
+                        item.shrink(1);
+                    }
+
+                    if (item.isEmpty()) {
+                        items.set(i, ItemStack.EMPTY);
+                    }
+
+
+                    anvilEntity.removeItems(serverPlayer);
+
+                    return ItemInteractionResult.SUCCESS;
+                }
+            } else
+                // nothing to pick up
+                if (stack.isEmpty()) {
+                    if (!usingTongs)
+                        anvilEntity.removeItems(serverPlayer);
+                    //return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+                }
+        }
+
+        ItemStack newStack;
+
+        ItemStack insertStack = stack;
+
+        // If main hand is empty, try offhand
+        if (insertStack.isEmpty() && !player.getOffhandItem().isEmpty()) {
+            insertStack = player.getOffhandItem();
+        }
+
+        if (insertStack.getItem() instanceof CraftmanAnvilHelper helper) {
+            newStack = helper.acceptCraftmanAnvilItem(insertStack);
+        } else {
+            newStack = insertStack;
+        }
+
+        if (insertStack.isEmpty()) {
+            anvilEntity.removeItems(serverPlayer);
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        boolean added = anvilEntity.addItem(newStack, player);
+
+        if (added) {
+            level.playSound(
+                    null,
+                    pos,
+                    SoundEvents.METAL_PLACE,
+                    SoundSource.BLOCKS,
+                    0.5f,
+                    1.0f
+            );
+
+            anvilEntity.checkAndSpawnRecipeParticles();
+        }
+
+
+        return ItemInteractionResult.SUCCESS;
     }
 
     public static Optional<ItemStack> getTongsFromInventory(Player player) {
