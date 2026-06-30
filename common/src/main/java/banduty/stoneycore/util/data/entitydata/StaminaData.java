@@ -28,19 +28,37 @@ public class StaminaData {
     }
 
     public static void addStamina(LivingEntity livingEntity, double amount) {
-        setStamina(livingEntity, clampStamina(livingEntity, livingEntity.getAttributeValue(SCAttributes.STAMINA) + amount));
+        setStamina(livingEntity, amount);
     }
 
     public static void removeStamina(LivingEntity livingEntity, double amount) {
-        setStamina(livingEntity, clampStamina(livingEntity, livingEntity.getAttributeValue(SCAttributes.STAMINA) - amount));
+        setStamina(livingEntity, -amount);
     }
 
     public static double getStamina(LivingEntity livingEntity) {
         return livingEntity.getAttributeValue(SCAttributes.STAMINA);
     }
 
-    private static double clampStamina(LivingEntity livingEntity, double value) {
-        return Math.max(0, Math.min(value, livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA)));
+    private static double clampStamina(LivingEntity livingEntity, double amount) {
+        AttributeInstance attribute = livingEntity.getAttribute(SCAttributes.STAMINA);
+        if (attribute == null) return 0.0;
+
+        double currentModifier = attribute.getModifier(STAMINA_MODIFIER_ID) != null
+                ? attribute.getModifier(STAMINA_MODIFIER_ID).amount()
+                : 0.0;
+
+        double baseValue = attribute.getBaseValue();
+        double maxStamina = livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA);
+
+        double targetModifier = currentModifier + amount;
+
+        // The total value cannot drop below 0
+        double minModifier = -baseValue;
+
+        // The total value cannot exceed maxStamina
+        double maxModifier = maxStamina - baseValue;
+
+        return Math.clamp(targetModifier, minModifier, maxModifier);
     }
 
     public static void setStaminaBlocked(IEntityDataSaver livingEntity, boolean blocked) {
