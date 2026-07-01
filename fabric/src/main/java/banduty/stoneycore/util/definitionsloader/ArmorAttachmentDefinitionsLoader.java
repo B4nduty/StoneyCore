@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ArmorItem;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
@@ -55,10 +55,10 @@ public class ArmorAttachmentDefinitionsLoader implements IdentifiableResourceRel
                                     StoneyCore.LOG.error(
                                             "Invalid armorSlot '{}' in {}. Expected one of {}. This item will not protect any armor slot.",
                                             armorSlot, id, EnumSet.of(
-                                                    EquipmentSlot.HEAD,
-                                                    EquipmentSlot.CHEST,
-                                                    EquipmentSlot.LEGS,
-                                                    EquipmentSlot.FEET
+                                                    ArmorItem.Type.HELMET,
+                                                    ArmorItem.Type.CHESTPLATE,
+                                                    ArmorItem.Type.LEGGINGS,
+                                                    ArmorItem.Type.BOOTS
                                             )
                                     );
                                     def = new ArmorAttachmentDefinitionData(
@@ -92,11 +92,11 @@ public class ArmorAttachmentDefinitionsLoader implements IdentifiableResourceRel
     }
 
     private boolean isValidArmorSlot(String slot) {
-        Set<EquipmentSlot> valid = EnumSet.of(
-                EquipmentSlot.HEAD,
-                EquipmentSlot.CHEST,
-                EquipmentSlot.LEGS,
-                EquipmentSlot.FEET
+        Set<ArmorItem.Type> valid = EnumSet.of(
+                ArmorItem.Type.HELMET,
+                ArmorItem.Type.CHESTPLATE,
+                ArmorItem.Type.LEGGINGS,
+                ArmorItem.Type.BOOTS
         );
         return valid.stream().anyMatch(s -> s.name().equals(slot));
     }

@@ -9,15 +9,12 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public record UnderArmorContents(List<ItemStack> attachments) {
 
@@ -143,66 +140,50 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             return new UnderArmorContents(List.copyOf(sanitize(this.attachments)));
         }
 
-        public boolean damageAttachment(String armorSlotName, int damageAmount,
-                                        LivingEntity entity, EquipmentSlot slot) {
-            boolean anyDamageApplied = false;
+        public boolean damageAttachment(ArmorItem.Type slot, int damageAmount, LivingEntity entity) {
+            if (this.attachments.isEmpty()) return false;
+
+            Set<String> protectedSlots = new HashSet<>();
+            List<AttachmentRef> candidates = new ArrayList<>();
 
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack attachmentStack = this.attachments.get(i);
-
                 if (attachmentStack.isEmpty()) continue;
 
                 if (ArmorAttachmentDefinitionsStorage.containsItem(attachmentStack)) {
-                    String slotFromJson = ArmorAttachmentDefinitionsStorage
-                            .getData(attachmentStack.getItem()).armorSlot();
+                    String slotFromJson = ArmorAttachmentDefinitionsStorage.getData(attachmentStack.getItem()).armorSlot();
 
-                    if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(armorSlotName)) {
-                        ItemStack copy = attachmentStack.copy();
+                    if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(slot.getName())) {
+                        ArmorAttachmentSlotDefinitionData slotDef = ArmorAttachmentSlotDefinitionsStorage.getData(attachmentStack, slot);
 
-                        copy.hurtAndBreak(damageAmount, entity, slot);
-
-                        if (copy.isEmpty()) {
-                            this.attachments.remove(i);
-                            i--;
-                        } else {
-                            this.attachments.set(i, copy);
-                        }
-
-                        anyDamageApplied = true;
+                        protectedSlots.addAll(slotDef.protectedSlots());
+                        candidates.add(new AttachmentRef(i, attachmentStack, slotDef.slot()));
                     }
                 }
+            }
+
+            boolean anyDamageApplied = false;
+
+            for (int i = candidates.size() - 1; i >= 0; i--) {
+                AttachmentRef candidate = candidates.get(i);
+
+                if (protectedSlots.contains(candidate.slotName)) continue;
+
+                ItemStack copy = candidate.stack.copy();
+                copy.hurtAndBreak(damageAmount, entity, slot.getSlot());
+
+                if (copy.isEmpty()) {
+                    this.attachments.remove(candidate.index);
+                } else {
+                    this.attachments.set(candidate.index, copy);
+                }
+
+                anyDamageApplied = true;
             }
 
             return anyDamageApplied;
         }
 
-        public ItemStack getSameSlot(ItemStack input, ArmorItem.Type armorType) {
-            if (input.isEmpty()) return ItemStack.EMPTY;
-
-            ArmorAttachmentSlotDefinitionData inputDef =
-                    ArmorAttachmentSlotDefinitionsStorage.getData(input, armorType);
-
-            if (inputDef == null || Objects.equals(
-                    inputDef,
-                    ArmorAttachmentSlotDefinitionsStorage.getDefaultData()
-            )) {
-                return ItemStack.EMPTY;
-            }
-
-            String targetSlot = inputDef.slot();
-
-            for (ItemStack stack : this.attachments) {
-                if (stack.isEmpty()) continue;
-
-                ArmorAttachmentSlotDefinitionData def =
-                        ArmorAttachmentSlotDefinitionsStorage.getData(stack, armorType);
-
-                if (def != null && Objects.equals(def.slot(), targetSlot)) {
-                    return stack;
-                }
-            }
-
-            return ItemStack.EMPTY;
-        }
+        private record AttachmentRef(int index, ItemStack stack, String slotName) {}
     }
 }

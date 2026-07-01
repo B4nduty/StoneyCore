@@ -25,6 +25,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.CombatRules;
 import net.minecraft.world.damagesource.DamageSource;
@@ -37,6 +38,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
@@ -308,13 +310,16 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
     @Inject(method = "getDamageAfterArmorAbsorb", at = @At("HEAD"), cancellable = true)
     private void stoneycore$getDamageAfterArmorAbsorb(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
+        if (source.is(DamageTypeTags.BYPASSES_ARMOR)) return;
         LivingEntity livingEntity = (LivingEntity) (Object) this;
         amount = CombatRules.getDamageAfterAbsorb(livingEntity, amount, source, (float) livingEntity.getArmorValue(), (float) livingEntity.getAttributeValue(Attributes.ARMOR_TOUGHNESS));
 
         for (ItemStack armorStack : livingEntity.getArmorSlots()) {
             if (armorStack.isEmpty()) continue;
 
-            EquipmentSlot slot = livingEntity.getEquipmentSlotForItem(armorStack);
+            if (!(armorStack.getItem() instanceof SCUnderArmor scUnderArmor)) continue;
+
+            ArmorItem.Type slot = scUnderArmor.getType();
             boolean slotProtected = false;
 
             UnderArmorContents contents = armorStack.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
@@ -322,7 +327,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             if (!contents.isEmpty()) {
                 UnderArmorContents.Mutable mutableContents = new UnderArmorContents.Mutable(contents);
 
-                slotProtected = mutableContents.damageAttachment(slot.getName(), (int) Math.ceil(amount), livingEntity, slot);
+                slotProtected = mutableContents.damageAttachment(slot, (int) Math.ceil(amount), livingEntity);
 
                 if (slotProtected) {
                     UnderArmorContents newContents = mutableContents.toImmutable();
@@ -343,7 +348,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             }
 
             if (!slotProtected) {
-                armorStack.hurtAndBreak((int) amount, livingEntity, slot);
+                armorStack.hurtAndBreak((int) amount, livingEntity, slot.getSlot());
             }
         }
 

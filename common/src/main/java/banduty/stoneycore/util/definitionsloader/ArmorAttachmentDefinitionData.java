@@ -6,7 +6,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EquipmentSlot;
 
 public record ArmorAttachmentDefinitionData(double armor, double toughness, String armorSlot, double hungerDrainMultiplier,
                                             double deflectChance, double weight, float attackSpeed, int rechargeTime, ResourceLocation visoredHelmet) {
@@ -23,13 +22,4 @@ public record ArmorAttachmentDefinitionData(double armor, double toughness, Stri
     ).apply(instance, ArmorAttachmentDefinitionData::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ArmorAttachmentDefinitionData> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
-
-    public EquipmentSlot getArmorSlot() {
-        if (armorSlot.isEmpty()) return null;
-        try {
-            return EquipmentSlot.valueOf(armorSlot.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
 }

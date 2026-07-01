@@ -36,7 +36,8 @@ public class ArmorAttachmentSlotDefinitionsStorage {
                     combinedItems,
                     incomingData.icon().isEmpty() ? existingData.icon() : incomingData.icon(),
                     false,
-                    incomingData.requiredSlot().isEmpty() ? existingData.requiredSlot() : incomingData.requiredSlot()
+                    incomingData.requiredSlot().isEmpty() ? existingData.requiredSlot() : incomingData.requiredSlot(),
+                    incomingData.protectedSlots().isEmpty() ? existingData.protectedSlots() : incomingData.protectedSlots()
             );
 
             DEFINITIONS.put(incomingData.slot(), merged);
@@ -46,10 +47,8 @@ public class ArmorAttachmentSlotDefinitionsStorage {
     }
 
     public static ArmorAttachmentSlotDefinitionData getDefaultData() {
-        return new ArmorAttachmentSlotDefinitionData("", "", new ArrayList<>(), "", false, "");
+        return new ArmorAttachmentSlotDefinitionData("", "", new ArrayList<>(), "", false, "", new ArrayList<>());
     }
-
-
 
     public static ArmorAttachmentSlotDefinitionData getData(ItemStack attachmentStack, @NotNull ArmorItem.Type armorType) {
         if (attachmentStack == null || attachmentStack.isEmpty()) {
@@ -96,6 +95,7 @@ public class ArmorAttachmentSlotDefinitionsStorage {
                 .filter(def -> getArmorType(def) == type)
                 .toList();
     }
+
     public static ArmorItem.Type getArmorType(ArmorAttachmentSlotDefinitionData armorAttachmentSlotDefinitionData) {
         try {
             return ArmorItem.Type.valueOf(armorAttachmentSlotDefinitionData.armor().toUpperCase(Locale.ROOT));
