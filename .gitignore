@@ -22,5 +22,3 @@ build
 eclipse
 run
 /fabric/run-datagen
-/fabric/src/generated
-/neoforge/src/generated
