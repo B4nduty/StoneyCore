@@ -141,7 +141,7 @@ public class StoneyCoreOverlayRenderer {
         if (!config.visualOptions().getNoiseEffect()) return;
 
         ResourceLocation noiseTexture = noiseTextures[currentNoiseTexture];
-        float alpha = (float) Math.max(0.0, 1.0 - staminaPercentage);
+        float alpha = (float) Math.max(0.0, 0.8 - staminaPercentage);
 
         if (currentNoiseTextureTime-- <= 0 && !Minecraft.getInstance().isPaused()) {
             currentNoiseTexture = (currentNoiseTexture + 1) % noiseTextures.length;
