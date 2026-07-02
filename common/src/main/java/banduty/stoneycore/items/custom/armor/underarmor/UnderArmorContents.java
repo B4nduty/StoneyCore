@@ -121,9 +121,8 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                         ArmorAttachmentSlotDefinitionsStorage.getData(existing, armorType);
 
                 if (existingDef != null && Objects.equals(existingDef.slot(), incomingSlot)) {
-                    ItemStack old = existing;
                     this.attachments.set(i, singleItem);
-                    return old;
+                    return existing;
                 }
             }
 
@@ -144,8 +143,9 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             if (this.attachments.isEmpty()) return false;
 
             Set<String> protectedSlots = new HashSet<>();
-            List<AttachmentRef> candidates = new ArrayList<>();
+            List<AttachmentRef> eligibleAttachments = new ArrayList<>();
 
+            // First pass: collect all eligible candidates
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack attachmentStack = this.attachments.get(i);
                 if (attachmentStack.isEmpty()) continue;
@@ -157,33 +157,76 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                         ArmorAttachmentSlotDefinitionData slotDef = ArmorAttachmentSlotDefinitionsStorage.getData(attachmentStack, slot);
 
                         protectedSlots.addAll(slotDef.protectedSlots());
-                        candidates.add(new AttachmentRef(i, attachmentStack, slotDef.slot()));
+                        AttachmentRef ref = new AttachmentRef(i, attachmentStack, slotDef.slot());
+
+                        // Only add to eligible if not protected
+                        if (!protectedSlots.contains(ref.slotName)) {
+                            eligibleAttachments.add(ref);
+                        }
                     }
                 }
             }
 
-            boolean anyDamageApplied = false;
+            if (eligibleAttachments.isEmpty()) return false;
 
-            for (int i = candidates.size() - 1; i >= 0; i--) {
-                AttachmentRef candidate = candidates.get(i);
-
-                if (protectedSlots.contains(candidate.slotName)) continue;
-
-                ItemStack copy = candidate.stack.copy();
-                copy.hurtAndBreak(damageAmount, entity, slot.getSlot());
-
-                if (copy.isEmpty()) {
-                    this.attachments.remove(candidate.index);
-                } else {
-                    this.attachments.set(candidate.index, copy);
-                }
-
-                anyDamageApplied = true;
+            // Calculate total durability capacity of all eligible attachments
+            // Option 1: Use max durability as weight
+            int totalDurability = 0;
+            for (AttachmentRef ref : eligibleAttachments) {
+                totalDurability += ref.stack.getMaxDamage();
             }
 
-            return anyDamageApplied;
+            // If no max durability (unbreakable items), distribute evenly
+            if (totalDurability == 0) {
+                int damagePerAttachment = damageAmount / eligibleAttachments.size();
+                int remainder = damageAmount % eligibleAttachments.size();
+
+                for (int i = 0; i < eligibleAttachments.size(); i++) {
+                    AttachmentRef ref = eligibleAttachments.get(i);
+                    int damage = damagePerAttachment + (i < remainder ? 1 : 0);
+                    applyDamageToAttachment(ref, damage, entity, slot);
+                }
+                return true;
+            }
+
+            // Option 2: Proportional distribution based on max durability
+            int remainingDamage = damageAmount;
+            for (int i = 0; i < eligibleAttachments.size() - 1; i++) {
+                AttachmentRef ref = eligibleAttachments.get(i);
+                int proportionalDamage = (int) Math.round(
+                        (double) damageAmount * ref.stack.getMaxDamage() / totalDurability
+                );
+                // Ensure we don't apply more damage than the item can take
+                proportionalDamage = Math.min(proportionalDamage, ref.stack.getMaxDamage());
+                applyDamageToAttachment(ref, proportionalDamage, entity, slot);
+                remainingDamage -= proportionalDamage;
+            }
+
+            // Apply remaining damage to the last attachment
+            if (!eligibleAttachments.isEmpty()) {
+                AttachmentRef lastRef = eligibleAttachments.getLast();
+                applyDamageToAttachment(lastRef, remainingDamage, entity, slot);
+            }
+
+            return true;
         }
 
-        private record AttachmentRef(int index, ItemStack stack, String slotName) {}
+        private void applyDamageToAttachment(AttachmentRef ref, int damageAmount, LivingEntity entity, ArmorItem.Type slot) {
+            if (damageAmount <= 0) return;
+
+            ItemStack copy = ref.stack.copy();
+            // Clamp damage to avoid damaging more than item can take
+            int actualDamage = Math.min(damageAmount, copy.getMaxDamage());
+            copy.hurtAndBreak(actualDamage, entity, slot.getSlot());
+
+            if (copy.isEmpty()) {
+                this.attachments.remove(ref.index);
+            } else {
+                this.attachments.set(ref.index, copy);
+            }
+        }
+
+        private record AttachmentRef(int index, ItemStack stack, String slotName) {
+        }
     }
 }
