@@ -39,6 +39,8 @@ public class CrossbowHandler implements IRangedWeaponHandler {
 
         SCRangeWeaponUtil.shootArrow(level, weapon, player, fakeArrow, 1.0f);
 
+        SCRangeWeaponUtil.setWeaponState(weapon, SCRangeWeaponUtil.WeaponState.idle());
+
         weapon.remove(SCDataComponents.LOADED_ARROW.get());
 
         if (player instanceof ServerPlayer serverPlayer) {
