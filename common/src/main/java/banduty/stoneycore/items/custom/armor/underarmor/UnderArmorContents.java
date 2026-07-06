@@ -145,7 +145,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             Set<String> protectedSlots = new HashSet<>();
             List<AttachmentRef> eligibleAttachments = new ArrayList<>();
 
-            // First pass: collect all eligible candidates
+            // Collect all eligible candidates
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack attachmentStack = this.attachments.get(i);
                 if (attachmentStack.isEmpty()) continue;
@@ -169,27 +169,15 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
             if (eligibleAttachments.isEmpty()) return false;
 
+            Collections.shuffle(eligibleAttachments);
+
             // Calculate total durability capacity of all eligible attachments
-            // Option 1: Use max durability as weight
             int totalDurability = 0;
             for (AttachmentRef ref : eligibleAttachments) {
                 totalDurability += ref.stack.getMaxDamage();
             }
 
-            // If no max durability (unbreakable items), distribute evenly
-            if (totalDurability == 0) {
-                int damagePerAttachment = damageAmount / eligibleAttachments.size();
-                int remainder = damageAmount % eligibleAttachments.size();
-
-                for (int i = 0; i < eligibleAttachments.size(); i++) {
-                    AttachmentRef ref = eligibleAttachments.get(i);
-                    int damage = damagePerAttachment + (i < remainder ? 1 : 0);
-                    applyDamageToAttachment(ref, damage, entity, slot);
-                }
-                return true;
-            }
-
-            // Option 2: Proportional distribution based on max durability
+            // Proportional distribution based on max durability
             int remainingDamage = damageAmount;
             for (int i = 0; i < eligibleAttachments.size() - 1; i++) {
                 AttachmentRef ref = eligibleAttachments.get(i);
