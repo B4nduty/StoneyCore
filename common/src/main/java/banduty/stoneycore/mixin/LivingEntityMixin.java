@@ -313,7 +313,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         if (source.is(DamageTypeTags.BYPASSES_ARMOR)) return;
         LivingEntity livingEntity = (LivingEntity) (Object) this;
         amount = CombatRules.getDamageAfterAbsorb(livingEntity, amount, source, (float) livingEntity.getArmorValue(), (float) livingEntity.getAttributeValue(Attributes.ARMOR_TOUGHNESS));
-
+        int durabilityDamage = Math.max(1, (int) Math.ceil(amount));
         for (ItemStack armorStack : livingEntity.getArmorSlots()) {
             if (armorStack.isEmpty()) continue;
 
@@ -327,7 +327,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             if (!contents.isEmpty()) {
                 UnderArmorContents.Mutable mutableContents = new UnderArmorContents.Mutable(contents);
 
-                slotProtected = mutableContents.damageAttachment(slot, (int) Math.ceil(amount), livingEntity);
+                slotProtected = mutableContents.damageAttachment(slot, durabilityDamage, livingEntity);
 
                 if (slotProtected) {
                     UnderArmorContents newContents = mutableContents.toImmutable();
@@ -348,7 +348,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             }
 
             if (!slotProtected) {
-                armorStack.hurtAndBreak((int) amount, livingEntity, slot.getSlot());
+                armorStack.hurtAndBreak(durabilityDamage, livingEntity, slot.getSlot());
             }
         }
 
