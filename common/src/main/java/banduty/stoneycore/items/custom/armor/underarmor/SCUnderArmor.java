@@ -8,6 +8,7 @@ import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
@@ -27,8 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class SCUnderArmor extends ArmorItem {
 
@@ -37,70 +36,117 @@ public class SCUnderArmor extends ArmorItem {
     }
 
     @Override
-    public boolean overrideStackedOnOther(ItemStack underArmorStack, Slot slot, ClickAction action, Player player) {
-        return handleStackInteraction(underArmorStack, action, player, slot::getItem, slot::set);
+    public boolean overrideStackedOnOther(ItemStack underArmorStack, Slot slot,
+                                          ClickAction action, Player player) {
+        if (action != ClickAction.SECONDARY) {
+            return false;
+        }
+
+        UnderArmorContents.Mutable mutable = new UnderArmorContents.Mutable(
+                underArmorStack.getOrDefault(
+                        SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                        UnderArmorContents.EMPTY));
+
+        ItemStack slotStack = slot.getItem();
+
+        if (slotStack.isEmpty()) {
+            // Extract
+            ItemStack extracted = mutable.removeLast();
+            if (extracted.isEmpty()) {
+                return true;
+            }
+
+            ItemStack remaining = slot.safeInsert(extracted);
+
+            if (!remaining.isEmpty()) {
+                mutable.tryInsert(remaining, player, underArmorStack);
+                return true;
+            }
+
+            saveContents(underArmorStack, mutable);
+            rebuildAttachmentAttributes(underArmorStack);
+            playSound(player, this.getMaterial().value().equipSound().value());
+            return true;
+        }
+
+        // Insert
+        ItemStack result = mutable.tryInsert(slotStack, player, underArmorStack);
+        if (result == null) {
+            return false;
+        }
+
+        slotStack.shrink(1);
+
+        if (!result.isEmpty()) {
+            slot.set(result);
+        }
+
+        saveContents(underArmorStack, mutable);
+        rebuildAttachmentAttributes(underArmorStack);
+        playSound(player, this.getMaterial().value().equipSound().value());
+        return true;
     }
 
     @Override
-    public boolean overrideOtherStackedOnMe(ItemStack underArmorStack, ItemStack incomingStack, Slot slot,
-                                            ClickAction action, Player player, SlotAccess access) {
-        return handleStackInteraction(underArmorStack, action, player, () -> incomingStack, access::set);
-    }
+    public boolean overrideOtherStackedOnMe(ItemStack underArmorStack,
+                                            ItemStack incomingStack,
+                                            Slot slot,
+                                            ClickAction action,
+                                            Player player,
+                                            SlotAccess access) {
+        if (action != ClickAction.SECONDARY) {
+            return false;
+        }
 
-    private boolean handleStackInteraction(ItemStack underArmorStack, ClickAction action, Player player,
-                                           Supplier<ItemStack> incomingSupplier, Consumer<ItemStack> outputCons) {
-        if (action != ClickAction.SECONDARY) return false;
-
-        ItemStack incomingStack = incomingSupplier.get();
-        UnderArmorContents contents = underArmorStack.getOrDefault(
-                SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
-        UnderArmorContents.Mutable mutable = new UnderArmorContents.Mutable(contents);
+        UnderArmorContents.Mutable mutable = new UnderArmorContents.Mutable(
+                underArmorStack.getOrDefault(
+                        SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                        UnderArmorContents.EMPTY));
 
         if (incomingStack.isEmpty()) {
+            // Extract onto cursor
             ItemStack extracted = mutable.removeLast();
-            if (!extracted.isEmpty()) {
-
-                UnderArmorContents newContents = mutable.toImmutable();
-
-                if (newContents.isEmpty()) {
-                    underArmorStack.remove(
-                            SCDataComponents.UNDER_ARMOR_CONTENTS.get()
-                    );
-                } else {
-                    underArmorStack.set(
-                            SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
-                            newContents
-                    );
-                }
-
-                rebuildAttachmentAttributes(underArmorStack);
-                outputCons.accept(extracted);
-                playSound(player, this.getMaterial().value().equipSound().value());
+            if (extracted.isEmpty()) {
                 return true;
             }
-        } else {
-            ItemStack result = mutable.tryInsert(incomingStack, player, underArmorStack);
-            if (result != null) {
-                incomingStack.shrink(1);
-                if (!result.isEmpty()) outputCons.accept(result);
-                UnderArmorContents newContents = mutable.toImmutable();
 
-                if (newContents.isEmpty()) {
-                    underArmorStack.remove(
-                            SCDataComponents.UNDER_ARMOR_CONTENTS.get()
-                    );
-                } else {
-                    underArmorStack.set(
-                            SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
-                            newContents
-                    );
-                }
-                rebuildAttachmentAttributes(underArmorStack);
-                playSound(player, this.getMaterial().value().equipSound().value());
-                return true;
-            }
+            access.set(extracted);
+
+            saveContents(underArmorStack, mutable);
+            rebuildAttachmentAttributes(underArmorStack);
+            playSound(player, this.getMaterial().value().equipSound().value());
+            return true;
         }
-        return false;
+
+        // Insert from cursor
+        ItemStack result = mutable.tryInsert(incomingStack, player, underArmorStack);
+        if (result == null) {
+            return false;
+        }
+
+        incomingStack.shrink(1);
+
+        if (!result.isEmpty()) {
+            access.set(result);
+        }
+
+        saveContents(underArmorStack, mutable);
+        rebuildAttachmentAttributes(underArmorStack);
+        playSound(player, this.getMaterial().value().equipSound().value());
+        return true;
+    }
+
+    private void saveContents(ItemStack underArmorStack,
+                              UnderArmorContents.Mutable mutable) {
+        UnderArmorContents newContents = mutable.toImmutable();
+
+        if (newContents.isEmpty()) {
+            underArmorStack.remove(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
+        } else {
+            underArmorStack.set(
+                    SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                    newContents);
+        }
     }
 
     @Override
@@ -110,9 +156,15 @@ public class SCUnderArmor extends ArmorItem {
         return Optional.of(new UnderArmorTooltip(contents, this.getType()));
     }
 
-    private void playSound(Player player, net.minecraft.sounds.SoundEvent sound) {
-        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                sound, SoundSource.PLAYERS, 0.8F, 0.8F + player.getRandom().nextFloat() * 0.4F);
+    private void playSound(Player player, SoundEvent sound) {
+        player.level().playSound(
+                player, player.blockPosition(),
+                sound,
+                SoundSource.PLAYERS,
+                0.8F,
+                0.8F + player.getRandom().nextFloat() * 0.4F
+        );
+        
     }
 
     @Override
