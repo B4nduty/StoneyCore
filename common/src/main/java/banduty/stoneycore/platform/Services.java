@@ -5,6 +5,7 @@ import banduty.stoneycore.combat.melee.ICombatHelper;
 import banduty.stoneycore.entity.custom.AbstractSiegeHelper;
 import banduty.stoneycore.items.custom.blueprint.IBlueprintHelper;
 import banduty.stoneycore.platform.services.IPlatformHelper;
+import banduty.stoneycore.util.data.entitydata.ConfigHelper;
 import banduty.stoneycore.util.data.entitydata.StaminaHelper;
 import banduty.stoneycore.util.render.OutlineClaimRendererHelper;
 import banduty.stoneycore.util.servertick.LandTrackerHelper;
@@ -18,6 +19,7 @@ public class Services {
     public static final StaminaHelper STAMINA = load(StaminaHelper.class);
     public static final OutlineClaimRendererHelper OUTLINE_CLAIM_RENDERER = load(OutlineClaimRendererHelper.class);
     public static final LandTrackerHelper LAND_TRACKER = load(LandTrackerHelper.class);
+    public static final ConfigHelper CONFIG = load(ConfigHelper.class);
     public static final ICombatHelper COMBAT = ServiceLoaderHelper.loadHighestPriority(ICombatHelper.class);
 
     public static <T> T load(Class<T> clazz) {

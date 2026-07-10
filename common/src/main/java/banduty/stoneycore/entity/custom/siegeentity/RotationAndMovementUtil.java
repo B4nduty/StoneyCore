@@ -7,98 +7,113 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public class RotationAndMovementUtil {
-    public static void updatePassengerPosition(AbstractSiegeEntity abstractSiegeEntity, Entity passenger, Entity.MoveFunction moveFunction) {
-        if (abstractSiegeEntity.hasPassenger(passenger)) {
-            if (!(passenger instanceof Player) && passenger.getFirstPassenger() instanceof Player player) abstractSiegeEntity.setTrackedYaw(player.getVisualRotationYInDegrees());
-            else if (passenger instanceof Player) abstractSiegeEntity.setTrackedYaw(passenger.getVisualRotationYInDegrees());
-            abstractSiegeEntity.setYRot(abstractSiegeEntity.getTrackedYaw());
-            abstractSiegeEntity.setYHeadRot(abstractSiegeEntity.getTrackedYaw());
-            abstractSiegeEntity.setYBodyRot(abstractSiegeEntity.getTrackedYaw());
-            abstractSiegeEntity.lastRiderYaw = abstractSiegeEntity.getTrackedYaw();
 
-            if (!(passenger instanceof Player)) abstractSiegeEntity.setTrackedPitch(0);
-            else abstractSiegeEntity.setTrackedPitch(passenger.getXRot());
-            abstractSiegeEntity.lastRiderPitch = abstractSiegeEntity.getTrackedPitch();
-
-            float yawRadians = (float) Math.toRadians(abstractSiegeEntity.getVisualRotationYInDegrees());
-            Vec3 offset = abstractSiegeEntity.getPassengerOffset(passenger);
-            double leftOffset = offset.x;
-            double backOffset = offset.z;
-
-            double forwardX = -Math.sin(yawRadians);
-            double forwardZ =  Math.cos(yawRadians);
-
-            double rightX =  Math.cos(yawRadians);
-            double rightZ =  Math.sin(yawRadians);
-
-            double offsetX = rightX * leftOffset - forwardX * backOffset;
-            double offsetZ = rightZ * leftOffset - forwardZ * backOffset;
-
-            double newX = abstractSiegeEntity.getX() + offsetX;
-            double newY = abstractSiegeEntity.getY() + offset.y;
-            double newZ = abstractSiegeEntity.getZ() + offsetZ;
-
-            moveFunction.accept(passenger, newX, newY, newZ);
-
-            if (!(passenger instanceof Player) && passenger.getFirstPassenger() == null) {
-                passenger.setYRot(abstractSiegeEntity.getTrackedYaw());
-                passenger.setYHeadRot(abstractSiegeEntity.getTrackedYaw());
-                passenger.setYBodyRot(abstractSiegeEntity.getTrackedYaw());
-            }
-        }
-    }
-
-    public static void updateSiegeVelocity(AbstractSiegeEntity abstractSiegeEntity) {
-        Vec3 horizontalVelocity = Vec3.ZERO;
-        Entity passenger = abstractSiegeEntity.getFirstPassenger();
-
-        if (passenger != null) {
-            if (passenger instanceof Player player && abstractSiegeEntity.getCooldown() == 0) {
-                double forward = player.zza * abstractSiegeEntity.getVelocity(player);
-                horizontalVelocity = calculateMovementVector(forward, abstractSiegeEntity.getVisualRotationYInDegrees());
-            } else if (passenger.getFirstPassenger() != null && passenger.getFirstPassenger() instanceof Player passengerRider && abstractSiegeEntity.getCooldown() == 0) {
-                double forward = passengerRider.zza * abstractSiegeEntity.getVelocity(passenger);
-                horizontalVelocity = calculateMovementVector(forward, abstractSiegeEntity.getVisualRotationYInDegrees());
-            }
+    public static void updatePassengerPosition(AbstractSiegeEntity siege, Entity passenger, Entity.MoveFunction moveFunction) {
+        if (!siege.hasPassenger(passenger)) {
+            return;
         }
 
-        Vec3 velocity = abstractSiegeEntity.getDeltaMovement();
+        float yaw;
 
-        double verticalVelocity = velocity.y;
-
-        verticalVelocity -= 0.08;
-
-        if (abstractSiegeEntity.onGround() && verticalVelocity < 0) {
-            verticalVelocity = 0;
+        if (!(passenger instanceof Player) && passenger.getFirstPassenger() instanceof Player player) {
+            yaw = player.getVisualRotationYInDegrees();
+        } else if (passenger instanceof Player player) {
+            yaw = player.getVisualRotationYInDegrees();
+        } else {
+            yaw = siege.getTrackedYaw();
         }
 
-        Vec3 newVelocity = new Vec3(horizontalVelocity.x, verticalVelocity, horizontalVelocity.z);
+        siege.setTrackedYaw(yaw);
+        siege.setYRot(yaw);
+        siege.setYHeadRot(yaw);
+        siege.setYBodyRot(yaw);
+        siege.lastRiderYaw = yaw;
 
-        abstractSiegeEntity.setDeltaMovement(newVelocity);
+        float pitch = passenger instanceof Player player ? player.getXRot() : 0;
 
-        abstractSiegeEntity.move(MoverType.SELF, newVelocity);
-    }
+        siege.setTrackedPitch(pitch);
+        siege.lastRiderPitch = pitch;
 
-    private static Vec3 calculateMovementVector(double forward, double yaw) {
         double yawRad = Math.toRadians(yaw);
-        double x = -Math.sin(yawRad) * forward;
-        double z = Math.cos(yawRad) * forward;
-        return new Vec3(x, 0, z);
+
+        double sin = Math.sin(yawRad);
+        double cos = Math.cos(yawRad);
+
+        Vec3 offset = siege.getPassengerOffset(passenger);
+
+        double offsetX = cos * offset.x - (-sin) * offset.z;
+        double offsetZ = sin * offset.x - cos * offset.z;
+
+        double x = siege.getX() + offsetX;
+        double y = siege.getY() + offset.y;
+        double z = siege.getZ() + offsetZ;
+
+        moveFunction.accept(passenger, x, y, z);
+
+        if (!(passenger instanceof Player) && passenger.getFirstPassenger() == null) {
+            passenger.setYRot(yaw);
+            passenger.setYHeadRot(yaw);
+            passenger.setYBodyRot(yaw);
+        }
     }
 
-    public static void updateWheelRotation(AbstractSiegeEntity abstractSiegeEntity) {
-        Vec3 velocity = abstractSiegeEntity.getDeltaMovement();
 
-        float yawRadians = (float) Math.toRadians(abstractSiegeEntity.getVisualRotationYInDegrees());
-        Vec3 forward = new Vec3(-Math.sin(yawRadians), 0, Math.cos(yawRadians)).normalize();
+    public static void updateSiegeVelocity(AbstractSiegeEntity siege) {
+        double horizontalX = 0;
+        double horizontalZ = 0;
 
-        double directionalSpeed = -velocity.dot(forward);
+        if (siege.getCooldown() == 0) {
+            Entity passenger = siege.getFirstPassenger();
+            Player rider = null;
 
-        abstractSiegeEntity.wheelRotation += (float) (directionalSpeed * 72);
-        abstractSiegeEntity.wheelRotation %= 360f;
+            if (passenger instanceof Player player) {
+                rider = player;
+            } else if (passenger != null && passenger.getFirstPassenger() instanceof Player player) {
+                rider = player;
+            }
 
-        if (abstractSiegeEntity.wheelRotation < 0) {
-            abstractSiegeEntity.wheelRotation += 360f;
+            if (rider != null) {
+                double forward = rider.zza * siege.getVelocity(rider);
+
+                double yawRad = Math.toRadians(siege.getVisualRotationYInDegrees());
+
+                horizontalX = -Math.sin(yawRad) * forward;
+                horizontalZ = Math.cos(yawRad) * forward;
+            }
+        }
+
+        Vec3 velocity = siege.getDeltaMovement();
+
+        double verticalY = velocity.y - 0.08;
+
+        if (siege.onGround() && verticalY < 0) {
+            verticalY = 0;
+        }
+
+        Vec3 newVelocity = new Vec3(horizontalX, verticalY, horizontalZ);
+
+        siege.setDeltaMovement(newVelocity);
+        siege.move(MoverType.SELF, newVelocity);
+    }
+
+
+    public static void updateWheelRotation(AbstractSiegeEntity siege) {
+        Vec3 velocity = siege.getDeltaMovement();
+
+        double yawRad = Math.toRadians(siege.getVisualRotationYInDegrees());
+
+        double forwardX = -Math.sin(yawRad);
+        double forwardZ = Math.cos(yawRad);
+
+        double directionalSpeed =
+                -(velocity.x * forwardX + velocity.z * forwardZ);
+
+        siege.wheelRotation += (float) (directionalSpeed * 72);
+
+        siege.wheelRotation %= 360f;
+
+        if (siege.wheelRotation < 0) {
+            siege.wheelRotation += 360f;
         }
     }
 }

@@ -19,6 +19,7 @@ public class SCPayloads {
     public static ResourceLocation OUTLINE_CLAIM_PACKET_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "outline_claim_packet");
     public static ResourceLocation SIEGE_YAW_PITCH_S2C_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "siege_yaw_pitch_s2c");
     public static ResourceLocation LAND_CLIENT_DATA_S2C_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "land_client_data_s2c");
+    public static ResourceLocation DAMAGE_INDICATOR_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "damage_indicator_data_s2c");
 
     static {
         registerC2S(AttackC2SPacket.ID, AttackC2SPacket.CODEC);
@@ -32,6 +33,7 @@ public class SCPayloads {
         registerS2C(OutlineClaimS2CPacket.ID, OutlineClaimS2CPacket.CODEC);
         registerS2C(SiegeYawS2CPacket.ID, SiegeYawS2CPacket.CODEC);
         registerS2C(LandClientDataS2CPacket.ID, LandClientDataS2CPacket.CODEC);
+        registerS2C(DamageIndicatorS2CPacket.ID, DamageIndicatorS2CPacket.CODEC);
     }
 
     private static <T extends CustomPacketPayload> void registerS2C(CustomPacketPayload.Type<T> packetIdentifier, StreamCodec<RegistryFriendlyByteBuf, T> codec) {

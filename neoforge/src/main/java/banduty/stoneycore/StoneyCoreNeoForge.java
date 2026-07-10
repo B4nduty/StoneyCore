@@ -19,7 +19,7 @@ public class StoneyCoreNeoForge {
         StoneyCore.init();
         modContainer.registerConfig(ModConfig.Type.COMMON, SCConfigs.SPEC);
         modContainer.registerConfig(ModConfig.Type.CLIENT, SCVisualConfigs.SPEC);
-
+       
         NeoForgePlatformHelper.registerRegistries(modEventBus);
         modEventBus.addListener(StoneyCoreNeoForge::addItemsToCreativeTabs);
 

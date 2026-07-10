@@ -7,6 +7,7 @@ import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.lands.util.Land;
 import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.util.EntityDamageUtil;
 import banduty.stoneycore.util.WeightUtil;
@@ -366,11 +367,18 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
     @Inject(method = "actuallyHurt", at = @At("TAIL"))
     private void stoneycore$sendDamage(DamageSource source, float amount, CallbackInfo ci) {
-        if (StoneyCore.getConfig().visualOptions().getDamageIndicator() && source.getEntity() instanceof Player player) {
-            ItemStack mainHandStack = player.getMainHandItem();
-            if (WeaponDefinitionsStorage.isMelee(mainHandStack.getItem()) && !player.hasEffect(MobEffects.WEAKNESS)) {
-                if (amount <= 0) amount = 0;
-                player.displayClientMessage(Component.literal("Damage: " + (int) amount), true);
+
+        if (source.getEntity() instanceof Player player) {
+
+            ItemStack stack = player.getMainHandItem();
+
+            if (WeaponDefinitionsStorage.isMelee(stack.getItem())
+                    && !player.hasEffect(MobEffects.WEAKNESS)) {
+
+                Services.CONFIG.sendDamageIndicator(
+                        (ServerPlayer) player,
+                        amount
+                );
             }
         }
     }
