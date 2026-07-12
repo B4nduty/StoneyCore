@@ -19,16 +19,15 @@ import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.servertick.AttackSpeedHelper;
-import net.minecraft.core.BlockPos;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.damagesource.CombatRules;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -44,10 +43,8 @@ import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -58,9 +55,6 @@ import java.util.Optional;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements IEntityDataSaver {
-    @Shadow
-    protected abstract void checkFallDamage(double heightDifference, boolean onGround, BlockState state, BlockPos landedPosition);
-
     @Unique
     private CompoundTag stoneyCore$persistentData;
 
@@ -309,52 +303,54 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         ci.cancel();
     }
 
-    @Inject(method = "getDamageAfterArmorAbsorb", at = @At("HEAD"), cancellable = true)
-    private void stoneycore$getDamageAfterArmorAbsorb(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
-        if (source.is(DamageTypeTags.BYPASSES_ARMOR)) return;
+    @WrapOperation(
+            method = "doHurtEquipment",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/item/ItemStack;hurtAndBreak(ILnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;)V"
+            )
+    )
+    private void stoneycore$modifyHurtAndBreak(ItemStack itemStack, int amount, LivingEntity entity, EquipmentSlot equipmentSlot, Operation<Void> original) {
         LivingEntity livingEntity = (LivingEntity) (Object) this;
-        amount = CombatRules.getDamageAfterAbsorb(livingEntity, amount, source, (float) livingEntity.getArmorValue(), (float) livingEntity.getAttributeValue(Attributes.ARMOR_TOUGHNESS));
-        int durabilityDamage = Math.max(1, (int) Math.ceil(amount));
-        for (ItemStack armorStack : livingEntity.getArmorSlots()) {
-            if (armorStack.isEmpty()) continue;
+        int durabilityDamage = Math.max(1, amount);
+        if (itemStack.isEmpty()) return;
 
-            if (!(armorStack.getItem() instanceof SCUnderArmor scUnderArmor)) continue;
+        if (!(itemStack.getItem() instanceof SCUnderArmor scUnderArmor)) {
+            original.call(itemStack, amount, entity, equipmentSlot);
+            return;
+        }
 
-            ArmorItem.Type slot = scUnderArmor.getType();
-            boolean slotProtected = false;
+        ArmorItem.Type slot = scUnderArmor.getType();
+        boolean slotProtected;
 
-            UnderArmorContents contents = armorStack.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
+        UnderArmorContents contents = itemStack.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
 
-            if (!contents.isEmpty()) {
-                UnderArmorContents.Mutable mutableContents = new UnderArmorContents.Mutable(contents);
+        if (!contents.isEmpty()) {
+            UnderArmorContents.Mutable mutableContents = new UnderArmorContents.Mutable(contents);
 
-                slotProtected = mutableContents.damageAttachment(slot, durabilityDamage, livingEntity);
+            slotProtected = mutableContents.damageAttachment(slot, durabilityDamage, livingEntity);
 
-                if (slotProtected) {
-                    UnderArmorContents newContents = mutableContents.toImmutable();
+            if (slotProtected) {
+                UnderArmorContents newContents = mutableContents.toImmutable();
 
-                    if (newContents.isEmpty()) {
-                        armorStack.remove(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
-                    } else {
-                        armorStack.set(
-                                SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
-                                newContents
-                        );
-                    }
+                if (newContents.isEmpty()) {
+                    itemStack.remove(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
+                } else {
+                    itemStack.set(
+                            SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
+                            newContents
+                    );
+                }
 
-                    if (armorStack.getItem() instanceof SCUnderArmor underArmor) {
-                        underArmor.rebuildAttachmentAttributes(armorStack);
-                    }
+                if (itemStack.getItem() instanceof SCUnderArmor underArmor) {
+                    underArmor.rebuildAttachmentAttributes(itemStack);
                 }
             }
 
             if (!slotProtected) {
-                armorStack.hurtAndBreak(durabilityDamage, livingEntity, slot.getSlot());
+                original.call(itemStack, amount, entity, equipmentSlot);
             }
         }
-
-        cir.setReturnValue(amount);
-        cir.cancel();
     }
 
     @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
