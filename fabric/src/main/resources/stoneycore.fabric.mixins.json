@@ -7,6 +7,7 @@
   "mixins": [
     "FabricItemMixin",
     "FItemEntityMixin",
+    "FLivingEntityMixin",
     "FPlayerMixin"
   ],
   "client": [
