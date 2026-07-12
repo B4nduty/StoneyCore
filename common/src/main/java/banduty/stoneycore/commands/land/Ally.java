@@ -16,6 +16,7 @@ import static net.minecraft.commands.Commands.literal;
 public class Ally {
     public static LiteralArgumentBuilder<CommandSourceStack> registerAlly() {
         return literal("ally")
+                .requires(src -> src.hasPermission(2))
                 .then(argument("owner", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
                             ServerLevel serverLevel = ctx.getSource().getLevel();

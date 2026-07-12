@@ -2,7 +2,11 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.lands.util.LandState;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -19,16 +23,30 @@ public class PlayerNameTagHandler {
         var playerId = player.getUUID();
 
         // Find the first land where player is owner or ally
-        var landTag = LandState.get(serverLevel).getAllLands().stream()
+        var landOpt = LandState.get(serverLevel).getAllLands().stream()
                 .filter(land -> land.getOwnerUUID().equals(playerId) || land.isAlly(playerId))
-                .findFirst()
-                .map(land -> land.getLandTag(serverLevel))
-                .orElse(null);
+                .findFirst();
 
-        if (landTag != null) {
-            // Append land tag to player name
-            String formattedName = player.getName().getString() + " " + landTag.getString();
-            event.setDisplayname(Component.literal(formattedName));
+        if (landOpt.isPresent()) {
+            var land = landOpt.get();
+            MutableComponent finalDisplayName = Component.empty();
+
+            finalDisplayName.append(land.getLandTag(serverLevel)).append(" ");
+
+            String titleName = land.getPlayerTitle(playerId);
+            if (titleName != null && !titleName.isBlank()) {
+                Integer colorInt = land.getTitles().get(titleName);
+                TextColor color = colorInt != null ? TextColor.fromRgb(colorInt) : TextColor.fromLegacyFormat(ChatFormatting.WHITE);
+
+                Component titleComponent = Component.literal("[" + titleName + "]")
+                        .setStyle(Style.EMPTY.withColor(color));
+
+                finalDisplayName.append(titleComponent).append(" ");
+            }
+
+            finalDisplayName.append(event.getUsername());
+
+            event.setDisplayname(finalDisplayName);
         }
     }
 }

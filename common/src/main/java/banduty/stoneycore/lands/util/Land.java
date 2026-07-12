@@ -30,6 +30,8 @@ public class Land {
     private final LandType landType;
     private final Set<UUID> allies = new HashSet<>();
     private final LongSet claimed = new LongOpenHashSet();
+    private final Map<String, Integer> customTitles = new HashMap<>();
+    private final Map<UUID, String> playerTitles = new HashMap<>();
 
     public Land(UUID owner, BlockPos coreBlock, int radius, LandType landType, String name, int maxAllies) {
         this.owner = owner;
@@ -297,6 +299,14 @@ public class Land {
 
         nbt.putString("LandType", landType.id().toString());
 
+        CompoundTag titlesTag = new CompoundTag();
+        customTitles.forEach(titlesTag::putInt);
+        nbt.put("CustomTitles", titlesTag);
+
+        CompoundTag playerTitlesTag = new CompoundTag();
+        playerTitles.forEach((uuid, title) -> playerTitlesTag.putString(uuid.toString(), title));
+        nbt.put("PlayerTitles", playerTitlesTag);
+
         return nbt;
     }
 
@@ -330,6 +340,22 @@ public class Land {
             }
         }
 
+        if (nbt.contains("CustomTitles", Tag.TAG_COMPOUND)) {
+            CompoundTag titlesTag = nbt.getCompound("CustomTitles");
+            for (String key : titlesTag.getAllKeys()) {
+                k.customTitles.put(key, titlesTag.getInt(key));
+            }
+        }
+
+        if (nbt.contains("PlayerTitles", Tag.TAG_COMPOUND)) {
+            CompoundTag playerTitlesTag = nbt.getCompound("PlayerTitles");
+            for (String key : playerTitlesTag.getAllKeys()) {
+                try {
+                    k.playerTitles.put(UUID.fromString(key), playerTitlesTag.getString(key));
+                } catch (IllegalArgumentException ignored) {}
+            }
+        }
+
         return k;
     }
 
@@ -345,7 +371,36 @@ public class Land {
     public void recalculateClaims(ServerLevel serverLevel) {
         clearClaims(serverLevel);
 
-        // Re-run claim worker using current radius
         initializeClaim(serverLevel, this.radius, Services.PLATFORM.getClaimTasks());
+    }
+
+    public Map<String, Integer> getTitles() {
+        return this.customTitles;
+    }
+
+    public void createTitle(String titleName, Integer color) {
+        this.customTitles.put(titleName, color);
+    }
+
+    public void assignTitleToPlayer(UUID playerUuid, String titleName) {
+        this.playerTitles.put(playerUuid, titleName);
+    }
+
+    public void removeTitleFromPlayer(UUID playerUuid) {
+        this.playerTitles.remove(playerUuid);
+    }
+
+    public String getPlayerTitle(UUID playerUuid) {
+        return this.playerTitles.getOrDefault(playerUuid, "");
+    }
+
+    public List<UUID> getPlayersWithTitle(String titleName) {
+        List<UUID> matches = new ArrayList<>();
+        for (Map.Entry<UUID, String> entry : playerTitles.entrySet()) {
+            if (entry.getValue().equals(titleName)) {
+                matches.add(entry.getKey());
+            }
+        }
+        return matches;
     }
 }

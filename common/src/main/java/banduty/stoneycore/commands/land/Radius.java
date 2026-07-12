@@ -21,6 +21,7 @@ import static net.minecraft.commands.Commands.literal;
 public class Radius {
     public static LiteralArgumentBuilder<CommandSourceStack> registerRadius() {
         return literal("radius")
+                .requires(src -> src.hasPermission(2))
                 .then(argument("owner", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
                             ServerLevel world = ctx.getSource().getLevel();

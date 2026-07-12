@@ -19,6 +19,7 @@ public class FabricSCCommandsHandler implements CommandRegistrationCallback {
                         .then(Name.registerName())
                         .then(TransferOwnership.registerTransferOwnership())
                         .then(SiegeCommand.registerSiege())
+                        .then(Title.registerTitle())
         );
     }
 }

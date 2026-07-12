@@ -20,6 +20,7 @@ public class Name {
 
     public static LiteralArgumentBuilder<CommandSourceStack> registerName() {
         return literal("name")
+                .requires(src -> src.hasPermission(2))
                 .then(argument("owner", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
                             ServerLevel world = ctx.getSource().getLevel();

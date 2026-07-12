@@ -20,6 +20,7 @@ public class TransferOwnership {
 
     public static LiteralArgumentBuilder<CommandSourceStack> registerTransferOwnership() {
         return literal("transferownership")
+                .requires(src -> src.hasPermission(2))
                 .then(argument("owner", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
                             ServerLevel serverLevel = ctx.getSource().getLevel();

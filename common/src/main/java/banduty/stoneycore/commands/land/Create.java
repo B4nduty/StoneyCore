@@ -26,6 +26,7 @@ import static net.minecraft.commands.Commands.literal;
 public class Create {
     public static LiteralArgumentBuilder<CommandSourceStack> registerCreate() {
         return literal("create")
+                .requires(src -> src.hasPermission(2))
                 .then(argument("landType", ResourceLocationArgument.id())
                         .suggests((ctx, builder) -> {
                             for (LandType type : LandTypeRegistry.getAll()) {

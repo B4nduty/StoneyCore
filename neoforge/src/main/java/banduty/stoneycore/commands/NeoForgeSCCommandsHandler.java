@@ -25,6 +25,7 @@ public class NeoForgeSCCommandsHandler {
                         .then(Name.registerName())
                         .then(TransferOwnership.registerTransferOwnership())
                         .then(SiegeCommand.registerSiege())
+                        .then(Title.registerTitle())
         );
     }
 }

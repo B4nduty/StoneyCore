@@ -22,6 +22,7 @@ import static net.minecraft.commands.Commands.literal;
 public class SiegeCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> registerSiege() {
         return literal("siege")
+                .requires(src -> src.hasPermission(2))
                 .then(literal("start")
                         .then(argument("owner", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
