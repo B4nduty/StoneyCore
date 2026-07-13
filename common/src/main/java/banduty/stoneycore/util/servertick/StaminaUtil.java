@@ -9,6 +9,7 @@ import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,7 +31,6 @@ public class StaminaUtil {
             if (currentStamina < maxStamina) {
                 StaminaData.setStamina(entity, maxStamina);
             }
-            removeStaminaEffects(entity);
             StaminaData.setStaminaBlocked((IEntityDataSaver) entity, false);
             StaminaData.setStaminaUseTime((IEntityDataSaver) entity, 0);
             return;
@@ -74,7 +74,17 @@ public class StaminaUtil {
                 "health", health
         ));
 
-        int recoveryRate = Math.max(1, (int) StoneyCore.getStrEq().evaluate(config.staminaRecoveryFormula(), vars));
+        Difficulty difficulty = entity.level().getDifficulty();
+
+        double difficultyMultiplier = switch (difficulty) {
+            case PEACEFUL -> 0.5; // 2x faster
+            case EASY -> 1.0;
+            case NORMAL -> 1.5;
+            case HARD -> 2.0; // 2x slower
+        };
+
+        int recoveryRate = Math.max(1, (int) (StoneyCore.getStrEq().evaluate(config.staminaRecoveryFormula(), vars) * difficultyMultiplier)
+        );
 
         if (entity.tickCount % recoveryRate != 0) return;
 
@@ -86,19 +96,24 @@ public class StaminaUtil {
 
     private static void handleStaminaEffects(LivingEntity entity, double currentStamina, double maxStamina) {
         IEntityDataSaver dataSaver = (IEntityDataSaver) entity;
-        double level1 = maxStamina * 0.3;
-        double level2 = maxStamina * 0.15;
 
-        if (currentStamina < level1 && currentStamina > level2) {
-            applyStaminaEffects(entity, 0, 0);
-        } else if (currentStamina <= 0) {
+        double level1 = maxStamina * 0.30;
+        double level2 = maxStamina * 0.20;
+        double level3 = maxStamina * 0.10;
+
+        if (currentStamina <= 0) {
             StaminaData.setStaminaBlocked(dataSaver, true);
             applyStaminaEffects(entity, 3, 3);
-        } else if (StaminaData.isStaminaBlocked(dataSaver) && currentStamina >= level2) {
+        } else if (currentStamina <= level3) {
+            applyStaminaEffects(entity, 2, 2);
+        } else if (currentStamina <= level2) {
+            applyStaminaEffects(entity, 1, 1);
+        } else if (currentStamina <= level1) {
+            applyStaminaEffects(entity, 0, 0);
+        }
+
+        if (StaminaData.isStaminaBlocked(dataSaver) && currentStamina >= level3) {
             StaminaData.setStaminaBlocked(dataSaver, false);
-            removeStaminaEffects(entity);
-        } else if (currentStamina >= level1) {
-            removeStaminaEffects(entity);
         }
     }
 
@@ -132,13 +147,8 @@ public class StaminaUtil {
     }
 
     private static void applyStaminaEffects(LivingEntity entity, int fatigueLevel, int slownessLevel) {
-        entity.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, -1, fatigueLevel, false, false, false));
-        entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, -1, slownessLevel, false, false, false));
-    }
-
-    private static void removeStaminaEffects(LivingEntity entity) {
-        entity.removeEffect(MobEffects.DIG_SLOWDOWN);
-        entity.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+        entity.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 20, fatigueLevel, false, false, false));
+        entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, slownessLevel, false, false, false));
     }
 
     private static boolean isSCWeapon(ItemStack stack) {

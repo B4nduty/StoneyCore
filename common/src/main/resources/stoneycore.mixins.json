@@ -21,6 +21,7 @@
     "PersistentProjectileEntityMixin",
     "PlayerDataMixin",
     "PlayerMixin",
+    "ServerPlayerMixin",
     "ShapelessRecipeAccessor",
     "SpawnHelperMixin",
     "VillagerMixin",

@@ -1,6 +1,7 @@
 package banduty.stoneycore.commands;
 
 import banduty.stoneycore.commands.land.*;
+import banduty.stoneycore.commands.stamina.StaminaCommand;
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandBuildContext;
@@ -21,5 +22,6 @@ public class FabricSCCommandsHandler implements CommandRegistrationCallback {
                         .then(SiegeCommand.registerSiege())
                         .then(Title.registerTitle())
         );
+        StaminaCommand.register(dispatcher);
     }
 }

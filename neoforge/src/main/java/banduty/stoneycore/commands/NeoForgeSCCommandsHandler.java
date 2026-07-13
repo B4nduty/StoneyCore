@@ -2,6 +2,7 @@ package banduty.stoneycore.commands;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.commands.land.*;
+import banduty.stoneycore.commands.stamina.StaminaCommand;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -27,5 +28,7 @@ public class NeoForgeSCCommandsHandler {
                         .then(SiegeCommand.registerSiege())
                         .then(Title.registerTitle())
         );
+
+        StaminaCommand.register(dispatcher);
     }
 }

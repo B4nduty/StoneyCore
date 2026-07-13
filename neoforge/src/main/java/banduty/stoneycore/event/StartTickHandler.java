@@ -36,11 +36,11 @@ public class StartTickHandler {
         processClaimTasks();
         VisitorTracker.tickCooldowns();
 
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+        /*for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (!player.isSpectator()) {
                 updatePlayerTick(player);
             }
-        }
+        }*/
 
         for (ServerLevel serverLevel : server.getAllLevels()) {
             checkAndRemoveBrokenLands(serverLevel);

@@ -2,7 +2,6 @@ package banduty.stoneycore.items.custom.hotiron;
 
 import banduty.stoneycore.client.MinecraftS4S;
 import banduty.stoneycore.items.SCItems;
-import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.util.data.itemdata.ItemStackHolder;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.core.BlockPos;
@@ -71,8 +70,7 @@ public class HotIron extends Item {
             igniteHotIron(stack, entity);
         }
 
-        if (!isHeldInTongs(entity)) {
-            entity.setSharedFlagOnFire(true);
+        if (entity instanceof Player player && isInPlayerInventory(player, stack)) {
             entity.setRemainingFireTicks(20);
         }
 
@@ -107,11 +105,17 @@ public class HotIron extends Item {
         }
     }
 
-    private static boolean isHeldInTongs(Entity entity) {
-        if (!(entity instanceof Player player)) return false;
+    private static boolean isInPlayerInventory(Player player, ItemStack stack) {
+        if (player.getMainHandItem() == stack) return true;
+        if (player.getOffhandItem() == stack) return true;
 
-        return Tongs.isHolding(player.getMainHandItem())
-                || Tongs.isHolding(player.getOffhandItem());
+        for (ItemStack invStack : player.getInventory().items) {
+            if (invStack == stack) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static void removeTargetStack(ItemStack stack) {
