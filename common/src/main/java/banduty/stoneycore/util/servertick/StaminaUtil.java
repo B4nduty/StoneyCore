@@ -9,7 +9,6 @@ import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
 import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
-import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -74,17 +73,7 @@ public class StaminaUtil {
                 "health", health
         ));
 
-        Difficulty difficulty = entity.level().getDifficulty();
-
-        double difficultyMultiplier = switch (difficulty) {
-            case PEACEFUL -> 0.5; // 2x faster
-            case EASY -> 1.0;
-            case NORMAL -> 1.5;
-            case HARD -> 2.0; // 2x slower
-        };
-
-        int recoveryRate = Math.max(1, (int) (StoneyCore.getStrEq().evaluate(config.staminaRecoveryFormula(), vars) * difficultyMultiplier)
-        );
+        int recoveryRate = Math.max(1, (int) StoneyCore.getStrEq().evaluate(config.staminaRecoveryFormula(), vars));
 
         if (entity.tickCount % recoveryRate != 0) return;
 
