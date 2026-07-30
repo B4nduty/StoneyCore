@@ -37,6 +37,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class CraftmanAnvilBlockEntity extends BlockEntity implements ImplementedInventory {
+
+    private static final int OUTPUT_SLOT = 0;
+    private static final int FIRST_INGREDIENT_SLOT = 1;
+
     protected final NonNullList<ItemStack> items;
     private int hitCount = 0;
     private UUID lastHitter = null;
@@ -44,7 +48,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
 
     public CraftmanAnvilBlockEntity(BlockPos pos, BlockState state) {
         super(SCBlocks.CRAFTMAN_ANVIL_BLOCK_ENTITY.get(), pos, state);
-        this.items = NonNullList.withSize(7, ItemStack.EMPTY);
+        this.items = NonNullList.withSize(FIRST_INGREDIENT_SLOT + CraftmanAnvilRecipe.GRID_SIZE, ItemStack.EMPTY);
     }
 
     protected final ContainerData data = new ContainerData() {
@@ -76,8 +80,8 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         if (level == null) return Optional.empty();
 
         AnvilInput input = new AnvilInput(
-                items.get(0), items.get(1), items.get(2),
-                items.get(3), items.get(4), items.get(5)  // Changed to slots 0-5
+                items.get(1), items.get(2), items.get(3),
+                items.get(4), items.get(5), items.get(6)
         );
 
         return level.getRecipeManager()
@@ -92,7 +96,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         if (level == null || level.isClientSide()) return;
 
         boolean hasItems = false;
-        for (int i = 0; i < 6; i++) {  // Check slots 0-5
+        for (int i = FIRST_INGREDIENT_SLOT; i < items.size(); i++) {
             if (!items.get(i).isEmpty()) {
                 hasItems = true;
                 break;
@@ -101,12 +105,10 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
 
         boolean currentRecipeValid = hasItems && getRecipe().isPresent();
 
-        // Transition: invalid → valid
         if (currentRecipeValid && !lastRecipeValid) {
             spawnParticles(ParticleTypes.HAPPY_VILLAGER, 10);
         }
 
-        // Transition: valid → invalid
         if (!currentRecipeValid && lastRecipeValid) {
             spawnParticles(new DustParticleOptions(new Vector3f(1.0f, 0.0f, 0.0f), 1.0f), 10);
         }
@@ -167,18 +169,18 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
 
         NonNullList<ItemStack> remainders = getRecipeReminder();
 
-        for (int i = 1; i < 7; i++) {
+        for (int i = FIRST_INGREDIENT_SLOT; i < items.size(); i++) {
             items.set(i, ItemStack.EMPTY);
         }
 
-        items.set(0, result);
+        items.set(OUTPUT_SLOT, result);
         lastRecipeValid = false;
 
         for (ItemStack remainder : remainders) {
             if (!remainder.isEmpty()) {
                 boolean added = false;
 
-                for (int j = 1; j < 7; j++) {
+                for (int j = FIRST_INGREDIENT_SLOT; j < items.size(); j++) {
                     if (!items.get(j).isEmpty() && ItemStack.isSameItemSameComponents(items.get(j), remainder)) {
                         int newCount = items.get(j).getCount() + remainder.getCount();
                         if (newCount <= items.get(j).getMaxStackSize()) {
@@ -190,7 +192,7 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
                 }
 
                 if (!added) {
-                    for (int j = 1; j < 7; j++) {
+                    for (int j = FIRST_INGREDIENT_SLOT; j < items.size(); j++) {
                         if (items.get(j).isEmpty()) {
                             items.set(j, remainder);
                             added = true;
@@ -215,10 +217,10 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
     }
 
     public NonNullList<ItemStack> getRecipeReminder() {
-        NonNullList<ItemStack> remainders = NonNullList.withSize(6, ItemStack.EMPTY);
+        NonNullList<ItemStack> remainders = NonNullList.withSize(CraftmanAnvilRecipe.GRID_SIZE, ItemStack.EMPTY);
 
-        for (int i = 0; i < 6; i++) {
-            ItemStack stack = items.get(i);
+        for (int i = 0; i < CraftmanAnvilRecipe.GRID_SIZE; i++) {
+            ItemStack stack = items.get(i + FIRST_INGREDIENT_SLOT);
             if (!stack.isEmpty()) {
                 ItemStack remainder = Services.PLATFORM.getCraftingRemainingItem(stack);
                 if (!remainder.isEmpty()) {
@@ -329,6 +331,31 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         return data;
     }
 
+    public boolean hasOutput() {
+        return !items.get(OUTPUT_SLOT).isEmpty();
+    }
+
+    public boolean takeOutput(Player player) {
+        if (level != null && level.isClientSide()) {
+            return false;
+        }
+
+        ItemStack output = items.get(OUTPUT_SLOT);
+        if (output.isEmpty()) {
+            return false;
+        }
+
+        ItemStack copy = output.copy();
+        if (!player.getInventory().add(copy)) {
+            player.drop(copy, false);
+        }
+
+        items.set(OUTPUT_SLOT, ItemStack.EMPTY);
+        setChanged();
+        checkAndSpawnRecipeParticles();
+        return true;
+    }
+
     public boolean addItem(ItemStack stack) {
         return addItem(stack, null);
     }
@@ -338,21 +365,36 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
             return false;
         }
 
+        for (int i = FIRST_INGREDIENT_SLOT; i < items.size(); i++) {
+            if (items.get(i).isEmpty()) {
+                return addItem(stack, player, i);
+            }
+        }
+
+        return false;
+    }
+
+    public boolean addItem(ItemStack stack, Player player, int targetSlot) {
+        if (level != null && level.isClientSide()) {
+            return false;
+        }
+
+        if (targetSlot < FIRST_INGREDIENT_SLOT || targetSlot >= items.size()) {
+            return false;
+        }
+
         hitCount = 0;
 
         boolean isIncomingManuscript = stack.getItem() instanceof Manuscript;
 
         if (isIncomingManuscript) {
-            // Look for existing manuscript in input slots (1-6)
-            for (int i = 1; i < 7; i++) {
+            for (int i = FIRST_INGREDIENT_SLOT; i < items.size(); i++) {
                 ItemStack existing = items.get(i);
 
                 if (!existing.isEmpty() && existing.getItem() instanceof Manuscript) {
-                    // Swap manuscripts
                     ItemStack old = existing.copy();
                     items.set(i, stack.split(1));
 
-                    // Give old one back to player (or drop if no player context)
                     if (player != null) {
                         if (!player.getInventory().add(old)) {
                             player.drop(old, false);
@@ -368,14 +410,11 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
             }
         }
 
-        // Add item to input slots (1-6) only
-        for (int i = 1; i < 7; i++) {
-            if (items.get(i).isEmpty()) {
-                items.set(i, stack.split(1));
-                setChanged();
-                checkAndSpawnRecipeParticles();
-                return true;
-            }
+        if (items.get(targetSlot).isEmpty()) {
+            items.set(targetSlot, stack.split(1));
+            setChanged();
+            checkAndSpawnRecipeParticles();
+            return true;
         }
 
         return false;
@@ -387,18 +426,16 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         hitCount = 0;
         boolean itemsRemoved = false;
 
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < items.size(); i++) {
             ItemStack stack = items.get(i);
             if (!stack.isEmpty() && stack.getCount() > 0) {
                 ItemStack copy = stack.copy();
-                // If invalid state OR normal removal → always allow extraction
                 if (!playerEntity.getInventory().add(copy)) {
                     playerEntity.drop(copy, false);
                 }
                 items.set(i, ItemStack.EMPTY);
                 itemsRemoved = true;
             } else {
-                // Clean up any ghost stacks with 0 count
                 items.set(i, ItemStack.EMPTY);
             }
         }
@@ -409,14 +446,13 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         }
     }
 
-    // Override WorldlyContainer methods for specific slot access if needed
     @Override
     public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction direction) {
-        return slot >= 1 && slot < 7; // Input slots 1-6
+        return slot >= FIRST_INGREDIENT_SLOT && slot < items.size();
     }
 
     @Override
     public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction direction) {
-        return slot == 0; // Output slot 0
+        return slot == OUTPUT_SLOT;
     }
 }

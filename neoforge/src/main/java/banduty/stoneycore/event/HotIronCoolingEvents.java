@@ -2,6 +2,7 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -95,7 +96,7 @@ public class HotIronCoolingEvents {
 
         int count = stack.getCount();
 
-        ItemStack target = HotIron.getTargetStack(stack);
+        ItemStack target = new ItemStack(ManuscriptType.getManuscriptItem(stack));
 
         ItemStack result;
 

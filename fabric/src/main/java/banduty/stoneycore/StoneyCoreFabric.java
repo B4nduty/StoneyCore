@@ -128,7 +128,6 @@ public class StoneyCoreFabric implements ModInitializer {
     private static void addItemsToToolsItemGroup(FabricItemGroupEntries entries) {
         entries.accept(SCItems.SMITHING_HAMMER.get());
         entries.accept(SCItems.TONGS.get());
-        entries.accept(SCItems.MANUSCRIPT.get());
     }
 
     private static void addItemsToIngredientItemGroup(FabricItemGroupEntries entries) {

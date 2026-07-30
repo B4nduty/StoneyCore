@@ -15,6 +15,7 @@ import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.model.*;
 import banduty.stoneycore.networking.SCS2CNetworking;
@@ -26,15 +27,13 @@ import banduty.stoneycore.platform.FabricHumanoidModelSetupAnimHelper;
 import banduty.stoneycore.platform.FabricKeyInputHelper;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.SCScreenHandlers;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.*;
 import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
@@ -68,19 +67,18 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                     (stack, world, entity, seed) ->
                             stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f ? 1.0F : 0.0F);
 
-            if (item instanceof HotIron hotIron) {
-                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "finished"),
-                        (stack, world, entity, seed) ->
-                                hotIron.isFinished(stack) ? 1.0F : 0.0F);
-            }
-
             if (item instanceof Tongs) {
                 ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "hotiron"),
+                        (stack, world, entity, seed) -> {
+                            ManuscriptType type = ManuscriptType.getManuscriptType(stack);
+                            return type != null && type.getHotIronItem() instanceof HotIron ? 1.0F : 0.0F;
+                        });
+            }
+
+            if (item instanceof HotIron && item != SCItems.HOT_IRON.get()) {
+                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"),
                         (stack, world, entity, seed) ->
-                                Tongs.getTargetStack(stack).getItem() instanceof HotIron ? 1.0F : 0.0F);
-                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "finished"),
-                        (stack, world, entity, seed) ->
-                                !(HotIron.getTargetStack(Tongs.getTargetStack(stack)).isEmpty()) ? 1.0F : 0.0F);
+                                !stack.getOrDefault(SCDataComponents.FINISHED.get(), false) ? 1.0F : 0.0F);
             }
         }
         ArmorRenderer.register(new CrownRenderer(), SCItems.CROWN.get());

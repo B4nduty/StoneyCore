@@ -2,19 +2,15 @@ package banduty.stoneycore.compat.jei;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.block.SCBlocks;
-import banduty.stoneycore.items.SCItems;
-import banduty.stoneycore.items.custom.manuscript.Manuscript;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
 import banduty.stoneycore.recipes.SCRecipes;
 import banduty.stoneycore.screen.BlueprintScreen;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.registration.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -38,13 +34,6 @@ public class StoneyCoreJEIPlugin implements IModPlugin {
 
     @Override
     public void registerItemSubtypes(ISubtypeRegistration registration) {
-        registration.registerSubtypeInterpreter(VanillaTypes.ITEM_STACK, SCItems.MANUSCRIPT.get(), (stack, context) -> {
-            ItemStack target = Manuscript.getTargetStack(stack);
-
-            if (target.isEmpty()) return "";
-
-            return BuiltInRegistries.ITEM.getKey(target.getItem()).toString();
-        });
     }
 
     @Override

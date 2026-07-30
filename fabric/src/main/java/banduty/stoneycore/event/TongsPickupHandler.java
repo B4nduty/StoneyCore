@@ -2,6 +2,7 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.event.custom.PlayerPickupCallback;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -21,9 +22,9 @@ public class TongsPickupHandler {
             ItemStack offHand = player.getOffhandItem();
 
             // Check main hand for empty tongs
-            if (mainHand.getItem() instanceof Tongs && !Tongs.hasTargetStack(mainHand)) {
+            if (mainHand.getItem() instanceof Tongs && !ManuscriptType.hasManuscriptType(mainHand)) {
                 // Store the hot iron in the tongs
-                Tongs.setTargetStack(mainHand, pickedStack.copyWithCount(1));
+                ManuscriptType.setManuscriptType(mainHand, ManuscriptType.getManuscriptType(pickedStack.copyWithCount(1)));
 
                 // Remove the picked item from the world
                 itemEntity.discard();
@@ -36,9 +37,9 @@ public class TongsPickupHandler {
             }
 
             // Check off hand for empty tongs
-            if (offHand.getItem() instanceof Tongs && !Tongs.hasTargetStack(offHand)) {
+            if (offHand.getItem() instanceof Tongs && !ManuscriptType.hasManuscriptType(offHand)) {
                 // Store the hot iron in the tongs
-                Tongs.setTargetStack(offHand, pickedStack.copyWithCount(1));
+                ManuscriptType.setManuscriptType(offHand, ManuscriptType.getManuscriptType(pickedStack.copyWithCount(1)));
 
                 // Remove the picked item from the world
                 itemEntity.discard();

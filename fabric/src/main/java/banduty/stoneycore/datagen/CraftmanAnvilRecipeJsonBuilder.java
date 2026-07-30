@@ -19,7 +19,13 @@ import java.util.*;
 
 public class CraftmanAnvilRecipeJsonBuilder implements RecipeBuilder {
     private final ItemStack result;
+
     private final List<StackIngredient> ingredients = new ArrayList<>();
+
+    @Nullable
+    private List<String> pattern;
+    private final Map<String, StackIngredient> key = new LinkedHashMap<>();
+
     private int hitTimes = 3;
     private float chance = 1.0f;
     private final Map<String, Criterion<?>> criteria = new LinkedHashMap<>();
@@ -41,6 +47,45 @@ public class CraftmanAnvilRecipeJsonBuilder implements RecipeBuilder {
 
     public CraftmanAnvilRecipeJsonBuilder requires(TagKey<Item> tag, int count) {
         this.ingredients.add(new StackIngredient(ItemStack.EMPTY, Optional.of(tag)));
+        return this;
+    }
+
+    public CraftmanAnvilRecipeJsonBuilder requiresFinished(ItemStack stack) {
+        this.ingredients.add(new StackIngredient(stack, Optional.empty(), StackIngredient.FinishedRequirement.FINISHED));
+        return this;
+    }
+
+    public CraftmanAnvilRecipeJsonBuilder requiresUnfinished(ItemStack stack) {
+        this.ingredients.add(new StackIngredient(stack, Optional.empty(), StackIngredient.FinishedRequirement.NOT_FINISHED));
+        return this;
+    }
+
+    public CraftmanAnvilRecipeJsonBuilder pattern(String... rows) {
+        this.pattern = List.of(rows);
+        return this;
+    }
+
+    public CraftmanAnvilRecipeJsonBuilder define(char symbol, ItemStack stack) {
+        this.key.put(String.valueOf(symbol), new StackIngredient(stack, Optional.empty()));
+        return this;
+    }
+
+    public CraftmanAnvilRecipeJsonBuilder defineFinished(char symbol, ItemStack stack) {
+        this.key.put(String.valueOf(symbol), new StackIngredient(stack, Optional.empty(), StackIngredient.FinishedRequirement.FINISHED));
+        return this;
+    }
+
+    public CraftmanAnvilRecipeJsonBuilder defineUnfinished(char symbol, ItemStack stack) {
+        this.key.put(String.valueOf(symbol), new StackIngredient(stack, Optional.empty(), StackIngredient.FinishedRequirement.NOT_FINISHED));
+        return this;
+    }
+
+    public CraftmanAnvilRecipeJsonBuilder define(char symbol, Item item) {
+        return define(symbol, new ItemStack(item));
+    }
+
+    public CraftmanAnvilRecipeJsonBuilder define(char symbol, TagKey<Item> tag) {
+        this.key.put(String.valueOf(symbol), new StackIngredient(ItemStack.EMPTY, Optional.of(tag)));
         return this;
     }
 
@@ -73,6 +118,10 @@ public class CraftmanAnvilRecipeJsonBuilder implements RecipeBuilder {
 
     @Override
     public void save(RecipeOutput recipeOutput, ResourceLocation id) {
+        if (this.pattern != null && !this.ingredients.isEmpty()) {
+            throw new IllegalStateException("Craftman's Anvil recipe " + id + " mixes pattern(...) with requires(...) - use one or the other");
+        }
+
         Advancement.Builder advancementBuilder = recipeOutput.advancement()
                 .addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(id))
                 .rewards(AdvancementRewards.Builder.recipe(id))
@@ -80,12 +129,14 @@ public class CraftmanAnvilRecipeJsonBuilder implements RecipeBuilder {
 
         this.criteria.forEach(advancementBuilder::addCriterion);
 
-        CraftmanAnvilRecipe recipe = new CraftmanAnvilRecipe(
-                List.copyOf(this.ingredients),
-                this.result,
-                this.hitTimes,
-                this.chance
-        );
+        CraftmanAnvilRecipe recipe;
+
+        if (this.pattern != null) {
+            CraftmanAnvilRecipe.ShapedPattern shapedPattern = CraftmanAnvilRecipe.createPattern(this.pattern, this.key);
+            recipe = new CraftmanAnvilRecipe(Optional.of(shapedPattern), List.of(), this.result, this.hitTimes, this.chance);
+        } else {
+            recipe = new CraftmanAnvilRecipe(Optional.empty(), List.copyOf(this.ingredients), this.result, this.hitTimes, this.chance);
+        }
 
         recipeOutput.accept(id, recipe, advancementBuilder.build(id.withPrefix("recipes/")));
     }

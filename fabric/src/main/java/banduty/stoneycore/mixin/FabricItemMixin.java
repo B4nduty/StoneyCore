@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public interface FabricItemMixin {
     @Inject(method = "getRecipeRemainder", at = @At("HEAD"), cancellable = true)
     private void stoneycore$getRecipeRemainder(ItemStack stack, CallbackInfoReturnable<ItemStack> cir) {
-        if (stack.getItem() == SCItems.MANUSCRIPT) { cir.setReturnValue(stack); return; }
         if (stack.getItem() == SCItems.TONGS) { cir.setReturnValue(stack); return; }
         if (stack.getItem() == SCItems.SMITHING_HAMMER) {
             ItemStack newStack = stack.copy();

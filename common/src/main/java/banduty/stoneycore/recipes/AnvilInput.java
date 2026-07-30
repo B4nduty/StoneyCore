@@ -5,7 +5,7 @@ import net.minecraft.world.item.crafting.RecipeInput;
 import org.jetbrains.annotations.NotNull;
 
 public record AnvilInput(ItemStack slot0, ItemStack slot1, ItemStack slot2,
-        ItemStack slot3, ItemStack slot4, ItemStack slot5) implements RecipeInput {
+                         ItemStack slot3, ItemStack slot4, ItemStack slot5) implements RecipeInput {
 
     @Override
     public @NotNull ItemStack getItem(int index) {

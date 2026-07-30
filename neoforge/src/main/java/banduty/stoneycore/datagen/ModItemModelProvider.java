@@ -22,7 +22,6 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(SCItems.SMITHING_HAMMER.get());
         simpleItem(SCItems.BLACK_POWDER.get());
         simpleItem(SCItems.CROWN.get());
-        simpleItem(SCItems.MANUSCRIPT.get());
 
         createTongsModel();
         createHotIronModel();

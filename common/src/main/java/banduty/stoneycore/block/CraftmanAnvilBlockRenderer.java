@@ -1,10 +1,14 @@
 package banduty.stoneycore.block;
 
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -22,15 +26,34 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
 public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanAnvilBlockEntity> {
+
+    private static final RenderType SLOT_HIGHLIGHT = new RenderType(
+            "stoneycore_slot_highlight",
+            DefaultVertexFormat.POSITION_COLOR,
+            VertexFormat.Mode.QUADS,
+            256,
+            false, // affectsCrumbling
+            true,  // sortOnUpload - translucent geometry, so sort it
+            () -> {
+                RenderSystem.setShader(GameRenderer::getPositionColorShader);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                RenderSystem.disableCull();
+            },
+            () -> {
+                RenderSystem.disableBlend();
+                RenderSystem.enableCull();
+            }
+    ) {};
 
     public CraftmanAnvilBlockRenderer(BlockEntityRendererProvider.Context context) {
 
@@ -45,111 +68,195 @@ public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanA
         BlockState blockState = entity.getBlockState();
         Direction facing = blockState.getValue(CraftmanAnvilBlock.FACING);
 
-        // Create a combined list with both input and output slots
-        List<ItemStack> allItems = new ArrayList<>();
-        List<Integer> allSlotIndices = new ArrayList<>();
-
-        // Add output slot (index 0) - treat it as part of the grid
         ItemStack outputStack = itemStacks.getFirst();
-        if (!outputStack.isEmpty()) {
-            allItems.add(outputStack);
-            allSlotIndices.add(0);
-        }
+        boolean outputPending = !outputStack.isEmpty();
 
-        // Add input slots (indices 1-6)
-        for (int i = 1; i < itemStacks.size(); i++) {
-            ItemStack stack = itemStacks.get(i);
-            if (!stack.isEmpty()) {
-                allItems.add(stack);
-                allSlotIndices.add(i);
+        if (outputPending) {
+            renderItemInSlot(entity, outputStack, 0, facing, poseStack, vertexConsumers, itemRenderer);
+        } else {
+            for (int i = 1; i < itemStacks.size(); i++) {
+                ItemStack stack = itemStacks.get(i);
+                if (!stack.isEmpty()) {
+                    renderItemInSlot(entity, stack, i, facing, poseStack, vertexConsumers, itemRenderer);
+                }
+            }
+
+            Optional<RecipeHolder<CraftmanAnvilRecipe>> recipe = entity.getRecipe();
+            recipe.ifPresent(anvilRecipe -> renderHitSquares(entity, poseStack, vertexConsumers, recipe.get().value().hitTimes(), facing));
+
+            if (isPlayerLookingAt(entity)) {
+                renderEmptySlotIndicators(entity, itemStacks, facing, poseStack, vertexConsumers);
             }
         }
-
-        // Render all items using the same rendering logic
-        renderItems(entity, allItems, allSlotIndices, facing, poseStack, vertexConsumers, itemRenderer);
-
-        Optional<RecipeHolder<CraftmanAnvilRecipe>> recipe = entity.getRecipe();
-        recipe.ifPresent(anvilRecipe -> renderHitSquares(entity, poseStack, vertexConsumers, recipe.get().value().hitTimes(), facing));
     }
 
-    private void renderItems(CraftmanAnvilBlockEntity entity, List<ItemStack> itemsToRender,
-                             List<Integer> slotIndices, Direction facing, PoseStack poseStack,
-                             MultiBufferSource vertexConsumers, ItemRenderer itemRenderer) {
-        // If no items to render, return early
-        if (itemsToRender.isEmpty()) return;
+    private boolean isPlayerLookingAt(CraftmanAnvilBlockEntity entity) {
+        HitResult hitResult = Minecraft.getInstance().hitResult;
+        return hitResult instanceof BlockHitResult blockHitResult
+                && blockHitResult.getType() == HitResult.Type.BLOCK
+                && blockHitResult.getBlockPos().equals(entity.getBlockPos());
+    }
 
-        int itemCount = itemsToRender.size();
+    private static final float EMPTY_SLOT_BOX_COLOR_R = 0.25f;
+    private static final float EMPTY_SLOT_BOX_COLOR_G = 0.45f;
+    private static final float EMPTY_SLOT_BOX_COLOR_B = 1.0f;
+    private static final float EMPTY_SLOT_BOX_ALPHA = 0.35f;
 
-        // Fixed 2 rows, 3 columns max
-        int maxCols = 3;
-        int maxRows = 2;
+    private void renderEmptySlotIndicators(CraftmanAnvilBlockEntity entity, NonNullList<ItemStack> itemStacks,
+                                           Direction facing, PoseStack poseStack, MultiBufferSource vertexConsumers) {
+        VertexConsumer bufferBuilder = vertexConsumers.getBuffer(SLOT_HIGHLIGHT);
 
+        for (int slotIndex = 1; slotIndex < itemStacks.size(); slotIndex++) {
+            if (!itemStacks.get(slotIndex).isEmpty()) continue;
+            renderEmptySlotBox(bufferBuilder, slotIndex, facing, poseStack);
+        }
+    }
+
+    private void renderEmptySlotBox(VertexConsumer bufferBuilder, int slotIndex, Direction facing, PoseStack poseStack) {
         float spacingX = 0.3f;
         float spacingZ = 0.24f;
 
-        // Render each item
-        for (int idx = 0; idx < itemCount; idx++) {
-            ItemStack itemStack = itemsToRender.get(idx);
-            int originalSlot = slotIndices.get(idx);
+        int gridIndex = slotIndex - 1;
+        int row = gridIndex / CraftmanAnvilRecipe.GRID_WIDTH;
+        int col = gridIndex % CraftmanAnvilRecipe.GRID_WIDTH;
 
-            poseStack.pushPose();
+        float xOffset = (col - (CraftmanAnvilRecipe.GRID_WIDTH - 1) / 2.0f) * spacingX;
+        float zOffset = (row - (CraftmanAnvilRecipe.GRID_HEIGHT - 1) / 2.0f) * spacingZ;
 
-            // Base position on the anvil
-            poseStack.translate(0.5f, 0.66f, 0.5f);
+        poseStack.pushPose();
 
-            // Apply facing rotation
-            switch (facing) {
-                case NORTH -> poseStack.translate(-0.1f, 0f, 0f);
-                case SOUTH -> {
-                    poseStack.mulPose(Axis.YP.rotationDegrees(180));
-                    poseStack.translate(-0.1f, 0f, 0f);
-                }
-                case WEST -> {
-                    poseStack.mulPose(Axis.YP.rotationDegrees(90));
-                    poseStack.translate(-0.1f, 0f, 0f);
-                }
-                case EAST -> {
-                    poseStack.mulPose(Axis.YP.rotationDegrees(270));
-                    poseStack.translate(-0.1f, 0f, 0f);
-                }
+        // Base position on the anvil surface.
+        poseStack.translate(0.5f, 0.63f, 0.5f);
+
+        switch (facing) {
+            case NORTH -> poseStack.translate(-0.1f, 0f, 0f);
+            case SOUTH -> {
+                poseStack.mulPose(Axis.YP.rotationDegrees(180));
+                poseStack.translate(-0.1f, 0f, 0f);
             }
-
-            // Calculate position in 2x3 grid
-            int row = idx / maxCols;
-            int col = idx % maxCols;
-
-            // Get the actual number of items in this row
-            int itemsInCurrentRow = Math.min(maxCols, itemCount - (row * maxCols));
-
-            // Calculate the number of rows actually used
-            int usedRows = (int) Math.ceil(itemCount / (double) maxCols);
-
-            // Center the grid horizontally and vertically
-            float xOffset = (col - (itemsInCurrentRow - 1) / 2.0f) * spacingX;
-            float zOffset = (row - (usedRows - 1) / 2.0f) * spacingZ;
-
-            poseStack.translate(xOffset, 0f, zOffset);
-
-            // Random rotation for variety (but consistent per slot)
-            long seed = (long) BuiltInRegistries.ITEM.getKey(itemStack.getItem()).hashCode() + originalSlot * 37L;
-            Random rand = new Random(seed);
-
-            float offsetX = -0.06f + rand.nextFloat() * 0.12f;
-            float offsetZ = -0.02f + rand.nextFloat() * 0.04f;
-            float rotY = -50f + rand.nextFloat() * 100f;
-
-            poseStack.translate(offsetX, 0f, offsetZ);
-            poseStack.mulPose(Axis.YP.rotationDegrees(rotY));
-
-            // Same scale for all items
-            poseStack.scale(0.25f, 0.25f, 0.25f);
-
-            poseStack.mulPose(Axis.XP.rotationDegrees(270));
-
-            itemRenderer.renderStatic(itemStack, ItemDisplayContext.GUI, getLightLevel(entity.getLevel(),
-                    entity.getBlockPos()), OverlayTexture.NO_OVERLAY, poseStack, vertexConsumers, entity.getLevel(), 1);
-            poseStack.popPose();
+            case WEST -> {
+                poseStack.mulPose(Axis.YP.rotationDegrees(90));
+                poseStack.translate(-0.1f, 0f, 0f);
+            }
+            case EAST -> {
+                poseStack.mulPose(Axis.YP.rotationDegrees(270));
+                poseStack.translate(-0.1f, 0f, 0f);
+            }
         }
+
+        poseStack.translate(xOffset, 0f, zOffset);
+
+        float halfWidth = 0.06f;
+        float height = 0.05f;
+        float halfDepth = 0.06f;
+
+        renderBox(bufferBuilder, poseStack.last().pose(), poseStack.last().normal(),
+                -halfWidth, 0f, -halfDepth, halfWidth, height, halfDepth,
+                EMPTY_SLOT_BOX_COLOR_R, EMPTY_SLOT_BOX_COLOR_G, EMPTY_SLOT_BOX_COLOR_B, EMPTY_SLOT_BOX_ALPHA);
+
+        poseStack.popPose();
+    }
+
+    private void renderBox(VertexConsumer bufferBuilder, Matrix4f matrix, Matrix3f normalMatrix,
+                           float minX, float minY, float minZ, float maxX, float maxY, float maxZ,
+                           float r, float g, float b, float a) {
+        // -X face
+        addQuad(bufferBuilder, matrix,
+                minX, minY, maxZ, minX, maxY, maxZ, minX, maxY, minZ, minX, minY, minZ, r, g, b, a);
+        // +X face
+        addQuad(bufferBuilder, matrix,
+                maxX, minY, minZ, maxX, maxY, minZ, maxX, maxY, maxZ, maxX, minY, maxZ, r, g, b, a);
+        // -Y face (bottom)
+        addQuad(bufferBuilder, matrix,
+                maxX, minY, minZ, maxX, minY, maxZ, minX, minY, maxZ, minX, minY, minZ, r, g, b, a);
+        // +Y face (top)
+        addQuad(bufferBuilder, matrix,
+                maxX, maxY, maxZ, maxX, maxY, minZ, minX, maxY, minZ, minX, maxY, maxZ, r, g, b, a);
+        // -Z face
+        addQuad(bufferBuilder, matrix,
+                minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ, maxX, minY, minZ, r, g, b, a);
+        // +Z face
+        addQuad(bufferBuilder, matrix,
+                maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ, minX, minY, maxZ, r, g, b, a);
+    }
+
+    private void addQuad(VertexConsumer bufferBuilder, Matrix4f matrix,
+                         float x1, float y1, float z1,
+                         float x2, float y2, float z2,
+                         float x3, float y3, float z3,
+                         float x4, float y4, float z4,
+                         float r, float g, float b, float a) {
+        bufferBuilder.addVertex(matrix, x1, y1, z1).setColor(r, g, b, a);
+        bufferBuilder.addVertex(matrix, x2, y2, z2).setColor(r, g, b, a);
+        bufferBuilder.addVertex(matrix, x3, y3, z3).setColor(r, g, b, a);
+        bufferBuilder.addVertex(matrix, x4, y4, z4).setColor(r, g, b, a);
+    }
+
+    private void renderItemInSlot(CraftmanAnvilBlockEntity entity, ItemStack itemStack, int slotIndex,
+                                  Direction facing, PoseStack poseStack,
+                                  MultiBufferSource vertexConsumers, ItemRenderer itemRenderer) {
+        float spacingX = 0.3f;
+        float spacingZ = 0.24f;
+
+        float xOffset;
+        float zOffset;
+
+        if (slotIndex == 0) {
+            // Output slot - sits in the middle of the ingredient grid.
+            xOffset = 0f;
+            zOffset = 0f;
+        } else {
+            int gridIndex = slotIndex - 1;
+            int row = gridIndex / CraftmanAnvilRecipe.GRID_WIDTH;
+            int col = gridIndex % CraftmanAnvilRecipe.GRID_WIDTH;
+
+            xOffset = (col - (CraftmanAnvilRecipe.GRID_WIDTH - 1) / 2.0f) * spacingX;
+            zOffset = (row - (CraftmanAnvilRecipe.GRID_HEIGHT - 1) / 2.0f) * spacingZ;
+        }
+
+        poseStack.pushPose();
+
+        // Base position on the anvil
+        poseStack.translate(0.5f, 0.66f, 0.5f);
+
+        // Apply facing rotation
+        switch (facing) {
+            case NORTH -> poseStack.translate(-0.1f, 0f, 0f);
+            case SOUTH -> {
+                poseStack.mulPose(Axis.YP.rotationDegrees(180));
+                poseStack.translate(-0.1f, 0f, 0f);
+            }
+            case WEST -> {
+                poseStack.mulPose(Axis.YP.rotationDegrees(90));
+                poseStack.translate(-0.1f, 0f, 0f);
+            }
+            case EAST -> {
+                poseStack.mulPose(Axis.YP.rotationDegrees(270));
+                poseStack.translate(-0.1f, 0f, 0f);
+            }
+        }
+
+        poseStack.translate(xOffset, 0f, zOffset);
+
+        // Random rotation for variety
+        long seed = (long) BuiltInRegistries.ITEM.getKey(itemStack.getItem()).hashCode() + slotIndex * 37L;
+        Random rand = new Random(seed);
+
+        float offsetX = -0.06f + rand.nextFloat() * 0.12f;
+        float offsetZ = -0.02f + rand.nextFloat() * 0.04f;
+        float rotY = -50f + rand.nextFloat() * 100f;
+
+        poseStack.translate(offsetX, 0f, offsetZ);
+        poseStack.mulPose(Axis.YP.rotationDegrees(rotY));
+
+        // Same scale for all items
+        poseStack.scale(0.25f, 0.25f, 0.25f);
+
+        poseStack.mulPose(Axis.XP.rotationDegrees(270));
+
+        itemRenderer.renderStatic(itemStack, ItemDisplayContext.GUI, getLightLevel(entity.getLevel(),
+                entity.getBlockPos()), OverlayTexture.NO_OVERLAY, poseStack, vertexConsumers, entity.getLevel(), 1);
+        poseStack.popPose();
     }
 
     private void renderHitSquares(CraftmanAnvilBlockEntity entity, PoseStack poseStack, MultiBufferSource vertexConsumers, int totalHits, Direction facing) {
@@ -224,58 +331,6 @@ public class CraftmanAnvilBlockRenderer implements BlockEntityRenderer<CraftmanA
         }
 
         poseStack.popPose();
-    }
-
-    private record SquareData(float x, float y, float r, float g, float b, float a, int index) {
-    }
-
-    private float[] hsvToRgb(float hue, float saturation, float value) {
-        float[] rgb = new float[3];
-
-        int h = (int) (hue * 6);
-        float f = hue * 6 - h;
-        float p = value * (1 - saturation);
-        float q = value * (1 - f * saturation);
-        float t = value * (1 - (1 - f) * saturation);
-
-        switch (h % 6) {
-            case 0 -> {
-                rgb[0] = value;
-                rgb[1] = t;
-                rgb[2] = p;
-            }
-            case 1 -> {
-                rgb[0] = q;
-                rgb[1] = value;
-                rgb[2] = p;
-            }
-            case 2 -> {
-                rgb[0] = p;
-                rgb[1] = value;
-                rgb[2] = t;
-            }
-            case 3 -> {
-                rgb[0] = p;
-                rgb[1] = q;
-                rgb[2] = value;
-            }
-            case 4 -> {
-                rgb[0] = t;
-                rgb[1] = p;
-                rgb[2] = value;
-            }
-            case 5 -> {
-                rgb[0] = value;
-                rgb[1] = p;
-                rgb[2] = q;
-            }
-        }
-
-        return rgb;
-    }
-
-    private float clampColor(float value) {
-        return Math.max(0, Math.min(1, value));
     }
 
     private void renderSingleSquare(VertexConsumer bufferBuilder, Matrix4f matrix, Matrix3f normalMatrix,

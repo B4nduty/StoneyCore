@@ -20,10 +20,6 @@ public interface IItemExtensionMixin {
 
     @Inject(method = "getCraftingRemainingItem", at = @At("HEAD"), cancellable = true)
     private void stoneycore$getCraftingRemainingItem(ItemStack itemStack, CallbackInfoReturnable<ItemStack> cir) {
-        if (itemStack.getItem() == SCItems.MANUSCRIPT) {
-            cir.setReturnValue(itemStack);
-            return;
-        }
         if (itemStack.getItem() == SCItems.TONGS) {
             cir.setReturnValue(itemStack);
             return;

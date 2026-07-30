@@ -15,8 +15,6 @@ public interface SCRecipes {
 
     Supplier<RecipeSerializer<CraftmanAnvilRecipe>> CRAFTMAN_ANVIL_RECIPE_SERIALIZER = registerSerializer("craftman_anvil_crafting", new CraftmanAnvilRecipe.Serializer());
 
-    Supplier<RecipeSerializer<ManuscriptCraftingRecipe>> MANUSCRIPT_SERIALIZER = registerSerializer("manuscript_crafting", new ManuscriptCraftingRecipe.Serializer());
-
     Supplier<RecipeSerializer<BannerPatternRecipe>> BANNER_SERIALIZER = registerSerializer("banner_pattern_crafting", new BannerPatternRecipe.Serializer());
 
     @SuppressWarnings("unchecked")

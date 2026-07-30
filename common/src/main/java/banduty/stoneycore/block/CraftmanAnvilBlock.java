@@ -3,7 +3,9 @@ package banduty.stoneycore.block;
 import banduty.stoneycore.items.custom.CraftmanAnvilHelper;
 import banduty.stoneycore.items.custom.SmithingHammer;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.items.custom.tongs.Tongs;
+import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,10 +35,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-
-import java.util.Optional;
 
 public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     public static final MapCodec<CraftmanAnvilBlock> CODEC = simpleCodec(CraftmanAnvilBlock::new);
@@ -89,6 +90,35 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
         return RenderShape.MODEL;
     }
 
+    private static int computeTargetSlot(BlockState state, BlockPos pos, BlockHitResult hit) {
+        Direction facing = state.getValue(FACING);
+        Direction right = facing.getClockWise();
+        Direction row = facing.getOpposite();
+
+        Vec3 hitLoc = hit.getLocation();
+        double dx = hitLoc.x - (pos.getX() + 0.5);
+        double dz = hitLoc.z - (pos.getZ() + 0.5);
+
+        double across = dx * right.getStepX() + dz * right.getStepZ();
+        double along = dx * row.getStepX() + dz * row.getStepZ();
+
+        double u = clamp01(across + 0.5);
+        double v = clamp01(along + 0.5);
+
+        int col = Math.min(CraftmanAnvilRecipe.GRID_WIDTH - 1, (int) (u * CraftmanAnvilRecipe.GRID_WIDTH));
+        int rowI = Math.min(CraftmanAnvilRecipe.GRID_HEIGHT - 1, (int) (v * CraftmanAnvilRecipe.GRID_HEIGHT));
+
+        int gridIndex = rowI * CraftmanAnvilRecipe.GRID_WIDTH + col;
+
+        return gridIndex + 1;
+    }
+
+    private static double clamp01(double value) {
+        if (value < 0) return 0;
+        if (value > 1) return 1;
+        return value;
+    }
+
     @Override
     protected ItemInteractionResult useItemOn(
             ItemStack stack,
@@ -111,6 +141,13 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
 
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        // Finished output waiting in the anvil takes priority over any other interaction:
+        // any click just collects it, and ingredient slots are untouchable until it's cleared.
+        if (anvilEntity.hasOutput()) {
+            anvilEntity.takeOutput(serverPlayer);
+            return ItemInteractionResult.SUCCESS;
         }
 
         if (stack.getItem() instanceof SmithingHammer) {
@@ -145,46 +182,39 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
 
         boolean usingTongs = !tongsStack.isEmpty();
 
+        if (usingTongs && !ManuscriptType.hasManuscriptType(tongsStack)) {
+            NonNullList<ItemStack> items = anvilEntity.getItems();
 
-        if (usingTongs || stack.isEmpty()) {
-            if (Tongs.getTargetStack(tongsStack).isEmpty()) {
-                NonNullList<ItemStack> items = anvilEntity.getItems();
+            for (int i = 0; i < items.size(); i++) {
+                ItemStack item = items.get(i);
 
-                for (int i = 0; i < items.size(); i++) {
+                if (item.isEmpty()) continue;
+                if (!(item.getItem() instanceof HotIron)) continue;
 
-                    ItemStack item = items.get(i);
+                ManuscriptType type = ManuscriptType.getManuscriptType(item);
+                if (type == null) continue;
 
-                    if (item.isEmpty()) continue;
-                    if (!(item.getItem() instanceof HotIron)) continue;
+                ManuscriptType.setManuscriptType(tongsStack, type);
+                item.shrink(1);
 
-                    if (usingTongs) {
-                        Tongs.setTargetStack(tongsStack, item.copy());
-                        item.shrink(1);
-                    }
-
-                    if (item.isEmpty()) {
-                        items.set(i, ItemStack.EMPTY);
-                    }
-
-
-                    anvilEntity.removeItems(serverPlayer);
-
-                    return ItemInteractionResult.SUCCESS;
+                if (item.isEmpty()) {
+                    items.set(i, ItemStack.EMPTY);
                 }
-            } else
-                // nothing to pick up
-                if (stack.isEmpty()) {
-                    if (!usingTongs)
-                        anvilEntity.removeItems(serverPlayer);
-                    //return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                }
+
+                anvilEntity.removeItems(serverPlayer);
+                return ItemInteractionResult.SUCCESS;
+            }
+        }
+
+        // Bare-handed empty click: just dump the anvil's contents back to the player.
+        if (!usingTongs && stack.isEmpty()) {
+            anvilEntity.removeItems(serverPlayer);
+            return ItemInteractionResult.SUCCESS;
         }
 
         ItemStack newStack;
-
         ItemStack insertStack = stack;
 
-        // If main hand is empty, try offhand
         if (insertStack.isEmpty() && !player.getOffhandItem().isEmpty()) {
             insertStack = player.getOffhandItem();
         }
@@ -200,7 +230,8 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        boolean added = anvilEntity.addItem(newStack, player);
+        int targetSlot = computeTargetSlot(state, pos, hit);
+        boolean added = anvilEntity.addItem(newStack, player, targetSlot);
 
         if (added) {
             level.playSound(
@@ -215,14 +246,7 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
             anvilEntity.checkAndSpawnRecipeParticles();
         }
 
-
         return ItemInteractionResult.SUCCESS;
-    }
-
-    public static Optional<ItemStack> getTongsFromInventory(Player player) {
-        return player.getInventory().items.stream()
-                .filter(stack -> !stack.isEmpty() && stack.getItem() instanceof Tongs && !Tongs.hasTargetStack(stack))
-                .findFirst();
     }
 
     @Override
@@ -249,21 +273,15 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        if (canFallThrough(level.getBlockState(pos.below()))
-                && pos.getY() >= level.getMinBuildHeight()) {
-
+        if (canFallThrough(level.getBlockState(pos.below())) && pos.getY() >= level.getMinBuildHeight()) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
 
-            // Drop inventory BEFORE removing block
             if (blockEntity instanceof CraftmanAnvilBlockEntity anvil) {
                 Containers.dropContents(level, pos, anvil);
             }
 
-            // Remove BE safely
             level.removeBlockEntity(pos);
             level.removeBlock(pos, false);
-
-            // Spawn falling block WITHOUT block entity data
             FallingBlockEntity.fall(level, pos, state);
         }
     }

@@ -1,8 +1,6 @@
 package banduty.stoneycore.items.custom.hotiron;
 
 import banduty.stoneycore.client.MinecraftS4S;
-import banduty.stoneycore.items.SCItems;
-import banduty.stoneycore.util.data.itemdata.ItemStackHolder;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -34,10 +32,16 @@ import java.util.List;
 
 public class HotIron extends Item {
     private static final int IGNITE_DURATION_TICKS = 20 * 30;
-    private static final int IGNITE_DURATION_TICKS_AFTER_FINISH = 20 * 30;
+
+    private final boolean destroysOnQuench;
 
     public HotIron(Properties properties) {
+        this(properties, true);
+    }
+
+    public HotIron(Properties properties, boolean destroysOnQuench) {
         super(properties);
+        this.destroysOnQuench = destroysOnQuench;
     }
 
     @Override
@@ -46,20 +50,7 @@ public class HotIron extends Item {
 
         if (level.isClientSide()) return;
 
-        ItemStackHolder holder = stack.get(SCDataComponents.TARGET_STACK.get());
-        ItemStack target = ItemStack.EMPTY;
-
-        if (holder != null) {
-            target = holder.stack();
-
-            target.getItem().inventoryTick(target, level, entity, slot, selected);
-
-            if (target.isEmpty()) {
-                stack.remove(SCDataComponents.TARGET_STACK.get());
-            } else {
-                stack.set(SCDataComponents.TARGET_STACK.get(), new ItemStackHolder(target));
-            }
-        }
+        if (stack.getOrDefault(SCDataComponents.FINISHED.get(), false)) return;
 
         if (entity instanceof Player player && player.isCreative()) {
             unlimitedHotIron(stack);
@@ -79,20 +70,12 @@ public class HotIron extends Item {
 
         long currentTime = level.getGameTime();
 
-        if (isFinished(stack)) {
-            currentTime -= IGNITE_DURATION_TICKS_AFTER_FINISH;
-        }
-
         long elapsed = currentTime - igniteTime;
 
         if (elapsed >= IGNITE_DURATION_TICKS) {
             stack.shrink(1);
 
-            if (!target.isEmpty()) {
-                entity.spawnAtLocation(target.copy());
-            } else {
-                entity.spawnAtLocation(Items.IRON_INGOT);
-            }
+            entity.spawnAtLocation(Items.IRON_INGOT);
 
             level.playSound(
                     null,
@@ -118,10 +101,6 @@ public class HotIron extends Item {
         return false;
     }
 
-    public static void removeTargetStack(ItemStack stack) {
-        stack.remove(SCDataComponents.TARGET_STACK.get());
-    }
-
     public static void igniteHotIron(ItemStack stack, Entity entity) {
         stack.set(SCDataComponents.IGNITE_TIME.get(), entity.level().getGameTime());
     }
@@ -130,58 +109,12 @@ public class HotIron extends Item {
         stack.remove(SCDataComponents.IGNITE_TIME.get());
     }
 
-    public static boolean hasTargetStack(ItemStack stack) {
-        return !(getTargetStack(stack).isEmpty());
-    }
-
-    public static ItemStack getHotIronFor(ItemStack targetStack) {
-        return HotIron.createForStack(targetStack);
-    }
-
-    public static ItemStack createForStack(ItemStack targetStack) {
-        ItemStack stack = new ItemStack(SCItems.HOT_IRON.get());
-        setTargetStack(stack, targetStack);
-        return stack;
-    }
-
-    public static void setTargetStack(ItemStack stack, ItemStack targetStack) {
-        if (targetStack == null || targetStack.isEmpty()) return;
-        stack.set(SCDataComponents.TARGET_STACK.get(), new ItemStackHolder(targetStack));
-    }
-
-    public static ItemStack getTargetStack(ItemStack stack) {
-        if (stack.has(SCDataComponents.TARGET_STACK.get())) {
-            return stack.get(SCDataComponents.TARGET_STACK.get()).stack();
-        }
-        return ItemStack.EMPTY;
-    }
-
-    public boolean isFinished(ItemStack stack) {
-        return hasTargetStack(stack);
-    }
-
-    @Override
-    public Component getName(ItemStack stack) {
-        ItemStack target = getTargetStack(stack);
-        if (!target.isEmpty()) {
-            // Get the original item's display name
-            Component originalName = target.getHoverName();
-            // Return a translatable component with the original name as an argument
-            return Component.translatable("item.stoneycore.hot_iron.with_item", originalName);
-        }
-        return super.getName(stack);
-    }
-
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         Long igniteTime = stack.get(SCDataComponents.IGNITE_TIME.get());
 
         if (igniteTime != null) {
             long currentTime = MinecraftS4S.minecraft().level.getGameTime();
-
-            if (isFinished(stack)) {
-                currentTime -= IGNITE_DURATION_TICKS_AFTER_FINISH;
-            }
 
             long remainingTicks = IGNITE_DURATION_TICKS - (currentTime - igniteTime);
             if (remainingTicks < 0) remainingTicks = 0;
@@ -206,14 +139,12 @@ public class HotIron extends Item {
 
         if (player == null) return InteractionResult.PASS;
 
-        // Check for water sources
         BlockPos waterPos = getLookedWater(player, level);
 
         if (waterPos != null) {
             return handleWaterInteraction(level, waterPos, player, stack, context.getHand());
         }
 
-        // Check for water cauldron
         if (state.is(Blocks.WATER_CAULDRON) && state.hasProperty(LayeredCauldronBlock.LEVEL)) {
             return handleWaterCauldron(level, pos, player, stack);
         }
@@ -222,8 +153,7 @@ public class HotIron extends Item {
     }
 
     private BlockPos getLookedWater(Player player, Level level) {
-
-        double reach = 5.0; // same as bucket reach
+        double reach = 5.0;
 
         Vec3 start = player.getEyePosition();
         Vec3 end = start.add(player.getLookAngle().scale(reach));
@@ -241,34 +171,40 @@ public class HotIron extends Item {
         BlockPos pos = hit.getBlockPos();
         BlockState state = level.getBlockState(pos);
 
-        if (state.getFluidState().isSource() &&
-                state.getFluidState().is(Fluids.WATER)) {
+        if (state.getFluidState().isSource() && state.getFluidState().is(Fluids.WATER)) {
             return pos;
         }
 
         return null;
     }
 
+    private void quench(ItemStack stack, Player player) {
+        if (destroysOnQuench) {
+            stack.shrink(1);
+            player.addItem(new ItemStack(Items.IRON_INGOT));
+        } else {
+            stack.remove(SCDataComponents.IGNITE_TIME.get());
+        }
+        stack.set(SCDataComponents.FINISHED.get(), true);
+    }
+
+    public void quenchDropped(ItemStack stack, Entity entity) {
+        if (destroysOnQuench) {
+            stack.shrink(1);
+            entity.spawnAtLocation(Items.IRON_INGOT);
+        } else {
+            stack.remove(SCDataComponents.IGNITE_TIME.get());
+        }
+        stack.set(SCDataComponents.FINISHED.get(), true);
+    }
+
     private InteractionResult handleWaterInteraction(Level level, BlockPos pos, Player player, ItemStack stack, InteractionHand hand) {
         if (!level.isClientSide()) {
-            // Get the target before extinguishing
-            ItemStack target = getTargetStack(stack);
+            quench(stack, player);
 
-            // Extinguish the hot iron
-            stack.shrink(1);
-
-            // Drop the target or an iron ingot
-            if (!target.isEmpty()) {
-                player.addItem(target.copy());
-            } else {
-                player.addItem(new ItemStack(Items.IRON_INGOT));
-            }
-
-            // Play extinguish sound
             level.playSound(null, pos, SoundEvents.GENERIC_EXTINGUISH_FIRE,
                     SoundSource.PLAYERS, 0.5f, 1.8f + level.random.nextFloat() * (3.4f - 1.8f));
 
-            // Spawn steam particles
             if (level instanceof ServerLevel serverLevel) {
                 RandomSource random = level.random;
                 for (int i = 0; i < 8; i++) {
@@ -286,23 +222,10 @@ public class HotIron extends Item {
         int cauldronLevel = level.getBlockState(pos).getValue(LayeredCauldronBlock.LEVEL);
         if (cauldronLevel >= 1) {
             if (!level.isClientSide()) {
-                // Reduce cauldron water level
                 LayeredCauldronBlock.lowerFillLevel(level.getBlockState(pos), level, pos);
 
-                // Get the target before extinguishing
-                ItemStack target = getTargetStack(stack);
+                quench(stack, player);
 
-                // Extinguish the hot iron
-                stack.shrink(1);
-
-                // Drop the target or an iron ingot
-                if (!target.isEmpty()) {
-                    player.addItem(target.copy());
-                } else {
-                    player.addItem(new ItemStack(Items.IRON_INGOT));
-                }
-
-                // Spawn steam particles
                 if (level instanceof ServerLevel serverLevel) {
                     RandomSource random = level.random;
                     for (int i = 0; i < 10; i++) {

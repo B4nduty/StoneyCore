@@ -20,9 +20,12 @@ public interface SCDataComponents {
     Supplier<DataComponentType<Long>> IGNITE_TIME = register("ignite_time",
             builder -> builder.persistent(Codec.LONG).networkSynchronized(ByteBufCodecs.VAR_LONG));
 
-    Supplier<DataComponentType<ItemStackHolder>> TARGET_STACK = register("target_stack",
-            builder -> builder.persistent(ItemStackHolder.CODEC)
-                    .networkSynchronized(ItemStackHolder.STREAM_CODEC));
+    Supplier<DataComponentType<Boolean>> FINISHED = register("finished",
+            builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
+
+    Supplier<DataComponentType<String>> MANUSCRIPT_TYPE = register("manuscript_type",
+            builder -> builder.persistent(Codec.STRING)
+                    .networkSynchronized(ByteBufCodecs.STRING_UTF8));
 
     Supplier<DataComponentType<Boolean>> BLUDGEONING = register("bludgeoning",
             builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));

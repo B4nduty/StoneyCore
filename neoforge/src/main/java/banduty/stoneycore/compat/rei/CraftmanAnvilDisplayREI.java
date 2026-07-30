@@ -1,7 +1,6 @@
 package banduty.stoneycore.compat.rei;
 
-import banduty.stoneycore.items.custom.hotiron.HotIron;
-import banduty.stoneycore.items.custom.manuscript.Manuscript;
+import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
 import banduty.stoneycore.recipes.StackIngredient;
 import me.shedaniel.rei.api.common.category.CategoryIdentifier;
@@ -11,6 +10,7 @@ import me.shedaniel.rei.api.common.entry.EntryStack;
 import me.shedaniel.rei.api.common.util.EntryIngredients;
 import me.shedaniel.rei.api.common.util.EntryStacks;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 
 import java.util.ArrayList;
@@ -41,16 +41,20 @@ public class CraftmanAnvilDisplayREI extends BasicDisplay {
         EntryStack<?> entry = this.outputs.getFirst().getFirst();
         ItemStack stack = entry.castValue();
 
-        ItemStack target = HotIron.getTargetStack(stack);
-        if (target.isEmpty()) target = Manuscript.getTargetStack(stack);
+        ItemStack output = recipe.output();
+        ManuscriptType type = ManuscriptType.getManuscriptType(output);
 
-        if (!target.isEmpty()) {
-            this.outputs = List.of(
-                    EntryIngredient.of(EntryStacks.of(target.copy()))
-            );
-            this.realOutput = List.of(
-                    EntryIngredient.of(EntryStacks.of(stack.copy()))
-            );
+        if (type != null && type.getHotIronItem() != null && type.getHotIronItem() != Items.AIR) {
+            ItemStack target = new ItemStack(type.getHotIronItem());
+
+            if (!target.isEmpty()) {
+                this.outputs = List.of(
+                        EntryIngredient.of(EntryStacks.of(target.copy()))
+                );
+                this.realOutput = List.of(
+                        EntryIngredient.of(EntryStacks.of(stack.copy()))
+                );
+            }
         }
     }
 

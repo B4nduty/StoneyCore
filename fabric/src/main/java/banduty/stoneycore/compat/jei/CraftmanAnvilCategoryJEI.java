@@ -2,8 +2,7 @@ package banduty.stoneycore.compat.jei;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.block.SCBlocks;
-import banduty.stoneycore.items.custom.hotiron.HotIron;
-import banduty.stoneycore.items.custom.manuscript.Manuscript;
+import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
 import banduty.stoneycore.recipes.StackIngredient;
 import mezz.jei.api.constants.VanillaTypes;
@@ -20,6 +19,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
 public class CraftmanAnvilCategoryJEI implements IRecipeCategory<CraftmanAnvilRecipe> {
@@ -80,12 +80,13 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<CraftmanAnvilRe
         }
 
         ItemStack output = recipe.output();
+        ManuscriptType type = ManuscriptType.getManuscriptType(output);
 
-        ItemStack target = HotIron.getTargetStack(output);
-        if (target.isEmpty()) target = Manuscript.getTargetStack(output);
-        if (target.isEmpty()) target = output;
+        if (type != null && type.getHotIronItem() != null && type.getHotIronItem() != Items.AIR) {
+            ItemStack target = new ItemStack(type.getHotIronItem());
+            builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(target);
+        }
 
-        builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(target);
         builder.addSlot(RecipeIngredientRole.OUTPUT, 120, 20).addItemStack(output);
     }
 
@@ -93,18 +94,15 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<CraftmanAnvilRe
     public void draw(CraftmanAnvilRecipe recipe, IRecipeSlotsView slots, GuiGraphics guiGraphics, double mouseX, double mouseY) {
         guiGraphics.pose().pushPose();
 
-        // Hit times
         guiGraphics.drawString(Minecraft.getInstance().font, "Hits: " + recipe.hitTimes(), 10, 42, 0xFFFFFF, true);
 
-        // Chance
         if (recipe.chance() < 1f) {
             guiGraphics.drawString(Minecraft.getInstance().font, String.format("Chance: %.1f%%", recipe.chance() * 100), 90, 42, 0xFFFFFF, true);
         }
 
         ItemStack output = recipe.output();
 
-        ItemStack target = HotIron.getTargetStack(output);
-        if (target.isEmpty()) target = Manuscript.getTargetStack(output);
+        ItemStack target = new ItemStack(ManuscriptType.getManuscriptItem(output));
 
         if (!target.isEmpty()) {
             guiGraphics.pose().pushPose();

@@ -1,6 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
@@ -11,7 +12,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -29,17 +29,19 @@ public class HotIronCoolingHandler {
 
     public static void init() {
 
-        // track when item enters world
+        // track any item that enters the world already ignited
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-            if (entity instanceof ItemEntity item) {
-                if (item.getItem().getItem() instanceof HotIron) {
-                    HOT_IRON.add(item);
-                }
+            if (entity instanceof ItemEntity item && isIgnited(item.getItem())) {
+                HOT_IRON.add(item);
             }
         });
 
         // tick cooling logic
         ServerTickEvents.END_WORLD_TICK.register(HotIronCoolingHandler::tick);
+    }
+
+    private static boolean isIgnited(ItemStack stack) {
+        return !stack.isEmpty() && stack.get(SCDataComponents.IGNITE_TIME.get()) != null;
     }
 
     private static void tick(ServerLevel world) {
@@ -57,7 +59,7 @@ public class HotIronCoolingHandler {
 
             ItemStack stack = item.getItem();
 
-            if (!(stack.getItem() instanceof HotIron)) {
+            if (!isIgnited(stack)) {
                 it.remove();
                 continue;
             }
@@ -89,34 +91,7 @@ public class HotIronCoolingHandler {
     }
 
     private static void cool(ServerLevel level, ItemEntity item, ItemStack stack) {
-
-        int count = stack.getCount();
-
-        ItemStack target = HotIron.getTargetStack(stack);
-
-        ItemStack result;
-
-        if (!target.isEmpty()) {
-            result = target.copy();
-        } else {
-            result = new ItemStack(Items.IRON_INGOT);
-        }
-
-        result.setCount(count);
-
-        // remove the hot iron entity completely
-        item.discard();
-
-        // spawn cooled stack
-        ItemEntity newEntity = new ItemEntity(
-                level,
-                item.getX(),
-                item.getY(),
-                item.getZ(),
-                result
-        );
-
-        level.addFreshEntity(newEntity);
+        ((HotIron) stack.getItem()).quenchDropped(stack, item);
 
         level.playSound(
                 null,

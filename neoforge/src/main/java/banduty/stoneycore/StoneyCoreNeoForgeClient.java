@@ -5,9 +5,11 @@ import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
 import banduty.stoneycore.entity.SCEntities;
+import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.model.*;
 import banduty.stoneycore.particle.MuzzlesFlashParticle;
@@ -18,6 +20,7 @@ import banduty.stoneycore.platform.NeoForgeHumanoidModelSetupAnimHelper;
 import banduty.stoneycore.platform.NeoForgeKeyInputHelper;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.SCScreenHandlers;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.item.ItemProperties;
@@ -29,10 +32,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
+import net.neoforged.neoforge.client.event.*;
 
 @EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class StoneyCoreNeoForgeClient {
@@ -53,18 +53,18 @@ public class StoneyCoreNeoForgeClient {
                         (stack, world, entity, seed) ->
                                 stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f ? 1.0F : 0.0F);
 
-                if (item instanceof HotIron hotIron) {
-                    ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "finished"),
-                            (stack, world, entity, seed) -> hotIron.isFinished(stack) ? 1.0F : 0.0F);
-                }
-
                 if (item instanceof Tongs) {
                     ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "hotiron"),
+                            (stack, world, entity, seed) -> {
+                                ManuscriptType type = ManuscriptType.getManuscriptType(stack);
+                                return type != null && type.getHotIronItem() instanceof HotIron ? 1.0F : 0.0F;
+                            });
+                }
+
+                if (item instanceof HotIron && item != SCItems.HOT_IRON.get()) {
+                    ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"),
                             (stack, world, entity, seed) ->
-                                    Tongs.getTargetStack(stack).getItem() instanceof HotIron ? 1.0F : 0.0F);
-                    ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "finished"),
-                            (stack, world, entity, seed) ->
-                                    !(HotIron.getTargetStack(Tongs.getTargetStack(stack)).isEmpty()) ? 1.0F : 0.0F);
+                                    !stack.getOrDefault(SCDataComponents.FINISHED.get(), false) ? 1.0F : 0.0F);
                 }
             }
         });
