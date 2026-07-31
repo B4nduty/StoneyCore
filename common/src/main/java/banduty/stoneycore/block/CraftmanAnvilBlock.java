@@ -42,7 +42,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     public static final MapCodec<CraftmanAnvilBlock> CODEC = simpleCodec(CraftmanAnvilBlock::new);
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
-    private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 10, 15);
+    private static final VoxelShape SHAPE = Block.box(2, 0, 1, 14, 10, 15);
 
     public CraftmanAnvilBlock(BlockBehaviour.Properties properties) {
         super(properties);
