@@ -25,7 +25,7 @@ public interface ArmorAttachment {
         return false;
     }
 
-    default boolean canEquip(ItemStack underArmorStack, Player player) {
+    default boolean canEquip(ItemStack underArmorStack, Player player, ItemStack attachmentStack) {
         return true;
     }
 

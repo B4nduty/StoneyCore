@@ -85,7 +85,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             if (incoming.isEmpty() || !(incoming.getItem() instanceof ArmorAttachment armorAttachment))
                 return null;
 
-            if (!armorAttachment.canEquip(underArmorStack, player)) return null;
+            if (!armorAttachment.canEquip(underArmorStack, player, incoming)) return null;
 
             if (!(underArmorStack.getItem() instanceof ArmorItem armorItem)) return null;
             ArmorItem.Type armorType = armorItem.getType();
