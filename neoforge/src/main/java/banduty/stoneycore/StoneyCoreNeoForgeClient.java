@@ -9,6 +9,7 @@ import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.model.*;
@@ -61,7 +62,7 @@ public class StoneyCoreNeoForgeClient {
                             });
                 }
 
-                if (item instanceof HotIron && item != SCItems.HOT_IRON.get()) {
+                if (item instanceof QuenchItem && item != SCItems.HOT_IRON.get()) {
                     ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"),
                             (stack, world, entity, seed) ->
                                     !stack.getOrDefault(SCDataComponents.FINISHED.get(), false) ? 1.0F : 0.0F);

@@ -1,7 +1,9 @@
 package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.client.MinecraftS4S;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
@@ -18,16 +20,23 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -38,8 +47,43 @@ import java.util.List;
 
 @Mixin(Item.class)
 public abstract class ItemMixin {
-    @Shadow
-    public abstract UseAnim getUseAnimation(ItemStack stack);
+    @Inject(method = "inventoryTick", at = @At("TAIL"))
+    public void stoneycore$inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected, CallbackInfo ci) {
+        if (level.isClientSide()) return;
+
+        if (!(stack.getItem() instanceof QuenchItem quenchItem)) return;
+
+        if (quenchItem.isFinished(stack)) return;
+
+        if (entity instanceof Player player && player.isCreative()) {
+            quenchItem.unlimitedItem(stack);
+            return;
+        }
+
+        if (!quenchItem.isIgnited(stack)) {
+            quenchItem.igniteItem(stack, entity);
+        }
+
+        if (entity instanceof Player player && stoneyCore$isInPlayerInventory(player, stack)) {
+            entity.setRemainingFireTicks(20);
+        }
+
+        quenchItem.tickBurnout(stack, level, entity);
+    }
+
+    @Unique
+    private static boolean stoneyCore$isInPlayerInventory(Player player, ItemStack stack) {
+        if (player.getMainHandItem() == stack) return true;
+        if (player.getOffhandItem() == stack) return true;
+
+        for (ItemStack invStack : player.getInventory().items) {
+            if (invStack == stack) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     @Inject(method = "getUseAnimation", at = @At("HEAD"), cancellable = true)
     public void stoneycore$getUseAnimation(ItemStack stack, CallbackInfoReturnable<UseAnim> cir) {
@@ -251,21 +295,116 @@ public abstract class ItemMixin {
         }
 
         TooltipClientSide.setTooltip(tooltip, stack);
+
+        if (stack.getItem() instanceof QuenchItem quenchItem) {
+            Long igniteTime = quenchItem.getIgniteTime(stack);
+
+            if (igniteTime != null) {
+                long currentTime = MinecraftS4S.minecraft().level.getGameTime();
+
+                long remainingTicks = quenchItem.getIgniteDuration() - (currentTime - igniteTime);
+                if (remainingTicks < 0) remainingTicks = 0;
+
+                long seconds = remainingTicks / 20;
+                long hours = seconds / 3600;
+                seconds %= 3600;
+                long minutes = seconds / 60;
+                seconds %= 60;
+
+                tooltip.add(Component.literal(String.format("Ignited - Time left: %02d:%02d:%02d", hours, minutes, seconds)));
+            }
+        }
     }
 
     @Inject(method = "useOn", at = @At("HEAD"), cancellable = true)
     public void stoneycore$useOn(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
+        Level level = context.getLevel();
+        if (level.isClientSide) return;
+
         ItemStack stack = context.getItemInHand();
         if (!WeaponDefinitionsStorage.isMelee(stack) || !stack.is(SCTags.WEAPONS_HARVEST.getTag())) return;
 
-        Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         Player player = context.getPlayer();
         BlockState state = level.getBlockState(pos);
 
-        if (!level.isClientSide() && player != null) {
+        if (player != null) {
             stoneyCore$handleCropHarvest(level, pos, state, player, stack, context.getHand(), cir);
         }
+
+        if (stack.getItem() instanceof QuenchItem quenchItem) {
+            if (player == null) {
+                cir.setReturnValue(InteractionResult.PASS);
+                return;
+            }
+
+            BlockPos waterPos = stoneyCore$getLookedWater(player, level);
+
+            if (waterPos != null) {
+                cir.setReturnValue(stoneyCore$handleWaterInteraction(level, waterPos, player, stack, context.getHand()));
+                return;
+            }
+
+            if (state.is(Blocks.WATER_CAULDRON) && state.hasProperty(LayeredCauldronBlock.LEVEL)) {
+                cir.setReturnValue(stoneyCore$handleWaterCauldron(level, pos, player, stack));
+                return;
+            }
+
+            cir.setReturnValue(InteractionResult.PASS);
+        }
+    }
+
+    @Unique
+    private BlockPos stoneyCore$getLookedWater(Player player, Level level) {
+        double reach = 5.0;
+
+        Vec3 start = player.getEyePosition();
+        Vec3 end = start.add(player.getLookAngle().scale(reach));
+
+        BlockHitResult hit = level.clip(new ClipContext(
+                start,
+                end,
+                ClipContext.Block.OUTLINE,
+                ClipContext.Fluid.SOURCE_ONLY,
+                player
+        ));
+
+        if (hit.getType() != HitResult.Type.BLOCK) return null;
+
+        BlockPos pos = hit.getBlockPos();
+        BlockState state = level.getBlockState(pos);
+
+        if (state.getFluidState().isSource() && state.getFluidState().is(Fluids.WATER)) {
+            return pos;
+        }
+
+        return null;
+    }
+
+    @Unique
+    private InteractionResult stoneyCore$handleWaterInteraction(Level level, BlockPos pos, Player player, ItemStack stack, InteractionHand hand) {
+        if (!level.isClientSide() && stack.getItem() instanceof QuenchItem quenchItem) {
+            quenchItem.quench(stack, player);
+            quenchItem.playQuenchEffects(level, pos, 8);
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+    @Unique
+    private InteractionResult stoneyCore$handleWaterCauldron(Level level, BlockPos pos, Player player, ItemStack stack) {
+        int cauldronLevel = level.getBlockState(pos).getValue(LayeredCauldronBlock.LEVEL);
+        if (cauldronLevel >= 1 && stack.getItem() instanceof QuenchItem quenchItem) {
+            if (!level.isClientSide()) {
+                LayeredCauldronBlock.lowerFillLevel(level.getBlockState(pos), level, pos);
+
+                quenchItem.quench(stack, player);
+                quenchItem.playQuenchEffects(level, pos, 10);
+            } else {
+                quenchItem.playQuenchSoundClient(player);
+            }
+            return InteractionResult.SUCCESS;
+        }
+        return InteractionResult.PASS;
     }
 
     @Unique
