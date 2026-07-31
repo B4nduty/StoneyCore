@@ -322,17 +322,11 @@ public abstract class ItemMixin {
         if (level.isClientSide) return;
 
         ItemStack stack = context.getItemInHand();
-        if (!WeaponDefinitionsStorage.isMelee(stack) || !stack.is(SCTags.WEAPONS_HARVEST.getTag())) return;
-
         BlockPos pos = context.getClickedPos();
         Player player = context.getPlayer();
         BlockState state = level.getBlockState(pos);
 
-        if (player != null) {
-            stoneyCore$handleCropHarvest(level, pos, state, player, stack, context.getHand(), cir);
-        }
-
-        if (stack.getItem() instanceof QuenchItem quenchItem) {
+        if (stack.getItem() instanceof QuenchItem) {
             if (player == null) {
                 cir.setReturnValue(InteractionResult.PASS);
                 return;
@@ -351,6 +345,12 @@ public abstract class ItemMixin {
             }
 
             cir.setReturnValue(InteractionResult.PASS);
+        }
+
+        if (!WeaponDefinitionsStorage.isMelee(stack) || !stack.is(SCTags.WEAPONS_HARVEST.getTag())) return;
+
+        if (player != null) {
+            stoneyCore$handleCropHarvest(level, pos, state, player, stack, context.getHand(), cir);
         }
     }
 

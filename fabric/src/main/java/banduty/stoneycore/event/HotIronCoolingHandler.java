@@ -1,6 +1,6 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -31,7 +31,7 @@ public class HotIronCoolingHandler {
 
         // track any item that enters the world already ignited
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-            if (entity instanceof ItemEntity item && isIgnited(item.getItem())) {
+            if (entity instanceof ItemEntity item && item.getItem().getItem() instanceof QuenchItem) {
                 HOT_IRON.add(item);
             }
         });
@@ -59,7 +59,7 @@ public class HotIronCoolingHandler {
 
             ItemStack stack = item.getItem();
 
-            if (!isIgnited(stack)) {
+            if (!(stack.getItem() instanceof QuenchItem)) {
                 it.remove();
                 continue;
             }
@@ -91,7 +91,7 @@ public class HotIronCoolingHandler {
     }
 
     private static void cool(ServerLevel level, ItemEntity item, ItemStack stack) {
-        ((HotIron) stack.getItem()).quenchDropped(stack, item);
+        ((QuenchItem) stack.getItem()).quenchDropped(stack, item);
 
         level.playSound(
                 null,

@@ -1,5 +1,7 @@
 package banduty.stoneycore.datagen;
 
+import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -20,6 +22,12 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
     }
 
     protected void registerItemWConditions(Item item, boolean joinConditions, boolean overlay, OverrideCondition... conditions) {
+        List<OverrideCondition> conditionList = new ArrayList<>(Arrays.asList(conditions));
+        if (item instanceof QuenchItem) {
+            conditionList.add(new OverrideCondition(ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"), 1));
+        }
+        conditions = conditionList.toArray(new OverrideCondition[0]);
+
         String path = BuiltInRegistries.ITEM.getKey(item).getPath();
 
         // Create the base model

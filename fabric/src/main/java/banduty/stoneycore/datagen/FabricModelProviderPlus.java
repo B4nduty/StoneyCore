@@ -1,5 +1,7 @@
 package banduty.stoneycore.datagen;
 
+import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -25,6 +27,12 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
     }
 
     protected void registerItemWConditions(Item item, ItemModelGenerators itemModelGenerators, boolean joinConditions, boolean overlay, OverrideCondition... conditions) {
+        List<OverrideCondition> conditionList = new ArrayList<>(Arrays.asList(conditions));
+        if (item instanceof QuenchItem) {
+            conditionList.add(new OverrideCondition(ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"), 1));
+        }
+        conditions = conditionList.toArray(new OverrideCondition[0]);
+
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
         String namespace = itemId.getNamespace();
         String path = itemId.getPath();

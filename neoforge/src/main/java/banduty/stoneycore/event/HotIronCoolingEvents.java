@@ -1,8 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.hotiron.HotIron;
-import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -11,7 +10,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,7 +26,6 @@ import java.util.WeakHashMap;
 @EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class HotIronCoolingEvents {
 
-    // industrial-grade tracking structure
     private static final Set<ItemEntity> HOT_IRON_ITEMS =
             java.util.Collections.newSetFromMap(new WeakHashMap<>());
 
@@ -37,7 +34,7 @@ public class HotIronCoolingEvents {
 
         if (!(event.getEntity() instanceof ItemEntity item)) return;
 
-        if (item.getItem().getItem() instanceof HotIron) {
+        if (item.getItem().getItem() instanceof QuenchItem) {
             HOT_IRON_ITEMS.add(item);
         }
     }
@@ -61,7 +58,7 @@ public class HotIronCoolingEvents {
             ItemStack stack = item.getItem();
 
             // stack changed → stop tracking
-            if (!(stack.getItem() instanceof HotIron)) {
+            if (!(stack.getItem() instanceof QuenchItem)) {
                 it.remove();
                 continue;
             }
@@ -93,34 +90,7 @@ public class HotIronCoolingEvents {
     }
 
     private static void cool(ServerLevel level, ItemEntity item, ItemStack stack) {
-
-        int count = stack.getCount();
-
-        ItemStack target = new ItemStack(ManuscriptType.getManuscriptItem(stack));
-
-        ItemStack result;
-
-        if (!target.isEmpty()) {
-            result = target.copy();
-        } else {
-            result = new ItemStack(Items.IRON_INGOT);
-        }
-
-        result.setCount(count);
-
-        // remove the hot iron entity completely
-        item.discard();
-
-        // spawn cooled stack
-        ItemEntity newEntity = new ItemEntity(
-                level,
-                item.getX(),
-                item.getY(),
-                item.getZ(),
-                result
-        );
-
-        level.addFreshEntity(newEntity);
+        ((QuenchItem) stack.getItem()).quenchDropped(stack, item);
 
         level.playSound(
                 null,
