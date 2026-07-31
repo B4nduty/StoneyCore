@@ -16,6 +16,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class CraftmanAnvilDisplayREI extends BasicDisplay {
     private final int hitTimes;
@@ -64,9 +65,16 @@ public class CraftmanAnvilDisplayREI extends BasicDisplay {
 
     private static List<EntryIngredient> getInputList(CraftmanAnvilRecipe recipe) {
         if (recipe == null) return Collections.emptyList();
-
         List<EntryIngredient> list = new ArrayList<>();
-        for (StackIngredient ingredient : recipe.ingredients()) {
+
+        List<StackIngredient> ingredients = recipe.pattern()
+                .map(p -> p.slots().stream()
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .toList())
+                .orElse(recipe.ingredients());
+
+        for (StackIngredient ingredient : ingredients) {
             if (ingredient.tag().isPresent()) {
                 list.add(EntryIngredients.ofItemTag(ingredient.tag().get()));
             } else {

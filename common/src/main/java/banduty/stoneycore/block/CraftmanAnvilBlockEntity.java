@@ -335,14 +335,14 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         return !items.get(OUTPUT_SLOT).isEmpty();
     }
 
-    public boolean takeOutput(Player player) {
+    public void takeAll(Player player) {
         if (level != null && level.isClientSide()) {
-            return false;
+            return;
         }
 
         ItemStack output = items.get(OUTPUT_SLOT);
         if (output.isEmpty()) {
-            return false;
+            return;
         }
 
         ItemStack copy = output.copy();
@@ -351,9 +351,16 @@ public class CraftmanAnvilBlockEntity extends BlockEntity implements Implemented
         }
 
         items.set(OUTPUT_SLOT, ItemStack.EMPTY);
+
+        for (int i = FIRST_INGREDIENT_SLOT; i < items.size(); i++) {
+            if (!items.get(i).isEmpty()) {
+                copy = items.get(i).copy();
+                player.drop(copy, false);
+                items.set(i, ItemStack.EMPTY);
+            }
+        }
         setChanged();
         checkAndSpawnRecipeParticles();
-        return true;
     }
 
     public boolean addItem(ItemStack stack) {

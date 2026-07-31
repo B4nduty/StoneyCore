@@ -22,6 +22,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+import java.util.Optional;
+
 public class CraftmanAnvilCategoryJEI implements IRecipeCategory<CraftmanAnvilRecipe> {
     public static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "craftman_anvil");
     public static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "textures/gui/craftman_anvil_gui.png");
@@ -60,7 +63,13 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<CraftmanAnvilRe
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, CraftmanAnvilRecipe recipe, IFocusGroup focuses) {
-        var ingredients = recipe.ingredients();
+        List<StackIngredient> ingredients = recipe.pattern()
+                .map(p -> p.slots().stream()
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .toList())
+                .orElse(recipe.ingredients());
+
         int inputSize = Math.min(ingredients.size(), 6);
 
         int[] inputSlotsX = {54, 36, 72, 54, 36, 72};

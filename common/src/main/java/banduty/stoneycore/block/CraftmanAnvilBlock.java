@@ -42,7 +42,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     public static final MapCodec<CraftmanAnvilBlock> CODEC = simpleCodec(CraftmanAnvilBlock::new);
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
-    private static final VoxelShape SHAPE = Block.box(2, 0, 2, 14, 10, 14);
+    private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 10, 15);
 
     public CraftmanAnvilBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -143,10 +143,8 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        // Finished output waiting in the anvil takes priority over any other interaction:
-        // any click just collects it, and ingredient slots are untouchable until it's cleared.
         if (anvilEntity.hasOutput()) {
-            anvilEntity.takeOutput(serverPlayer);
+            anvilEntity.takeAll(serverPlayer);
             return ItemInteractionResult.SUCCESS;
         }
 
