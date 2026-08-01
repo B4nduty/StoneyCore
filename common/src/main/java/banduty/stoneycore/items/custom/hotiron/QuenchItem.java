@@ -7,12 +7,21 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.LayeredCauldronBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 public interface QuenchItem {
 
@@ -110,5 +119,55 @@ public interface QuenchItem {
     default void playQuenchSoundClient(Player player) {
         float pitch = 1.8f + player.getRandom().nextFloat() * (3.4f - 1.8f);
         player.playSound(SoundEvents.GENERIC_EXTINGUISH_FIRE, 0.5f, pitch);
+    }
+
+    default BlockPos getLookedWater(Player player, Level level) {
+        double reach = 5.0;
+
+        Vec3 start = player.getEyePosition();
+        Vec3 end = start.add(player.getLookAngle().scale(reach));
+
+        BlockHitResult hit = level.clip(new ClipContext(
+                start,
+                end,
+                ClipContext.Block.OUTLINE,
+                ClipContext.Fluid.SOURCE_ONLY,
+                player
+        ));
+
+        if (hit.getType() != HitResult.Type.BLOCK) return null;
+
+        BlockPos pos = hit.getBlockPos();
+        BlockState state = level.getBlockState(pos);
+
+        if (state.getFluidState().isSource() && state.getFluidState().is(Fluids.WATER)) {
+            return pos;
+        }
+
+        return null;
+    }
+
+    default InteractionResult handleWaterInteraction(Level level, BlockPos pos, Player player, ItemStack stack, InteractionHand hand) {
+        if (!level.isClientSide() && stack.getItem() instanceof QuenchItem quenchItem) {
+            quenchItem.quench(stack, player);
+            quenchItem.playQuenchEffects(level, pos, 8);
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+    default InteractionResult handleWaterCauldron(Level level, BlockPos pos, Player player, ItemStack stack) {
+        int cauldronLevel = level.getBlockState(pos).getValue(LayeredCauldronBlock.LEVEL);
+        if (cauldronLevel >= 1 && stack.getItem() instanceof QuenchItem quenchItem) {
+            if (!level.isClientSide()) {
+                LayeredCauldronBlock.lowerFillLevel(level.getBlockState(pos), level, pos);
+
+                quenchItem.quench(stack, player);
+                quenchItem.playQuenchEffects(level, pos, 10);
+            } else {
+                quenchItem.playQuenchSoundClient(player);
+            }
+            return InteractionResult.SUCCESS;
+        }
+        return InteractionResult.PASS;
     }
 }

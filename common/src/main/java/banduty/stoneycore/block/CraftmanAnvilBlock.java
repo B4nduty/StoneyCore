@@ -2,10 +2,10 @@ package banduty.stoneycore.block;
 
 import banduty.stoneycore.items.custom.CraftmanAnvilHelper;
 import banduty.stoneycore.items.custom.SmithingHammer;
-import banduty.stoneycore.items.custom.hotiron.HotIron;
-import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -120,15 +120,8 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(
-            ItemStack stack,
-            BlockState state,
-            Level level,
-            BlockPos pos,
-            Player player,
-            InteractionHand hand,
-            BlockHitResult hit
-    ) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level,
+                                              BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (level.isClientSide()) {
             return ItemInteractionResult.sidedSuccess(true);
         }
@@ -179,20 +172,18 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
         }
 
         boolean usingTongs = !tongsStack.isEmpty();
+        boolean tongsEmpty = usingTongs && !tongsStack.has(SCDataComponents.CAPTURED_ITEM.get());
 
-        if (usingTongs && !ManuscriptType.hasManuscriptType(tongsStack)) {
+        if (tongsEmpty) {
             NonNullList<ItemStack> items = anvilEntity.getItems();
 
             for (int i = 0; i < items.size(); i++) {
                 ItemStack item = items.get(i);
 
                 if (item.isEmpty()) continue;
-                if (!(item.getItem() instanceof HotIron)) continue;
+                if (!(item.getItem() instanceof QuenchItem quenchItem) || quenchItem.isFinished(item)) continue;
 
-                ManuscriptType type = ManuscriptType.getManuscriptType(item);
-                if (type == null) continue;
-
-                ManuscriptType.setManuscriptType(tongsStack, type);
+                tongsStack.set(SCDataComponents.CAPTURED_ITEM.get(), item.copyWithCount(1));
                 item.shrink(1);
 
                 if (item.isEmpty()) {

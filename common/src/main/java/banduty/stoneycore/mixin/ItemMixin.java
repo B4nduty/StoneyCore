@@ -25,17 +25,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -326,21 +321,21 @@ public abstract class ItemMixin {
         Player player = context.getPlayer();
         BlockState state = level.getBlockState(pos);
 
-        if (stack.getItem() instanceof QuenchItem) {
+        if (stack.getItem() instanceof QuenchItem quenchItem) {
             if (player == null) {
                 cir.setReturnValue(InteractionResult.PASS);
                 return;
             }
 
-            BlockPos waterPos = stoneyCore$getLookedWater(player, level);
+            BlockPos waterPos = quenchItem.getLookedWater(player, level);
 
             if (waterPos != null) {
-                cir.setReturnValue(stoneyCore$handleWaterInteraction(level, waterPos, player, stack, context.getHand()));
+                cir.setReturnValue(quenchItem.handleWaterInteraction(level, waterPos, player, stack, context.getHand()));
                 return;
             }
 
             if (state.is(Blocks.WATER_CAULDRON) && state.hasProperty(LayeredCauldronBlock.LEVEL)) {
-                cir.setReturnValue(stoneyCore$handleWaterCauldron(level, pos, player, stack));
+                cir.setReturnValue(quenchItem.handleWaterCauldron(level, pos, player, stack));
                 return;
             }
 
@@ -352,59 +347,6 @@ public abstract class ItemMixin {
         if (player != null) {
             stoneyCore$handleCropHarvest(level, pos, state, player, stack, context.getHand(), cir);
         }
-    }
-
-    @Unique
-    private BlockPos stoneyCore$getLookedWater(Player player, Level level) {
-        double reach = 5.0;
-
-        Vec3 start = player.getEyePosition();
-        Vec3 end = start.add(player.getLookAngle().scale(reach));
-
-        BlockHitResult hit = level.clip(new ClipContext(
-                start,
-                end,
-                ClipContext.Block.OUTLINE,
-                ClipContext.Fluid.SOURCE_ONLY,
-                player
-        ));
-
-        if (hit.getType() != HitResult.Type.BLOCK) return null;
-
-        BlockPos pos = hit.getBlockPos();
-        BlockState state = level.getBlockState(pos);
-
-        if (state.getFluidState().isSource() && state.getFluidState().is(Fluids.WATER)) {
-            return pos;
-        }
-
-        return null;
-    }
-
-    @Unique
-    private InteractionResult stoneyCore$handleWaterInteraction(Level level, BlockPos pos, Player player, ItemStack stack, InteractionHand hand) {
-        if (!level.isClientSide() && stack.getItem() instanceof QuenchItem quenchItem) {
-            quenchItem.quench(stack, player);
-            quenchItem.playQuenchEffects(level, pos, 8);
-        }
-        return InteractionResult.SUCCESS;
-    }
-
-    @Unique
-    private InteractionResult stoneyCore$handleWaterCauldron(Level level, BlockPos pos, Player player, ItemStack stack) {
-        int cauldronLevel = level.getBlockState(pos).getValue(LayeredCauldronBlock.LEVEL);
-        if (cauldronLevel >= 1 && stack.getItem() instanceof QuenchItem quenchItem) {
-            if (!level.isClientSide()) {
-                LayeredCauldronBlock.lowerFillLevel(level.getBlockState(pos), level, pos);
-
-                quenchItem.quench(stack, player);
-                quenchItem.playQuenchEffects(level, pos, 10);
-            } else {
-                quenchItem.playQuenchSoundClient(player);
-            }
-            return InteractionResult.SUCCESS;
-        }
-        return InteractionResult.PASS;
     }
 
     @Unique

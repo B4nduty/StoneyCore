@@ -23,7 +23,7 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
 
     protected void registerItemWConditions(Item item, boolean joinConditions, boolean overlay, OverrideCondition... conditions) {
         List<OverrideCondition> conditionList = new ArrayList<>(Arrays.asList(conditions));
-        if (item instanceof QuenchItem) {
+        if (item instanceof QuenchItem quenchItem && !quenchItem.destroysOnQuench()) {
             conditionList.add(new OverrideCondition(ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"), 1));
         }
         conditions = conditionList.toArray(new OverrideCondition[0]);

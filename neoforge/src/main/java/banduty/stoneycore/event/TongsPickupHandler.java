@@ -2,7 +2,6 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
-import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -29,16 +28,18 @@ public class TongsPickupHandler {
         boolean handled = false;
 
         // Check main hand for empty tongs
-        if (mainHand.getItem() instanceof Tongs && !ManuscriptType.hasManuscriptType(mainHand)) {
-            // Store the hot iron in the tongs
-            ManuscriptType.setManuscriptType(mainHand, ManuscriptType.getManuscriptType(pickedStack.copyWithCount(1)));
-            handled = true;
+        if (mainHand.getItem() instanceof Tongs tongs && tongs.getCapturedItem(mainHand).isEmpty()) {
+            // Store the captured item in the tongs
+            tongs.setCapturedItem(mainHand, pickedStack.copyWithCount(1));
+            pickedStack.shrink(1);
+            if (pickedStack.getCount() <= 0) handled = true;
         }
         // Check off hand for empty tongs (only if main hand wasn't used)
-        else if (offHand.getItem() instanceof Tongs && !ManuscriptType.hasManuscriptType(offHand)) {
-            // Store the hot iron in the tongs
-            ManuscriptType.setManuscriptType(offHand, ManuscriptType.getManuscriptType(pickedStack.copyWithCount(1)));
-            handled = true;
+        else if (offHand.getItem() instanceof Tongs tongs && tongs.getCapturedItem(mainHand).isEmpty()) {
+            // Store the captured item in the tongs
+            tongs.setCapturedItem(mainHand, pickedStack.copyWithCount(1));
+            pickedStack.shrink(1);
+            if (pickedStack.getCount() <= 0) handled = true;
         }
 
         // If we stored the item in tongs, remove it from the world and cancel pickup

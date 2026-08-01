@@ -19,12 +19,7 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public record CraftmanAnvilRecipe(Optional<ShapedPattern> pattern, List<StackIngredient> ingredients,
@@ -163,22 +158,24 @@ public record CraftmanAnvilRecipe(Optional<ShapedPattern> pattern, List<StackIng
     private static DataResult<ShapedPattern> fromRaw(PatternRaw raw) {
         List<String> rows = raw.pattern();
 
-        if (rows.size() != GRID_HEIGHT) {
-            return DataResult.error(() -> "Pattern must have exactly " + GRID_HEIGHT + " rows, found " + rows.size());
+        if (rows.isEmpty() || rows.size() > GRID_HEIGHT) {
+            return DataResult.error(() -> "Pattern must have between 1 and " + GRID_HEIGHT + " rows, found " + rows.size());
         }
 
-        List<Optional<StackIngredient>> slots = new ArrayList<>(GRID_SIZE);
+        List<Optional<StackIngredient>> slots = new ArrayList<>(Collections.nCopies(GRID_SIZE, Optional.empty()));
 
-        for (String row : rows) {
-            if (row.length() != GRID_WIDTH) {
-                return DataResult.error(() -> "Pattern row \"" + row + "\" must be exactly " + GRID_WIDTH + " characters wide");
+        for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
+            String row = rows.get(rowIndex);
+
+            if (row.length() > GRID_WIDTH) {
+                int finalRowIndex = rowIndex;
+                return DataResult.error(() -> "Pattern row \"" + row + "\" at index " + finalRowIndex + " must be at most " + GRID_WIDTH + " characters wide");
             }
 
-            for (int col = 0; col < GRID_WIDTH; col++) {
+            for (int col = 0; col < row.length(); col++) {
                 char symbol = row.charAt(col);
 
                 if (symbol == ' ') {
-                    slots.add(Optional.empty());
                     continue;
                 }
 
@@ -188,7 +185,7 @@ public record CraftmanAnvilRecipe(Optional<ShapedPattern> pattern, List<StackIng
                     return DataResult.error(() -> "Pattern references unknown key '" + symbol + "'");
                 }
 
-                slots.add(Optional.of(ingredient));
+                slots.set(rowIndex * GRID_WIDTH + col, Optional.of(ingredient));
             }
         }
 

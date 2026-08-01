@@ -2,7 +2,6 @@ package banduty.stoneycore.compat.jei;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.block.SCBlocks;
-import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
 import banduty.stoneycore.recipes.StackIngredient;
 import mezz.jei.api.constants.VanillaTypes;
@@ -19,7 +18,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -63,39 +61,39 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<CraftmanAnvilRe
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, CraftmanAnvilRecipe recipe, IFocusGroup focuses) {
-        List<StackIngredient> ingredients = recipe.pattern()
-                .map(p -> p.slots().stream()
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .toList())
-                .orElse(recipe.ingredients());
+        int[] inputSlotsX = {36, 54, 72, 36, 54, 72};
+        int[] inputSlotsY = {11, 11, 11, 29, 29, 29};
 
-        int inputSize = Math.min(ingredients.size(), 6);
+        if (recipe.pattern().isPresent()) {
+            List<Optional<StackIngredient>> slots = recipe.pattern().get().slots();
 
-        int[] inputSlotsX = {54, 36, 72, 54, 36, 72};
-        int[] inputSlotsY = {29, 29, 29, 11, 11, 11};
+            for (int i = 0; i < slots.size(); i++) {
+                Optional<StackIngredient> ingredient = slots.get(i);
 
-        for (int i = 0; i < inputSize; i++) {
-            StackIngredient ing = ingredients.get(i);
-            int addX = 0;
-            int addY = 0;
+                if (ingredient.isEmpty()) continue;
 
-            if (inputSize <= 3) addY = -9;
-            if (inputSize == 1 || inputSize == 2) addX = 18;
-            else if (inputSize == 5 && (i == 3 || i == 4)) addX = 9;
+                builder.addSlot(RecipeIngredientRole.INPUT, inputSlotsX[i], inputSlotsY[i])
+                        .addItemStacks(ingredient.get().asItemStacks());
+            }
+        } else {
+            List<StackIngredient> ingredients = recipe.ingredients();
+            int inputSize = Math.min(ingredients.size(), 6);
 
-            builder.addSlot(RecipeIngredientRole.INPUT, inputSlotsX[i] + addX, inputSlotsY[i] + addY)
-                    .addItemStacks(ing.asItemStacks());
+            for (int i = 0; i < inputSize; i++) {
+                StackIngredient ing = ingredients.get(i);
+                int addX = 0;
+                int addY = 0;
+
+                if (inputSize <= 3) addY = -9;
+                if (inputSize == 1 || inputSize == 2) addX = 18;
+                else if (inputSize == 5 && (i == 3 || i == 4)) addX = 9;
+
+                builder.addSlot(RecipeIngredientRole.INPUT, inputSlotsX[i] + addX, inputSlotsY[i] + addY)
+                        .addItemStacks(ing.asItemStacks());
+            }
         }
 
         ItemStack output = recipe.output();
-        ManuscriptType type = ManuscriptType.getManuscriptType(output);
-
-        if (type != null && type.getHotIronItem() != null && type.getHotIronItem() != Items.AIR) {
-            ItemStack target = new ItemStack(type.getHotIronItem());
-            builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT).addItemStack(target);
-        }
-
         builder.addSlot(RecipeIngredientRole.OUTPUT, 120, 20).addItemStack(output);
     }
 
@@ -107,20 +105,6 @@ public class CraftmanAnvilCategoryJEI implements IRecipeCategory<CraftmanAnvilRe
 
         if (recipe.chance() < 1f) {
             guiGraphics.drawString(Minecraft.getInstance().font, String.format("Chance: %.1f%%", recipe.chance() * 100), 90, 42, 0xFFFFFF, true);
-        }
-
-        ItemStack output = recipe.output();
-
-        ItemStack target = new ItemStack(ManuscriptType.getManuscriptItem(output));
-
-        if (!target.isEmpty()) {
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(136, 28, 0);
-            float scale = 0.5f;
-            guiGraphics.pose().scale(scale, scale, scale);
-            guiGraphics.renderItem(target, 0, 0);
-            guiGraphics.renderItemDecorations(Minecraft.getInstance().font, target, 0, 0);
-            guiGraphics.pose().popPose();
         }
 
         guiGraphics.pose().popPose();

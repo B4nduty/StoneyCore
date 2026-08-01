@@ -1,15 +1,22 @@
 package banduty.stoneycore.items.custom.tongs;
 
 import banduty.stoneycore.items.custom.CraftmanAnvilHelper;
-import banduty.stoneycore.items.custom.hotiron.HotIron;
-import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LayeredCauldronBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
 
 public class Tongs extends Item implements CraftmanAnvilHelper {
 
@@ -18,12 +25,43 @@ public class Tongs extends Item implements CraftmanAnvilHelper {
     }
 
     @Override
+    public void inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected) {
+        super.inventoryTick(stack, level, entity, slotId, isSelected);
+
+        ItemStack capturedItem = getCapturedItem(stack);
+        capturedItem.inventoryTick(level, entity, slotId, isSelected);
+    }
+
+    @Override
+    public Component getName(ItemStack stack) {
+        ItemStack capturedItem = getCapturedItem(stack);
+        if (capturedItem == ItemStack.EMPTY) return super.getName(stack);
+        return Component.translatable("item.stoneycore.tongs_with_item", capturedItem);
+    }
+
+    public boolean hasCapturedItem(ItemStack tongs) {
+        return tongs.has(SCDataComponents.CAPTURED_ITEM.get());
+    }
+
+    public ItemStack getCapturedItem(ItemStack tongs) {
+        ItemStack captured = tongs.get(SCDataComponents.CAPTURED_ITEM.get());
+        return captured != null ? captured : ItemStack.EMPTY;
+    }
+
+    public void setCapturedItem(ItemStack tongs, ItemStack captured) {
+        tongs.set(SCDataComponents.CAPTURED_ITEM.get(), captured.copy());
+    }
+
+    public void removeCapturedItem(ItemStack tongs) {
+        tongs.remove(SCDataComponents.CAPTURED_ITEM.get());
+    }
+
+    @Override
     public ItemStack acceptCraftmanAnvilItem(ItemStack itemStack) {
-        if (ManuscriptType.hasManuscriptType(itemStack)) {
-            ManuscriptType manuscriptType = ManuscriptType.getManuscriptType(itemStack);
-            ItemStack targetStack = manuscriptType != null ? new ItemStack(manuscriptType.getHotIronItem()) : ItemStack.EMPTY;
-            ManuscriptType.removeManuscriptType(itemStack);
-            return targetStack;
+        if (hasCapturedItem(itemStack)) {
+            ItemStack captured = getCapturedItem(itemStack);
+            removeCapturedItem(itemStack);
+            return captured;
         }
         return itemStack;
     }
@@ -33,29 +71,55 @@ public class Tongs extends Item implements CraftmanAnvilHelper {
         ItemStack stack = player.getItemInHand(hand);
         if (level.isClientSide()) return InteractionResultHolder.pass(stack);
 
-        ManuscriptType manuscriptType = ManuscriptType.getManuscriptType(stack);
+        if (hasCapturedItem(stack)) {
+            ItemStack captured = getCapturedItem(stack);
+            if (!captured.isEmpty()) {
+                player.addItem(captured.copy());
+            }
+            removeCapturedItem(stack);
+            return InteractionResultHolder.success(stack);
+        }
 
         InteractionHand secondHand = (hand == InteractionHand.MAIN_HAND) ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
         ItemStack secondStack = player.getItemInHand(secondHand);
 
-        if (manuscriptType != null) {
-            Item itemToGive = manuscriptType.getHotIronItem();
-            if (itemToGive != null && itemToGive != Items.AIR) {
-                player.addItem(new ItemStack(itemToGive));
-            }
-            ManuscriptType.removeManuscriptType(stack);
+        if (secondStack.getItem() instanceof QuenchItem quenchItem && !quenchItem.isFinished(secondStack)) {
+            setCapturedItem(stack, secondStack.copyWithCount(1));
+            secondStack.shrink(1);
             return InteractionResultHolder.success(stack);
         }
 
-        if (secondStack.getItem() instanceof HotIron) {
-            ManuscriptType hotIronType = ManuscriptType.getManuscriptType(secondStack);
-            if (hotIronType != null) {
-                ManuscriptType.setManuscriptType(stack, hotIronType);
-                secondStack.shrink(1);
-                return InteractionResultHolder.success(stack);
+        return InteractionResultHolder.fail(stack);
+    }
+
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        Level level = context.getLevel();
+        if (level.isClientSide) return InteractionResult.PASS;
+
+        ItemStack stack = context.getItemInHand();
+        BlockPos pos = context.getClickedPos();
+        Player player = context.getPlayer();
+        BlockState state = level.getBlockState(pos);
+
+        ItemStack itemStack = getCapturedItem(stack);
+
+        if (itemStack.getItem() instanceof QuenchItem quenchItem) {
+            if (player == null) {
+                return InteractionResult.PASS;
+            }
+
+            BlockPos waterPos = quenchItem.getLookedWater(player, level);
+
+            if (waterPos != null) {
+                return quenchItem.handleWaterInteraction(level, waterPos, player, itemStack, context.getHand());
+            }
+
+            if (state.is(Blocks.WATER_CAULDRON) && state.hasProperty(LayeredCauldronBlock.LEVEL)) {
+                return quenchItem.handleWaterCauldron(level, pos, player, itemStack);
             }
         }
 
-        return InteractionResultHolder.fail(stack);
+        return InteractionResult.PASS;
     }
 }

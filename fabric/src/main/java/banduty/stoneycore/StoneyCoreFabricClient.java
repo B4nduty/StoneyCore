@@ -14,9 +14,7 @@ import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
-import banduty.stoneycore.items.custom.hotiron.HotIron;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
-import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.model.*;
 import banduty.stoneycore.networking.SCS2CNetworking;
@@ -43,6 +41,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class StoneyCoreFabricClient implements ClientModInitializer {
     @Override
@@ -68,11 +67,18 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                     (stack, world, entity, seed) ->
                             stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f ? 1.0F : 0.0F);
 
-            if (item instanceof Tongs) {
+            if (item instanceof Tongs tongs) {
                 ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "hotiron"),
                         (stack, world, entity, seed) -> {
-                            ManuscriptType type = ManuscriptType.getManuscriptType(stack);
-                            return type != null && type.getHotIronItem() instanceof HotIron ? 1.0F : 0.0F;
+                            ItemStack itemStack = tongs.getCapturedItem(stack);
+                            if (!(itemStack.getItem() instanceof QuenchItem quenchItem)) return 0.0F;
+                            return itemStack.getItem() == SCItems.HOT_IRON.get() || !quenchItem.isFinished(stack) ? 1.0F : 0.0F;
+                        });
+                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "finished"),
+                        (stack, world, entity, seed) -> {
+                            ItemStack itemStack = tongs.getCapturedItem(stack);
+                            if (!(itemStack.getItem() instanceof QuenchItem quenchItem)) return 0.0F;
+                            return quenchItem.isFinished(itemStack) ? 1.0F : 0.0F;
                         });
             }
 

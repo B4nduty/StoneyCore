@@ -2,7 +2,6 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.event.custom.PlayerPickupCallback;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
-import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -22,12 +21,14 @@ public class TongsPickupHandler {
             ItemStack offHand = player.getOffhandItem();
 
             // Check main hand for empty tongs
-            if (mainHand.getItem() instanceof Tongs && !ManuscriptType.hasManuscriptType(mainHand)) {
-                // Store the hot iron in the tongs
-                ManuscriptType.setManuscriptType(mainHand, ManuscriptType.getManuscriptType(pickedStack.copyWithCount(1)));
+            if (mainHand.getItem() instanceof Tongs tongs && tongs.getCapturedItem(mainHand).isEmpty()) {
+                // Store the captured item in the tongs
+                tongs.setCapturedItem(mainHand, pickedStack.copyWithCount(1));
+
+                pickedStack.shrink(1);
 
                 // Remove the picked item from the world
-                itemEntity.discard();
+                if (pickedStack.getCount() <= 0) itemEntity.discard();
 
                 // Also remove from player inventory if it somehow got there
                 removeHotIronFromInventory(player, pickedStack);
@@ -37,12 +38,14 @@ public class TongsPickupHandler {
             }
 
             // Check off hand for empty tongs
-            if (offHand.getItem() instanceof Tongs && !ManuscriptType.hasManuscriptType(offHand)) {
-                // Store the hot iron in the tongs
-                ManuscriptType.setManuscriptType(offHand, ManuscriptType.getManuscriptType(pickedStack.copyWithCount(1)));
+            if (offHand.getItem() instanceof Tongs tongs && tongs.getCapturedItem(mainHand).isEmpty()) {
+                // Store the captured item in the tongs
+                tongs.setCapturedItem(mainHand, pickedStack.copyWithCount(1));
+
+                pickedStack.shrink(1);
 
                 // Remove the picked item from the world
-                itemEntity.discard();
+                if (pickedStack.getCount() <= 0) itemEntity.discard();
 
                 // Also remove from player inventory if it somehow got there
                 removeHotIronFromInventory(player, pickedStack);

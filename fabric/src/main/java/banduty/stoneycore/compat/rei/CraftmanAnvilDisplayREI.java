@@ -1,6 +1,5 @@
 package banduty.stoneycore.compat.rei;
 
-import banduty.stoneycore.items.custom.manuscript.ManuscriptType;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
 import banduty.stoneycore.recipes.StackIngredient;
 import me.shedaniel.rei.api.common.category.CategoryIdentifier;
@@ -10,7 +9,6 @@ import me.shedaniel.rei.api.common.entry.EntryStack;
 import me.shedaniel.rei.api.common.util.EntryIngredients;
 import me.shedaniel.rei.api.common.util.EntryStacks;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 
 import java.util.ArrayList;
@@ -42,21 +40,7 @@ public class CraftmanAnvilDisplayREI extends BasicDisplay {
         EntryStack<?> entry = this.outputs.getFirst().getFirst();
         ItemStack stack = entry.castValue();
 
-        ItemStack output = recipe.output();
-        ManuscriptType type = ManuscriptType.getManuscriptType(output);
-
-        if (type != null && type.getHotIronItem() != null && type.getHotIronItem() != Items.AIR) {
-            ItemStack target = new ItemStack(type.getHotIronItem());
-
-            if (!target.isEmpty()) {
-                this.outputs = List.of(
-                        EntryIngredient.of(EntryStacks.of(target.copy()))
-                );
-                this.realOutput = List.of(
-                        EntryIngredient.of(EntryStacks.of(stack.copy()))
-                );
-            }
-        }
+        this.realOutput = List.of(EntryIngredient.of(EntryStacks.of(stack.copy())));
     }
 
     public List<EntryIngredient> getRealOutput() {
@@ -65,22 +49,39 @@ public class CraftmanAnvilDisplayREI extends BasicDisplay {
 
     private static List<EntryIngredient> getInputList(CraftmanAnvilRecipe recipe) {
         if (recipe == null) return Collections.emptyList();
+
+        if (recipe.pattern().isPresent()) {
+            List<Optional<StackIngredient>> slots = recipe.pattern().get().slots();
+            List<EntryIngredient> list = new ArrayList<>(slots.size());
+
+            for (Optional<StackIngredient> slot : slots) {
+                if (slot.isEmpty()) {
+                    list.add(EntryIngredient.empty());
+                    continue;
+                }
+
+                StackIngredient ingredient = slot.get();
+
+                if (ingredient.tag().isPresent()) {
+                    list.add(EntryIngredients.ofItemTag(ingredient.tag().get()));
+                } else {
+                    list.add(EntryIngredients.of(ingredient.stack()));
+                }
+            }
+
+            return list;
+        }
+
         List<EntryIngredient> list = new ArrayList<>();
 
-        List<StackIngredient> ingredients = recipe.pattern()
-                .map(p -> p.slots().stream()
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .toList())
-                .orElse(recipe.ingredients());
-
-        for (StackIngredient ingredient : ingredients) {
+        for (StackIngredient ingredient : recipe.ingredients()) {
             if (ingredient.tag().isPresent()) {
                 list.add(EntryIngredients.ofItemTag(ingredient.tag().get()));
             } else {
                 list.add(EntryIngredients.of(ingredient.stack()));
             }
         }
+
         return list;
     }
 
