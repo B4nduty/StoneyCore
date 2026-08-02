@@ -36,7 +36,7 @@ public class Tongs extends Item implements CraftmanAnvilHelper {
     public Component getName(ItemStack stack) {
         ItemStack capturedItem = getCapturedItem(stack);
         if (capturedItem == ItemStack.EMPTY) return super.getName(stack);
-        return Component.translatable("item.stoneycore.tongs_with_item", capturedItem);
+        return Component.translatable("item.stoneycore.tongs_with_item", capturedItem.getItem());
     }
 
     public boolean hasCapturedItem(ItemStack tongs) {

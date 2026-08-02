@@ -311,6 +311,13 @@ public abstract class ItemMixin {
         }
     }
 
+    @Inject(method = "getName", at = @At("HEAD"), cancellable = true)
+    public void stoneycore$getName(ItemStack stack, CallbackInfoReturnable<Component> cir) {
+        if (!(stack.getItem() instanceof QuenchItem quenchItem) || quenchItem.destroysOnQuench() || quenchItem.isFinished(stack)) return;
+
+        cir.setReturnValue(Component.translatable("item.stoneycore.ignited", Component.translatable(stack.getItem().getDescriptionId())));
+    }
+
     @Inject(method = "useOn", at = @At("HEAD"), cancellable = true)
     public void stoneycore$useOn(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         Level level = context.getLevel();

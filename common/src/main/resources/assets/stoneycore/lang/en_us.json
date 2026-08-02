@@ -9,6 +9,7 @@
   "item.stoneycore.hot_iron.with_item": "Hot %s",
   "item.stoneycore.tongs": "Tongs",
   "item.stoneycore.tongs_with_item": "Tongs with %s",
+  "item.stoneycore.ignited": "Ignited %s",
   "block.stoneycore.craftman_anvil": "Craftman's Anvil",
   "key.category.stoneycore": "StoneyCore",
   "key.stoneycore.reload": "Reload",
