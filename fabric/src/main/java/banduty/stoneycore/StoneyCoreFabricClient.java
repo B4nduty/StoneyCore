@@ -31,6 +31,7 @@ import banduty.stoneycore.util.data.itemdata.SCTags;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.*;
 import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
@@ -102,5 +103,7 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(UnderArmourLeggingsModel.LAYER_LOCATION, UnderArmourLeggingsModel::getTexturedModelData);
         EntityModelLayerRegistry.registerModelLayer(UnderArmourBootsModel.LAYER_LOCATION, UnderArmourBootsModel::getTexturedModelData);
         EntityModelLayerRegistry.registerModelLayer(CrownModel.LAYER_LOCATION, CrownModel::getTexturedModelData);
+
+        ModelLoadingPlugin.register(new SCModelLoadingPlugin());
     }
 }
