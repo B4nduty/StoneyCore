@@ -1,9 +1,9 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.client.render.ArmorAttachmentRenderManager;
-import banduty.stoneycore.client.render.ArmorAttachmentRenderer;
-import banduty.stoneycore.client.render.ArmorTextureCache;
+import banduty.stoneycore.client.render.armor.ArmorAttachmentRenderManager;
+import banduty.stoneycore.client.render.armor.ArmorAttachmentRenderer;
+import banduty.stoneycore.client.render.armor.ArmorTextureCache;
 import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.model.UnderArmourArmModel;

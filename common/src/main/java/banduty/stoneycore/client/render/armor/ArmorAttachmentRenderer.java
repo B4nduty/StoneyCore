@@ -1,4 +1,4 @@
-package banduty.stoneycore.client.render;
+package banduty.stoneycore.client.render.armor;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.HumanoidModel;

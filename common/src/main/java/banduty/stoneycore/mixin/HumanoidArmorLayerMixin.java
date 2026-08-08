@@ -1,6 +1,6 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.client.render.UnderArmourRenderer;
+import banduty.stoneycore.client.render.armor.UnderArmourRenderer;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.HumanoidModel;

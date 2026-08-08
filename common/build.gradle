@@ -29,6 +29,10 @@ repositories {
         }
     }
     maven { url 'https://jitpack.io' }
+    maven {
+        name = 'GeckoLib'
+        url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+    }
 }
 
 dependencies {
@@ -37,6 +41,8 @@ dependencies {
     annotationProcessor group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
 
     implementation "com.github.B4nduty:streq:v${streq}"
+
+    compileOnly "software.bernie.geckolib:geckolib-common-1.21.1:${project.geckolib}"
 }
 
 configurations {

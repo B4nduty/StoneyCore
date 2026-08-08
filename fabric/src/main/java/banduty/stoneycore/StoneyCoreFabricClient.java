@@ -4,13 +4,15 @@ import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.ClientOutlineRenderer;
 import banduty.stoneycore.client.CrownRenderer;
-import banduty.stoneycore.client.SC3DItemRenderer;
+import banduty.stoneycore.client.render.item.SC3DItemRenderer;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
+import banduty.stoneycore.client.render.item.SCIconItemRenderer;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.event.*;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.client.SC3DRendererProvider;
+import banduty.stoneycore.items.client.SCIconRendererProvider;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
@@ -92,8 +94,7 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
 
             ResourceLocation resourceLocation = BuiltInRegistries.ITEM.getKey(item);
 
-
-                if (item instanceof SC3DRendererProvider) {
+            if (item instanceof SC3DRendererProvider) {
                 ModelLoadingPlugin.register(pluginContext -> {
                     pluginContext.addModels(
                             ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_gui"),
@@ -101,6 +102,17 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                     );
                 });
                 SC3DItemRenderer renderer = new SC3DItemRenderer();
+
+                BuiltinItemRendererRegistry.INSTANCE.register(item, renderer::renderByItem);
+            }
+
+            if (item instanceof SCIconRendererProvider) {
+                ModelLoadingPlugin.register(pluginContext -> {
+                    pluginContext.addModels(
+                            ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_icon")
+                    );
+                });
+                SCIconItemRenderer renderer = new SCIconItemRenderer();
 
                 BuiltinItemRendererRegistry.INSTANCE.register(item, renderer::renderByItem);
             }

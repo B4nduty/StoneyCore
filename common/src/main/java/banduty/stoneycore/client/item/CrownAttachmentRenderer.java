@@ -1,8 +1,8 @@
 package banduty.stoneycore.client.item;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.client.render.ArmorAttachmentPosition;
-import banduty.stoneycore.client.render.ArmorAttachmentRenderer;
+import banduty.stoneycore.client.render.armor.ArmorAttachmentPosition;
+import banduty.stoneycore.client.render.armor.ArmorAttachmentRenderer;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.model.CrownModel;

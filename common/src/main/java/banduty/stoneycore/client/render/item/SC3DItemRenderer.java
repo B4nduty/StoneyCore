@@ -1,4 +1,4 @@
-package banduty.stoneycore.client;
+package banduty.stoneycore.client.render.item;
 
 import banduty.stoneycore.platform.ClientPlatform;
 import com.mojang.blaze3d.platform.Lighting;

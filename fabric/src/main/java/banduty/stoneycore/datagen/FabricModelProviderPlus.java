@@ -2,6 +2,7 @@ package banduty.stoneycore.datagen;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.client.SC3DRendererProvider;
+import banduty.stoneycore.items.client.SCIconRendererProvider;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -39,15 +40,19 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         String path = itemId.getPath();
 
         boolean is3DProvider = item instanceof SC3DRendererProvider;
-        // For 3D providers, the flat 2D model with overrides is named path_gui (e.g., halberd_gui)
-        String guiPath = is3DProvider ? path + "_gui" : path;
+        boolean isIconProvider = item instanceof SCIconRendererProvider;
+        boolean isCustomRenderer = is3DProvider || isIconProvider;
+
+        // Determine the model suffix for the flat icon model: _gui for SC3DRendererProvider, _icon for SCIconRendererProvider
+        String customSuffix = is3DProvider ? "_gui" : (isIconProvider ? "_icon" : "");
+        String iconPath = isCustomRenderer ? path + customSuffix : path;
 
         Set<String> generatedModels = new HashSet<>();
         JsonArray overrides = new JsonArray();
 
         // Generate individual condition models and overrides
         for (OverrideCondition condition : conditions) {
-            String modelName = condition.getModelName(guiPath);
+            String modelName = condition.getModelName(iconPath);
             generateOverrideModel(item, ModelTemplates.FLAT_ITEM, modelName, itemModelGenerators, overlay);
             generatedModels.add(modelName);
 
@@ -65,7 +70,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
 
                     for (OverrideCondition condition : combination) {
                         combinedPredicate.addProperty(condition.predicateKey.toString(), condition.predicateValue);
-                        modelNames.add(condition.getModelName(guiPath));
+                        modelNames.add(condition.getModelName(iconPath));
                     }
 
                     String combinedModelName = combineMultipleModelNames(modelNames);
@@ -93,12 +98,12 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
             finalModel = ModelTemplates.FLAT_ITEM;
         }
 
-        // Generate the 2D GUI model (e.g., halberd_gui.json if SC3DRendererProvider, or halberd.json normally)
-        ResourceLocation guiModelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + guiPath);
+        // Generate the 2D icon model (e.g., halberd_gui.json for 3D providers, item_icon.json for icon providers, or base path)
+        ResourceLocation iconModelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + iconPath);
         ModelTemplate finalModelTemplate = finalModel;
 
         finalModelTemplate.create(
-                guiModelId,
+                iconModelId,
                 textures,
                 itemModelGenerators.output,
                 (id, textureMap) -> {
@@ -110,8 +115,8 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
                 }
         );
 
-        // If the item is an SC3DRendererProvider, generate the base model with parent "builtin/entity"
-        if (is3DProvider) {
+        // For custom renderer providers, generate the base model with parent "builtin/entity"
+        if (isCustomRenderer) {
             ResourceLocation baseModelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path);
             itemModelGenerators.output.accept(baseModelId, () -> {
                 JsonObject json = new JsonObject();

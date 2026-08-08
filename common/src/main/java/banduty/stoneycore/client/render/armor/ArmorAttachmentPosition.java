@@ -1,4 +1,4 @@
-package banduty.stoneycore.client.render;
+package banduty.stoneycore.client.render.armor;
 
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import net.minecraft.world.entity.LivingEntity;

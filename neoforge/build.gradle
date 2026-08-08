@@ -36,6 +36,10 @@ repositories {
             includeGroup 'com.jamieswhiteshirt'
         }
     }
+    maven {
+        name = 'GeckoLib'
+        url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+    }
 }
 
 neoForge {
@@ -92,6 +96,8 @@ dependencies {
     runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei}"
 
     api "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config}"
+
+    compileOnly "software.bernie.geckolib:geckolib-neoforge-1.21.1:${project.geckolib}"
 
     implementation "com.github.B4nduty:streq:v${streq}"
     jarJar("com.github.B4nduty:streq:v${streq}") {

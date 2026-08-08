@@ -1,4 +1,4 @@
-package banduty.stoneycore.client.render;
+package banduty.stoneycore.client.render.armor;
 
 import net.minecraft.world.item.Item;
 
