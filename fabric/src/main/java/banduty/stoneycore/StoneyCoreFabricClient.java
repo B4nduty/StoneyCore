@@ -4,14 +4,13 @@ import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.ClientOutlineRenderer;
 import banduty.stoneycore.client.CrownRenderer;
+import banduty.stoneycore.client.SC3DItemRenderer;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
 import banduty.stoneycore.entity.SCEntities;
-import banduty.stoneycore.event.AttackCancelHandler;
-import banduty.stoneycore.event.ClientTickHandler;
-import banduty.stoneycore.event.ItemTooltipHandler;
-import banduty.stoneycore.event.KeyInputHandler;
+import banduty.stoneycore.event.*;
 import banduty.stoneycore.items.SCItems;
+import banduty.stoneycore.items.client.SC3DRendererProvider;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
@@ -22,6 +21,7 @@ import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
 import banduty.stoneycore.particle.SCParticles;
 import banduty.stoneycore.platform.ClientPlatform;
+import banduty.stoneycore.platform.FabricClientPlatformHelper;
 import banduty.stoneycore.platform.FabricHumanoidModelSetupAnimHelper;
 import banduty.stoneycore.platform.FabricKeyInputHelper;
 import banduty.stoneycore.screen.BlueprintScreen;
@@ -47,6 +47,7 @@ import net.minecraft.world.item.ItemStack;
 public class StoneyCoreFabricClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ClientPlatform.setIclientPlatformHelper(new FabricClientPlatformHelper());
         ClientPlatform.setHumanoidModelSetupAnimHelper(new FabricHumanoidModelSetupAnimHelper());
         ClientPlatform.setKeyInputHelper(new FabricKeyInputHelper());
         SCS2CNetworking.registerS2CNetworking();
@@ -88,6 +89,21 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                         (stack, world, entity, seed) ->
                                 !stack.getOrDefault(SCDataComponents.FINISHED.get(), false) ? 1.0F : 0.0F);
             }
+
+            ResourceLocation resourceLocation = BuiltInRegistries.ITEM.getKey(item);
+
+
+                if (item instanceof SC3DRendererProvider) {
+                ModelLoadingPlugin.register(pluginContext -> {
+                    pluginContext.addModels(
+                            ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_gui"),
+                            ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_3d")
+                    );
+                });
+                SC3DItemRenderer renderer = new SC3DItemRenderer();
+
+                BuiltinItemRendererRegistry.INSTANCE.register(item, renderer::renderByItem);
+            }
         }
         ArmorRenderer.register(new CrownRenderer(), SCItems.CROWN.get());
 
@@ -103,7 +119,5 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(UnderArmourLeggingsModel.LAYER_LOCATION, UnderArmourLeggingsModel::getTexturedModelData);
         EntityModelLayerRegistry.registerModelLayer(UnderArmourBootsModel.LAYER_LOCATION, UnderArmourBootsModel::getTexturedModelData);
         EntityModelLayerRegistry.registerModelLayer(CrownModel.LAYER_LOCATION, CrownModel::getTexturedModelData);
-
-        ModelLoadingPlugin.register(new SCModelLoadingPlugin());
     }
 }
