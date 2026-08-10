@@ -35,6 +35,7 @@
     "HorseModelMixin",
     "HumanoidArmorLayerMixin",
     "ItemInHandRendererMixin",
+    "ItemRendererAccessor",
     "MinecraftClientMixin",
     "PlayerEntityRendererMixin"
   ],
