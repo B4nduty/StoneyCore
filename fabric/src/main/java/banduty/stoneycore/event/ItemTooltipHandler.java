@@ -7,7 +7,9 @@ import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.definitionsloader.*;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
+import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
@@ -34,7 +36,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
         for (LandType landType : LandTypeRegistry.getAll()) {
             ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
             for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
-                if (stack.is(landType.coreItem()) || (armorAttachment.getItem() == landType.coreItem())) {
+                if (itemStack.is(landType.coreItem()) || armorAttachment.is(landType.coreItem())) {
 
                     lines.add(Component.translatable("component.tooltip.stoneycore.coreItem").withStyle(ChatFormatting.GOLD));
                     break;
@@ -42,8 +44,10 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             }
         }
 
-        if (stack.is(SCTags.HIDE_NAME_TAG.getTag())) lines.add(Component.translatable("component.tooltip.stoneycore.hideNameTag").withStyle(ChatFormatting.BLUE));
-        if (stack.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) lines.add(Component.translatable("component.tooltip.stoneycore.freezing").withStyle(ChatFormatting.BLUE));
+        if (stack.is(SCTags.HIDE_NAME_TAG.getTag()))
+            lines.add(Component.translatable("component.tooltip.stoneycore.hideNameTag").withStyle(ChatFormatting.BLUE));
+        if (stack.is(ItemTags.FREEZE_IMMUNE_WEARABLES))
+            lines.add(Component.translatable("component.tooltip.stoneycore.freezing").withStyle(ChatFormatting.BLUE));
 
         if (WeaponDefinitionsStorage.isRanged(stack)) {
             double baseDamage = WeaponDefinitionsStorage.getData(stack).ranged().baseDamage();
@@ -73,9 +77,12 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             double bludgeoning = SCArmorUtil.getResistance(SCDamageType.BLUDGEONING, armorItem) * 100;
             double piercing = SCArmorUtil.getResistance(SCDamageType.PIERCING, armorItem) * 100;
 
-            if (slashing != 0) lines.add(Component.translatable("component.tooltip.stoneycore.slashingResistance", formatValue(slashing, false)).withStyle(ChatFormatting.BLUE));
-            if (bludgeoning != 0) lines.add(Component.translatable("component.tooltip.stoneycore.bludgeoningResistance", formatValue(bludgeoning, false)).withStyle(ChatFormatting.BLUE));
-            if (piercing != 0) lines.add(Component.translatable("component.tooltip.stoneycore.piercingResistance", formatValue(piercing, false)).withStyle(ChatFormatting.BLUE));
+            if (slashing != 0)
+                lines.add(Component.translatable("component.tooltip.stoneycore.slashingResistance", formatValue(slashing, false)).withStyle(ChatFormatting.BLUE));
+            if (bludgeoning != 0)
+                lines.add(Component.translatable("component.tooltip.stoneycore.bludgeoningResistance", formatValue(bludgeoning, false)).withStyle(ChatFormatting.BLUE));
+            if (piercing != 0)
+                lines.add(Component.translatable("component.tooltip.stoneycore.piercingResistance", formatValue(piercing, false)).withStyle(ChatFormatting.BLUE));
         }
 
         if (ArmorDefinitionsStorage.containsItem(stack)) {

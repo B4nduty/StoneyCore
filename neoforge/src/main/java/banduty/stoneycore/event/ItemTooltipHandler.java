@@ -8,7 +8,9 @@ import banduty.stoneycore.lands.LandType;
 import banduty.stoneycore.lands.LandTypeRegistry;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.definitionsloader.*;
+import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
+import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
+import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
 import banduty.stoneycore.util.weaponutil.SCArmorUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -44,7 +46,7 @@ public class ItemTooltipHandler {
         for (LandType landType : LandTypeRegistry.getAll()) {
             ItemStack itemStack = player.getItemBySlot(EquipmentSlot.HEAD);
             for (ItemStack armorAttachments : SCUnderArmor.getArmorAttachments(itemStack)) {
-                if (stack.is(landType.coreItem()) || (armorAttachments.getItem() == landType.coreItem())) {
+                if (itemStack.is(landType.coreItem()) || armorAttachments.is(landType.coreItem())) {
 
                     lines.add(Component.translatable("component.tooltip.stoneycore.coreItem").withStyle(ChatFormatting.GOLD));
                     break;
