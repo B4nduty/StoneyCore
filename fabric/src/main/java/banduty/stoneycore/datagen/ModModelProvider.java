@@ -5,6 +5,7 @@ import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.items.SCItems;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.data.models.BlockModelGenerators;
 import net.minecraft.data.models.ItemModelGenerators;
 import net.minecraft.data.models.blockstates.MultiVariantGenerator;
@@ -15,9 +16,13 @@ import net.minecraft.data.models.model.ModelTemplates;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 
+import java.util.concurrent.CompletableFuture;
+
 public class ModModelProvider extends FabricModelProviderPlus {
-    public ModModelProvider(FabricDataOutput output) {
+    private final CompletableFuture<HolderLookup.Provider> registriesFuture;
+    public ModModelProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registriesFuture) {
         super(output);
+        this.registriesFuture = registriesFuture;
     }
 
     @Override
@@ -60,12 +65,14 @@ public class ModModelProvider extends FabricModelProviderPlus {
 
     @Override
     public void generateItemModels(ItemModelGenerators itemModelGenerator) {
+        HolderLookup.Provider registries = registriesFuture.join();
+
         itemModelGenerator.generateFlatItem(SCItems.SMITHING_HAMMER.get(), ModelTemplates.FLAT_HANDHELD_ITEM);
         itemModelGenerator.generateFlatItem(SCItems.BLACK_POWDER.get(), ModelTemplates.FLAT_ITEM);
         itemModelGenerator.generateFlatItem(SCItems.CROWN.get(), ModelTemplates.FLAT_ITEM);
         itemModelGenerator.generateFlatItem(SCItems.HOT_IRON.get(), ModelTemplates.FLAT_ITEM);
 
-        registerItemWConditions(SCItems.TONGS.get(), itemModelGenerator, false, false,
+        registerItemWConditions(SCItems.TONGS.get(), itemModelGenerator, registries, false, false,
                 new OverrideCondition(ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "hotiron"), 1),
                 new OverrideCondition(ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "finished"), 1));
     }

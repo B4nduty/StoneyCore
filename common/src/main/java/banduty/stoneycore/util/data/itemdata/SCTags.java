@@ -48,11 +48,7 @@ public enum SCTags {
     /**
      * Armor that can Hide Name Tag
      */
-    HIDE_NAME_TAG("hide_name_tag"),
-    /**
-     * Armor that are banner compatible
-     */
-    BANNER_COMPATIBLE("banner_compatible");
+    HIDE_NAME_TAG("hide_name_tag");
 
     private final TagKey<Item> tag;
 

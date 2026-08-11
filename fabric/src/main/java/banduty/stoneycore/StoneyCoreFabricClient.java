@@ -7,11 +7,13 @@ import banduty.stoneycore.client.CrownRenderer;
 import banduty.stoneycore.client.render.item.SC3DItemRenderer;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
+import banduty.stoneycore.client.render.item.SCBannerItemRenderer;
 import banduty.stoneycore.client.render.item.SCIconItemRenderer;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.event.*;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.client.SC3DRendererProvider;
+import banduty.stoneycore.items.client.SCBannersRendererProvider;
 import banduty.stoneycore.items.client.SCIconRendererProvider;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
@@ -114,6 +116,17 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                 });
                 SCIconItemRenderer renderer = new SCIconItemRenderer();
 
+                BuiltinItemRendererRegistry.INSTANCE.register(item, renderer::renderByItem);
+            }
+
+            if (item instanceof SCBannersRendererProvider) {
+                ModelLoadingPlugin.register(pluginContext -> {
+                    pluginContext.addModels(
+                            ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_base")
+                    );
+                });
+
+                SCBannerItemRenderer renderer = new SCBannerItemRenderer();
                 BuiltinItemRendererRegistry.INSTANCE.register(item, renderer::renderByItem);
             }
         }

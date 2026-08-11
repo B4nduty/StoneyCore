@@ -2,12 +2,14 @@ package banduty.stoneycore.datagen;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.client.SC3DRendererProvider;
+import banduty.stoneycore.items.client.SCBannersRendererProvider;
 import banduty.stoneycore.items.client.SCIconRendererProvider;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.models.ItemModelGenerators;
 import net.minecraft.data.models.model.ModelTemplate;
@@ -24,11 +26,11 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         super(output);
     }
 
-    protected void registerItemWConditions(Item item, ItemModelGenerators itemModelGenerators, OverrideCondition... conditions) {
-        registerItemWConditions(item, itemModelGenerators, true, false, conditions);
+    protected void registerItemWConditions(Item item, ItemModelGenerators itemModelGenerators, HolderLookup.Provider registries, OverrideCondition... conditions) {
+        registerItemWConditions(item, itemModelGenerators, registries, true, false, conditions);
     }
 
-    protected void registerItemWConditions(Item item, ItemModelGenerators itemModelGenerators, boolean joinConditions, boolean overlay, OverrideCondition... conditions) {
+    protected void registerItemWConditions(Item item, ItemModelGenerators itemModelGenerators, HolderLookup.Provider registries, boolean joinConditions, boolean overlay, OverrideCondition... conditions) {
         List<OverrideCondition> conditionList = new ArrayList<>(Arrays.asList(conditions));
         if (item instanceof QuenchItem quenchItem && !quenchItem.destroysOnQuench()) {
             conditionList.add(new OverrideCondition(ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"), 1));
@@ -41,10 +43,12 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
 
         boolean is3DProvider = item instanceof SC3DRendererProvider;
         boolean isIconProvider = item instanceof SCIconRendererProvider;
-        boolean isCustomRenderer = is3DProvider || isIconProvider;
+        boolean isBannerProvider = item instanceof SCBannersRendererProvider;
 
-        // Determine the model suffix for the flat icon model: _gui for SC3DRendererProvider, _icon for SCIconRendererProvider
-        String customSuffix = is3DProvider ? "_gui" : (isIconProvider ? "_icon" : "");
+        boolean isCustomRenderer = is3DProvider || isIconProvider || isBannerProvider;
+
+        // 3D items get "_gui", Icon items get "_icon", Banner items use "_base", standard items use base path
+        String customSuffix = is3DProvider ? "_gui" : (isIconProvider ? "_icon" : (isBannerProvider ? "_base" : ""));
         String iconPath = isCustomRenderer ? path + customSuffix : path;
 
         Set<String> generatedModels = new HashSet<>();
@@ -98,7 +102,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
             finalModel = ModelTemplates.FLAT_ITEM;
         }
 
-        // Generate the 2D icon model (e.g., halberd_gui.json for 3D providers, item_icon.json for icon providers, or base path)
+        // Generate flat 2D base model (models/item/surcoat_base.json)
         ResourceLocation iconModelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + iconPath);
         ModelTemplate finalModelTemplate = finalModel;
 
@@ -115,7 +119,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
                 }
         );
 
-        // For custom renderer providers, generate the base model with parent "builtin/entity"
+        // Generate base item model (models/item/surcoat.json) pointing to builtin/entity
         if (isCustomRenderer) {
             ResourceLocation baseModelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path);
             itemModelGenerators.output.accept(baseModelId, () -> {
@@ -130,7 +134,6 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         List<List<OverrideCondition>> allCombinations = new ArrayList<>();
         int n = conditions.length;
 
-        // Generate all subsets (2^n - 1, excluding empty set)
         for (int i = 1; i < (1 << n); i++) {
             List<OverrideCondition> combination = new ArrayList<>();
             for (int j = 0; j < n; j++) {
@@ -151,7 +154,6 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         String[] firstParts = modelNames.get(0).split("_");
         String baseName = firstParts[0];
 
-        // Keep adding parts until we find where models diverge
         for (int i = 1; i < firstParts.length; i++) {
             String potentialBase = baseName + "_" + firstParts[i];
             boolean allStartWith = true;
@@ -170,7 +172,6 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
             }
         }
 
-        // Extract all unique conditions
         Set<String> conditions = new HashSet<>();
         for (String modelName : modelNames) {
             String conditionPart = modelName.substring(baseName.length());
@@ -224,25 +225,6 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         overrides.add(override);
     }
 
-    protected void generateBannerPatternModels(Item item, ModelTemplate model, ItemModelGenerators itemModelGenerator) {
-        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
-        String[] bannerPatternNames = {
-                "border", "bricks", "circle", "creeper", "cross", "curly_border", "diagonal_left", "diagonal_right",
-                "diagonal_up_left", "diagonal_up_right", "flow", "flower", "globe", "gradient", "gradient_up", "guster", "half_horizontal",
-                "half_horizontal_bottom", "half_vertical", "half_vertical_right", "mojang", "piglin", "rhombus", "skull",
-                "small_stripes", "square_bottom_left", "square_bottom_right", "square_top_left", "square_top_right",
-                "straight_cross", "stripe_bottom", "stripe_center", "stripe_downleft", "stripe_downright", "stripe_left",
-                "stripe_middle", "stripe_right", "stripe_top", "triangle_bottom", "triangle_top", "triangles_bottom",
-                "triangles_top"
-        };
-
-        for (String pattern : bannerPatternNames) {
-            ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + itemId.getPath() + "/" + pattern);
-            TextureMapping textures = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + itemId.getPath() + "/" + pattern));
-            model.create(modelId, textures, itemModelGenerator.output);
-        }
-    }
-
     protected void registerWCustomName(Item item, ModelTemplate model, ItemModelGenerators itemModelGenerator, String modelName, ResourceLocation texturePath) {
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
         String path = itemId.getPath();
@@ -258,7 +240,8 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
 
     public record OverrideCondition(ResourceLocation predicateKey, Number predicateValue) {
         String getModelName(String basePath) {
-            return basePath + "_" + predicateKey.getPath();
+            String cleanPath = basePath.replaceAll("(_gui|_icon|_base)$", "");
+            return cleanPath + "_" + predicateKey.getPath();
         }
     }
 }
