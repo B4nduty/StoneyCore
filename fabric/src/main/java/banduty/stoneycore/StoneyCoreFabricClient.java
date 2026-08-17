@@ -87,7 +87,7 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                         (stack, world, entity, seed) -> {
                             ItemStack itemStack = tongs.getCapturedItem(stack);
                             if (!(itemStack.getItem() instanceof QuenchItem quenchItem)) return 0.0F;
-                            return quenchItem.isFinished(itemStack) ? 1.0F : 0.0F;
+                            return quenchItem.isIgnited(itemStack) ? 1.0F : 0.0F;
                         });
             }
 

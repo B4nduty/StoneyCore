@@ -4,6 +4,7 @@ import banduty.stoneycore.client.MinecraftS4S;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
+import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
 import banduty.stoneycore.util.data.entitydata.StaminaData;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
@@ -337,6 +338,49 @@ public abstract class ItemMixin {
                                     )
                             )
                     );
+                }
+            }
+        }
+        if (stack.getItem() instanceof Tongs tongs) {
+
+            ItemStack capturedItem = tongs.getCapturedItem(stack);
+
+            if (!capturedItem.isEmpty()
+                    && capturedItem.getItem() instanceof QuenchItem quenchItem
+                    && quenchItem.isIgnited(capturedItem)) {
+
+                Long igniteTime = quenchItem.getIgniteTime(capturedItem);
+
+                if (igniteTime != null) {
+                    Level clientLevel = MinecraftS4S.minecraft().level;
+
+                    if (clientLevel != null) {
+                        long currentTime = clientLevel.getGameTime();
+
+                        long remainingTicks =
+                                quenchItem.getIgniteDuration()
+                                        - (currentTime - igniteTime);
+
+                        remainingTicks = Math.max(0, remainingTicks);
+
+                        long totalSeconds = remainingTicks / 20;
+
+                        long hours = totalSeconds / 3600;
+                        long minutes = (totalSeconds % 3600) / 60;
+                        long seconds = totalSeconds % 60;
+
+                        tooltip.add(
+                                Component.translatable(
+                                        "component.tooltip.stoneycore.tong_ignitedtime",
+                                        String.format(
+                                                "%02d:%02d:%02d",
+                                                hours,
+                                                minutes,
+                                                seconds
+                                        )
+                                )
+                        );
+                    }
                 }
             }
         }
