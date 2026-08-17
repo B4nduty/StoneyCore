@@ -4,13 +4,16 @@ import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.ClientOutlineRenderer;
 import banduty.stoneycore.client.CrownRenderer;
-import banduty.stoneycore.client.render.item.SC3DItemRenderer;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
+import banduty.stoneycore.client.render.item.SC3DItemRenderer;
 import banduty.stoneycore.client.render.item.SCBannerItemRenderer;
 import banduty.stoneycore.client.render.item.SCIconItemRenderer;
 import banduty.stoneycore.entity.SCEntities;
-import banduty.stoneycore.event.*;
+import banduty.stoneycore.event.AttackCancelHandler;
+import banduty.stoneycore.event.ClientTickHandler;
+import banduty.stoneycore.event.ItemTooltipHandler;
+import banduty.stoneycore.event.KeyInputHandler;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.client.SC3DRendererProvider;
 import banduty.stoneycore.items.client.SCBannersRendererProvider;
@@ -89,9 +92,18 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
             }
 
             if (item instanceof QuenchItem && item != SCItems.HOT_IRON.get()) {
-                ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"),
+                ItemProperties.register(
+                        item,
+                        ResourceLocation.fromNamespaceAndPath(
+                                StoneyCore.MOD_ID,
+                                "ignited"
+                        ),
                         (stack, world, entity, seed) ->
-                                !stack.getOrDefault(SCDataComponents.FINISHED.get(), false) ? 1.0F : 0.0F);
+                                stack.getOrDefault(
+                                        SCDataComponents.IGNITED.get(),
+                                        false
+                                ) ? 1.0F : 0.0F
+                );
             }
 
             ResourceLocation resourceLocation = BuiltInRegistries.ITEM.getKey(item);

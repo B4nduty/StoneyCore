@@ -6,6 +6,7 @@ import banduty.stoneycore.items.custom.armor.custom.CrownItem;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import banduty.stoneycore.platform.Services;
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 
@@ -20,7 +21,7 @@ public interface SCItems {
 
     Supplier<Item> TONGS = registerItem("tongs", () -> new Tongs(new Item.Properties().stacksTo(1)));
 
-    Supplier<Item> HOT_IRON = registerItem("hot_iron", () -> new HotIron(new Item.Properties()));
+    Supplier<Item> HOT_IRON = registerItem("hot_iron", () -> new HotIron(new Item.Properties().component(SCDataComponents.IGNITED.get(), true)));
 
     private static Supplier<Item> registerItem(String name, Supplier<Item> itemSupplier) {
         return Services.PLATFORM.register(BuiltInRegistries.ITEM, name, itemSupplier);

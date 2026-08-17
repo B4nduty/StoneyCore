@@ -81,7 +81,7 @@ public final class SCRangeWeaponUtil {
         if (arrowEntity instanceof SCArrowEntity scArrowEntity)
             scArrowEntity.setDamageType(definitionData.ranged().damageType());
 
-        if (Boolean.TRUE.equals(stack.get(SCDataComponents.IGNITED.get()))) {
+        if (Boolean.TRUE.equals(stack.get(SCDataComponents.ARROW_IGNITED.get()))) {
             arrowEntity.igniteForSeconds(5);
         }
 

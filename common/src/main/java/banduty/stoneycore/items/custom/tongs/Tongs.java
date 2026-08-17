@@ -1,8 +1,10 @@
 package banduty.stoneycore.items.custom.tongs;
 
+import banduty.stoneycore.client.MinecraftS4S;
 import banduty.stoneycore.items.custom.CraftmanAnvilHelper;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -11,12 +13,14 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.core.BlockPos;
+
+import java.util.List;
 
 public class Tongs extends Item implements CraftmanAnvilHelper {
 
@@ -35,8 +39,62 @@ public class Tongs extends Item implements CraftmanAnvilHelper {
     @Override
     public Component getName(ItemStack stack) {
         ItemStack capturedItem = getCapturedItem(stack);
-        if (capturedItem == ItemStack.EMPTY) return super.getName(stack);
-        return Component.translatable("item.stoneycore.tongs_with_item", capturedItem.getItem());
+        if (capturedItem.isEmpty()) return super.getName(stack);
+        return Component.translatable("item.stoneycore.tongs_with_item", capturedItem.getItem().getName(capturedItem));
+    }
+
+    @Override
+    public void appendHoverText(
+            ItemStack stack,
+            Item.TooltipContext context,
+            List<Component> tooltip,
+            TooltipFlag tooltipFlag
+    ) {
+        super.appendHoverText(stack, context, tooltip, tooltipFlag);
+
+        ItemStack capturedItem = getCapturedItem(stack);
+
+        if (capturedItem.isEmpty()) {
+            return;
+        }
+
+        if (capturedItem.getItem() instanceof QuenchItem quenchItem
+                && quenchItem.isIgnited(capturedItem)) {
+
+            Long igniteTime = quenchItem.getIgniteTime(capturedItem);
+
+            if (igniteTime != null) {
+                Level clientLevel = MinecraftS4S.minecraft().level;
+
+                if (clientLevel != null) {
+                    long currentTime = clientLevel.getGameTime();
+
+                    long remainingTicks =
+                            quenchItem.getIgniteDuration()
+                                    - (currentTime - igniteTime);
+
+                    remainingTicks = Math.max(0, remainingTicks);
+
+                    long totalSeconds = remainingTicks / 20;
+
+                    long hours = totalSeconds / 3600;
+                    long minutes = (totalSeconds % 3600) / 60;
+                    long seconds = totalSeconds % 60;
+
+                    tooltip.add(
+                            Component.translatable(
+                                    "component.tooltip.stoneycore.tong_ignitedtime",
+                                    String.format(
+                                            "%02d:%02d:%02d",
+                                            hours,
+                                            minutes,
+                                            seconds
+                                    )
+                            )
+                    );
+                }
+            }
+        }
     }
 
     public boolean hasCapturedItem(ItemStack tongs) {

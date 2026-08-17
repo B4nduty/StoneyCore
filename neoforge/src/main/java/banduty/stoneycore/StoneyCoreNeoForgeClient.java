@@ -72,9 +72,18 @@ public class StoneyCoreNeoForgeClient {
                 }
 
                 if (item instanceof QuenchItem && item != SCItems.HOT_IRON.get()) {
-                    ItemProperties.register(item, ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"),
+                    ItemProperties.register(
+                            item,
+                            ResourceLocation.fromNamespaceAndPath(
+                                    StoneyCore.MOD_ID,
+                                    "ignited"
+                            ),
                             (stack, world, entity, seed) ->
-                                    !stack.getOrDefault(SCDataComponents.FINISHED.get(), false) ? 1.0F : 0.0F);
+                                    stack.getOrDefault(
+                                            SCDataComponents.IGNITED.get(),
+                                            false
+                                    ) ? 1.0F : 0.0F
+                    );
                 }
             }
         });

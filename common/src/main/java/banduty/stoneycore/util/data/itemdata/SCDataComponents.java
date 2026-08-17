@@ -21,7 +21,7 @@ public interface SCDataComponents {
     Supplier<DataComponentType<Long>> IGNITE_TIME = register("ignite_time",
             builder -> builder.persistent(Codec.LONG).networkSynchronized(ByteBufCodecs.VAR_LONG));
 
-    Supplier<DataComponentType<Boolean>> FINISHED = register("finished",
+    Supplier<DataComponentType<Boolean>> IGNITED = register("ignited",
             builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
 
     Supplier<DataComponentType<String>> MANUSCRIPT_TYPE = register("manuscript_type",
@@ -31,7 +31,7 @@ public interface SCDataComponents {
     Supplier<DataComponentType<Boolean>> BLUDGEONING = register("bludgeoning",
             builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
 
-    Supplier<DataComponentType<Boolean>> IGNITED = register("ignited",
+    Supplier<DataComponentType<Boolean>> ARROW_IGNITED = register("arrow_ignited",
             builder -> builder.persistent(Codec.BOOL).networkSynchronized(ByteBufCodecs.BOOL));
 
     Supplier<DataComponentType<Boolean>> VISOR_OPEN = register("visor_open",

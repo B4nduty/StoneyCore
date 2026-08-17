@@ -43,26 +43,38 @@ import java.util.List;
 @Mixin(Item.class)
 public abstract class ItemMixin {
     @Inject(method = "inventoryTick", at = @At("TAIL"))
-    public void stoneycore$inventoryTick(ItemStack stack, Level level, Entity entity, int slotId, boolean isSelected, CallbackInfo ci) {
+    public void stoneycore$inventoryTick(
+            ItemStack stack,
+            Level level,
+            Entity entity,
+            int slotId,
+            boolean isSelected,
+            CallbackInfo ci
+    ) {
         if (level.isClientSide()) return;
 
         if (!(stack.getItem() instanceof QuenchItem quenchItem)) return;
 
+        // Already cooled/finished.
         if (quenchItem.isFinished(stack)) return;
 
+        // Creative items do not burn out.
         if (entity instanceof Player player && player.isCreative()) {
             quenchItem.unlimitedItem(stack);
             return;
         }
 
-        if (!quenchItem.isIgnited(stack)) {
+        // Start the timer if this ignited item doesn't have one yet.
+        if (quenchItem.getIgniteTime(stack) == null) {
             quenchItem.igniteItem(stack, entity);
         }
 
-        if (entity instanceof Player player && stoneyCore$isInPlayerInventory(player, stack)) {
+        if (entity instanceof Player player
+                && stoneyCore$isInPlayerInventory(player, stack)) {
             entity.setRemainingFireTicks(20);
         }
 
+        // Continue the countdown.
         quenchItem.tickBurnout(stack, level, entity);
     }
 
@@ -291,29 +303,49 @@ public abstract class ItemMixin {
 
         TooltipClientSide.setTooltip(tooltip, stack);
 
-        if (stack.getItem() instanceof QuenchItem quenchItem) {
+        if (stack.getItem() instanceof QuenchItem quenchItem
+                && quenchItem.isIgnited(stack)) {
+
             Long igniteTime = quenchItem.getIgniteTime(stack);
 
             if (igniteTime != null) {
-                long currentTime = MinecraftS4S.minecraft().level.getGameTime();
+                Level clientLevel = MinecraftS4S.minecraft().level;
 
-                long remainingTicks = quenchItem.getIgniteDuration() - (currentTime - igniteTime);
-                if (remainingTicks < 0) remainingTicks = 0;
+                if (clientLevel != null) {
+                    long currentTime = clientLevel.getGameTime();
 
-                long seconds = remainingTicks / 20;
-                long hours = seconds / 3600;
-                seconds %= 3600;
-                long minutes = seconds / 60;
-                seconds %= 60;
+                    long remainingTicks =
+                            quenchItem.getIgniteDuration()
+                                    - (currentTime - igniteTime);
 
-                tooltip.add(Component.literal(String.format("Ignited - Time left: %02d:%02d:%02d", hours, minutes, seconds)));
+                    remainingTicks = Math.max(0, remainingTicks);
+
+                    long totalSeconds = remainingTicks / 20;
+
+                    long hours = totalSeconds / 3600;
+                    long minutes = (totalSeconds % 3600) / 60;
+                    long seconds = totalSeconds % 60;
+
+                    tooltip.add(
+                            Component.translatable(
+                                    "component.tooltip.stoneycore.ignitedtime",
+                                    String.format(
+                                            "%02d:%02d:%02d",
+                                            hours,
+                                            minutes,
+                                            seconds
+                                    )
+                            )
+                    );
+                }
             }
         }
     }
 
     @Inject(method = "getName", at = @At("HEAD"), cancellable = true)
     public void stoneycore$getName(ItemStack stack, CallbackInfoReturnable<Component> cir) {
-        if (!(stack.getItem() instanceof QuenchItem quenchItem) || quenchItem.destroysOnQuench() || quenchItem.isFinished(stack)) return;
+        if (!(stack.getItem() instanceof QuenchItem quenchItem) || quenchItem.destroysOnQuench() || quenchItem.isFinished(stack))
+            return;
 
         cir.setReturnValue(Component.translatable("item.stoneycore.ignited", Component.translatable(stack.getItem().getDescriptionId())));
     }

@@ -19,37 +19,46 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-@EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(
+        modid = StoneyCore.MOD_ID,
+        bus = EventBusSubscriber.Bus.GAME
+)
 public class HotIronCoolingEvents {
 
     private static final Set<ItemEntity> HOT_IRON_ITEMS =
-            java.util.Collections.newSetFromMap(new WeakHashMap<>());
+            Collections.newSetFromMap(new WeakHashMap<>());
 
     @SubscribeEvent
     public static void onJoin(EntityJoinLevelEvent event) {
+        if (!(event.getEntity() instanceof ItemEntity item)) {
+            return;
+        }
 
-        if (!(event.getEntity() instanceof ItemEntity item)) return;
+        ItemStack stack = item.getItem();
 
-        if (item.getItem().getItem() instanceof QuenchItem) {
+        if (stack.getItem() instanceof QuenchItem quenchItem
+                && quenchItem.isIgnited(stack)) {
+
             HOT_IRON_ITEMS.add(item);
         }
     }
 
     @SubscribeEvent
     public static void onLevelTick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        if (!(event.getLevel() instanceof ServerLevel level)) {
+            return;
+        }
 
         Iterator<ItemEntity> it = HOT_IRON_ITEMS.iterator();
 
         while (it.hasNext()) {
-
             ItemEntity item = it.next();
 
-            // cleanup invalid references
             if (item == null || !item.isAlive()) {
                 it.remove();
                 continue;
@@ -57,8 +66,13 @@ public class HotIronCoolingEvents {
 
             ItemStack stack = item.getItem();
 
-            // stack changed → stop tracking
-            if (!(stack.getItem() instanceof QuenchItem)) {
+            if (!(stack.getItem() instanceof QuenchItem quenchItem)) {
+                it.remove();
+                continue;
+            }
+
+            // No longer ignited → no longer needs tracking.
+            if (!quenchItem.isIgnited(stack)) {
                 it.remove();
                 continue;
             }
@@ -68,40 +82,66 @@ public class HotIronCoolingEvents {
 
             boolean cooled = false;
 
-            // water source / waterlogged
+            // Water source.
             if (state.getFluidState().isSource()
                     && state.getFluidState().is(Fluids.WATER)) {
+
                 cooled = true;
             }
 
-            // water cauldron
+            // Water cauldron.
             if (state.is(Blocks.WATER_CAULDRON)
                     && state.getValue(LayeredCauldronBlock.LEVEL) > 0) {
 
                 cooled = true;
-                LayeredCauldronBlock.lowerFillLevel(state, level, pos);
+
+                LayeredCauldronBlock.lowerFillLevel(
+                        state,
+                        level,
+                        pos
+                );
             }
 
             if (cooled) {
                 cool(level, item, stack);
-                it.remove(); // no longer hot iron after cooling
+                it.remove();
             }
         }
     }
 
-    private static void cool(ServerLevel level, ItemEntity item, ItemStack stack) {
-        ((QuenchItem) stack.getItem()).quenchDropped(stack, item);
+    private static void cool(
+            ServerLevel level,
+            ItemEntity item,
+            ItemStack stack
+    ) {
+        QuenchItem quenchItem = (QuenchItem) stack.getItem();
+
+        // Safety check: don't quench an already cooled item.
+        if (!quenchItem.isIgnited(stack)) {
+            return;
+        }
+
+        quenchItem.quenchDropped(stack, item);
+
+        /*
+         * Make sure the ItemEntity knows that its ItemStack
+         * has changed so the new component state is synchronized
+         * to the client.
+         */
+        item.setItem(stack);
 
         level.playSound(
                 null,
-                item.getX(), item.getY(), item.getZ(),
+                item.getX(),
+                item.getY(),
+                item.getZ(),
                 SoundEvents.GENERIC_EXTINGUISH_FIRE,
                 SoundSource.BLOCKS,
                 0.6f,
                 1.6f + level.random.nextFloat() * 0.8f
         );
 
-        RandomSource r = level.random;
+        RandomSource random = level.random;
 
         for (int i = 0; i < 20; i++) {
             level.sendParticles(
@@ -110,9 +150,9 @@ public class HotIronCoolingEvents {
                     item.getY() + 0.2,
                     item.getZ(),
                     1,
-                    (r.nextDouble() - 0.5) * 0.3,
+                    (random.nextDouble() - 0.5) * 0.3,
                     0.07,
-                    (r.nextDouble() - 0.5) * 0.3,
+                    (random.nextDouble() - 0.5) * 0.3,
                     0.02
             );
         }

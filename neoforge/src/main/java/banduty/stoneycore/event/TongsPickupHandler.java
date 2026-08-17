@@ -1,7 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.hotiron.HotIron;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.items.custom.tongs.Tongs;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -10,7 +10,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 
-@EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(
+        modid = StoneyCore.MOD_ID,
+        bus = EventBusSubscriber.Bus.GAME
+)
 public class TongsPickupHandler {
 
     @SubscribeEvent
@@ -19,35 +22,50 @@ public class TongsPickupHandler {
         Player player = event.getPlayer();
         ItemStack pickedStack = event.getItemEntity().getItem();
 
-        if (!(pickedStack.getItem() instanceof HotIron))
+        if (!(pickedStack.getItem() instanceof QuenchItem quenchItem)
+                || !quenchItem.isIgnited(pickedStack)) {
             return;
+        }
 
         ItemStack mainHand = player.getMainHandItem();
         ItemStack offHand = player.getOffhandItem();
 
         boolean handled = false;
 
-        // Check main hand for empty tongs
-        if (mainHand.getItem() instanceof Tongs tongs && tongs.getCapturedItem(mainHand).isEmpty()) {
-            // Store the captured item in the tongs
-            tongs.setCapturedItem(mainHand, pickedStack.copyWithCount(1));
+        // Check main hand for empty tongs.
+        if (mainHand.getItem() instanceof Tongs tongs
+                && tongs.getCapturedItem(mainHand).isEmpty()) {
+
+            tongs.setCapturedItem(
+                    mainHand,
+                    pickedStack.copyWithCount(1)
+            );
+
             pickedStack.shrink(1);
-            if (pickedStack.getCount() <= 0) handled = true;
-        }
-        // Check off hand for empty tongs (only if main hand wasn't used)
-        else if (offHand.getItem() instanceof Tongs tongs && tongs.getCapturedItem(mainHand).isEmpty()) {
-            // Store the captured item in the tongs
-            tongs.setCapturedItem(mainHand, pickedStack.copyWithCount(1));
-            pickedStack.shrink(1);
-            if (pickedStack.getCount() <= 0) handled = true;
+
+            if (pickedStack.isEmpty()) {
+                handled = true;
+            }
         }
 
-        // If we stored the item in tongs, remove it from the world and cancel pickup
+        // Check off hand for empty tongs.
+        else if (offHand.getItem() instanceof Tongs tongs
+                && tongs.getCapturedItem(offHand).isEmpty()) {
+
+            tongs.setCapturedItem(
+                    offHand,
+                    pickedStack.copyWithCount(1)
+            );
+
+            pickedStack.shrink(1);
+
+            if (pickedStack.isEmpty()) {
+                handled = true;
+            }
+        }
+
         if (handled) {
-            // Remove the item entity from the world
             event.getItemEntity().discard();
-
-            // Cancel the event so the item doesn't go to inventory
             event.setCanPickup(TriState.FALSE);
         }
     }

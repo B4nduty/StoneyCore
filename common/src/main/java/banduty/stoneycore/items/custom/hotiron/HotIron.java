@@ -1,6 +1,8 @@
 package banduty.stoneycore.items.custom.hotiron;
 
+import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class HotIron extends Item implements QuenchItem {
     private static final int IGNITE_DURATION_TICKS = 20 * 30;
@@ -24,5 +26,12 @@ public class HotIron extends Item implements QuenchItem {
     @Override
     public boolean destroysOnQuench() {
         return destroysOnQuench;
+    }
+
+    @Override
+    public ItemStack getDefaultInstance() {
+        ItemStack stack = super.getDefaultInstance();
+        stack.set(SCDataComponents.IGNITED.get(), true);
+        return stack;
     }
 }

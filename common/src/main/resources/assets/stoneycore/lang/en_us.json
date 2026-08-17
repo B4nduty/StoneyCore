@@ -44,6 +44,8 @@
   "component.tooltip.stoneycore.openVisorArmor": "Open Visor: -1 Armor",
   "component.tooltip.stoneycore.openVisorToughness": "Open Visor: -1 Toughness",
   "component.tooltip.stoneycore.openVisorEatDrink": "You can't §l§4eat/drink §rwith the §l§4Visor Closed",
+  "component.tooltip.stoneycore.ignitedtime": "Ignited - Time left: %s",
+  "component.tooltip.stoneycore.tong_ignitedtime": "Ignited - Time left: %s",
   "text.config.stoneycore.title": "StoneyCore",
   "text.config.stoneycore.section.combatOptions": "Combat Options",
   "text.config.stoneycore.category.combatOptions": "Combat Options",

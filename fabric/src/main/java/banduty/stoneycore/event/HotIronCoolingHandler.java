@@ -1,7 +1,6 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
@@ -29,19 +28,25 @@ public class HotIronCoolingHandler {
 
     public static void init() {
 
-        // track any item that enters the world already ignited
+        // Track only items that are actually ignited.
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
-            if (entity instanceof ItemEntity item && item.getItem().getItem() instanceof QuenchItem) {
+            if (!(entity instanceof ItemEntity item)) {
+                return;
+            }
+
+            ItemStack stack = item.getItem();
+
+            if (stack.getItem() instanceof QuenchItem quenchItem
+                    && quenchItem.isIgnited(stack)) {
+
                 HOT_IRON.add(item);
             }
         });
 
-        // tick cooling logic
-        ServerTickEvents.END_WORLD_TICK.register(HotIronCoolingHandler::tick);
-    }
-
-    private static boolean isIgnited(ItemStack stack) {
-        return !stack.isEmpty() && stack.get(SCDataComponents.IGNITE_TIME.get()) != null;
+        // Tick cooling logic.
+        ServerTickEvents.END_WORLD_TICK.register(
+                HotIronCoolingHandler::tick
+        );
     }
 
     private static void tick(ServerLevel world) {
@@ -52,6 +57,7 @@ public class HotIronCoolingHandler {
 
             ItemEntity item = it.next();
 
+            // Cleanup invalid references.
             if (item == null || !item.isAlive()) {
                 it.remove();
                 continue;
@@ -59,7 +65,13 @@ public class HotIronCoolingHandler {
 
             ItemStack stack = item.getItem();
 
-            if (!(stack.getItem() instanceof QuenchItem)) {
+            if (!(stack.getItem() instanceof QuenchItem quenchItem)) {
+                it.remove();
+                continue;
+            }
+
+            // Already cooled/finished.
+            if (!quenchItem.isIgnited(stack)) {
                 it.remove();
                 continue;
             }
@@ -69,40 +81,74 @@ public class HotIronCoolingHandler {
 
             boolean cooled = false;
 
-            // water source / waterlogged
+            // Water source / waterlogged block.
             if (state.getFluidState().isSource()
                     && state.getFluidState().is(Fluids.WATER)) {
+
                 cooled = true;
             }
 
-            // water cauldron
+            // Water cauldron.
             else if (state.is(Blocks.WATER_CAULDRON)
                     && state.getValue(LayeredCauldronBlock.LEVEL) > 0) {
 
                 cooled = true;
-                LayeredCauldronBlock.lowerFillLevel(state, world, pos);
+
+                LayeredCauldronBlock.lowerFillLevel(
+                        state,
+                        world,
+                        pos
+                );
             }
 
             if (cooled) {
-                cool(world, item, stack);
-                it.remove();
+                if (cool(world, item, stack)) {
+                    it.remove();
+                }
             }
         }
     }
 
-    private static void cool(ServerLevel level, ItemEntity item, ItemStack stack) {
-        ((QuenchItem) stack.getItem()).quenchDropped(stack, item);
+    private static boolean cool(
+            ServerLevel level,
+            ItemEntity item,
+            ItemStack stack
+    ) {
+        QuenchItem quenchItem =
+                (QuenchItem) stack.getItem();
+
+        // Safety check: don't quench an already cooled item.
+        if (!quenchItem.isIgnited(stack)) {
+            return false;
+        }
+
+        boolean quenched =
+                quenchItem.quenchDropped(stack, item);
+
+        if (!quenched) {
+            return false;
+        }
+
+        /*
+         * Explicitly update the ItemEntity's stack.
+         *
+         * This is important for the client to receive the
+         * updated component state and refresh the item model.
+         */
+        item.setItem(stack);
 
         level.playSound(
                 null,
-                item.getX(), item.getY(), item.getZ(),
+                item.getX(),
+                item.getY(),
+                item.getZ(),
                 SoundEvents.GENERIC_EXTINGUISH_FIRE,
                 SoundSource.BLOCKS,
                 0.6f,
                 1.6f + level.random.nextFloat() * 0.8f
         );
 
-        RandomSource r = level.random;
+        RandomSource random = level.random;
 
         for (int i = 0; i < 20; i++) {
             level.sendParticles(
@@ -111,11 +157,13 @@ public class HotIronCoolingHandler {
                     item.getY() + 0.2,
                     item.getZ(),
                     1,
-                    (r.nextDouble() - 0.5) * 0.3,
+                    (random.nextDouble() - 0.5) * 0.3,
                     0.07,
-                    (r.nextDouble() - 0.5) * 0.3,
+                    (random.nextDouble() - 0.5) * 0.3,
                     0.02
             );
         }
+
+        return true;
     }
 }
