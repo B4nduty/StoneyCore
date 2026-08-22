@@ -37,7 +37,8 @@
     "ItemInHandRendererMixin",
     "ItemRendererAccessor",
     "MinecraftClientMixin",
-    "PlayerEntityRendererMixin"
+    "PlayerEntityRendererMixin",
+    "ItemClientMixin"
   ],
   "server": [
   ],
