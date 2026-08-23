@@ -20,6 +20,7 @@ import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
 import banduty.stoneycore.particle.SCParticles;
 import banduty.stoneycore.platform.ClientPlatform;
+import banduty.stoneycore.platform.NeoForgeClientPlatformHelper;
 import banduty.stoneycore.platform.NeoForgeHumanoidModelSetupAnimHelper;
 import banduty.stoneycore.platform.NeoForgeKeyInputHelper;
 import banduty.stoneycore.screen.BlueprintScreen;
@@ -53,6 +54,7 @@ public class StoneyCoreNeoForgeClient {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            ClientPlatform.setIclientPlatformHelper(new NeoForgeClientPlatformHelper());
             ClientPlatform.setHumanoidModelSetupAnimHelper(new NeoForgeHumanoidModelSetupAnimHelper());
             ClientPlatform.setKeyInputHelper(new NeoForgeKeyInputHelper());
 
