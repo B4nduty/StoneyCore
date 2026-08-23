@@ -4,8 +4,13 @@ import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
+import banduty.stoneycore.client.render.item.SC3DItemRenderer;
+import banduty.stoneycore.client.render.item.SCBannerItemRenderer;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.items.SCItems;
+import banduty.stoneycore.items.client.SC3DRendererProvider;
+import banduty.stoneycore.items.client.SCBannersRendererProvider;
+import banduty.stoneycore.items.client.SCIconRendererProvider;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
@@ -21,8 +26,10 @@ import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.SCScreenHandlers;
 import banduty.stoneycore.util.data.itemdata.SCDataComponents;
 import banduty.stoneycore.util.data.itemdata.SCTags;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
@@ -33,9 +40,12 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 
 @EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class StoneyCoreNeoForgeClient {
@@ -97,6 +107,55 @@ public class StoneyCoreNeoForgeClient {
         );
     }
 
+    @SubscribeEvent
+    public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
+        for (Item item : BuiltInRegistries.ITEM) {
+            ResourceLocation resourceLocation = BuiltInRegistries.ITEM.getKey(item);
+
+            if (item instanceof SC3DRendererProvider) {
+                event.register(ModelResourceLocation.standalone(
+                        ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_gui")));
+                event.register(ModelResourceLocation.standalone(
+                        ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_3d")));
+            }
+
+            if (item instanceof SCIconRendererProvider) {
+                event.register(ModelResourceLocation.standalone(
+                        ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_icon")));
+            }
+
+            if (item instanceof SCBannersRendererProvider) {
+                event.register(ModelResourceLocation.standalone(
+                        ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_base")));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void registerItemExtensions(RegisterClientExtensionsEvent event) {
+        SC3DItemRenderer sc3DItemRenderer = new SC3DItemRenderer();
+        SCBannerItemRenderer scBannerItemRenderer = new SCBannerItemRenderer();
+
+        for (Item item : BuiltInRegistries.ITEM) {
+            if (item instanceof SC3DRendererProvider) {
+                event.registerItem(new IClientItemExtensions() {
+                    @Override
+                    public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                        return sc3DItemRenderer;
+                    }
+                }, item);
+            }
+
+            if (item instanceof SCBannersRendererProvider) {
+                event.registerItem(new IClientItemExtensions() {
+                    @Override
+                    public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                        return scBannerItemRenderer;
+                    }
+                }, item);
+            }
+        }
+    }
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {

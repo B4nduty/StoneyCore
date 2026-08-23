@@ -8,7 +8,6 @@ import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
 import banduty.stoneycore.client.render.item.SC3DItemRenderer;
 import banduty.stoneycore.client.render.item.SCBannerItemRenderer;
-import banduty.stoneycore.client.render.item.SCIconItemRenderer;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.event.AttackCancelHandler;
 import banduty.stoneycore.event.ClientTickHandler;
@@ -126,9 +125,6 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                             ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_icon")
                     );
                 });
-                SCIconItemRenderer renderer = new SCIconItemRenderer();
-
-                BuiltinItemRendererRegistry.INSTANCE.register(item, renderer::renderByItem);
             }
 
             if (item instanceof SCBannersRendererProvider) {

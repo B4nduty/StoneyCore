@@ -31,14 +31,15 @@
     "BipedEntityModelMixin",
     "CameraAccessor",
     "CameraMixin",
+    "GeoItemRendererMixin",
     "GuiMixin",
     "HorseModelMixin",
     "HumanoidArmorLayerMixin",
+    "ItemClientMixin",
     "ItemInHandRendererMixin",
     "ItemRendererAccessor",
     "MinecraftClientMixin",
-    "PlayerEntityRendererMixin",
-    "ItemClientMixin"
+    "PlayerEntityRendererMixin"
   ],
   "server": [
   ],

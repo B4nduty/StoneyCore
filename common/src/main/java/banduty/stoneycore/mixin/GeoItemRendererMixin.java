@@ -1,10 +1,10 @@
-package banduty.stoneycore.client.render.item;
+package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.items.client.SCIconRendererProvider;
 import banduty.stoneycore.platform.ClientPlatform;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.ItemRenderer;
@@ -13,19 +13,17 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import software.bernie.geckolib.animatable.GeoItem;
-import software.bernie.geckolib.animatable.client.GeoRenderProvider;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import software.bernie.geckolib.renderer.GeoItemRenderer;
 
-public class SCIconItemRenderer extends BlockEntityWithoutLevelRenderer {
-
-    public SCIconItemRenderer() {
-        super(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels());
-    }
-
-    @Override
-    public void renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack,
-                             MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
-
+@Mixin(GeoItemRenderer.class)
+public class GeoItemRendererMixin {
+    @Inject(method = "renderByItem", at = @At("HEAD"), cancellable = true)
+    private void stoneycore$renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay, CallbackInfo ci) {
+        if (!(stack.getItem() instanceof SCIconRendererProvider)) return;
         ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
 
         ResourceLocation resourceLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
@@ -53,6 +51,7 @@ public class SCIconItemRenderer extends BlockEntityWithoutLevelRenderer {
             Lighting.setupFor3DItems();
 
             poseStack.popPose();
+            ci.cancel();
         } else if (displayContext == ItemDisplayContext.GROUND || displayContext == ItemDisplayContext.FIXED) {
             poseStack.pushPose();
             BakedModel guiModel = ClientPlatform.getIclientPlatformHelper()
@@ -63,18 +62,7 @@ public class SCIconItemRenderer extends BlockEntityWithoutLevelRenderer {
             itemRenderer.render(stack, displayContext, false, poseStack, bufferSource, packedLight, packedOverlay, guiModel);
 
             poseStack.popPose();
-        } else {
-            if (stack.getItem() instanceof GeoItem) {
-                Object renderProvider = GeoRenderProvider.of(stack);
-                if (renderProvider instanceof GeoRenderProvider geoRenderProvider) {
-                    BlockEntityWithoutLevelRenderer geoRenderer = geoRenderProvider.getGeoItemRenderer();
-                    if (geoRenderer != null && geoRenderer != this) {
-                        geoRenderer.renderByItem(stack, displayContext, poseStack, bufferSource, packedLight, packedOverlay);
-                        return;
-                    }
-                }
-            }
-            super.renderByItem(stack, displayContext, poseStack, bufferSource, packedLight, packedOverlay);
+            ci.cancel();
         }
     }
 }
