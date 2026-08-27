@@ -8,7 +8,6 @@ import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.client.model.UnderArmourArmModel;
 import banduty.stoneycore.data.SCTags;
-import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -120,8 +119,7 @@ public class ItemInHandRendererMixin {
 
         ItemStack chestStack = player.getInventory().getArmor(2);
         if (!chestStack.isEmpty() && chestStack.getItem() instanceof ArmorItem armorItem &&
-                ArmorDefinitionsStorage.containsItem(armorItem) &&
-                armorItem.getEquipmentSlot() == ArmorItem.Type.CHESTPLATE.getSlot()) {
+                armorItem instanceof SCUnderArmor && armorItem.getEquipmentSlot() == ArmorItem.Type.CHESTPLATE.getSlot()) {
 
             var materialKey = armorItem.getMaterial().unwrapKey().orElse(null);
             if (materialKey != null) {
