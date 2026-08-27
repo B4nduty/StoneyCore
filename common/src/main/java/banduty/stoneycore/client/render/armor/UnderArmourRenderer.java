@@ -2,10 +2,10 @@ package banduty.stoneycore.client.render.armor;
 
 import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
-import banduty.stoneycore.model.UnderArmourBootsModel;
-import banduty.stoneycore.model.UnderArmourChestplateModel;
-import banduty.stoneycore.model.UnderArmourHelmetModel;
-import banduty.stoneycore.model.UnderArmourLeggingsModel;
+import banduty.stoneycore.client.model.UnderArmourBootsModel;
+import banduty.stoneycore.client.model.UnderArmourChestplateModel;
+import banduty.stoneycore.client.model.UnderArmourHelmetModel;
+import banduty.stoneycore.client.model.UnderArmourLeggingsModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.HumanoidModel;

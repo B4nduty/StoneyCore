@@ -10,9 +10,9 @@ import banduty.stoneycore.networking.SCC2SNetworking;
 import banduty.stoneycore.networking.SCPayloads;
 import banduty.stoneycore.networking.payload.SyncDefinitionsPacket;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
-import banduty.stoneycore.util.data.entitydata.StaminaData;
-import banduty.stoneycore.util.definitionsloader.*;
+import banduty.stoneycore.data.IEntityDataSaver;
+import banduty.stoneycore.stamina.StaminaData;
+import banduty.stoneycore.definitions.*;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.bettercombat.api.client.BetterCombatClientEvents;
@@ -53,8 +53,7 @@ public class StoneyCoreFabric implements ModInitializer {
         PlayerBlockBreakEvents.AFTER.register(new PlayerBlockBreakAfterHandler());
         PlayerBlockBreakEvents.BEFORE.register(new PlayerBlockBreakBeforeHandler());
         UseBlockCallback.EVENT.register(new UseBlockHandler());
-        UseBlockCallback.EVENT.register(new VisitorUseBlock());
-        ServerLivingEntityEvents.AFTER_DEATH.register(new VisitorDeath());
+        VisitorEvents.register();
         if (FabricLoader.getInstance().isModLoaded("bettercombat")) {
             BetterCombatClientEvents.ATTACK_HIT.register(new PlayerAttackHitHandler());
         }

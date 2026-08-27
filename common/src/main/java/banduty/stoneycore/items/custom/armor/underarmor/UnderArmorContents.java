@@ -1,9 +1,9 @@
 package banduty.stoneycore.items.custom.armor.underarmor;
 
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
-import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
-import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionData;
-import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionsStorage;
+import banduty.stoneycore.definitions.ArmorAttachmentDefinitionsStorage;
+import banduty.stoneycore.definitions.ArmorAttachmentSlotDefinitionData;
+import banduty.stoneycore.definitions.ArmorAttachmentSlotDefinitionsStorage;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;

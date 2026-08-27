@@ -2,8 +2,8 @@ package banduty.stoneycore.client.item;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
-import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionData;
-import banduty.stoneycore.util.definitionsloader.ArmorAttachmentSlotDefinitionsStorage;
+import banduty.stoneycore.definitions.ArmorAttachmentSlotDefinitionData;
+import banduty.stoneycore.definitions.ArmorAttachmentSlotDefinitionsStorage;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;

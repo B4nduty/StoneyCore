@@ -1,8 +1,8 @@
 package banduty.stoneycore.networking.payload;
 
 import banduty.stoneycore.networking.SCPayloads;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
-import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
+import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
+import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

@@ -1,6 +1,6 @@
 package banduty.stoneycore.networking.payload;
 
-import banduty.stoneycore.lands.util.LandClientState;
+import banduty.stoneycore.lands.LandClientState;
 import banduty.stoneycore.networking.SCPayloads;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.BlockPos;

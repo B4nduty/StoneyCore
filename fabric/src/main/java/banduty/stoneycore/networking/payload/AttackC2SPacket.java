@@ -5,7 +5,7 @@ import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.damagetype.SCDamageTypeResolver;
 import banduty.stoneycore.networking.SCPayloads;
 import banduty.stoneycore.util.WeightUtil;
-import banduty.stoneycore.util.data.entitydata.StaminaData;
+import banduty.stoneycore.stamina.StaminaData;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

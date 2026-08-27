@@ -1,6 +1,6 @@
 package banduty.stoneycore.lands;
 
-import banduty.stoneycore.util.definitionsloader.LandValues;
+import banduty.stoneycore.definitions.LandValues;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;

@@ -1,7 +1,7 @@
 package banduty.stoneycore.client;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.entity.custom.SCBulletEntity;
+import banduty.stoneycore.entity.projectile.SCBulletEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

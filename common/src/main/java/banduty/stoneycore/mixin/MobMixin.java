@@ -1,9 +1,9 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.combat.melee.CombatSelect;
-import banduty.stoneycore.util.EntityDamageUtil;
-import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
+import banduty.stoneycore.combat.damagetype.EntityDamageUtil;
+import banduty.stoneycore.data.SCTags;
+import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;

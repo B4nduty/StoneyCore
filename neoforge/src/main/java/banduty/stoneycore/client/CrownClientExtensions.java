@@ -1,6 +1,6 @@
 package banduty.stoneycore.client;
 
-import banduty.stoneycore.model.CrownModel;
+import banduty.stoneycore.client.model.CrownModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.world.entity.EquipmentSlot;

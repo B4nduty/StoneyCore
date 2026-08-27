@@ -1,9 +1,9 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.combat.damagetype.SCDamageType;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
-import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
+import banduty.stoneycore.definitions.WeaponDefinitionData;
+import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
+import banduty.stoneycore.combat.weapon.SCWeaponUtil;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;

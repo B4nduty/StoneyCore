@@ -1,6 +1,6 @@
 package banduty.stoneycore.items.custom;
 
-import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.LandState;
 import com.google.common.collect.Maps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;

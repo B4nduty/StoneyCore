@@ -1,8 +1,8 @@
 package banduty.stoneycore.lands.visitor;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.lands.util.Land;
-import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.Land;
+import banduty.stoneycore.lands.LandState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;

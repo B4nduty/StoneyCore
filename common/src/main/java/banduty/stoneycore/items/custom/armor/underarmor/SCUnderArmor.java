@@ -2,9 +2,9 @@ package banduty.stoneycore.items.custom.armor.underarmor;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
-import banduty.stoneycore.util.data.entitydata.SCAttributes;
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
-import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
+import banduty.stoneycore.data.SCAttributes;
+import banduty.stoneycore.data.SCDataComponents;
+import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;

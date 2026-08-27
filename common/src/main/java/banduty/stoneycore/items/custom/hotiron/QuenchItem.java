@@ -1,7 +1,7 @@
 package banduty.stoneycore.items.custom.hotiron;
 
-import banduty.stoneycore.items.custom.tongs.Tongs;
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
+import banduty.stoneycore.items.custom.Tongs;
+import banduty.stoneycore.data.SCDataComponents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;

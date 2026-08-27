@@ -2,7 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.SCItems;
-import banduty.stoneycore.items.custom.armor.custom.CrownItem;
+import banduty.stoneycore.items.custom.armor.CrownItem;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;

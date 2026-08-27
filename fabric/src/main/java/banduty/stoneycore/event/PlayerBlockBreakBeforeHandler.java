@@ -1,8 +1,8 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.lands.util.Land;
-import banduty.stoneycore.lands.util.LandManager;
-import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.Land;
+import banduty.stoneycore.lands.LandManager;
+import banduty.stoneycore.lands.LandState;
 import banduty.stoneycore.siege.SiegeManager;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.core.BlockPos;

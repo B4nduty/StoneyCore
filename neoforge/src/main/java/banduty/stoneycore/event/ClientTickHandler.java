@@ -2,9 +2,9 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.StoneyCoreClient;
-import banduty.stoneycore.entity.custom.AbstractSiegeEntity;
+import banduty.stoneycore.entity.siege.AbstractSiegeEntity;
 import banduty.stoneycore.networking.payload.SiegeYawC2SPacket;
-import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
+import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.animal.horse.Horse;

@@ -2,11 +2,11 @@ package banduty.stoneycore.items;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.SmithingHammer;
-import banduty.stoneycore.items.custom.armor.custom.CrownItem;
+import banduty.stoneycore.items.custom.armor.CrownItem;
 import banduty.stoneycore.items.custom.hotiron.HotIron;
-import banduty.stoneycore.items.custom.tongs.Tongs;
+import banduty.stoneycore.items.custom.Tongs;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
+import banduty.stoneycore.data.SCDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 

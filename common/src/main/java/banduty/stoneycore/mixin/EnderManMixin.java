@@ -1,8 +1,8 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
-import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
+import banduty.stoneycore.data.SCDataComponents;
+import banduty.stoneycore.definitions.ArmorAttachmentDefinitionsStorage;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;

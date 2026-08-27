@@ -1,8 +1,8 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
-import banduty.stoneycore.util.data.entitydata.StaminaData;
+import banduty.stoneycore.data.IEntityDataSaver;
+import banduty.stoneycore.stamina.StaminaData;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;

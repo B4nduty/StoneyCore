@@ -2,11 +2,11 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.melee.CombatSelect;
-import banduty.stoneycore.util.EntityDamageUtil;
+import banduty.stoneycore.combat.damagetype.EntityDamageUtil;
 import banduty.stoneycore.util.WeightUtil;
-import banduty.stoneycore.util.data.entitydata.StaminaData;
-import banduty.stoneycore.util.data.itemdata.SCTags;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
+import banduty.stoneycore.stamina.StaminaData;
+import banduty.stoneycore.data.SCTags;
+import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;

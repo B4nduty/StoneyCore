@@ -1,6 +1,6 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.entity.custom.AbstractSiegeEntity;
+import banduty.stoneycore.entity.siege.AbstractSiegeEntity;
 import net.minecraft.client.model.AgeableListModel;
 import net.minecraft.client.model.HorseModel;
 import net.minecraft.client.model.geom.ModelPart;

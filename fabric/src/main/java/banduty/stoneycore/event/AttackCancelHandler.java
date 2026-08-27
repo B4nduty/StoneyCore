@@ -1,7 +1,7 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
-import banduty.stoneycore.util.data.entitydata.StaminaData;
+import banduty.stoneycore.data.IEntityDataSaver;
+import banduty.stoneycore.stamina.StaminaData;
 import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;

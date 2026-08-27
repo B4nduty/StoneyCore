@@ -1,7 +1,7 @@
 package banduty.stoneycore.networking.payload;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.lands.util.LandClientState;
+import banduty.stoneycore.lands.LandClientState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;

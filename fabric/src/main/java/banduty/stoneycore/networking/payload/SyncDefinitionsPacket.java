@@ -1,7 +1,7 @@
 package banduty.stoneycore.networking.payload;
 
 import banduty.stoneycore.networking.SCPayloads;
-import banduty.stoneycore.util.definitionsloader.*;
+import banduty.stoneycore.definitions.*;
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;

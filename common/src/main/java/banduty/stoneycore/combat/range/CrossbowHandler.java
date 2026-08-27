@@ -1,7 +1,7 @@
 package banduty.stoneycore.combat.range;
 
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
-import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
+import banduty.stoneycore.data.SCDataComponents;
+import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;

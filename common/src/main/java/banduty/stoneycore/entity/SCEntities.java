@@ -1,7 +1,7 @@
 package banduty.stoneycore.entity;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.entity.custom.SCBulletEntity;
+import banduty.stoneycore.entity.projectile.SCBulletEntity;
 import banduty.stoneycore.platform.Services;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;

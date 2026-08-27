@@ -1,6 +1,6 @@
 package banduty.stoneycore.combat.damagetype;
 
-import banduty.stoneycore.util.data.itemdata.SCTags;
+import banduty.stoneycore.data.SCTags;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;

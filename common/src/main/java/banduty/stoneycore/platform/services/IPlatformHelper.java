@@ -1,7 +1,7 @@
 package banduty.stoneycore.platform.services;
 
 import banduty.stoneycore.config.ConfigImpl;
-import banduty.stoneycore.lands.util.ClaimWorker;
+import banduty.stoneycore.lands.ClaimWorker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;

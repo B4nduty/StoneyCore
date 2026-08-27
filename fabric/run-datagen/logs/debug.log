@@ -1049,11 +1049,11 @@
 [12:47:31] [main/DEBUG] (FabricLoader/Mixin) fabric-object-builder-v1.mixins.json:DefaultAttributeRegistryMixin from mod fabric-object-builder-api-v1->@Inject::injectAttributes(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V doesn't use it's CallbackInfo
 [12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.platform.FabricPlatformHelper@50fbc617 for service interface banduty.stoneycore.platform.services.IPlatformHelper
 [12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.items.item.FabricBlueprintHelper@3bf910a2 for service interface banduty.stoneycore.items.custom.blueprint.IBlueprintHelper
-[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.entity.custom.FabricAbstractSiegeHelper@6b2bbc8c for service interface banduty.stoneycore.entity.custom.AbstractSiegeHelper
-[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.util.data.entitydata.FabricStaminaHelper@64d580fe for service interface banduty.stoneycore.util.data.entitydata.StaminaHelper
-[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.util.render.FabricOutlineClaimRenderer@4b091c60 for service interface banduty.stoneycore.util.render.OutlineClaimRendererHelper
-[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.util.servertick.FabricLandTracker@3fd35451 for service interface banduty.stoneycore.util.servertick.LandTrackerHelper
-[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.util.data.entitydata.FabricConfigHelper@152334da for service interface banduty.stoneycore.util.data.entitydata.ConfigHelper
+[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.entity.custom.FabricAbstractSiegeHelper@6b2bbc8c for service interface banduty.stoneycore.entity.siege.AbstractSiegeHelper
+[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.data.FabricStaminaHelper@64d580fe for service interface banduty.stoneycore.stamina.StaminaHelper
+[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.client.render.land.FabricOutlineClaimRenderer@4b091c60 for service interface banduty.stoneycore.client.render.land.OutlineClaimRendererHelper
+[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.combat.mechanics.FabricLandTracker@3fd35451 for service interface banduty.stoneycore.combat.mechanics.LandTrackerHelper
+[12:47:31] [main/DEBUG] (StoneyCore) Loaded banduty.stoneycore.data.FabricConfigHelper@152334da for service interface banduty.stoneycore.platform.services.ConfigHelper
 [12:47:31] [main/DEBUG] (StoneyCore) No suitable ICombatHelper service found, using default interface implementation
 [12:47:31] [main/WARN] (StoneyCore) Could not instantiate banduty.stoneycore.combat.melee.ICombatHelper using default constructor, using anonymous fallback
 [12:47:31] [main/DEBUG] (StoneyCore) Selected banduty.stoneycore.platform.ServiceLoaderHelper$1 for service interface banduty.stoneycore.combat.melee.ICombatHelper

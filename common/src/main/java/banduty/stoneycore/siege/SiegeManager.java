@@ -1,9 +1,9 @@
 package banduty.stoneycore.siege;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.lands.util.Land;
-import banduty.stoneycore.lands.util.LandManager;
-import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.Land;
+import banduty.stoneycore.lands.LandManager;
+import banduty.stoneycore.lands.LandState;
 import banduty.stoneycore.platform.Services;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerBossEvent;

@@ -1,6 +1,6 @@
 package banduty.stoneycore.items.custom.hotiron;
 
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
+import banduty.stoneycore.data.SCDataComponents;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 

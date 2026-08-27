@@ -1,7 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.lands.visitor.VisitorTracker;
-import banduty.stoneycore.util.data.itemdata.SCTags;
+import banduty.stoneycore.data.SCTags;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;

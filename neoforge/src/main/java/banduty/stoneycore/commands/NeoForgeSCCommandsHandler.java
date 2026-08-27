@@ -1,11 +1,6 @@
 package banduty.stoneycore.commands;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.commands.land.*;
-import banduty.stoneycore.commands.stamina.StaminaCommand;
-import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -15,20 +10,6 @@ public class NeoForgeSCCommandsHandler {
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-
-        dispatcher.register(
-                Commands.literal("land")
-                        .then(Ally.registerAlly())
-                        .then(Create.registerCreate())
-                        .then(Remove.registerRemove())
-                        .then(Radius.registerRadius())
-                        .then(Name.registerName())
-                        .then(TransferOwnership.registerTransferOwnership())
-                        .then(SiegeCommand.registerSiege())
-                        .then(Title.registerTitle())
-        );
-
-        StaminaCommand.register(dispatcher);
+        SCCommandsHandler.register(event.getDispatcher());
     }
 }

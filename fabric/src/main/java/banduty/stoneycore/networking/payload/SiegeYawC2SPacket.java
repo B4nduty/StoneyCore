@@ -1,6 +1,6 @@
 package banduty.stoneycore.networking.payload;
 
-import banduty.stoneycore.entity.custom.AbstractSiegeEntity;
+import banduty.stoneycore.entity.siege.AbstractSiegeEntity;
 import banduty.stoneycore.networking.SCPayloads;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;

@@ -10,6 +10,6 @@ public class NeoForgeClientPlatformHelper implements IClientPlatformHelper {
 
     @Override
     public BakedModel getModel(ResourceLocation resourceLocation) {
-        return Minecraft.getInstance().getModelManager().getModel(ModelResourceLocation.inventory(resourceLocation));
+        return Minecraft.getInstance().getModelManager().getModel(ModelResourceLocation.standalone(resourceLocation));
     }
 }

@@ -2,7 +2,7 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.networking.payload.SyncDefinitionsPacket;
-import banduty.stoneycore.util.definitionsloader.*;
+import banduty.stoneycore.definitions.*;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;

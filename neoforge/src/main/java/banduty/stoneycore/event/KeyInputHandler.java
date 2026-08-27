@@ -6,7 +6,7 @@ import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.networking.payload.ReloadC2SPacket;
 import banduty.stoneycore.networking.payload.ToggleVisorC2SPacket;
 import banduty.stoneycore.sounds.SCSounds;
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
+import banduty.stoneycore.data.SCDataComponents;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;

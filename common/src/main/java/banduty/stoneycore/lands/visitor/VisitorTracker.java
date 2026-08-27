@@ -1,7 +1,7 @@
 package banduty.stoneycore.lands.visitor;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.LandState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;

@@ -1,0 +1,294 @@
+package banduty.stoneycore.combat.weapon;
+
+import banduty.stoneycore.combat.range.RangedWeaponHandlers;
+import banduty.stoneycore.entity.projectile.SCArrowEntity;
+import banduty.stoneycore.entity.projectile.SCBulletEntity;
+import banduty.stoneycore.particle.SCParticles;
+import banduty.stoneycore.data.SCDataComponents;
+import banduty.stoneycore.definitions.WeaponDefinitionData;
+import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
+import banduty.stoneycore.combat.mechanics.AttackSpeedHelper;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.item.ArrowItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+public final class SCRangeWeaponUtil {
+    private SCRangeWeaponUtil() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
+    public static WeaponState getWeaponState(ItemStack stack) {
+        return new WeaponState(
+                stack.getOrDefault(SCDataComponents.RELOADING.get(), false),
+                stack.getOrDefault(SCDataComponents.CHARGED.get(), false),
+                stack.getOrDefault(SCDataComponents.SHOOTING.get(), false)
+        );
+    }
+
+    public static void setWeaponState(ItemStack stack, WeaponState state) {
+        stack.set(SCDataComponents.RELOADING.get(), state.isReloading());
+        stack.set(SCDataComponents.CHARGED.get(), state.isCharged());
+        stack.set(SCDataComponents.SHOOTING.get(), state.isShooting());
+    }
+
+    public static void handleShoot(Level level, Player player, ItemStack weapon) {
+        var def = WeaponDefinitionsStorage.getData(weapon);
+        if (def == null || def.ranged() == null) return;
+        String type = def.ranged().id();
+        RangedWeaponHandlers.get(type).ifPresent(handler -> {
+            if (handler.canShoot(weapon)) handler.shoot(level, player, weapon);
+        });
+    }
+
+    public static void handleReload(Level level, Player player, ItemStack weapon) {
+        var def = WeaponDefinitionsStorage.getData(weapon);
+        if (def == null || def.ranged() == null) return;
+        String type = def.ranged().id();
+        RangedWeaponHandlers.get(type).ifPresent(h -> h.reload(level, player, weapon));
+    }
+
+    public static void shootArrow(Level level, ItemStack stack, Player player, ItemStack arrowStack, float pullProgress) {
+        if (level == null || level.isClientSide() || player == null || arrowStack == null || arrowStack.isEmpty())
+            return;
+
+        if (!(arrowStack.getItem() instanceof ArrowItem arrowItem)) return;
+
+        var definitionData = WeaponDefinitionsStorage.getData(stack);
+        if (definitionData == null || definitionData.ranged() == null) return;
+
+        AbstractArrow arrowEntity = arrowItem.createArrow(level, arrowStack, player, stack);
+        arrowEntity.setBaseDamage(definitionData.ranged().baseDamage() / definitionData.ranged().speed());
+
+        if (arrowEntity instanceof SCArrowEntity scArrowEntity)
+            scArrowEntity.setDamageType(definitionData.ranged().damageType());
+
+        if (Boolean.TRUE.equals(stack.get(SCDataComponents.ARROW_IGNITED.get()))) {
+            arrowEntity.igniteForSeconds(5);
+        }
+
+        arrowEntity.shootFromRotation(
+                player,
+                player.getXRot(),
+                player.getYRot(),
+                0.0F,
+                pullProgress * definitionData.ranged().speed(),
+                definitionData.ranged().divergence()
+        );
+
+        if (!player.isCreative()) {
+            stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(player.getUsedItemHand()));
+        }
+
+        level.addFreshEntity(arrowEntity);
+        playSoundForPlayers(level, stack, player);
+    }
+
+    private static Item[] getItemsFromIds(Set<String> itemIds) {
+        return itemIds.stream()
+                .map(ResourceLocation::parse)
+                .map(BuiltInRegistries.ITEM::get)
+                .filter(i -> i != Items.AIR)
+                .toArray(Item[]::new);
+    }
+
+    public static void shootBullet(Level level, ItemStack stack, Player player) {
+        var definitionData = WeaponDefinitionsStorage.getData(stack);
+        if (definitionData == null || definitionData.ranged() == null) return;
+
+        SCBulletEntity bulletEntity = new SCBulletEntity(level, player, stack);
+        bulletEntity.setDamageAmount(definitionData.ranged().baseDamage());
+        bulletEntity.setDamageType(definitionData.ranged().damageType());
+        bulletEntity.setOwner(player);
+
+        bulletEntity.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F,
+                definitionData.ranged().speed(),
+                definitionData.ranged().divergence());
+
+        level.addFreshEntity(bulletEntity);
+        playSoundForPlayers(level, stack, player);
+
+        if (!player.isCreative()) {
+            stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(player.getUsedItemHand()));
+        }
+
+        if (level instanceof ServerLevel serverLevel) {
+            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), SCParticles.MUZZLES_SMOKE_PARTICLE.get(), 50, 0.2f, 0.0005f, 5);
+            spawnParticleTrail(serverLevel, player, player.getUsedItemHand(), SCParticles.MUZZLES_FLASH_PARTICLE.get(), 1, 0f, 0.1f, 6);
+        }
+    }
+
+    private static void playSoundForPlayers(Level level, ItemStack stack, Player player) {
+        if (level == null) return;
+        var definitionData = WeaponDefinitionsStorage.getData(stack);
+        if (definitionData == null || definitionData.ranged() == null || definitionData.ranged().soundEvent() == null)
+            return;
+
+        for (Player playerEntity : level.players()) {
+            if (playerEntity == null) continue;
+            Vec3 hearPos = playerEntity.position();
+            double distance = player.position().distanceTo(hearPos);
+            float volume = (float) Math.max(0, 1 - (distance * 0.01));
+            if (volume > 0)
+                playerEntity.playNotifySound(definitionData.ranged().soundEvent(), SoundSource.BLOCKS, volume, 1.0F);
+        }
+    }
+
+    private static void spawnParticleTrail(ServerLevel serverLevel, Player player, InteractionHand hand, ParticleOptions particle, int count, float delta, float spread, int distance) {
+        Vec3 handPos = getHandPosition(player, hand);
+        Vec3 lookDir = player.getViewVector(1.0F);
+        for (ServerPlayer otherPlayer : serverLevel.players()) {
+            double distToPlayer = otherPlayer.distanceTo(player);
+            int adjustedCount = count;
+
+            if (distToPlayer > 32) {
+                adjustedCount = Math.max(1, count / 4); // 25% at far distance
+            } else if (distToPlayer > 16) {
+                adjustedCount = Math.max(1, count / 2); // 50% at medium distance
+            }
+
+            for (int i = 0; i < distance; i++) {
+                Vec3 pos = handPos.add(lookDir.scale(i));
+                serverLevel.sendParticles(particle, pos.x, pos.y, pos.z, adjustedCount, delta, delta, delta, spread);
+            }
+        }
+    }
+
+    private static Vec3 getHandPosition(Player player, InteractionHand hand) {
+        boolean isMainHand = hand == InteractionHand.MAIN_HAND;
+
+        double xOffset = isMainHand ? 0.1 : -0.1;
+        double yOffset = 1.5;
+        double zOffset = 1.5;
+
+        Vec3 basePos = player.position().add(0, yOffset, 0);
+        Vec3 sideOffset = player.getViewVector(1.0F).cross(new Vec3(0, 1, 0)).scale(xOffset);
+
+        return basePos.add(sideOffset).add(player.getViewVector(1.0F).scale(zOffset));
+    }
+
+    public static Optional<ItemStack> getArrowFromInventory(Player player) {
+        ItemStack offhand = player.getOffhandItem();
+        if (offhand.getItem() instanceof ArrowItem) return Optional.of(offhand);
+
+        return player.getInventory().items.stream()
+                .filter(stack -> !stack.isEmpty() && stack.getItem() instanceof ArrowItem)
+                .findFirst();
+    }
+
+    public static int getArrowSlot(Player player) {
+        var main = player.getInventory().items;
+        for (int i = 0; i < main.size(); i++) {
+            ItemStack s = main.get(i);
+            if (!s.isEmpty() && s.getItem() instanceof ArrowItem) return i;
+        }
+        return -1;
+    }
+
+    public static float getBowPullProgress(int useTicks) {
+        float pull = (float) useTicks / 20.0F;
+        pull = (pull * pull + pull * 2.0F) / 3.0F;
+        return Math.min(pull, 1.0F);
+    }
+
+    public static float getCrossbowPullProgress(int useTicks, ItemStack itemStack, LivingEntity livingEntity) {
+        var definitionData = WeaponDefinitionsStorage.getData(itemStack);
+        if (definitionData == null || definitionData.ranged() == null) return 0;
+        int chargeTime = Math.max(1, AttackSpeedHelper.getReloadSpeedModified(livingEntity, itemStack));
+        float progress = Math.min((float) useTicks / chargeTime, 1.0F);
+        if (useTicks <= 1) progress = 0f;
+        return Math.min(progress, 1.0F);
+    }
+
+    public static InteractionResultHolder<ItemStack> handleCrossbowUse(Level world, Player player, InteractionHand hand, ItemStack stack) {
+        WeaponState state = getWeaponState(stack);
+        if (state.isCharged()) {
+            handleShoot(world, player, stack);
+        } else {
+            player.startUsingItem(hand);
+        }
+        return InteractionResultHolder.consume(stack);
+    }
+
+    public record AmmoRequirement(
+            int amountFirstItem, Item firstItem, Item firstItem2nOption,
+            int amountSecondItem, Item secondItem, Item secondItem2nOption,
+            int amountThirdItem, Item thirdItem, Item thirdItem2nOption
+    ) {
+        public static final AmmoRequirement EMPTY = new AmmoRequirement(
+                0, Items.AIR, Items.AIR,
+                0, Items.AIR, Items.AIR,
+                0, Items.AIR, Items.AIR
+        );
+    }
+
+    public static @NotNull AmmoRequirement getAmmoRequirement(ItemStack itemStack) {
+        WeaponDefinitionData definitionData = WeaponDefinitionsStorage.getData(itemStack);
+        if (definitionData == null || definitionData.ranged() == null) return AmmoRequirement.EMPTY;
+
+        Map<String, WeaponDefinitionData.AmmoRequirementData> ammoRequirementMap = definitionData.ranged().ammoRequirement();
+        if (!ammoRequirementMap.containsKey("item1")) return AmmoRequirement.EMPTY;
+
+        Item[] firstItems = getItemsFromIds(ammoRequirementMap.get("item1").itemIds());
+        if (firstItems.length == 0) return AmmoRequirement.EMPTY;
+
+        Item[] secondItems = ammoRequirementMap.containsKey("item2")
+                ? getItemsFromIds(ammoRequirementMap.get("item2").itemIds())
+                : new Item[0];
+
+        Item[] thirdItems = ammoRequirementMap.containsKey("item3")
+                ? getItemsFromIds(ammoRequirementMap.get("item3").itemIds())
+                : new Item[0];
+
+        return new AmmoRequirement(
+                ammoRequirementMap.get("item1").amount(),
+                firstItems[0],
+                firstItems.length > 1 ? firstItems[1] : Items.AIR,
+
+                ammoRequirementMap.containsKey("item2") ? ammoRequirementMap.get("item2").amount() : 0,
+                secondItems.length > 0 ? secondItems[0] : Items.AIR,
+                secondItems.length > 1 ? secondItems[1] : Items.AIR,
+
+                ammoRequirementMap.containsKey("item3") ? ammoRequirementMap.get("item3").amount() : 0,
+                thirdItems.length > 0 ? thirdItems[0] : Items.AIR,
+                thirdItems.length > 1 ? thirdItems[1] : Items.AIR
+        );
+    }
+
+    public record WeaponState(boolean isReloading, boolean isCharged, boolean isShooting) {
+
+        public static WeaponState idle() {
+            return new WeaponState(false, false, false);
+        }
+
+        public static WeaponState reloading() {
+            return new WeaponState(true, false, false);
+        }
+
+        public static WeaponState charged() {
+            return new WeaponState(false, true, false);
+        }
+
+        public static WeaponState shooting() {
+            return new WeaponState(false, false, true);
+        }
+    }
+}

@@ -1,8 +1,8 @@
 package banduty.stoneycore.commands.land;
 
 import banduty.stoneycore.commands.SCCommandsHandler;
-import banduty.stoneycore.lands.util.Land;
-import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.Land;
+import banduty.stoneycore.lands.LandState;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.siege.SiegeManager;
 import banduty.stoneycore.siege.SiegeManager.Siege;

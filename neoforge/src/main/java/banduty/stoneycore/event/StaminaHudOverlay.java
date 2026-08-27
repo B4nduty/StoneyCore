@@ -1,11 +1,11 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
-import banduty.stoneycore.util.data.entitydata.SCAttributes;
-import banduty.stoneycore.util.data.entitydata.StaminaData;
-import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
+import banduty.stoneycore.data.IEntityDataSaver;
+import banduty.stoneycore.data.SCAttributes;
+import banduty.stoneycore.stamina.StaminaData;
+import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
+import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.LayeredDraw;

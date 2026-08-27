@@ -2,9 +2,9 @@ package banduty.stoneycore.items.custom.armor;
 
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
-import banduty.stoneycore.util.data.entitydata.SCAttributes;
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
-import banduty.stoneycore.util.definitionsloader.ArmorAttachmentDefinitionsStorage;
+import banduty.stoneycore.data.SCAttributes;
+import banduty.stoneycore.data.SCDataComponents;
+import banduty.stoneycore.definitions.ArmorAttachmentDefinitionsStorage;
 import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;

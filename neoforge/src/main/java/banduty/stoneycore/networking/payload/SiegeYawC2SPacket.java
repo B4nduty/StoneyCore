@@ -23,16 +23,16 @@ public record SiegeYawC2SPacket(float yaw, float pitch) implements CustomPacketP
 
     public void handle(IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player) {
-            if (player.getVehicle() instanceof banduty.stoneycore.entity.custom.AbstractSiegeEntity siege) {
+            if (player.getVehicle() instanceof banduty.stoneycore.entity.siege.AbstractSiegeEntity siege) {
                 applyYawPitch(siege, this.yaw, this.pitch);
             } else if (player.getVehicle() instanceof net.minecraft.world.entity.animal.horse.Horse horse &&
-                    horse.getVehicle() instanceof banduty.stoneycore.entity.custom.AbstractSiegeEntity siege) {
+                    horse.getVehicle() instanceof banduty.stoneycore.entity.siege.AbstractSiegeEntity siege) {
                 applyYawPitch(siege, this.yaw, 0);
             }
         }
     }
 
-    private void applyYawPitch(banduty.stoneycore.entity.custom.AbstractSiegeEntity siege, float yaw, float pitch) {
+    private void applyYawPitch(banduty.stoneycore.entity.siege.AbstractSiegeEntity siege, float yaw, float pitch) {
         siege.setTrackedYaw(yaw);
         siege.setYRot(yaw);
         siege.setYHeadRot(yaw);

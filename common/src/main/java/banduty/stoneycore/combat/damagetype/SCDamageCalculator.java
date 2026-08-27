@@ -1,7 +1,7 @@
 package banduty.stoneycore.combat.damagetype;
 
-import banduty.stoneycore.util.definitionsloader.ArmorDefinitionsStorage;
-import banduty.stoneycore.util.weaponutil.SCArmorUtil;
+import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
+import banduty.stoneycore.combat.weapon.SCArmorUtil;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

@@ -2,7 +2,7 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.event.custom.PlayerPickupCallback;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
-import banduty.stoneycore.items.custom.tongs.Tongs;
+import banduty.stoneycore.items.custom.Tongs;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;

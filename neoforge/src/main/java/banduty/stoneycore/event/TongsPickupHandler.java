@@ -2,7 +2,7 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
-import banduty.stoneycore.items.custom.tongs.Tongs;
+import banduty.stoneycore.items.custom.Tongs;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;

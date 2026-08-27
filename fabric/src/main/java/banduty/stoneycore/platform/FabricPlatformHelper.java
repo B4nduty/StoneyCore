@@ -4,7 +4,7 @@ import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.config.ConfigImpl;
 import banduty.stoneycore.config.FabricConfigImpl;
 import banduty.stoneycore.event.StartTickHandler;
-import banduty.stoneycore.lands.util.ClaimWorker;
+import banduty.stoneycore.lands.ClaimWorker;
 import banduty.stoneycore.networking.payload.LandTitleS2CPacket;
 import banduty.stoneycore.platform.services.IPlatformHelper;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;

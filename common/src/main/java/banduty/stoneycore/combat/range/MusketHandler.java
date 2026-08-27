@@ -1,8 +1,8 @@
 package banduty.stoneycore.combat.range;
 
 import banduty.stoneycore.util.SCInventoryItemFinder;
-import banduty.stoneycore.util.servertick.MechanicsUtil;
-import banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil;
+import banduty.stoneycore.combat.mechanics.MechanicsUtil;
+import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;

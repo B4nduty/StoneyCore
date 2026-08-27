@@ -1,7 +1,7 @@
 package banduty.stoneycore.datagen;
 
 import banduty.stoneycore.combat.damagetype.SCDamageType;
-import banduty.stoneycore.util.definitionsloader.*;
+import banduty.stoneycore.definitions.*;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;

@@ -1,6 +1,6 @@
 package banduty.stoneycore.block;
 
-import banduty.stoneycore.items.custom.manuscript.Manuscript;
+import banduty.stoneycore.items.custom.Manuscript;
 import banduty.stoneycore.platform.Services;
 import banduty.stoneycore.recipes.AnvilInput;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;

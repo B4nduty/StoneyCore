@@ -1,8 +1,8 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.lands.util.Land;
-import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.Land;
+import banduty.stoneycore.lands.LandState;
 import banduty.stoneycore.siege.SiegeManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;

@@ -22,11 +22,11 @@ public record ReloadC2SPacket() implements CustomPacketPayload {
     public void handle(IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player) {
             ItemStack itemStack = player.getMainHandItem();
-            if (banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage.isRanged(itemStack) &&
-                    banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil.getAmmoRequirement(itemStack) !=
-                            banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil.AmmoRequirement.EMPTY) {
-                if (!banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil.getWeaponState(itemStack).isCharged()) {
-                    banduty.stoneycore.util.weaponutil.SCRangeWeaponUtil.handleReload(player.level(), player, itemStack);
+            if (banduty.stoneycore.definitions.WeaponDefinitionsStorage.isRanged(itemStack) &&
+                    banduty.stoneycore.combat.weapon.SCRangeWeaponUtil.getAmmoRequirement(itemStack) !=
+                            banduty.stoneycore.combat.weapon.SCRangeWeaponUtil.AmmoRequirement.EMPTY) {
+                if (!banduty.stoneycore.combat.weapon.SCRangeWeaponUtil.getWeaponState(itemStack).isCharged()) {
+                    banduty.stoneycore.combat.weapon.SCRangeWeaponUtil.handleReload(player.level(), player, itemStack);
                 }
             }
         }

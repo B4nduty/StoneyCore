@@ -1,7 +1,7 @@
 package banduty.stoneycore.client;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.model.CrownModel;
+import banduty.stoneycore.client.model.CrownModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;

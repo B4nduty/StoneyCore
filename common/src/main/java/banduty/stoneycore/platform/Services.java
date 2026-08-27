@@ -2,13 +2,13 @@ package banduty.stoneycore.platform;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.melee.ICombatHelper;
-import banduty.stoneycore.entity.custom.AbstractSiegeHelper;
+import banduty.stoneycore.entity.siege.AbstractSiegeHelper;
 import banduty.stoneycore.items.custom.blueprint.IBlueprintHelper;
 import banduty.stoneycore.platform.services.IPlatformHelper;
-import banduty.stoneycore.util.data.entitydata.ConfigHelper;
-import banduty.stoneycore.util.data.entitydata.StaminaHelper;
-import banduty.stoneycore.util.render.OutlineClaimRendererHelper;
-import banduty.stoneycore.util.servertick.LandTrackerHelper;
+import banduty.stoneycore.platform.services.ConfigHelper;
+import banduty.stoneycore.stamina.StaminaHelper;
+import banduty.stoneycore.client.render.land.OutlineClaimRendererHelper;
+import banduty.stoneycore.lands.LandTrackerHelper;
 
 import java.util.ServiceLoader;
 

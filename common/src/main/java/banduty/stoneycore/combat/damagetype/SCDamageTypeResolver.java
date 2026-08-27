@@ -1,10 +1,10 @@
 package banduty.stoneycore.combat.damagetype;
 
 import banduty.stoneycore.combat.melee.CombatSelect;
-import banduty.stoneycore.util.data.itemdata.SCDataComponents;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionData;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
-import banduty.stoneycore.util.weaponutil.SCWeaponUtil;
+import banduty.stoneycore.data.SCDataComponents;
+import banduty.stoneycore.definitions.WeaponDefinitionData;
+import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
+import banduty.stoneycore.combat.weapon.SCWeaponUtil;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

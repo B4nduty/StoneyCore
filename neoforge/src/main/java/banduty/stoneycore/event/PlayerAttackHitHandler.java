@@ -2,10 +2,10 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.networking.payload.AttackC2SPacket;
-import banduty.stoneycore.util.data.entitydata.IEntityDataSaver;
-import banduty.stoneycore.util.data.entitydata.SCAttributes;
-import banduty.stoneycore.util.data.entitydata.StaminaData;
-import banduty.stoneycore.util.definitionsloader.WeaponDefinitionsStorage;
+import banduty.stoneycore.data.IEntityDataSaver;
+import banduty.stoneycore.data.SCAttributes;
+import banduty.stoneycore.stamina.StaminaData;
+import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;

@@ -1,7 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
-import banduty.stoneycore.lands.util.LandState;
+import banduty.stoneycore.lands.LandState;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
