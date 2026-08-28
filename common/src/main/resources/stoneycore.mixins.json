@@ -25,7 +25,8 @@
     "ShapelessRecipeAccessor",
     "SpawnHelperMixin",
     "VillagerMixin",
-    "VindicatorEntityMixin"
+    "VindicatorEntityMixin",
+    "MobGearMixin"
   ],
   "client": [
     "BipedEntityModelMixin",
