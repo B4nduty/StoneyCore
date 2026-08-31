@@ -1,6 +1,9 @@
 package banduty.stoneycore.datagen;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.items.client.SC3DRendererProvider;
+import banduty.stoneycore.items.client.SCBannersRendererProvider;
+import banduty.stoneycore.items.client.SCIconRendererProvider;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
@@ -30,19 +33,29 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
 
         String path = BuiltInRegistries.ITEM.getKey(item).getPath();
 
-        // Create the base model
+        boolean is3DProvider = item instanceof SC3DRendererProvider;
+        boolean isIconProvider = item instanceof SCIconRendererProvider;
+        boolean isBannerProvider = item instanceof SCBannersRendererProvider;
+
+        boolean isCustomRenderer = is3DProvider || isIconProvider || isBannerProvider;
+
+        // 3D items get "_gui", Icon items get "_icon", Banner items use "_base", standard items use base path
+        String customSuffix = is3DProvider ? "_gui" : (isIconProvider ? "_icon" : (isBannerProvider ? "_base" : ""));
+        String iconPath = isCustomRenderer ? path + customSuffix : path;
+
+        // Create the base (visible/icon) model
         ItemModelBuilder baseBuilder = overlay
-                ? withExistingParent(path, "item/handheld")
+                ? withExistingParent(iconPath, "item/handheld")
                 .texture("layer0", modLoc("item/" + path))
                 .texture("layer1", modLoc("item/" + path + "_overlay"))
-                : withExistingParent(path, "item/generated")
+                : withExistingParent(iconPath, "item/generated")
                 .texture("layer0", modLoc("item/" + path));
 
         Set<String> generatedModels = new HashSet<>();
 
         // 1. Individual condition models and overrides
         for (OverrideCondition condition : conditions) {
-            String modelName = condition.getModelName(path);
+            String modelName = condition.getModelName(iconPath);
             generateOverrideModel(item, modelName, overlay);
             generatedModels.add(modelName);
 
@@ -63,7 +76,7 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
 
                     for (OverrideCondition condition : combination) {
                         overrideBuilder.predicate(condition.predicateKey, condition.predicateValue.floatValue());
-                        modelNames.add(condition.getModelName(path));
+                        modelNames.add(condition.getModelName(iconPath));
                     }
 
                     String combinedModelName = combineMultipleModelNames(modelNames);
@@ -75,6 +88,10 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
                     overrideBuilder.model(getExistingFile(modLoc("item/" + combinedModelName))).end();
                 }
             }
+        }
+
+        if (isCustomRenderer) {
+            withExistingParent(path, "builtin/entity");
         }
     }
 
@@ -137,9 +154,22 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
         return baseName + "_" + String.join("_", sortedConditions);
     }
 
+    protected void registerWCustomName(Item item, String parent, String modelName, ResourceLocation texturePath) {
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+        String path = itemId.getPath();
+
+        String finalModelName = (modelName == null || modelName.isEmpty()) ? path : modelName;
+
+        ResourceLocation texture = texturePath != null ? texturePath : modLoc("item/" + path);
+
+        withExistingParent(finalModelName, parent)
+                .texture("layer0", texture);
+    }
+
     public record OverrideCondition(ResourceLocation predicateKey, Number predicateValue) {
         String getModelName(String basePath) {
-            return basePath + "_" + predicateKey.getPath();
+            String cleanPath = basePath.replaceAll("(_gui|_icon|_base)$", "");
+            return cleanPath + "_" + predicateKey.getPath();
         }
     }
 }
