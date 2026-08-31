@@ -11,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 import java.util.*;
@@ -91,7 +92,7 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
         }
 
         if (isCustomRenderer) {
-            withExistingParent(path, "builtin/entity");
+            getBuilder(path).parent(new ModelFile.UncheckedModelFile("builtin/entity"));
         }
     }
 
@@ -162,8 +163,12 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
 
         ResourceLocation texture = texturePath != null ? texturePath : modLoc("item/" + path);
 
-        withExistingParent(finalModelName, parent)
-                .texture("layer0", texture);
+        if ("builtin/entity".equals(parent)) {
+            getBuilder(finalModelName).parent(new ModelFile.UncheckedModelFile(parent));
+        } else {
+            withExistingParent(finalModelName, parent)
+                    .texture("layer0", texture);
+        }
     }
 
     public record OverrideCondition(ResourceLocation predicateKey, Number predicateValue) {
