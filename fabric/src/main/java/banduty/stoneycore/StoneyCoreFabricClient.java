@@ -6,8 +6,10 @@ import banduty.stoneycore.client.ClientOutlineRenderer;
 import banduty.stoneycore.client.CrownRenderer;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
+import banduty.stoneycore.client.model.*;
 import banduty.stoneycore.client.render.item.SC3DItemRenderer;
 import banduty.stoneycore.client.render.item.SCBannerItemRenderer;
+import banduty.stoneycore.data.SCTags;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.event.AttackCancelHandler;
 import banduty.stoneycore.event.ClientTickHandler;
@@ -17,11 +19,10 @@ import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.client.SC3DRendererProvider;
 import banduty.stoneycore.items.client.SCBannersRendererProvider;
 import banduty.stoneycore.items.client.SCIconRendererProvider;
+import banduty.stoneycore.items.custom.Tongs;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
-import banduty.stoneycore.items.custom.Tongs;
-import banduty.stoneycore.client.model.*;
 import banduty.stoneycore.networking.SCS2CNetworking;
 import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
@@ -32,8 +33,6 @@ import banduty.stoneycore.platform.FabricHumanoidModelSetupAnimHelper;
 import banduty.stoneycore.platform.FabricKeyInputHelper;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.SCScreenHandlers;
-import banduty.stoneycore.data.SCDataComponents;
-import banduty.stoneycore.data.SCTags;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
@@ -98,10 +97,7 @@ public class StoneyCoreFabricClient implements ClientModInitializer {
                                 "ignited"
                         ),
                         (stack, world, entity, seed) ->
-                                stack.getOrDefault(
-                                        SCDataComponents.IGNITED.get(),
-                                        false
-                                ) ? 1.0F : 0.0F
+                                ((QuenchItem) item).isIgnited(stack) ? 1.0F : 0.0F
                 );
             }
 

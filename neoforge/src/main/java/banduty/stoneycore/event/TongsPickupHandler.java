@@ -1,8 +1,8 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.items.custom.Tongs;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -18,10 +18,10 @@ public class TongsPickupHandler {
 
     @SubscribeEvent
     public static void onItemPickup(ItemEntityPickupEvent.Pre event) {
-
         Player player = event.getPlayer();
         ItemStack pickedStack = event.getItemEntity().getItem();
 
+        // Only handle currently ignited QuenchItems.
         if (!(pickedStack.getItem() instanceof QuenchItem quenchItem)
                 || !quenchItem.isIgnited(pickedStack)) {
             return;
@@ -29,8 +29,6 @@ public class TongsPickupHandler {
 
         ItemStack mainHand = player.getMainHandItem();
         ItemStack offHand = player.getOffhandItem();
-
-        boolean handled = false;
 
         // Check main hand for empty tongs.
         if (mainHand.getItem() instanceof Tongs tongs
@@ -43,13 +41,19 @@ public class TongsPickupHandler {
 
             pickedStack.shrink(1);
 
+            // The item entity still contains items if the original
+            // stack contained more than one item.
             if (pickedStack.isEmpty()) {
-                handled = true;
+                event.getItemEntity().discard();
             }
+
+            // Prevent the captured item from being picked up normally.
+            event.setCanPickup(TriState.FALSE);
+            return;
         }
 
         // Check off hand for empty tongs.
-        else if (offHand.getItem() instanceof Tongs tongs
+        if (offHand.getItem() instanceof Tongs tongs
                 && tongs.getCapturedItem(offHand).isEmpty()) {
 
             tongs.setCapturedItem(
@@ -59,13 +63,13 @@ public class TongsPickupHandler {
 
             pickedStack.shrink(1);
 
+            // The item entity still contains items if the original
+            // stack contained more than one item.
             if (pickedStack.isEmpty()) {
-                handled = true;
+                event.getItemEntity().discard();
             }
-        }
 
-        if (handled) {
-            event.getItemEntity().discard();
+            // Prevent the captured item from being picked up normally.
             event.setCanPickup(TriState.FALSE);
         }
     }

@@ -103,6 +103,8 @@ dependencies {
     jarJar("com.github.B4nduty:streq:v${streq}") {
         transitive = false
     }
+
+    additionalRuntimeClasspath "com.github.B4nduty:streq:v${streq}"
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

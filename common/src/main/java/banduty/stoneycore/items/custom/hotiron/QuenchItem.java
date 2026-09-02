@@ -1,7 +1,8 @@
 package banduty.stoneycore.items.custom.hotiron;
 
-import banduty.stoneycore.items.custom.Tongs;
+import banduty.stoneycore.data.CapturedItemData;
 import banduty.stoneycore.data.SCDataComponents;
+import banduty.stoneycore.items.custom.Tongs;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -60,10 +61,7 @@ public interface QuenchItem {
      * IGNITED component exists and is true = currently hot/ignited.
      */
     default boolean isIgnited(ItemStack stack) {
-        return stack.getOrDefault(
-                SCDataComponents.IGNITED.get(),
-                false
-        );
+        return stack.has(SCDataComponents.IGNITED.get());
     }
 
     /**
@@ -98,7 +96,6 @@ public interface QuenchItem {
             Level level,
             Entity entity
     ) {
-        // Already cooled/finished.
         if (!isIgnited(stack)) {
             return false;
         }
@@ -117,16 +114,28 @@ public interface QuenchItem {
 
         int count = stack.getCount();
 
-        /**/
-
+        /*
+         * The item may be stored inside Tongs.
+         *
+         * If it is, finishInsideTongs() removes the
+         * CAPTURED_ITEM component from the Tongs and
+         * handles the result.
+         */
         if (finishInsideTongs(stack, entity, count)) {
             playBurnoutEffects(level, entity);
             return true;
         }
 
+        /*
+         * The item is not inside Tongs.
+         *
+         * Remove the hot item.
+         */
         stack.setCount(0);
 
-        // Return the entire stack as the quench result.
+        /*
+         * Return the entire stack as the quench result.
+         */
         ItemStack result = new ItemStack(
                 getQuenchResult(),
                 count
@@ -155,36 +164,68 @@ public interface QuenchItem {
         );
     }
 
+    /**
+     * Handles an item that is currently stored inside Tongs.
+     * <p>
+     * Since CAPTURED_ITEM stores CapturedItemData rather than
+     * an ItemStack, we compare CapturedItemData instead of
+     * comparing ItemStack object references.
+     */
     default boolean finishInsideTongs(
             ItemStack capturedStack,
             Entity entity,
             int count
     ) {
         /*
+         * Create a representation of the current captured item.
+         *
+         * This is comparable with the data stored inside Tongs.
+         */
+        CapturedItemData currentCaptured =
+                CapturedItemData.fromItemStack(capturedStack);
+
+        if (currentCaptured == null) {
+            return false;
+        }
+
+        /*
          * Tongs are inside the player's inventory.
          */
         if (entity instanceof Player player) {
 
-            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            for (int i = 0;
+                 i < player.getInventory().getContainerSize();
+                 i++) {
 
-                ItemStack tongsStack = player.getInventory().getItem(i);
+                ItemStack tongsStack =
+                        player.getInventory().getItem(i);
 
                 if (!(tongsStack.getItem() instanceof Tongs tongs)) {
                     continue;
                 }
 
-                ItemStack tongCaptured = tongs.getCapturedItem(tongsStack);
-
                 /*
-                 * This is the exact ItemStack being ticked by
-                 * Tongs.inventoryTick().
+                 * Get the serialized item data stored by the Tongs.
                  */
-                if (tongCaptured != capturedStack) {
+                CapturedItemData tongCaptured =
+                        tongs.getCapturedItemData(tongsStack);
+
+                if (tongCaptured == null) {
                     continue;
                 }
 
                 /*
-                 * Remove the hot item from the Tongs first.
+                 * Compare the actual stored data rather than
+                 * comparing ItemStack object identity.
+                 */
+                if (!tongCaptured.equals(currentCaptured)) {
+                    continue;
+                }
+
+                /*
+                 * The hot item has burned out inside these Tongs.
+                 *
+                 * Remove CAPTURED_ITEM first.
                  */
                 tongs.removeCapturedItem(tongsStack);
 
@@ -236,13 +277,20 @@ public interface QuenchItem {
                 return false;
             }
 
-            ItemStack tongCaptured = tongs.getCapturedItem(tongsStack);
+            /*
+             * Get the serialized item data stored by the Tongs.
+             */
+            CapturedItemData tongCaptured =
+                    tongs.getCapturedItemData(tongsStack);
+
+            if (tongCaptured == null) {
+                return false;
+            }
 
             /*
-             * Make sure this is the captured ItemStack that
-             * actually triggered the burnout.
+             * Compare serialized data instead of ItemStack identity.
              */
-            if (tongCaptured != capturedStack) {
+            if (!tongCaptured.equals(currentCaptured)) {
                 return false;
             }
 
@@ -280,8 +328,7 @@ public interface QuenchItem {
             }
 
             /*
-             * If the Tongs became empty, it remains in the world
-             * as a normal empty pair of Tongs.
+             * The Tongs remain in the world as empty Tongs.
              */
             return true;
         }
@@ -298,16 +345,25 @@ public interface QuenchItem {
             ItemStack stack,
             Player player
     ) {
-        // Cannot quench an already cooled item.
         if (!isIgnited(stack)) {
             return false;
         }
+
         int count = stack.getCount();
+
         if (destroysOnQuench()) {
+
             stack.setCount(0);
-            player.addItem(new ItemStack(getQuenchResult(),
-                    count));
+
+            player.addItem(
+                    new ItemStack(
+                            getQuenchResult(),
+                            count
+                    )
+            );
+
         } else {
+
             setFinished(stack);
         }
 
@@ -323,7 +379,6 @@ public interface QuenchItem {
             ItemStack stack,
             Entity entity
     ) {
-        // Cannot quench an already cooled item.
         if (!isIgnited(stack)) {
             return false;
         }
@@ -331,18 +386,27 @@ public interface QuenchItem {
         int count = stack.getCount();
 
         if (destroysOnQuench()) {
-            // Remove the entire hot stack.
+
+            /*
+             * Remove the entire hot stack.
+             */
             stack.setCount(0);
 
-            // Return the entire stack as the quench result.
+            /*
+             * Return the entire stack as the quench result.
+             */
             ItemStack result = new ItemStack(
                     getQuenchResult(),
                     count
             );
 
             entity.spawnAtLocation(result);
+
         } else {
-            // The entire stack becomes cooled.
+
+            /*
+             * The entire stack becomes cooled.
+             */
             setFinished(stack);
         }
 
@@ -368,9 +432,11 @@ public interface QuenchItem {
         );
 
         if (level instanceof ServerLevel serverLevel) {
+
             RandomSource random = level.random;
 
             for (int i = 0; i < particleCount; i++) {
+
                 double x = pos.getX()
                         + 0.5
                         + (random.nextDouble() - 0.5) * 0.8;
@@ -461,12 +527,12 @@ public interface QuenchItem {
             return InteractionResult.PASS;
         }
 
-        // Already cooled, so water does nothing.
         if (!quenchItem.isIgnited(stack)) {
             return InteractionResult.PASS;
         }
 
         if (!level.isClientSide()) {
+
             if (quenchItem.quench(stack, player)) {
                 quenchItem.playQuenchEffects(
                         level,
@@ -474,7 +540,9 @@ public interface QuenchItem {
                         8
                 );
             }
+
         } else {
+
             quenchItem.playQuenchSoundClient(player);
         }
 
@@ -494,7 +562,6 @@ public interface QuenchItem {
             return InteractionResult.PASS;
         }
 
-        // Already cooled, so do not consume cauldron water.
         if (!quenchItem.isIgnited(stack)) {
             return InteractionResult.PASS;
         }
@@ -508,6 +575,7 @@ public interface QuenchItem {
         }
 
         if (!level.isClientSide()) {
+
             if (quenchItem.quench(stack, player)) {
 
                 LayeredCauldronBlock.lowerFillLevel(
@@ -522,7 +590,9 @@ public interface QuenchItem {
                         10
                 );
             }
+
         } else {
+
             quenchItem.playQuenchSoundClient(player);
         }
 

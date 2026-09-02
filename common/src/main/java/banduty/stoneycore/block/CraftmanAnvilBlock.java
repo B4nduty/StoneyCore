@@ -1,11 +1,12 @@
 package banduty.stoneycore.block;
 
+import banduty.stoneycore.data.CapturedItemData;
+import banduty.stoneycore.data.SCDataComponents;
 import banduty.stoneycore.items.custom.CraftmanAnvilHelper;
 import banduty.stoneycore.items.custom.SmithingHammer;
-import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.items.custom.Tongs;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.recipes.CraftmanAnvilRecipe;
-import banduty.stoneycore.data.SCDataComponents;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -183,7 +184,7 @@ public class CraftmanAnvilBlock extends BaseEntityBlock implements Fallable {
                 if (item.isEmpty()) continue;
                 if (!(item.getItem() instanceof QuenchItem quenchItem) || quenchItem.isFinished(item)) continue;
 
-                tongsStack.set(SCDataComponents.CAPTURED_ITEM.get(), item.copyWithCount(1));
+                tongsStack.set(SCDataComponents.CAPTURED_ITEM.get(), CapturedItemData.fromItemStack(item.copyWithCount(1)));
                 item.shrink(1);
 
                 if (item.isEmpty()) {

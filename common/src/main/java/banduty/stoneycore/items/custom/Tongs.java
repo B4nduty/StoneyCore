@@ -1,7 +1,8 @@
 package banduty.stoneycore.items.custom;
 
-import banduty.stoneycore.items.custom.hotiron.QuenchItem;
+import banduty.stoneycore.data.CapturedItemData;
 import banduty.stoneycore.data.SCDataComponents;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -43,16 +44,20 @@ public class Tongs extends Item implements CraftmanAnvilHelper {
     }
 
     public ItemStack getCapturedItem(ItemStack tongs) {
-        ItemStack captured = tongs.get(SCDataComponents.CAPTURED_ITEM.get());
-        return captured != null ? captured : ItemStack.EMPTY;
+        CapturedItemData captured = tongs.get(SCDataComponents.CAPTURED_ITEM.get());
+        return captured != null ? captured.toItemStack() : ItemStack.EMPTY;
     }
 
     public void setCapturedItem(ItemStack tongs, ItemStack captured) {
-        tongs.set(SCDataComponents.CAPTURED_ITEM.get(), captured.copy());
+        tongs.set(SCDataComponents.CAPTURED_ITEM.get(), CapturedItemData.fromItemStack(captured.copy()));
     }
 
     public void removeCapturedItem(ItemStack tongs) {
         tongs.remove(SCDataComponents.CAPTURED_ITEM.get());
+    }
+
+    public CapturedItemData getCapturedItemData(ItemStack tongs) {
+        return tongs.get(SCDataComponents.CAPTURED_ITEM.get());
     }
 
     @Override

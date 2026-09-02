@@ -9,7 +9,6 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -44,8 +43,11 @@ public interface SCDataComponents {
     Supplier<DataComponentType<UnderArmorContents>> UNDER_ARMOR_CONTENTS = register("under_armor_contents",
             builder -> builder.persistent(UnderArmorContents.CODEC).networkSynchronized(UnderArmorContents.STREAM_CODEC));
 
-    Supplier<DataComponentType<ItemStack>> CAPTURED_ITEM = register("captured_item",
-            builder -> builder.persistent(ItemStack.CODEC).networkSynchronized(ItemStack.STREAM_CODEC));
+    Supplier<DataComponentType<CapturedItemData>> CAPTURED_ITEM =
+            register("captured_item",
+                    builder -> builder
+                            .persistent(CapturedItemData.CODEC)
+                            .networkSynchronized(CapturedItemData.STREAM_CODEC));
 
     @SuppressWarnings("unchecked")
     private static <T> Supplier<DataComponentType<T>> register(String name, UnaryOperator<DataComponentType.Builder<T>> builderOperator) {

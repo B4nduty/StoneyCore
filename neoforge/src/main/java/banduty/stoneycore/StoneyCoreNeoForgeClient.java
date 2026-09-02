@@ -4,18 +4,19 @@ import banduty.stoneycore.block.CraftmanAnvilBlockRenderer;
 import banduty.stoneycore.block.SCBlocks;
 import banduty.stoneycore.client.SCBulletEntityRenderer;
 import banduty.stoneycore.client.item.ClientUnderArmorTooltip;
+import banduty.stoneycore.client.model.*;
 import banduty.stoneycore.client.render.item.SC3DItemRenderer;
 import banduty.stoneycore.client.render.item.SCBannerItemRenderer;
+import banduty.stoneycore.data.SCTags;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.items.SCItems;
 import banduty.stoneycore.items.client.SC3DRendererProvider;
 import banduty.stoneycore.items.client.SCBannersRendererProvider;
 import banduty.stoneycore.items.client.SCIconRendererProvider;
+import banduty.stoneycore.items.custom.Tongs;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorTooltip;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
-import banduty.stoneycore.items.custom.Tongs;
-import banduty.stoneycore.client.model.*;
 import banduty.stoneycore.particle.MuzzlesFlashParticle;
 import banduty.stoneycore.particle.MuzzlesSmokeParticle;
 import banduty.stoneycore.particle.SCParticles;
@@ -25,8 +26,6 @@ import banduty.stoneycore.platform.NeoForgeHumanoidModelSetupAnimHelper;
 import banduty.stoneycore.platform.NeoForgeKeyInputHelper;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.SCScreenHandlers;
-import banduty.stoneycore.data.SCDataComponents;
-import banduty.stoneycore.data.SCTags;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.item.ItemProperties;
@@ -40,11 +39,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.ModelEvent;
-import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
+import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 
@@ -91,10 +86,7 @@ public class StoneyCoreNeoForgeClient {
                                     "ignited"
                             ),
                             (stack, world, entity, seed) ->
-                                    stack.getOrDefault(
-                                            SCDataComponents.IGNITED.get(),
-                                            false
-                                    ) ? 1.0F : 0.0F
+                                    ((QuenchItem) item).isIgnited(stack) ? 1.0F : 0.0F
                     );
                 }
             }
