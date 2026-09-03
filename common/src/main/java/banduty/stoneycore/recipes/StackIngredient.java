@@ -163,14 +163,24 @@ public record StackIngredient(
             return BuiltInRegistries.ITEM
                     .getOrCreateTag(tag.get())
                     .stream()
-                    .map(holder -> new ItemStack(holder.value()))
+                    .map(holder -> applyFinishedRequirement(new ItemStack(holder.value())))
                     .collect(Collectors.toList());
         }
 
         if (!stack.isEmpty()) {
-            return Collections.singletonList(stack.copy());
+            return Collections.singletonList(applyFinishedRequirement(stack.copy()));
         }
 
         return Collections.emptyList();
+    }
+
+    private ItemStack applyFinishedRequirement(ItemStack displayStack) {
+        switch (finishedRequirement) {
+            case NOT_FINISHED -> displayStack.set(SCDataComponents.IGNITED.get(), true);
+            case FINISHED -> displayStack.remove(SCDataComponents.IGNITED.get());
+            case ANY -> {}
+        }
+
+        return displayStack;
     }
 }
