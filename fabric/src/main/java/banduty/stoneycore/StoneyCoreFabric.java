@@ -18,7 +18,6 @@ import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -66,6 +65,7 @@ public class StoneyCoreFabric implements ModInitializer {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new WeaponDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ArmorDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ArmorAttachmentDefinitionsLoader());
+        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new MobGearLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ArmorAttachmentSlotDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new LandDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new SiegeEngineDefinitionsLoader());

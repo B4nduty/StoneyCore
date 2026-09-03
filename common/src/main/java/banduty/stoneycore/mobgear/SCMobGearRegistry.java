@@ -1,5 +1,9 @@
 package banduty.stoneycore.mobgear;
 
+import banduty.stoneycore.mobgear.data.MobGearArmorData;
+import banduty.stoneycore.mobgear.data.MobGearAttachmentData;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -7,83 +11,42 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 public final class SCMobGearRegistry {
-
-    private record GearEntry<T>(Supplier<T> item, Set<EntityType<?>> allowedMobs) {
-        private boolean appliesTo(EntityType<?> type) {
-            return allowedMobs.isEmpty() || allowedMobs.contains(type);
+    private record GearInfo(Item item, Set<ResourceLocation> mobs) {
+        private boolean appliesTo(ResourceLocation mobId) {
+            return mobs.isEmpty() || mobs.contains(mobId);
         }
     }
 
-    private static final List<GearEntry<? extends Item>> WEAPONS = new ArrayList<>();
-    private static final Map<EquipmentSlot, List<GearEntry<? extends Item>>> ARMOR = new EnumMap<>(EquipmentSlot.class);
-    private static final Map<EquipmentSlot, List<GearEntry<? extends Item>>> ATTACHMENTS = new EnumMap<>(EquipmentSlot.class);
+    private static volatile List<GearInfo> WEAPONS = List.of();
+    private static volatile Map<EquipmentSlot, List<GearInfo>> ARMOR = Map.of();
+    private static volatile Map<EquipmentSlot, List<GearInfo>> ATTACHMENTS = Map.of();
 
-    private static final Map<EntityType<?>, List<Item>> WEAPON_CACHE = new HashMap<>();
+    private static final Map<EntityType<?>, List<Item>> WEAPON_CACHE = new ConcurrentHashMap<>();
     private static final Map<EquipmentSlot, Map<EntityType<?>, List<Item>>> ARMOR_CACHE = new EnumMap<>(EquipmentSlot.class);
     private static final Map<EquipmentSlot, Map<EntityType<?>, List<Item>>> ATTACHMENT_CACHE = new EnumMap<>(EquipmentSlot.class);
 
     private SCMobGearRegistry() {
     }
 
-    public static void registerWeapon(Supplier<? extends Item> weapon, EntityType<?>... allowedMobs) {
-        registerWeapon(weapon, toSet(allowedMobs));
-    }
+    public static void applyDatapackData(Map<ResourceLocation, List<ResourceLocation>> weaponData,
+                                         Map<ResourceLocation, MobGearArmorData> armorData,
+                                         Map<ResourceLocation, MobGearAttachmentData> attachmentData) {
+        WEAPONS = buildList(weaponData);
+        ARMOR = buildSlotMap(armorData, MobGearArmorData::slot, MobGearArmorData::mobs);
+        ATTACHMENTS = buildSlotMap(attachmentData, MobGearAttachmentData::slot, MobGearAttachmentData::mobs);
 
-    public static void registerWeapon(Supplier<? extends Item> weapon, Collection<EntityType<?>> allowedMobs) {
-        WEAPONS.add(new GearEntry<>(weapon, toSet(allowedMobs)));
         WEAPON_CACHE.clear();
-    }
-
-    public static void registerArmor(EquipmentSlot slot, Supplier<? extends Item> armorPiece,
-                                     EntityType<?>... allowedMobs) {
-        registerArmor(slot, armorPiece, toSet(allowedMobs));
-    }
-
-    public static void registerArmor(EquipmentSlot slot, Supplier<? extends Item> armorPiece,
-                                     Collection<EntityType<?>> allowedMobs) {
-        ARMOR.computeIfAbsent(slot, s -> new ArrayList<>()).add(new GearEntry<>(armorPiece, toSet(allowedMobs)));
-        clearSlotCache(ARMOR_CACHE, slot);
-    }
-
-    public static void registerArmorSet(Supplier<? extends Item> helmet,
-                                        Supplier<? extends Item> chestplate,
-                                        Supplier<? extends Item> leggings,
-                                        Supplier<? extends Item> boots,
-                                        EntityType<?>... allowedMobs) {
-        registerArmorSet(helmet, chestplate, leggings, boots, toSet(allowedMobs));
-    }
-
-    public static void registerArmorSet(Supplier<? extends Item> helmet,
-                                        Supplier<? extends Item> chestplate,
-                                        Supplier<? extends Item> leggings,
-                                        Supplier<? extends Item> boots,
-                                        Collection<EntityType<?>> allowedMobs) {
-        if (helmet != null) registerArmor(EquipmentSlot.HEAD, helmet, allowedMobs);
-        if (chestplate != null) registerArmor(EquipmentSlot.CHEST, chestplate, allowedMobs);
-        if (leggings != null) registerArmor(EquipmentSlot.LEGS, leggings, allowedMobs);
-        if (boots != null) registerArmor(EquipmentSlot.FEET, boots, allowedMobs);
-    }
-
-    public static void registerAttachment(EquipmentSlot slot, Supplier<? extends Item> attachment,
-                                          EntityType<?>... allowedMobs) {
-        registerAttachment(slot, attachment, toSet(allowedMobs));
-    }
-
-    public static void registerAttachment(EquipmentSlot slot, Supplier<? extends Item> attachment,
-                                          Collection<EntityType<?>> allowedMobs) {
-        ATTACHMENTS.computeIfAbsent(slot, s -> new ArrayList<>()).add(new GearEntry<>(attachment, toSet(allowedMobs)));
-        clearSlotCache(ATTACHMENT_CACHE, slot);
+        ARMOR_CACHE.clear();
+        ATTACHMENT_CACHE.clear();
     }
 
     public static boolean hasWeapons(Mob mob) {
@@ -114,24 +77,51 @@ public final class SCMobGearRegistry {
         return resolveSlot(ATTACHMENTS, ATTACHMENT_CACHE, slot, mob.getType());
     }
 
+    private static List<GearInfo> buildList(Map<ResourceLocation, List<ResourceLocation>> data) {
+        List<GearInfo> list = new ArrayList<>();
+        data.forEach((itemId, mobs) -> resolveItem(itemId)
+                .ifPresent(item -> list.add(new GearInfo(item, Set.copyOf(mobs)))));
+        return List.copyOf(list);
+    }
+
+    private static <T> Map<EquipmentSlot, List<GearInfo>> buildSlotMap(Map<ResourceLocation, T> data,
+                                                                       Function<T, EquipmentSlot> slotGetter,
+                                                                       Function<T, List<ResourceLocation>> mobsGetter) {
+        Map<EquipmentSlot, List<GearInfo>> grouped = new EnumMap<>(EquipmentSlot.class);
+
+        data.forEach((itemId, entry) -> resolveItem(itemId).ifPresent(item -> {
+            EquipmentSlot slot = slotGetter.apply(entry);
+            grouped.computeIfAbsent(slot, s -> new ArrayList<>())
+                    .add(new GearInfo(item, Set.copyOf(mobsGetter.apply(entry))));
+        }));
+
+        grouped.replaceAll((slot, list) -> List.copyOf(list));
+        return Map.copyOf(grouped);
+    }
+
+    private static Optional<Item> resolveItem(ResourceLocation id) {
+        return BuiltInRegistries.ITEM.getOptional(id);
+    }
+
     private static List<Item> resolveWeapons(EntityType<?> type) {
         return WEAPON_CACHE.computeIfAbsent(type, t -> resolve(WEAPONS, t));
     }
 
-    private static List<Item> resolveSlot(Map<EquipmentSlot, List<GearEntry<? extends Item>>> registry,
+    private static List<Item> resolveSlot(Map<EquipmentSlot, List<GearInfo>> registry,
                                           Map<EquipmentSlot, Map<EntityType<?>, List<Item>>> cache,
                                           EquipmentSlot slot, EntityType<?> type) {
-        List<GearEntry<? extends Item>> entries = registry.get(slot);
+        List<GearInfo> entries = registry.get(slot);
         if (entries == null || entries.isEmpty()) return List.of();
 
-        return cache.computeIfAbsent(slot, s -> new HashMap<>())
+        return cache.computeIfAbsent(slot, s -> new ConcurrentHashMap<>())
                 .computeIfAbsent(type, t -> resolve(entries, t));
     }
 
-    private static List<Item> resolve(List<GearEntry<? extends Item>> entries, EntityType<?> type) {
+    private static List<Item> resolve(List<GearInfo> entries, EntityType<?> type) {
+        ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         List<Item> resolved = new ArrayList<>();
-        for (GearEntry<? extends Item> entry : entries) {
-            if (entry.appliesTo(type)) resolved.add(entry.item().get());
+        for (GearInfo entry : entries) {
+            if (entry.appliesTo(typeId)) resolved.add(entry.item());
         }
         return resolved.isEmpty() ? List.of() : resolved;
     }
@@ -139,20 +129,5 @@ public final class SCMobGearRegistry {
     private static Item pickRandom(List<Item> candidates, RandomSource random) {
         if (candidates.isEmpty()) return null;
         return candidates.get(random.nextInt(candidates.size()));
-    }
-
-    private static void clearSlotCache(Map<EquipmentSlot, Map<EntityType<?>, List<Item>>> cache, EquipmentSlot slot) {
-        Map<EntityType<?>, List<Item>> perType = cache.get(slot);
-        if (perType != null) perType.clear();
-    }
-
-    private static Set<EntityType<?>> toSet(EntityType<?>... types) {
-        if (types == null || types.length == 0) return Collections.emptySet();
-        return new HashSet<>(List.of(types));
-    }
-
-    private static Set<EntityType<?>> toSet(Collection<EntityType<?>> types) {
-        if (types == null || types.isEmpty()) return Collections.emptySet();
-        return new HashSet<>(types);
     }
 }
