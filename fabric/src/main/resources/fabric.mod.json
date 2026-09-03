@@ -26,6 +26,9 @@
     ],
     "jei_mod_plugin": [
       "banduty.stoneycore.compat.jei.StoneyCoreJEIPlugin"
+    ],
+    "emi": [
+      "banduty.stoneycore.compat.emi.StoneyCoreEMIPlugin"
     ]
   },
   "mixins": [

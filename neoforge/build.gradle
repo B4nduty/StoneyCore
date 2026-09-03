@@ -37,6 +37,13 @@ repositories {
         }
     }
     maven {
+        name = 'Sleeping Town'
+        url 'https://repo.sleeping.town/'
+        content {
+            includeGroup 'dev.emi'
+        }
+    }
+    maven {
         name = 'GeckoLib'
         url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
     }
@@ -93,7 +100,8 @@ dependencies {
 
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei}"
     compileOnlyApi "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei}"
-    runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei}"
+
+    compileOnly "dev.emi:emi-neoforge:${emi_version}:api"
 
     api "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config}"
 
