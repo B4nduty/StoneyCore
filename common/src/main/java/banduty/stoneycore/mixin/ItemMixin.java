@@ -2,15 +2,15 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
-import banduty.stoneycore.items.custom.hotiron.QuenchItem;
+import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
+import banduty.stoneycore.combat.weapon.SCWeaponUtil;
 import banduty.stoneycore.data.IEntityDataSaver;
-import banduty.stoneycore.stamina.StaminaData;
 import banduty.stoneycore.data.SCDataComponents;
 import banduty.stoneycore.data.SCTags;
 import banduty.stoneycore.definitions.WeaponDefinitionData;
 import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
-import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
-import banduty.stoneycore.combat.weapon.SCWeaponUtil;
+import banduty.stoneycore.items.custom.hotiron.QuenchItem;
+import banduty.stoneycore.stamina.StaminaData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,7 +20,10 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -290,7 +293,7 @@ public abstract class ItemMixin {
             }
 
             if (state.is(Blocks.WATER_CAULDRON) && state.hasProperty(LayeredCauldronBlock.LEVEL)) {
-                cir.setReturnValue(quenchItem.handleWaterCauldron(level, pos, player, stack));
+                cir.setReturnValue(quenchItem.handleWaterCauldron(level, pos, player, stack, context.getHand()));
                 return;
             }
 

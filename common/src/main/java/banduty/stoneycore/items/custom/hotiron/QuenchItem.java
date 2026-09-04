@@ -32,6 +32,10 @@ public interface QuenchItem {
 
     boolean destroysOnQuench();
 
+    default boolean canBeIgnited() {
+        return true;
+    }
+
     default Item getQuenchResult() {
         return Items.IRON_INGOT;
     }
@@ -68,6 +72,10 @@ public interface QuenchItem {
      * Starts the ignition process.
      */
     default void igniteItem(ItemStack stack, Entity entity) {
+        if (!canBeIgnited()) {
+            return;
+        }
+
         stack.set(
                 SCDataComponents.IGNITED.get(),
                 true
@@ -162,6 +170,23 @@ public interface QuenchItem {
                 0.5f,
                 1.8f + level.getRandom().nextFloat() * (3.4f - 1.8f)
         );
+    }
+
+    default boolean hasEmptyTongsInOtherHand(
+            Player player,
+            InteractionHand hand
+    ) {
+        InteractionHand otherHand = hand == InteractionHand.MAIN_HAND
+                ? InteractionHand.OFF_HAND
+                : InteractionHand.MAIN_HAND;
+
+        ItemStack otherStack = player.getItemInHand(otherHand);
+
+        if (!(otherStack.getItem() instanceof Tongs tongs)) {
+            return false;
+        }
+
+        return tongs.getCapturedItemData(otherStack) == null;
     }
 
     /**
@@ -531,6 +556,10 @@ public interface QuenchItem {
             return InteractionResult.PASS;
         }
 
+        if (quenchItem.hasEmptyTongsInOtherHand(player, hand)) {
+            return InteractionResult.PASS;
+        }
+
         if (!level.isClientSide()) {
 
             if (quenchItem.quench(stack, player)) {
@@ -556,13 +585,17 @@ public interface QuenchItem {
             Level level,
             BlockPos pos,
             Player player,
-            ItemStack stack
-    ) {
+            ItemStack stack,
+            InteractionHand hand) {
         if (!(stack.getItem() instanceof QuenchItem quenchItem)) {
             return InteractionResult.PASS;
         }
 
         if (!quenchItem.isIgnited(stack)) {
+            return InteractionResult.PASS;
+        }
+
+        if (quenchItem.hasEmptyTongsInOtherHand(player, hand)) {
             return InteractionResult.PASS;
         }
 

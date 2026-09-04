@@ -116,11 +116,37 @@ public class Tongs extends Item implements CraftmanAnvilHelper {
             BlockPos waterPos = quenchItem.getLookedWater(player, level);
 
             if (waterPos != null) {
-                return quenchItem.handleWaterInteraction(level, waterPos, player, itemStack, context.getHand());
+                InteractionResult result = quenchItem.handleWaterInteraction(
+                        level,
+                        waterPos,
+                        player,
+                        itemStack,
+                        context.getHand()
+                );
+
+                if (result.consumesAction()) {
+                    removeCapturedItem(stack);
+                }
+
+                return result;
             }
 
-            if (state.is(Blocks.WATER_CAULDRON) && state.hasProperty(LayeredCauldronBlock.LEVEL)) {
-                return quenchItem.handleWaterCauldron(level, pos, player, itemStack);
+            if (state.is(Blocks.WATER_CAULDRON)
+                    && state.hasProperty(LayeredCauldronBlock.LEVEL)) {
+
+                InteractionResult result = quenchItem.handleWaterCauldron(
+                        level,
+                        pos,
+                        player,
+                        itemStack,
+                        context.getHand()
+                );
+
+                if (result.consumesAction()) {
+                    removeCapturedItem(stack);
+                }
+
+                return result;
             }
         }
 
