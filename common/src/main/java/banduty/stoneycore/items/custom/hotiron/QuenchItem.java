@@ -32,10 +32,6 @@ public interface QuenchItem {
 
     boolean destroysOnQuench();
 
-    default boolean canBeIgnited() {
-        return true;
-    }
-
     default Item getQuenchResult() {
         return Items.IRON_INGOT;
     }
@@ -72,10 +68,6 @@ public interface QuenchItem {
      * Starts the ignition process.
      */
     default void igniteItem(ItemStack stack, Entity entity) {
-        if (!canBeIgnited()) {
-            return;
-        }
-
         stack.set(
                 SCDataComponents.IGNITED.get(),
                 true
