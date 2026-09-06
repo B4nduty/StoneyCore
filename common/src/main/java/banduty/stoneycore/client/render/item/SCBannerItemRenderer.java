@@ -2,12 +2,10 @@ package banduty.stoneycore.client.render.item;
 
 import banduty.stoneycore.mixin.ItemRendererAccessor;
 import banduty.stoneycore.platform.ClientPlatform;
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.ItemRenderer;
@@ -25,153 +23,231 @@ import net.minecraft.world.level.block.entity.BannerPatternLayers;
 public class SCBannerItemRenderer extends BlockEntityWithoutLevelRenderer {
 
     public SCBannerItemRenderer() {
-        super(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels());
+        super(
+                Minecraft.getInstance().getBlockEntityRenderDispatcher(),
+                Minecraft.getInstance().getEntityModels()
+        );
     }
 
     @Override
     public void renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack,
                              MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
 
-        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
-        ResourceLocation baseLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Minecraft minecraft = Minecraft.getInstance();
+        ItemRenderer itemRenderer = minecraft.getItemRenderer();
 
-        // 1. Fetch base model
-        BakedModel baseModel = ClientPlatform.getIclientPlatformHelper().getModel(
-                ResourceLocation.fromNamespaceAndPath(baseLocation.getNamespace(), "item/" + baseLocation.getPath() + "_base")
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+
+        ResourceLocation baseModelLocation = ResourceLocation.fromNamespaceAndPath(
+                itemId.getNamespace(),
+                "item/" + itemId.getPath() + "_base"
         );
 
+        BakedModel baseModel = ClientPlatform.getIclientPlatformHelper().getModel(baseModelLocation);
+
         if (baseModel == null) {
-            baseModel = itemRenderer.getModel(stack, null, null, 0);
+            baseModel = itemRenderer.getModel(stack, minecraft.level, null, 0);
+        }
+
+        BakedModel resolvedModel = baseModel.getOverrides().resolve(
+                baseModel,
+                stack,
+                minecraft.level,
+                null,
+                0
+        );
+
+        if (resolvedModel == null) {
+            resolvedModel = baseModel;
         }
 
         ItemRendererAccessor accessor = (ItemRendererAccessor) itemRenderer;
-        boolean isGui = (displayContext == ItemDisplayContext.GUI);
 
-        // 2. Render Base Item Model
         poseStack.pushPose();
 
-        Lighting.setupFor3DItems();
+        resolvedModel.getTransforms().getTransform(displayContext).apply(leftHand(displayContext), poseStack);
 
-        // Render base model
         accessor.invokeRenderModelLists(
-                baseModel,
+                resolvedModel,
                 stack,
-                isGui ? LightTexture.FULL_BRIGHT : packedLight,
+                packedLight,
                 packedOverlay,
                 poseStack,
                 bufferSource.getBuffer(RenderType.cutout())
         );
 
-        if (bufferSource instanceof MultiBufferSource.BufferSource impl) {
-            impl.endBatch();
-        }
-
-        // 3. Render Banner Pattern Layers
         BannerPatternLayers patterns = stack.get(DataComponents.BANNER_PATTERNS);
 
         if (patterns != null && !patterns.layers().isEmpty()) {
-            int layerIndex = 0;
-
-            poseStack.pushPose();
-            poseStack.translate(0.5F, 0.5F, 0.5F);
-
-            for (BannerPatternLayers.Layer layer : patterns.layers()) {
-                Holder<BannerPattern> patternHolder = layer.pattern();
-                DyeColor color = layer.color();
-
-                String patternPath = patternHolder.unwrapKey()
-                        .map(key -> key.location().getPath())
-                        .orElse("base");
-
-                String patternNamespace = patternHolder.unwrapKey()
-                        .map(key -> key.location().getNamespace())
-                        .orElse("minecraft");
-
-                ResourceLocation textureLocation = ResourceLocation.fromNamespaceAndPath(
-                        baseLocation.getNamespace(),
-                        "textures/item/" + baseLocation.getPath() + "/" + patternNamespace + "/" + patternPath + ".png"
-                );
-
-                VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(textureLocation));
-                int iColor = color.getTextureDiffuseColor();
-
-                float zOffset = (1F / 32F) + 0.001F * layerIndex;
-
-                renderQuadCentered(poseStack, vertexConsumer, iColor, isGui ? LightTexture.FULL_BRIGHT : packedLight, packedOverlay, zOffset);
-
-                if (bufferSource instanceof MultiBufferSource.BufferSource impl) {
-                    impl.endBatch();
-                }
-
-                layerIndex++;
-            }
-            poseStack.popPose();
+            renderPatterns(
+                    itemId,
+                    patterns,
+                    poseStack,
+                    bufferSource,
+                    packedLight,
+                    packedOverlay
+            );
         }
-
-        Lighting.setupFor3DItems();
 
         poseStack.popPose();
     }
 
-    private void renderQuadCentered(PoseStack poseStack, VertexConsumer consumer, int color, int light, int overlay, float zOffset) {
+    private boolean leftHand(ItemDisplayContext displayContext) {
+        return displayContext == ItemDisplayContext.THIRD_PERSON_LEFT_HAND
+                || displayContext == ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+    }
+
+    private void renderPatterns(ResourceLocation itemId,
+                                BannerPatternLayers patterns,
+                                PoseStack poseStack,
+                                MultiBufferSource bufferSource,
+                                int light,
+                                int overlay) {
+
+        poseStack.pushPose();
+
+        /*
+         * minecraft:item/generated uses 0..1 model coordinates.
+         *
+         * Its generated item plane is centered around Z = 0.5.
+         *
+         * Therefore the overlay must use the same coordinate system:
+         *
+         * X = 0..1
+         * Y = 0..1
+         * Z ~= 0.5
+         *
+         * Do NOT translate by 0.5 here.
+         */
+        int layerIndex = 0;
+
+        for (BannerPatternLayers.Layer layer : patterns.layers()) {
+            Holder<BannerPattern> patternHolder = layer.pattern();
+            DyeColor color = layer.color();
+
+            String patternPath = patternHolder.unwrapKey()
+                    .map(key -> key.location().getPath())
+                    .orElse("base");
+
+            String patternNamespace = patternHolder.unwrapKey()
+                    .map(key -> key.location().getNamespace())
+                    .orElse("minecraft");
+
+            ResourceLocation textureLocation = ResourceLocation.fromNamespaceAndPath(
+                    itemId.getNamespace(),
+                    "textures/item/" + itemId.getPath() + "/" + patternNamespace + "/" + patternPath + ".png"
+            );
+
+            VertexConsumer consumer = bufferSource.getBuffer(
+                    RenderType.entityCutoutNoCull(textureLocation)
+            );
+
+            int colorValue = color.getTextureDiffuseColor();
+
+            /*
+             * The generated model is approximately:
+             *
+             * front = Z 0.46875
+             * back  = Z 0.53125
+             *
+             * Put the overlay just in front of those surfaces.
+             */
+            float zOffset = 0.001F + (0.0001F * layerIndex);
+
+            renderQuad(
+                    poseStack,
+                    consumer,
+                    colorValue,
+                    light,
+                    overlay,
+                    zOffset
+            );
+
+            layerIndex++;
+        }
+
+        poseStack.popPose();
+    }
+
+    private void renderQuad(PoseStack poseStack,
+                            VertexConsumer consumer,
+                            int color,
+                            int light,
+                            int overlay,
+                            float zOffset) {
+
         PoseStack.Pose pose = poseStack.last();
 
-        // Front Face
-        consumer.addVertex(pose, -0.5F, -0.5F, -zOffset)
-                .setColor(color)
-                .setUv(0.0F, 1.0F)
-                .setOverlay(overlay)
-                .setLight(light)
-                .setNormal(pose, 0.0F, 0.0F, 1.0F);
+        /*
+         * Front face.
+         *
+         * Generated item front surface:
+         * Z ~= 0.46875
+         */
+        float frontZ = 0.46875F - zOffset;
 
-        consumer.addVertex(pose, 0.5F, -0.5F, -zOffset)
-                .setColor(color)
-                .setUv(1.0F, 1.0F)
-                .setOverlay(overlay)
-                .setLight(light)
-                .setNormal(pose, 0.0F, 0.0F, 1.0F);
-
-        consumer.addVertex(pose, 0.5F, 0.5F, -zOffset)
-                .setColor(color)
-                .setUv(1.0F, 0.0F)
-                .setOverlay(overlay)
-                .setLight(light)
-                .setNormal(pose, 0.0F, 0.0F, 1.0F);
-
-        consumer.addVertex(pose, -0.5F, 0.5F, -zOffset)
-                .setColor(color)
-                .setUv(0.0F, 0.0F)
-                .setOverlay(overlay)
-                .setLight(light)
-                .setNormal(pose, 0.0F, 0.0F, 1.0F);
-
-        // Back Face
-        consumer.addVertex(pose, 0.5F, -0.5F, zOffset)
-                .setColor(color)
-                .setUv(1.0F, 1.0F)
-                .setOverlay(overlay)
-                .setLight(light)
-                .setNormal(pose, 0.0F, 0.0F, -1.0F);
-
-        consumer.addVertex(pose, -0.5F, -0.5F, zOffset)
+        consumer.addVertex(pose, 0.0F, 0.0F, frontZ)
                 .setColor(color)
                 .setUv(0.0F, 1.0F)
                 .setOverlay(overlay)
                 .setLight(light)
                 .setNormal(pose, 0.0F, 0.0F, -1.0F);
 
-        consumer.addVertex(pose, -0.5F, 0.5F, zOffset)
+        consumer.addVertex(pose, 1.0F, 0.0F, frontZ)
+                .setColor(color)
+                .setUv(1.0F, 1.0F)
+                .setOverlay(overlay)
+                .setLight(light)
+                .setNormal(pose, 0.0F, 0.0F, -1.0F);
+
+        consumer.addVertex(pose, 1.0F, 1.0F, frontZ)
+                .setColor(color)
+                .setUv(1.0F, 0.0F)
+                .setOverlay(overlay)
+                .setLight(light)
+                .setNormal(pose, 0.0F, 0.0F, -1.0F);
+
+        consumer.addVertex(pose, 0.0F, 1.0F, frontZ)
                 .setColor(color)
                 .setUv(0.0F, 0.0F)
                 .setOverlay(overlay)
                 .setLight(light)
                 .setNormal(pose, 0.0F, 0.0F, -1.0F);
 
-        consumer.addVertex(pose, 0.5F, 0.5F, zOffset)
+        /*
+         * Back face.
+         *
+         * Generated item back surface:
+         * Z ~= 0.53125
+         */
+        float backZ = 0.53125F + zOffset;
+
+        consumer.addVertex(pose, 1.0F, 0.0F, backZ)
+                .setColor(color)
+                .setUv(1.0F, 1.0F)
+                .setOverlay(overlay)
+                .setLight(light)
+                .setNormal(pose, 0.0F, 0.0F, 1.0F);
+
+        consumer.addVertex(pose, 0.0F, 0.0F, backZ)
+                .setColor(color)
+                .setUv(0.0F, 1.0F)
+                .setOverlay(overlay)
+                .setLight(light)
+                .setNormal(pose, 0.0F, 0.0F, 1.0F);
+
+        consumer.addVertex(pose, 0.0F, 1.0F, backZ)
+                .setColor(color)
+                .setUv(0.0F, 0.0F)
+                .setOverlay(overlay)
+                .setLight(light)
+                .setNormal(pose, 0.0F, 0.0F, 1.0F);
+
+        consumer.addVertex(pose, 1.0F, 1.0F, backZ)
                 .setColor(color)
                 .setUv(1.0F, 0.0F)
                 .setOverlay(overlay)
                 .setLight(light)
-                .setNormal(pose, 0.0F, 0.0F, -1.0F);
+                .setNormal(pose, 0.0F, 0.0F, 1.0F);
     }
 }
