@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
@@ -24,53 +25,93 @@ public class SC3DItemRenderer extends BlockEntityWithoutLevelRenderer {
     public void renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack,
                              MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
 
-        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
+        Minecraft minecraft = Minecraft.getInstance();
+        ItemRenderer itemRenderer = minecraft.getItemRenderer();
 
-        ResourceLocation resourceLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+
+        String modelSuffix;
+
+        if (displayContext == ItemDisplayContext.GUI
+                || displayContext == ItemDisplayContext.GROUND
+                || displayContext == ItemDisplayContext.FIXED) {
+            modelSuffix = "_gui";
+        } else {
+            modelSuffix = "_3d";
+        }
+
+        ResourceLocation modelLocation = ResourceLocation.fromNamespaceAndPath(
+                itemId.getNamespace(),
+                "item/" + itemId.getPath() + modelSuffix
+        );
+
+        BakedModel baseModel = ClientPlatform.getIclientPlatformHelper()
+                .getModel(modelLocation);
+
+        /*
+         * Get the entity currently rendering/holding the item.
+         *
+         * This is important for predicates such as:
+         * - pull
+         * - pulling
+         * - charged
+         * - any predicate that uses LivingEntity
+         */
+        LivingEntity entity = null;
+
+        if (minecraft.cameraEntity instanceof LivingEntity livingEntity) {
+            entity = livingEntity;
+        }
+
+        /*
+         * Resolve ItemOverrides.
+         *
+         * This is the part that was missing from the previous renderer.
+         */
+        BakedModel resolvedModel = baseModel.getOverrides().resolve(
+                baseModel,
+                stack,
+                minecraft.level,
+                entity,
+                0
+        );
+
+        poseStack.pushPose();
+
+        poseStack.translate(0.5D, 0.5D, 0.5D);
 
         if (displayContext == ItemDisplayContext.GUI) {
-            BakedModel guiModel = ClientPlatform.getIclientPlatformHelper()
-                    .getModel(ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_gui"));
-
-            poseStack.pushPose();
-
-            poseStack.translate(0.5D, 0.5D, 0.5D);
-
-            // 1. Setup GUI Flat Lighting (disables 3D directional light shading)
             Lighting.setupForFlatItems();
 
-            // 2. Render the GUI model flat
-            itemRenderer.render(stack, displayContext, false, poseStack, bufferSource, LightTexture.FULL_BRIGHT, packedOverlay, guiModel);
+            itemRenderer.render(
+                    stack,
+                    displayContext,
+                    false,
+                    poseStack,
+                    bufferSource,
+                    LightTexture.FULL_BRIGHT,
+                    packedOverlay,
+                    resolvedModel
+            );
 
-            // 3. Flush the render buffer while flat lighting is active
-            if (bufferSource instanceof MultiBufferSource.BufferSource impl) {
-                impl.endBatch();
+            if (bufferSource instanceof MultiBufferSource.BufferSource buffer) {
+                buffer.endBatch();
             }
 
-            // 4. Restore standard 3D inventory lighting setup for subsequent models
             Lighting.setupFor3DItems();
-
-            poseStack.popPose();
-        } else if (displayContext == ItemDisplayContext.GROUND || displayContext == ItemDisplayContext.FIXED) {
-            poseStack.pushPose();
-            BakedModel guiModel = ClientPlatform.getIclientPlatformHelper()
-                    .getModel(ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_gui"));
-
-            poseStack.translate(0.5D, 0.5D, 0.5D);
-
-            itemRenderer.render(stack, displayContext, false, poseStack, bufferSource, packedLight, packedOverlay, guiModel);
-
-            poseStack.popPose();
         } else {
-            poseStack.pushPose();
-            BakedModel handModel = ClientPlatform.getIclientPlatformHelper()
-                    .getModel(ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_3d"));
-
-            poseStack.translate(0.5D, 0.5D, 0.5D);
-
-            itemRenderer.render(stack, displayContext, false, poseStack, bufferSource, packedLight, packedOverlay, handModel);
-
-            poseStack.popPose();
+            itemRenderer.render(
+                    stack,
+                    displayContext,
+                    false,
+                    poseStack,
+                    bufferSource,
+                    packedLight,
+                    packedOverlay,
+                    resolvedModel
+            );
         }
+
+        poseStack.popPose();
     }
 }
