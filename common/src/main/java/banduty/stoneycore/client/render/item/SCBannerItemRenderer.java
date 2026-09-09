@@ -65,7 +65,16 @@ public class SCBannerItemRenderer extends BlockEntityWithoutLevelRenderer {
 
         poseStack.pushPose();
 
-        resolvedModel.getTransforms().getTransform(displayContext).apply(leftHand(displayContext), poseStack);
+        boolean thirdPerson = displayContext == ItemDisplayContext.THIRD_PERSON_LEFT_HAND || displayContext == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
+        double x = 0D;
+        double y = 0D;
+        double z = 0D;
+        if (thirdPerson) { x = 0.25D; y = 0.25D; z = 0.25D; }
+        if (displayContext == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND) { x = 0.25D; y = 0.25D; z = 1.0D; }
+        if (displayContext == ItemDisplayContext.FIRST_PERSON_LEFT_HAND) { x = 0.5D; y = 0D; z = 0.25D; }
+        poseStack.translate(x, y, z);
+
+        resolvedModel.getTransforms().getTransform(displayContext).apply(!leftHand(displayContext), poseStack);
 
         accessor.invokeRenderModelLists(
                 resolvedModel,
@@ -77,16 +86,8 @@ public class SCBannerItemRenderer extends BlockEntityWithoutLevelRenderer {
         );
 
         BannerPatternLayers patterns = stack.get(DataComponents.BANNER_PATTERNS);
-
         if (patterns != null && !patterns.layers().isEmpty()) {
-            renderPatterns(
-                    itemId,
-                    patterns,
-                    poseStack,
-                    bufferSource,
-                    packedLight,
-                    packedOverlay
-            );
+            renderPatterns(itemId, patterns, poseStack, bufferSource, packedLight, packedOverlay);
         }
 
         poseStack.popPose();
