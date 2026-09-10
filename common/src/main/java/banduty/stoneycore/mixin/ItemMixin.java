@@ -220,6 +220,7 @@ public abstract class ItemMixin {
             offHandStack.hurtAndBreak(1, serverPlayer, LivingEntity.getSlotForHand(hand));
         }
 
+        player.stopUsingItem();
         cir.setReturnValue(InteractionResultHolder.consume(stack));
     }
 
