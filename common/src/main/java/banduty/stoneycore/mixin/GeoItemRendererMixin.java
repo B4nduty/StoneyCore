@@ -32,22 +32,20 @@ public class GeoItemRendererMixin {
             BakedModel guiModel = ClientPlatform.getIclientPlatformHelper()
                     .getModel(ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_icon"));
 
+            guiModel = guiModel.getOverrides().resolve(guiModel, stack, Minecraft.getInstance().level, null, 0);
+
             poseStack.pushPose();
 
             poseStack.translate(0.5D, 0.5D, 0.5D);
 
-            // 1. Setup GUI Flat Lighting (disables 3D directional light shading)
             Lighting.setupForFlatItems();
 
-            // 2. Render the GUI model flat
             itemRenderer.render(stack, displayContext, false, poseStack, bufferSource, LightTexture.FULL_BRIGHT, packedOverlay, guiModel);
 
-            // 3. Flush the render buffer while flat lighting is active
             if (bufferSource instanceof MultiBufferSource.BufferSource impl) {
                 impl.endBatch();
             }
 
-            // 4. Restore standard 3D inventory lighting setup for subsequent models
             Lighting.setupFor3DItems();
 
             poseStack.popPose();
@@ -56,6 +54,8 @@ public class GeoItemRendererMixin {
             poseStack.pushPose();
             BakedModel guiModel = ClientPlatform.getIclientPlatformHelper()
                     .getModel(ResourceLocation.fromNamespaceAndPath(resourceLocation.getNamespace(), "item/" + resourceLocation.getPath() + "_icon"));
+
+            guiModel = guiModel.getOverrides().resolve(guiModel, stack, Minecraft.getInstance().level, null, 0);
 
             poseStack.translate(0.5D, 0.5D, 0.5D);
 
