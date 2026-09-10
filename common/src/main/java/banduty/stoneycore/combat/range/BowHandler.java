@@ -1,6 +1,7 @@
 package banduty.stoneycore.combat.range;
 
 import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -13,29 +14,29 @@ public class BowHandler implements IRangedWeaponHandler {
     }
 
     @Override
-    public void shoot(Level level, Player player, ItemStack weapon) {
+    public void shoot(Level level, LivingEntity livingEntity, ItemStack weapon) {
     }
 
     @Override
-    public void reload(Level level, Player player, ItemStack weapon) { /* bows don't reload */ }
+    public void reload(Level level, LivingEntity livingEntity, ItemStack weapon) { /* bows don't reload */ }
 
     @Override
-    public void handleRelease(ItemStack stack, Level level, Player player, int useTime, ItemStack arrowStack) {
+    public void handleRelease(ItemStack stack, Level level, LivingEntity livingEntity, int useTime, ItemStack arrowStack) {
         if (level.isClientSide) return;
 
         ItemStack ammo = arrowStack;
 
         if (ammo.isEmpty()) {
-            if (!player.isCreative()) return;
+            if (!(livingEntity instanceof Player player && player.isCreative())) return;
             ammo = new ItemStack(Items.ARROW);
         }
 
         float pull = SCRangeWeaponUtil.getBowPullProgress(useTime);
         if (pull < 0.1f) return;
 
-        SCRangeWeaponUtil.shootArrow(level, stack, player, ammo, pull);
+        SCRangeWeaponUtil.shootArrow(level, stack, livingEntity, ammo, pull);
 
-        if (!player.isCreative()) {
+        if (!(livingEntity instanceof Player player && player.isCreative())) {
             arrowStack.shrink(1);
         }
     }
@@ -46,6 +47,6 @@ public class BowHandler implements IRangedWeaponHandler {
     }
 
     @Override
-    public void handleUsageTick(Level level, ItemStack stack, Player player, int useTime) {
+    public void handleUsageTick(Level level, ItemStack stack, LivingEntity livingEntity, int useTime) {
     }
 }

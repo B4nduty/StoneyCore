@@ -118,12 +118,6 @@ public abstract class ItemMixin {
 
     @Inject(method = "onUseTick", at = @At("HEAD"))
     public void stoneycore$onUseTick(Level level, LivingEntity livingEntity, ItemStack stack, int remainingUseTicks, CallbackInfo ci) {
-        if (!(livingEntity instanceof Player player)) return;
-
-        IEntityDataSaver dataSaver = (IEntityDataSaver) player;
-        if (StaminaData.isStaminaBlocked(dataSaver)) {
-            player.stopUsingItem();
-        }
 
         if (level.isClientSide()) return;
         if (!WeaponDefinitionsStorage.isRanged(stack)) return;
@@ -131,7 +125,14 @@ public abstract class ItemMixin {
         WeaponDefinitionData data = WeaponDefinitionsStorage.getData(stack);
         int useTime = data.ranged().maxUseTime() - remainingUseTicks;
         if (RangedWeaponHandlers.get(data.ranged().id()).isPresent()) {
-            RangedWeaponHandlers.get(data.ranged().id()).get().handleUsageTick(level, stack, player, useTime);
+            RangedWeaponHandlers.get(data.ranged().id()).get().handleUsageTick(level, stack, livingEntity, useTime);
+        }
+
+        if (!(livingEntity instanceof Player player)) return;
+
+        IEntityDataSaver dataSaver = (IEntityDataSaver) player;
+        if (StaminaData.isStaminaBlocked(dataSaver)) {
+            player.stopUsingItem();
         }
     }
 

@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArrowItem;
 import net.minecraft.world.item.Item;
@@ -23,8 +24,8 @@ public class CrossbowHandler implements IRangedWeaponHandler {
     }
 
     @Override
-    public void shoot(Level level, Player player, ItemStack weapon) {
-        if (level == null || player == null || weapon == null) return;
+    public void shoot(Level level, LivingEntity livingEntity, ItemStack weapon) {
+        if (level == null || livingEntity == null || weapon == null) return;
 
         var weaponState = SCRangeWeaponUtil.getWeaponState(weapon);
         if (!weaponState.isCharged()) return;
@@ -37,26 +38,26 @@ public class CrossbowHandler implements IRangedWeaponHandler {
 
         ItemStack fakeArrow = new ItemStack(arrow);
 
-        SCRangeWeaponUtil.shootArrow(level, weapon, player, fakeArrow, 1.0f);
+        SCRangeWeaponUtil.shootArrow(level, weapon, livingEntity, fakeArrow, 1.0f);
 
         SCRangeWeaponUtil.setWeaponState(weapon, SCRangeWeaponUtil.WeaponState.idle());
 
         weapon.remove(SCDataComponents.LOADED_ARROW.get());
 
-        if (player instanceof ServerPlayer serverPlayer) {
+        if (livingEntity instanceof ServerPlayer serverPlayer) {
             CriteriaTriggers.SHOT_CROSSBOW.trigger(serverPlayer, new ItemStack(Items.CROSSBOW));
             serverPlayer.awardStat(Stats.ITEM_USED.get(weapon.getItem()));
         }
     }
 
     @Override
-    public void reload(Level level, Player player, ItemStack weapon) {
+    public void reload(Level level, LivingEntity livingEntity, ItemStack weapon) {
 
     }
 
     @Override
-    public void handleRelease(ItemStack stack, Level level, Player player, int useTime, ItemStack arrowStack) {
-        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack, player);
+    public void handleRelease(ItemStack stack, Level level, LivingEntity livingEntity, int useTime, ItemStack arrowStack) {
+        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack, livingEntity);
         if (pullProgress < 1.0F) {
             SCRangeWeaponUtil.WeaponState currentState = SCRangeWeaponUtil.getWeaponState(stack);
             SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(
@@ -70,22 +71,22 @@ public class CrossbowHandler implements IRangedWeaponHandler {
     }
 
     @Override
-    public void handleUsageTick(Level level, ItemStack stack, Player player, int useTime) {
+    public void handleUsageTick(Level level, ItemStack stack, LivingEntity livingEntity, int useTime) {
         if (level.isClientSide()) return;
         if (useTime <= 1) return;
 
-        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack, player);
-        float prevProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime - 1, stack, player);
+        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack, livingEntity);
+        float prevProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime - 1, stack, livingEntity);
 
-        boolean hasAmmo = SCRangeWeaponUtil.getArrowFromInventory(player).isPresent();
-        if (player.isCreative()) hasAmmo = true;
+        boolean hasAmmo = SCRangeWeaponUtil.getArrowFromInventory(livingEntity).isPresent();
+        if (!(livingEntity instanceof Player player && player.isCreative())) hasAmmo = true;
 
         SCRangeWeaponUtil.WeaponState currentState = SCRangeWeaponUtil.getWeaponState(stack);
         SCRangeWeaponUtil.WeaponState nextState = currentState;
 
         if (pullProgress < 1.0F) {
             if (currentState.isCharged()) {
-                shoot(level, player, stack);
+                shoot(level, livingEntity, stack);
                 nextState = SCRangeWeaponUtil.WeaponState.shooting();
             } else if (hasAmmo) {
                 nextState = SCRangeWeaponUtil.WeaponState.reloading();
@@ -96,7 +97,7 @@ public class CrossbowHandler implements IRangedWeaponHandler {
 
         if (pullProgress >= 0.2F && prevProgress < 0.2F) {
             level.playSound(null,
-                    player.getX(), player.getY(), player.getZ(),
+                    livingEntity.getX(), livingEntity.getY(), livingEntity.getZ(),
                     SoundEvents.CROSSBOW_LOADING_START,
                     SoundSource.PLAYERS,
                     0.5F, 1.0F);
@@ -104,7 +105,7 @@ public class CrossbowHandler implements IRangedWeaponHandler {
 
         if (pullProgress >= 0.5F && prevProgress < 0.5F) {
             level.playSound(null,
-                    player.getX(), player.getY(), player.getZ(),
+                    livingEntity.getX(), livingEntity.getY(), livingEntity.getZ(),
                     SoundEvents.CROSSBOW_LOADING_MIDDLE,
                     SoundSource.PLAYERS,
                     0.5F, 1.0F);
@@ -113,10 +114,10 @@ public class CrossbowHandler implements IRangedWeaponHandler {
         if (pullProgress >= 1.0F) {
             if (!currentState.isCharged() && hasAmmo) {
                 ItemStack ammoStack = SCRangeWeaponUtil
-                        .getArrowFromInventory(player)
+                        .getArrowFromInventory(livingEntity)
                         .orElseGet(() -> new ItemStack(net.minecraft.world.item.Items.ARROW));
 
-                if (!player.isCreative()) {
+                if (livingEntity instanceof Player player && !player.isCreative()) {
                     int slot = SCRangeWeaponUtil.getArrowSlot(player);
                     if (slot >= 0) player.getInventory().removeItem(slot, 1);
                 }
@@ -124,7 +125,7 @@ public class CrossbowHandler implements IRangedWeaponHandler {
                 stack.set(SCDataComponents.LOADED_ARROW.get(), BuiltInRegistries.ITEM.getKey(ammoStack.getItem()));
 
                 level.playSound(null,
-                        player.getX(), player.getY(), player.getZ(),
+                        livingEntity.getX(), livingEntity.getY(), livingEntity.getZ(),
                         SoundEvents.CROSSBOW_LOADING_END,
                         SoundSource.PLAYERS,
                         1.0F,
