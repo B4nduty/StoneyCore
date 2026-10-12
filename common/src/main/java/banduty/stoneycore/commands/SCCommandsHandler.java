@@ -23,7 +23,7 @@ public class SCCommandsHandler {
                         .then(SiegeCommand.registerSiege())
                         .then(Title.registerTitle())
         );
-
+        LocalDifficultyCommand.register(dispatcher);
         StaminaCommand.register(dispatcher);
     }
 

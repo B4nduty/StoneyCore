@@ -15,11 +15,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 public final class MobGearDataReader {
@@ -83,34 +79,74 @@ public final class MobGearDataReader {
         return result;
     }
 
+
     private static <T, S> Map<ResourceLocation, T> readWithSlot(
-            ResourceManager manager, String path, Codec<T> codec,
-            Function<T, List<ResourceLocation>> mobsGetter, Function<T, Boolean> replaceGetter,
-            Function<T, S> slotGetter, SlotDataFactory<S, T> factory) {
+            ResourceManager manager,
+            String path,
+            Codec<T> codec,
+            Function<T, List<ResourceLocation>> mobsGetter,
+            java.util.function.Predicate<T> replaceGetter,
+            Function<T, S> slotGetter,
+            SlotDataFactory<S, T> factory) {
 
         Map<ResourceLocation, T> result = new HashMap<>();
+
         Map<ResourceLocation, List<Resource>> stacks =
-                manager.listResourceStacks(path, id -> id.getPath().endsWith(".json"));
+                manager.listResourceStacks(
+                        path,
+                        id -> id.getPath().endsWith(".json")
+                );
 
         stacks.forEach((fileId, resources) -> {
             ResourceLocation itemId = toItemId(fileId, path);
-            if (itemId == null) return;
-
-            List<ResourceLocation> mobs = new ArrayList<>();
-            Object[] slotHolder = new Object[1];
-
-            for (Resource resource : resources) {
-                parse(resource, codec, fileId).ifPresent(data -> {
-                    if (replaceGetter.apply(data)) mobs.clear();
-                    mobs.addAll(mobsGetter.apply(data));
-                    slotHolder[0] = slotGetter.apply(data);
-                });
+            if (itemId == null) {
+                return;
             }
 
-            if (slotHolder[0] != null) {
-                @SuppressWarnings("unchecked")
-                S slot = (S) slotHolder[0];
-                result.put(itemId, factory.create(slot, List.copyOf(mobs), false));
+            List<ResourceLocation> mobs = new ArrayList<>();
+            S slot = null;
+            boolean hasValidData = false;
+
+            // Resource stacks should be processed from lower to higher priority.
+            for (Resource resource : resources) {
+                Optional<T> parsed = parse(resource, codec, fileId);
+
+                if (parsed.isEmpty()) {
+                    continue;
+                }
+
+                T data = parsed.get();
+                S nextSlot = slotGetter.apply(data);
+
+                if (hasValidData
+                        && slot != null
+                        && nextSlot != null
+                        && !slot.equals(nextSlot)) {
+                    StoneyCore.LOG.warn(
+                            "Mob gear slot changed between datapacks for {}: {} -> {}",
+                            fileId, slot, nextSlot
+                    );
+                }
+
+                if (replaceGetter.test(data)) {
+                    mobs.clear();
+                }
+
+                mobs.addAll(mobsGetter.apply(data));
+
+                // Scalar values use the highest-priority valid definition.
+                if (nextSlot != null) {
+                    slot = nextSlot;
+                }
+
+                hasValidData = true;
+            }
+
+            if (hasValidData && slot != null) {
+                result.put(
+                        itemId,
+                        factory.create(slot, List.copyOf(mobs), false)
+                );
             }
         });
 
