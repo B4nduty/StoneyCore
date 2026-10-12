@@ -3,7 +3,6 @@ package banduty.stoneycore.screen;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.items.custom.blueprint.BlueprintItem;
 import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.screen.button.TexturedButton;
 import banduty.stoneycore.structure.StructureSpawnRegistry;
 import banduty.stoneycore.structure.StructureSpawner;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -20,8 +19,6 @@ import net.minecraft.world.level.block.Block;
 import java.util.List;
 
 public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHandler> {
-    private boolean showLegend = false;
-    private TexturedButton legendButton;
 
     public BlueprintScreen(BlueprintScreenHandler handler, Inventory inventory, Component title) {
         super(handler, inventory, title);
@@ -46,14 +43,6 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
     @Override
     protected void init() {
         super.init();
-
-        this.legendButton = new TexturedButton(0, 0, 87, 174,
-                button -> this.showLegend = !this.showLegend,
-                ResourceLocation.fromNamespaceAndPath("stoneycore", "textures/models/armor/a_layer_1.png"),
-                ResourceLocation.fromNamespaceAndPath("stoneycore", "textures/models/armor/a_layer_1.png")
-        );
-
-        this.addRenderableWidget(legendButton);
     }
 
     @Override
@@ -108,37 +97,6 @@ public class BlueprintScreen extends AbstractContainerScreen<BlueprintScreenHand
         //renderLegend(guiGraphics, originalBasePath, namespace, basePath, 6 + xOffset);
         renderBlockFinderList(guiGraphics, 45 + xOffset);
         RenderSystem.disableBlend();
-    }
-
-    private void renderLegend(GuiGraphics guiGraphics, String originalBasePath, String namespace, String basePath, int xOffset) {
-
-        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(
-                originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace,
-                "textures/gui/blueprint/" + basePath + "_legend.png"
-        );
-
-
-        RenderSystem.setShaderTexture(0, texture);
-        guiGraphics.blit(texture, this.getX() - this.imageWidth / 2 + xOffset, this.getY(), 0, 0, 87, 174, 87, 174);
-
-        renderBlockFinderList(guiGraphics, xOffset);
-    }
-
-    private void updateLegendButton(String originalBasePath, String namespace, String basePath) {
-        String legendSuffix = showLegend ? "" : "_legend";
-
-        int xPos = this.getX() - (showLegend ? -(this.imageWidth - 157 + 1) : (this.imageWidth / 2 - 74));
-        int width = showLegend ? 157 : 16;
-        int height = 174;
-
-        ResourceLocation hoverTexture = ResourceLocation.fromNamespaceAndPath(originalBasePath.isEmpty() ? StoneyCore.MOD_ID : namespace,
-                "textures/gui/blueprint/" + basePath + legendSuffix + "_overlay.png");
-
-        legendButton.setX(xPos);
-        legendButton.setY(this.getY());
-        legendButton.setWidth(width);
-        legendButton.setHeight(height);
-        legendButton.setHoverTexture(hoverTexture);
     }
 
     private void renderBlockFinderList(GuiGraphics guiGraphics, int x) {
