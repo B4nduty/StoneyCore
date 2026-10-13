@@ -45,48 +45,59 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
         String iconPath = isCustomRenderer ? path + customSuffix : path;
 
         // Create the base (visible/icon) model
-        ItemModelBuilder baseBuilder = overlay
-                ? withExistingParent(iconPath, "item/handheld")
-                .texture("layer0", modLoc("item/" + path))
-                .texture("layer1", modLoc("item/" + path + "_overlay"))
-                : withExistingParent(iconPath, "item/generated")
-                .texture("layer0", modLoc("item/" + path));
+        if (isBannerProvider) {
+            generateBannerItemModels(item);
+        } else {
+            ItemModelBuilder baseBuilder = overlay
+                    ? withExistingParent(iconPath, "item/handheld")
+                    .texture("layer0", modLoc("item/" + path))
+                    .texture("layer1", modLoc("item/" + path + "_overlay"))
+                    : withExistingParent(iconPath, "item/generated")
+                    .texture("layer0", modLoc("item/" + path));
 
-        Set<String> generatedModels = new HashSet<>();
+            Set<String> generatedModels = new HashSet<>();
 
-        // 1. Individual condition models and overrides
-        for (OverrideCondition condition : conditions) {
-            String modelName = condition.getModelName(iconPath);
-            generateOverrideModel(item, modelName, overlay);
-            generatedModels.add(modelName);
+            // 1. Individual condition models and overrides
+            for (OverrideCondition condition : conditions) {
+                String modelName = condition.getModelName(iconPath);
+                generateOverrideModel(item, modelName, overlay);
+                generatedModels.add(modelName);
 
-            baseBuilder.override()
-                    .predicate(condition.predicateKey, condition.predicateValue.floatValue())
-                    .model(getExistingFile(modLoc("item/" + modelName)))
-                    .end();
-        }
+                baseBuilder.override()
+                        .predicate(condition.predicateKey, condition.predicateValue.floatValue())
+                        .model(getExistingFile(modLoc("item/" + modelName)))
+                        .end();
+            }
 
-        // 2. Combined condition models if multiple conditions exist
-        if (joinConditions && conditions.length > 1) {
-            List<List<OverrideCondition>> allCombinations = generateAllCombinations(conditions);
+            // 2. Combined condition models if multiple conditions exist
+            if (joinConditions && conditions.length > 1) {
+                List<List<OverrideCondition>> allCombinations =
+                        generateAllCombinations(conditions);
 
-            for (List<OverrideCondition> combination : allCombinations) {
-                if (combination.size() > 1) {
-                    List<String> modelNames = new ArrayList<>();
-                    var overrideBuilder = baseBuilder.override();
+                for (List<OverrideCondition> combination : allCombinations) {
+                    if (combination.size() > 1) {
+                        List<String> modelNames = new ArrayList<>();
+                        var overrideBuilder = baseBuilder.override();
 
-                    for (OverrideCondition condition : combination) {
-                        overrideBuilder.predicate(condition.predicateKey, condition.predicateValue.floatValue());
-                        modelNames.add(condition.getModelName(iconPath));
+                        for (OverrideCondition condition : combination) {
+                            overrideBuilder.predicate(
+                                    condition.predicateKey,
+                                    condition.predicateValue.floatValue()
+                            );
+                            modelNames.add(condition.getModelName(iconPath));
+                        }
+
+                        String combinedModelName = combineMultipleModelNames(modelNames);
+
+                        if (!generatedModels.contains(combinedModelName)) {
+                            generateOverrideModel(item, combinedModelName, overlay);
+                            generatedModels.add(combinedModelName);
+                        }
+
+                        overrideBuilder
+                                .model(getExistingFile(modLoc("item/" + combinedModelName)))
+                                .end();
                     }
-
-                    String combinedModelName = combineMultipleModelNames(modelNames);
-                    if (!generatedModels.contains(combinedModelName)) {
-                        generateOverrideModel(item, combinedModelName, overlay);
-                        generatedModels.add(combinedModelName);
-                    }
-
-                    overrideBuilder.model(getExistingFile(modLoc("item/" + combinedModelName))).end();
                 }
             }
         }
@@ -99,6 +110,7 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
     private void generateOverrideModel(Item item, String modelName) {
         this.generateOverrideModel(item, modelName, false);
     }
+
     private void generateOverrideModel(Item item, String modelName, boolean overlay) {
         if (overlay) {
             withExistingParent(modelName, "item/handheld")
@@ -177,4 +189,83 @@ public abstract class NeoForgeModelProviderPlus extends ItemModelProvider {
             return cleanPath + "_" + predicateKey.getPath();
         }
     }
+
+    public void generateBannerItemModels(Item item) {
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+
+        ResourceLocation baseModelId = itemId.withPath(
+                path -> "item/" + path + "_base"
+        );
+
+        ResourceLocation baseTexture = itemId.withPath(
+                path -> "item/" + path
+        );
+
+        getBuilder(baseModelId.getPath())
+                .parent(getExistingFile(mcLoc("item/generated")))
+                .texture("layer0", baseTexture);
+
+        for (ResourceLocation patternId : patternIds) {
+            ResourceLocation patternModelId = itemId.withPath(
+                    path -> "item/" + path + "/"
+                            + patternId.getNamespace() + "/"
+                            + patternId.getPath()
+            );
+
+            ResourceLocation patternTexture = itemId.withPath(
+                    path -> "item/" + path + "/"
+                            + patternId.getNamespace() + "/"
+                            + patternId.getPath()
+            );
+
+            getBuilder(patternModelId.getPath())
+                    .parent(getExistingFile(mcLoc("item/generated")))
+                    .texture("layer0", patternTexture);
+        }
+    }
+
+    List<ResourceLocation> patternIds = List.of(
+            ResourceLocation.withDefaultNamespace("border"),
+            ResourceLocation.withDefaultNamespace("bricks"),
+            ResourceLocation.withDefaultNamespace("circle"),
+            ResourceLocation.withDefaultNamespace("creeper"),
+            ResourceLocation.withDefaultNamespace("cross"),
+            ResourceLocation.withDefaultNamespace("curly_border"),
+            ResourceLocation.withDefaultNamespace("diagonal_left"),
+            ResourceLocation.withDefaultNamespace("diagonal_right"),
+            ResourceLocation.withDefaultNamespace("diagonal_up_left"),
+            ResourceLocation.withDefaultNamespace("diagonal_up_right"),
+            ResourceLocation.withDefaultNamespace("flow"),
+            ResourceLocation.withDefaultNamespace("flower"),
+            ResourceLocation.withDefaultNamespace("globe"),
+            ResourceLocation.withDefaultNamespace("gradient"),
+            ResourceLocation.withDefaultNamespace("gradient_up"),
+            ResourceLocation.withDefaultNamespace("guster"),
+            ResourceLocation.withDefaultNamespace("half_horizontal"),
+            ResourceLocation.withDefaultNamespace("half_horizontal_bottom"),
+            ResourceLocation.withDefaultNamespace("half_vertical"),
+            ResourceLocation.withDefaultNamespace("half_vertical_right"),
+            ResourceLocation.withDefaultNamespace("mojang"),
+            ResourceLocation.withDefaultNamespace("piglin"),
+            ResourceLocation.withDefaultNamespace("rhombus"),
+            ResourceLocation.withDefaultNamespace("skull"),
+            ResourceLocation.withDefaultNamespace("small_stripes"),
+            ResourceLocation.withDefaultNamespace("square_bottom_left"),
+            ResourceLocation.withDefaultNamespace("square_bottom_right"),
+            ResourceLocation.withDefaultNamespace("square_top_left"),
+            ResourceLocation.withDefaultNamespace("square_top_right"),
+            ResourceLocation.withDefaultNamespace("straight_cross"),
+            ResourceLocation.withDefaultNamespace("stripe_bottom"),
+            ResourceLocation.withDefaultNamespace("stripe_center"),
+            ResourceLocation.withDefaultNamespace("stripe_downleft"),
+            ResourceLocation.withDefaultNamespace("stripe_downright"),
+            ResourceLocation.withDefaultNamespace("stripe_left"),
+            ResourceLocation.withDefaultNamespace("stripe_middle"),
+            ResourceLocation.withDefaultNamespace("stripe_right"),
+            ResourceLocation.withDefaultNamespace("stripe_top"),
+            ResourceLocation.withDefaultNamespace("triangle_bottom"),
+            ResourceLocation.withDefaultNamespace("triangle_top"),
+            ResourceLocation.withDefaultNamespace("triangles_bottom"),
+            ResourceLocation.withDefaultNamespace("triangles_top")
+    );
 }

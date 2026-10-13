@@ -30,11 +30,24 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         registerItemWConditions(item, itemModelGenerators, registries, true, false, conditions);
     }
 
-    protected void registerItemWConditions(Item item, ItemModelGenerators itemModelGenerators, HolderLookup.Provider registries, boolean joinConditions, boolean overlay, OverrideCondition... conditions) {
+
+    protected void registerItemWConditions(
+            Item item,
+            ItemModelGenerators itemModelGenerators,
+            HolderLookup.Provider registries,
+            boolean joinConditions,
+            boolean overlay,
+            OverrideCondition... conditions
+    ) {
         List<OverrideCondition> conditionList = new ArrayList<>(Arrays.asList(conditions));
+
         if (item instanceof QuenchItem quenchItem && !quenchItem.destroysOnQuench()) {
-            conditionList.add(new OverrideCondition(ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"), 1));
+            conditionList.add(new OverrideCondition(
+                    ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "ignited"),
+                    1
+            ));
         }
+
         conditions = conditionList.toArray(new OverrideCondition[0]);
 
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
@@ -44,84 +57,142 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         boolean is3DProvider = item instanceof SC3DRendererProvider;
         boolean isIconProvider = item instanceof SCIconRendererProvider;
         boolean isBannerProvider = item instanceof SCBannersRendererProvider;
-
         boolean isCustomRenderer = is3DProvider || isIconProvider || isBannerProvider;
 
-        // 3D items get "_gui", Icon items get "_icon", Banner items use "_base", standard items use base path
-        String customSuffix = is3DProvider ? "_gui" : (isIconProvider ? "_icon" : (isBannerProvider ? "_base" : ""));
-        String iconPath = isCustomRenderer ? path + customSuffix : path;
+        String customSuffix = is3DProvider ? "_gui"
+                : isIconProvider ? "_icon"
+                : isBannerProvider ? "_base"
+                : "";
+
+        String iconPath = path + customSuffix;
 
         Set<String> generatedModels = new HashSet<>();
         JsonArray overrides = new JsonArray();
 
-        // Generate individual condition models and overrides
         for (OverrideCondition condition : conditions) {
             String modelName = condition.getModelName(iconPath);
-            generateOverrideModel(item, ModelTemplates.FLAT_ITEM, modelName, itemModelGenerators, overlay);
-            generatedModels.add(modelName);
 
-            addOverride(overrides, namespace, condition.predicateKey, condition.predicateValue, modelName);
+            generateOverrideModel(
+                    item,
+                    ModelTemplates.FLAT_ITEM,
+                    modelName,
+                    itemModelGenerators,
+                    overlay
+            );
+
+            generatedModels.add(modelName);
+            addOverride(
+                    overrides,
+                    namespace,
+                    condition.predicateKey,
+                    condition.predicateValue,
+                    modelName
+            );
         }
 
-        // Generate combined condition model and override if multiple conditions exist
         if (joinConditions && conditions.length > 1) {
-            List<List<OverrideCondition>> allCombinations = generateAllCombinations(conditions);
+            List<List<OverrideCondition>> allCombinations =
+                    generateAllCombinations(conditions);
 
             for (List<OverrideCondition> combination : allCombinations) {
-                if (combination.size() > 1) {
-                    JsonObject combinedPredicate = new JsonObject();
-                    List<String> modelNames = new ArrayList<>();
-
-                    for (OverrideCondition condition : combination) {
-                        combinedPredicate.addProperty(condition.predicateKey.toString(), condition.predicateValue);
-                        modelNames.add(condition.getModelName(iconPath));
-                    }
-
-                    String combinedModelName = combineMultipleModelNames(modelNames);
-
-                    if (!generatedModels.contains(combinedModelName)) {
-                        generateOverrideModel(item, ModelTemplates.FLAT_ITEM, combinedModelName, itemModelGenerators, overlay);
-                        generatedModels.add(combinedModelName);
-                    }
-
-                    addOverride(overrides, namespace, combinedPredicate, combinedModelName);
+                if (combination.size() <= 1) {
+                    continue;
                 }
+
+                JsonObject combinedPredicate = new JsonObject();
+                List<String> modelNames = new ArrayList<>();
+
+                for (OverrideCondition condition : combination) {
+                    combinedPredicate.addProperty(
+                            condition.predicateKey.toString(),
+                            condition.predicateValue
+                    );
+                    modelNames.add(condition.getModelName(iconPath));
+                }
+
+                String combinedModelName = combineMultipleModelNames(modelNames);
+
+                if (generatedModels.add(combinedModelName)) {
+                    generateOverrideModel(
+                            item,
+                            ModelTemplates.FLAT_ITEM,
+                            combinedModelName,
+                            itemModelGenerators,
+                            overlay
+                    );
+                }
+
+                addOverride(
+                        overrides,
+                        namespace,
+                        combinedPredicate,
+                        combinedModelName
+                );
             }
         }
 
-        TextureMapping textures;
-        ModelTemplate finalModel;
-
-        if (overlay) {
-            textures = new TextureMapping()
-                    .put(TextureSlot.LAYER0, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path))
-                    .put(TextureSlot.LAYER1, ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path + "_overlay"));
-            finalModel = ModelTemplates.TWO_LAYERED_ITEM;
+        if (isBannerProvider) {
+            generateBannerItemModels(item, itemModelGenerators);
         } else {
-            textures = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path));
-            finalModel = ModelTemplates.FLAT_ITEM;
+            TextureMapping textures;
+            ModelTemplate finalModel;
+
+            if (overlay) {
+                textures = new TextureMapping()
+                        .put(
+                                TextureSlot.LAYER0,
+                                ResourceLocation.fromNamespaceAndPath(
+                                        namespace, "item/" + path
+                                )
+                        )
+                        .put(
+                                TextureSlot.LAYER1,
+                                ResourceLocation.fromNamespaceAndPath(
+                                        namespace, "item/" + path + "_overlay"
+                                )
+                        );
+
+                finalModel = ModelTemplates.TWO_LAYERED_ITEM;
+            } else {
+                textures = TextureMapping.layer0(
+                        ResourceLocation.fromNamespaceAndPath(
+                                namespace, "item/" + path
+                        )
+                );
+
+                finalModel = ModelTemplates.FLAT_ITEM;
+            }
+
+            ResourceLocation iconModelId =
+                    ResourceLocation.fromNamespaceAndPath(
+                            namespace, "item/" + iconPath
+                    );
+
+            ModelTemplate finalModelTemplate = finalModel;
+
+            finalModelTemplate.create(
+                    iconModelId,
+                    textures,
+                    itemModelGenerators.output,
+                    (id, textureMap) -> {
+                        JsonObject json =
+                                finalModelTemplate.createBaseTemplate(id, textureMap);
+
+                        if (!overrides.isEmpty()) {
+                            json.add("overrides", overrides);
+                        }
+
+                        return json;
+                    }
+            );
         }
 
-        // Generate flat 2D base model (models/item/surcoat_base.json)
-        ResourceLocation iconModelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + iconPath);
-        ModelTemplate finalModelTemplate = finalModel;
-
-        finalModelTemplate.create(
-                iconModelId,
-                textures,
-                itemModelGenerators.output,
-                (id, textureMap) -> {
-                    JsonObject json = finalModelTemplate.createBaseTemplate(id, textureMap);
-                    if (!overrides.isEmpty()) {
-                        json.add("overrides", overrides);
-                    }
-                    return json;
-                }
-        );
-
-        // Generate base item model (models/item/surcoat.json) pointing to builtin/entity
         if (isCustomRenderer) {
-            ResourceLocation baseModelId = ResourceLocation.fromNamespaceAndPath(namespace, "item/" + path);
+            ResourceLocation baseModelId =
+                    ResourceLocation.fromNamespaceAndPath(
+                            namespace, "item/" + path
+                    );
+
             itemModelGenerators.output.accept(baseModelId, () -> {
                 JsonObject json = new JsonObject();
                 json.addProperty("parent", "builtin/entity");
@@ -129,6 +200,7 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
             });
         }
     }
+
 
     private List<List<OverrideCondition>> generateAllCombinations(OverrideCondition[] conditions) {
         List<List<OverrideCondition>> allCombinations = new ArrayList<>();
@@ -230,7 +302,8 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
         String path = itemId.getPath();
 
         ResourceLocation modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + path);
-        if (!modelName.isEmpty()) modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + modelName);
+        if (!modelName.isEmpty())
+            modelId = ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + modelName);
 
         TextureMapping texture = TextureMapping.layer0(ResourceLocation.fromNamespaceAndPath(itemId.getNamespace(), "item/" + path));
         if (texturePath != null) texture = TextureMapping.layer0(texturePath);
@@ -244,4 +317,87 @@ public abstract class FabricModelProviderPlus extends FabricModelProvider {
             return cleanPath + "_" + predicateKey.getPath();
         }
     }
+
+    public void generateBannerItemModels(Item item, ItemModelGenerators itemModelGenerator) {
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+
+        ResourceLocation baseModelId = itemId.withPath(
+                path -> "item/" + path + "_base"
+        );
+
+        ResourceLocation baseTexture = itemId.withPath(
+                path -> "item/" + path
+        );
+
+        ModelTemplates.FLAT_ITEM.create(
+                baseModelId,
+                TextureMapping.layer0(baseTexture),
+                itemModelGenerator.output
+        );
+
+        for (ResourceLocation patternId : patternIds) {
+            ResourceLocation patternModelId = itemId.withPath(
+                    path -> "item/" + path + "/"
+                            + patternId.getNamespace() + "/"
+                            + patternId.getPath()
+            );
+
+            ResourceLocation patternTexture = itemId.withPath(
+                    path -> "item/" + path + "/"
+                            + patternId.getNamespace() + "/"
+                            + patternId.getPath()
+            );
+
+            ModelTemplates.FLAT_ITEM.create(
+                    patternModelId,
+                    TextureMapping.layer0(patternTexture),
+                    itemModelGenerator.output
+            );
+        }
+    }
+
+    List<ResourceLocation> patternIds = List.of(
+            ResourceLocation.withDefaultNamespace("border"),
+            ResourceLocation.withDefaultNamespace("bricks"),
+            ResourceLocation.withDefaultNamespace("circle"),
+            ResourceLocation.withDefaultNamespace("creeper"),
+            ResourceLocation.withDefaultNamespace("cross"),
+            ResourceLocation.withDefaultNamespace("curly_border"),
+            ResourceLocation.withDefaultNamespace("diagonal_left"),
+            ResourceLocation.withDefaultNamespace("diagonal_right"),
+            ResourceLocation.withDefaultNamespace("diagonal_up_left"),
+            ResourceLocation.withDefaultNamespace("diagonal_up_right"),
+            ResourceLocation.withDefaultNamespace("flow"),
+            ResourceLocation.withDefaultNamespace("flower"),
+            ResourceLocation.withDefaultNamespace("globe"),
+            ResourceLocation.withDefaultNamespace("gradient"),
+            ResourceLocation.withDefaultNamespace("gradient_up"),
+            ResourceLocation.withDefaultNamespace("guster"),
+            ResourceLocation.withDefaultNamespace("half_horizontal"),
+            ResourceLocation.withDefaultNamespace("half_horizontal_bottom"),
+            ResourceLocation.withDefaultNamespace("half_vertical"),
+            ResourceLocation.withDefaultNamespace("half_vertical_right"),
+            ResourceLocation.withDefaultNamespace("mojang"),
+            ResourceLocation.withDefaultNamespace("piglin"),
+            ResourceLocation.withDefaultNamespace("rhombus"),
+            ResourceLocation.withDefaultNamespace("skull"),
+            ResourceLocation.withDefaultNamespace("small_stripes"),
+            ResourceLocation.withDefaultNamespace("square_bottom_left"),
+            ResourceLocation.withDefaultNamespace("square_bottom_right"),
+            ResourceLocation.withDefaultNamespace("square_top_left"),
+            ResourceLocation.withDefaultNamespace("square_top_right"),
+            ResourceLocation.withDefaultNamespace("straight_cross"),
+            ResourceLocation.withDefaultNamespace("stripe_bottom"),
+            ResourceLocation.withDefaultNamespace("stripe_center"),
+            ResourceLocation.withDefaultNamespace("stripe_downleft"),
+            ResourceLocation.withDefaultNamespace("stripe_downright"),
+            ResourceLocation.withDefaultNamespace("stripe_left"),
+            ResourceLocation.withDefaultNamespace("stripe_middle"),
+            ResourceLocation.withDefaultNamespace("stripe_right"),
+            ResourceLocation.withDefaultNamespace("stripe_top"),
+            ResourceLocation.withDefaultNamespace("triangle_bottom"),
+            ResourceLocation.withDefaultNamespace("triangle_top"),
+            ResourceLocation.withDefaultNamespace("triangles_bottom"),
+            ResourceLocation.withDefaultNamespace("triangles_top")
+    );
 }
