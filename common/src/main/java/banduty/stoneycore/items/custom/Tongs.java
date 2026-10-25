@@ -125,6 +125,17 @@ public class Tongs extends Item implements CraftmanAnvilHelper {
                 );
 
                 if (result.consumesAction()) {
+                    if (!quenchItem.destroysOnQuench()
+                            && !quenchItem.isIgnited(itemStack)) {
+                        ItemStack cooledItem = itemStack.copy();
+
+                        if (!cooledItem.isEmpty()) {
+                            if (!player.addItem(cooledItem)) {
+                                player.drop(cooledItem, false);
+                            }
+                        }
+                    }
+
                     removeCapturedItem(stack);
                 }
 
@@ -143,6 +154,17 @@ public class Tongs extends Item implements CraftmanAnvilHelper {
                 );
 
                 if (result.consumesAction()) {
+                    if (!quenchItem.destroysOnQuench()
+                            && !quenchItem.isIgnited(itemStack)) {
+                        ItemStack cooledItem = itemStack.copy();
+
+                        if (!cooledItem.isEmpty()) {
+                            if (!player.addItem(cooledItem)) {
+                                player.drop(cooledItem, false);
+                            }
+                        }
+                    }
+
                     removeCapturedItem(stack);
                 }
 
