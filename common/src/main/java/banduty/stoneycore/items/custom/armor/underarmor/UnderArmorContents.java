@@ -143,44 +143,36 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             if (this.attachments.isEmpty()) return false;
 
             Set<String> protectedSlots = new HashSet<>();
-            List<AttachmentRef> eligibleAttachments = new ArrayList<>();
+            List<AttachmentRef> candidates = new ArrayList<>();
 
-            // Collect all eligible candidates
             for (int i = 0; i < this.attachments.size(); i++) {
-                ItemStack attachmentStack = this.attachments.get(i);
-                if (attachmentStack.isEmpty()) continue;
+                ItemStack stack = this.attachments.get(i);
+                if (stack.isEmpty()) continue;
 
-                if (ArmorAttachmentDefinitionsStorage.containsItem(attachmentStack)) {
-                    String slotFromJson = ArmorAttachmentDefinitionsStorage.getData(attachmentStack.getItem()).armorSlot();
+                ArmorAttachmentSlotDefinitionData def =
+                        ArmorAttachmentSlotDefinitionsStorage.getData(stack, slot);
+                if (def.slot().isEmpty()) continue; // not valid for this armor type
 
-                    if (!slotFromJson.isBlank() && slotFromJson.equalsIgnoreCase(slot.getName())) {
-                        ArmorAttachmentSlotDefinitionData slotDef = ArmorAttachmentSlotDefinitionsStorage.getData(attachmentStack, slot);
-
-                        protectedSlots.addAll(slotDef.protectedSlots());
-                        AttachmentRef ref = new AttachmentRef(i, attachmentStack, slotDef.slot());
-
-                        // Only add to eligible if not protected
-                        if (!protectedSlots.contains(ref.slotName)) {
-                            eligibleAttachments.add(ref);
-                        }
-                    }
-                }
+                protectedSlots.addAll(def.protectedSlots());
+                candidates.add(new AttachmentRef(i, stack, def.slot()));
             }
 
-            if (eligibleAttachments.isEmpty()) return false;
+            List<AttachmentRef> eligible = new ArrayList<>(
+                    candidates.stream().filter(r -> !protectedSlots.contains(r.slotName())).toList());
+            if (eligible.isEmpty()) return false;
 
-            Collections.shuffle(eligibleAttachments);
+            Collections.shuffle(candidates);
 
             // Calculate total durability capacity of all eligible attachments
             int totalDurability = 0;
-            for (AttachmentRef ref : eligibleAttachments) {
+            for (AttachmentRef ref : candidates) {
                 totalDurability += ref.stack.getMaxDamage();
             }
 
             // Proportional distribution based on max durability
             int remainingDamage = damageAmount;
-            for (int i = 0; i < eligibleAttachments.size() - 1; i++) {
-                AttachmentRef ref = eligibleAttachments.get(i);
+            for (int i = 0; i < candidates.size() - 1; i++) {
+                AttachmentRef ref = candidates.get(i);
                 int proportionalDamage = (int) Math.round(
                         (double) damageAmount * ref.stack.getMaxDamage() / totalDurability
                 );
@@ -191,8 +183,8 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             }
 
             // Apply remaining damage to the last attachment
-            if (!eligibleAttachments.isEmpty()) {
-                AttachmentRef lastRef = eligibleAttachments.getLast();
+            if (!candidates.isEmpty()) {
+                AttachmentRef lastRef = candidates.getLast();
                 applyDamageToAttachment(lastRef, remainingDamage, entity, slot);
             }
 

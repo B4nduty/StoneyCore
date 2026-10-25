@@ -7,12 +7,11 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 
-public record ArmorAttachmentDefinitionData(double armor, double toughness, String armorSlot, double hungerDrainMultiplier,
+public record ArmorAttachmentDefinitionData(double armor, double toughness, double hungerDrainMultiplier,
                                             double deflectChance, double weight, float attackSpeed, int rechargeTime, ResourceLocation visoredHelmet) {
     public static final Codec<ArmorAttachmentDefinitionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.DOUBLE.optionalFieldOf("armor", 0.0).forGetter(ArmorAttachmentDefinitionData::armor),
             Codec.DOUBLE.optionalFieldOf("toughness", 0.0).forGetter(ArmorAttachmentDefinitionData::toughness),
-            Codec.STRING.optionalFieldOf("armorSlot", "").forGetter(ArmorAttachmentDefinitionData::armorSlot),
             Codec.DOUBLE.optionalFieldOf("hungerDrainMultiplier", 0.0).forGetter(ArmorAttachmentDefinitionData::hungerDrainMultiplier),
             Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(ArmorAttachmentDefinitionData::deflectChance),
             Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(ArmorAttachmentDefinitionData::weight),

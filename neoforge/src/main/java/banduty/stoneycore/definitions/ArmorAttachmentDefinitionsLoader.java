@@ -47,30 +47,6 @@ public class ArmorAttachmentDefinitionsLoader extends SimplePreparableReloadList
                 DataResult<ArmorAttachmentDefinitionData> result = ArmorAttachmentDefinitionData.CODEC.parse(JsonOps.INSTANCE, element);
                 result.resultOrPartial(StoneyCore.LOG::error)
                         .ifPresent(def -> {
-                            String armorSlot = def.armorSlot().toUpperCase();
-                            if (!armorSlot.isEmpty() && !isValidArmorSlot(armorSlot)) {
-                                StoneyCore.LOG.error(
-                                        "Invalid armorSlot '{}' in {}. Expected one of {}. This item will not protect any armor slot.",
-                                        armorSlot, id, EnumSet.of(
-                                                ArmorItem.Type.HELMET,
-                                                ArmorItem.Type.CHESTPLATE,
-                                                ArmorItem.Type.LEGGINGS,
-                                                ArmorItem.Type.BOOTS
-                                        )
-                                );
-                                def = new ArmorAttachmentDefinitionData(
-                                        def.armor(),
-                                        def.toughness(),
-                                        "",
-                                        def.hungerDrainMultiplier(),
-                                        def.deflectChance(),
-                                        def.weight(),
-                                        def.attackSpeed(),
-                                        def.rechargeTime(),
-                                        def.visoredHelmet()
-                                );
-                            }
-
                             ResourceLocation definitionId = ResourceLocation.tryBuild(
                                     id.getNamespace(),
                                     id.getPath().substring("definitions/attachments/".length(),

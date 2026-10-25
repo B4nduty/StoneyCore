@@ -1,7 +1,6 @@
 package banduty.stoneycore.items.custom.blueprint;
 
 import banduty.stoneycore.event.custom.RenderBlueprintEvents;
-import banduty.stoneycore.items.custom.blueprint.IBlueprintHelper;
 import banduty.stoneycore.screen.BlueprintScreen;
 import banduty.stoneycore.screen.BlueprintScreenHandler;
 import banduty.stoneycore.screen.SCScreenHandlers;
