@@ -176,6 +176,9 @@ public abstract class ItemMixin {
             return;
         }
 
+        if (hand != InteractionHand.OFF_HAND && ShieldUtil.canBlock(player.getOffhandItem()) ||
+                (!ShieldUtil.canBlock(stack) && hand == InteractionHand.OFF_HAND && ShieldUtil.canRaise(player.getItemInHand(InteractionHand.MAIN_HAND)))) return;
+
         // Only weapons whose definition allows blocking and/or parrying can be raised.
         if (ShieldUtil.canRaise(stack)) {
             player.startUsingItem(hand);
