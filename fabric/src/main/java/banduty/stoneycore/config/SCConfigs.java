@@ -23,9 +23,9 @@ public class SCConfigs implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     public double onParryStaminaConstant = 0.025d;
     @ConfigEntry.Gui.Tooltip
-    public double sprintingStaminaConstant = 0.04d;
+    public double sprintingStaminaConstant = 0.03d;
     @ConfigEntry.Gui.Tooltip
-    public double jumpingStaminaConstant = 0.01d;
+    public double jumpingStaminaConstant = 0.015d;
     @ConfigEntry.Gui.Tooltip
     public double swimmingStaminaConstant = 0.02d;
     @ConfigEntry.Gui.Tooltip

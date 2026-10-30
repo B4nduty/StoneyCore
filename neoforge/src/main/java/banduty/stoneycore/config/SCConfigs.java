@@ -72,11 +72,11 @@ public class SCConfigs {
 
         sprintingStaminaConstant = builder
                 .comment("Sprinting Stamina Constant")
-                .defineInRange("sprintingStaminaConstant", 0.04, 0.0, 1.0);
+                .defineInRange("sprintingStaminaConstant", 0.03, 0.0, 1.0);
 
         jumpingStaminaConstant = builder
                 .comment("Jumping Stamina Constant")
-                .defineInRange("jumpingStaminaConstant", 0.01, 0.0, 1.0);
+                .defineInRange("jumpingStaminaConstant", 0.015, 0.0, 1.0);
 
         swimmingStaminaConstant = builder
                 .comment("Swimming Stamina Constant")
