@@ -170,7 +170,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         ItemStack used = player.getUseItem();
         if (!ShieldUtil.isShield(used)) return;
 
-        int cooldown = ShieldUtil.getBlockCooldownTicks(used);
+        int cooldown = ShieldUtil.getBlockCooldownTicks(player, used);
         if (cooldown <= 0) return;
 
         // Don't overwrite a longer cooldown that was just applied (e.g. shield disabled by an axe).

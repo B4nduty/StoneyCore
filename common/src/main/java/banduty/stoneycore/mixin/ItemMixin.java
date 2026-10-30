@@ -154,8 +154,6 @@ public abstract class ItemMixin {
             return;
         }
 
-        if (hand == InteractionHand.OFF_HAND) return;
-
         if (WeaponDefinitionsStorage.isMelee(stack)) {
             stoneyCore$handleWeaponUse(level, player, hand, stack, cir);
         } else if (WeaponDefinitionsStorage.isRanged(stack)) {
