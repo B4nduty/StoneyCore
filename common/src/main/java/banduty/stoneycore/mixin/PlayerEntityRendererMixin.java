@@ -1,6 +1,6 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.data.SCTags;
+import banduty.stoneycore.combat.melee.ShieldUtil;
 import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -23,7 +23,7 @@ public class PlayerEntityRendererMixin {
             callbackInfoReturnable.setReturnValue(HumanoidModel.ArmPose.BOW_AND_ARROW);
         }
 
-        if (abstractClientPlayer.isUsingItem() && abstractClientPlayer.getUseItem() == abstractClientPlayer.getMainHandItem() && abstractClientPlayer.getMainHandItem().is(SCTags.WEAPONS_SHIELD.getTag())) {
+        if (abstractClientPlayer.isUsingItem() && abstractClientPlayer.getUseItem() == abstractClientPlayer.getMainHandItem() && ShieldUtil.isShield(abstractClientPlayer.getMainHandItem())) {
             callbackInfoReturnable.setReturnValue(HumanoidModel.ArmPose.BLOCK);
         }
     }

@@ -1,13 +1,12 @@
 package banduty.stoneycore.mixin;
 
-import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.combat.melee.ShieldUtil;
 import banduty.stoneycore.client.render.armor.ArmorAttachmentRenderManager;
 import banduty.stoneycore.client.render.armor.ArmorAttachmentRenderer;
 import banduty.stoneycore.client.render.armor.ArmorTextureCache;
 import banduty.stoneycore.items.custom.armor.underarmor.SCDyeableUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.client.model.UnderArmourArmModel;
-import banduty.stoneycore.data.SCTags;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -53,9 +52,9 @@ public class ItemInHandRendererMixin {
             )
     )
     private void stoneycore$shieldBlockTransform(AbstractClientPlayer player, float partialTick, float pitch,
-            InteractionHand hand, float swingProgress, ItemStack stack, float equipProgress, PoseStack poseStack,
-            MultiBufferSource buffer, int packedLight, CallbackInfo ci) {
-        if (!stack.is(SCTags.WEAPONS_SHIELD.getTag())) {
+                                                 InteractionHand hand, float swingProgress, ItemStack stack, float equipProgress, PoseStack poseStack,
+                                                 MultiBufferSource buffer, int packedLight, CallbackInfo ci) {
+        if (!ShieldUtil.isShield(stack)) {
             return;
         }
 
@@ -67,8 +66,9 @@ public class ItemInHandRendererMixin {
         int useTicks = player.getTicksUsingItem();
         float totalTicksElapsed = useTicks + partialTick;
 
-        if (StoneyCore.getConfig().combatOptions().getParry() && totalTicksElapsed > StoneyCore.getConfig().combatOptions().getParryWindowTicks()) {
-            float transitionProgress = totalTicksElapsed - StoneyCore.getConfig().combatOptions().getParryWindowTicks();
+        int parryWindow = ShieldUtil.getParryWindowTicks(stack);
+        if (parryWindow > 0 && totalTicksElapsed > parryWindow) {
+            float transitionProgress = totalTicksElapsed - parryWindow;
             tr = Math.min(1.0F, transitionProgress / TRANSITION_DURATION_TICKS);
         }
 

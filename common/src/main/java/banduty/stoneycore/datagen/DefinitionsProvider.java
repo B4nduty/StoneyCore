@@ -191,6 +191,9 @@ public abstract class DefinitionsProvider implements DataProvider {
             private int anim = 0;
             private int[] pierceAnim = new int[0];
             private double deflect, knockback;
+            private int parryWindow = 0;
+            private boolean blockingEnabled = false;
+            private int blockCooldown = 0;
 
             public static MeleeBuilder create() { return new MeleeBuilder(); }
             public MeleeBuilder slashingDamage(float... values) {
@@ -224,7 +227,13 @@ public abstract class DefinitionsProvider implements DataProvider {
             public MeleeBuilder deflect(double d) { this.deflect = d; return this; }
             public MeleeBuilder anim(int i) { this.anim = i; return this; }
             public MeleeBuilder pierceAnim(int... i) { this.pierceAnim = i; return this; }
-            public WeaponDefinitionData.MeleeData build() { return new WeaponDefinitionData.MeleeData(damage, radius, pierceAnim, anim, deflect, knockback); }
+            /** Parry window in ticks. 0 (default) = no parry, negative = use the global config value. */
+            public MeleeBuilder parryWindow(int ticks) { this.parryWindow = ticks; return this; }
+            /** true = the weapon blocks while raised. false (default) + a parry window = parry-only. A weapon with neither can't be raised. */
+            public MeleeBuilder blockingEnabled(boolean enabled) { this.blockingEnabled = enabled; return this; }
+            /** Cooldown in ticks applied when the player stops blocking/parrying (0 = none). */
+            public MeleeBuilder blockCooldown(int ticks) { this.blockCooldown = ticks; return this; }
+            public WeaponDefinitionData.MeleeData build() { return new WeaponDefinitionData.MeleeData(damage, radius, pierceAnim, anim, deflect, knockback, parryWindow, blockingEnabled, blockCooldown); }
         }
 
         public static class RangedBuilder {

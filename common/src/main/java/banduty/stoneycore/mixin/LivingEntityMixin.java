@@ -3,6 +3,7 @@ package banduty.stoneycore.mixin;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.melee.CombatSelect;
+import banduty.stoneycore.combat.melee.ShieldUtil;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.lands.Land;
 import banduty.stoneycore.lands.LandState;
@@ -156,6 +157,28 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         }
     }
 
+    /**
+     * Fires on every way a use can end (key released, item swapped away, stamina block, shield disabled...),
+     * so the cooldown can't be skipped. Server side only; cooldowns are synced to the client automatically.
+     */
+    @Inject(method = "stopUsingItem", at = @At("HEAD"))
+    private void stoneycore$shieldCooldownOnStop(CallbackInfo ci) {
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+        if (!(livingEntity instanceof Player player) || player.level().isClientSide()) return;
+        if (!player.isUsingItem()) return;
+
+        ItemStack used = player.getUseItem();
+        if (!ShieldUtil.isShield(used)) return;
+
+        int cooldown = ShieldUtil.getBlockCooldownTicks(used);
+        if (cooldown <= 0) return;
+
+        // Don't overwrite a longer cooldown that was just applied (e.g. shield disabled by an axe).
+        if (player.getCooldowns().isOnCooldown(used.getItem())) return;
+
+        player.getCooldowns().addCooldown(used.getItem(), cooldown);
+    }
+
     @Inject(method = "canDisableShield", at = @At("HEAD"), cancellable = true)
     public void stoneycore$canDisableShield(CallbackInfoReturnable<Boolean> cir) {
         ItemStack mainStack = ((LivingEntity) (Object) this).getMainHandItem();
@@ -216,23 +239,21 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
     @Unique
     private static boolean stoneyCore$handleParry(LivingEntity target, DamageSource source) {
-        if (!StoneyCore.getConfig().combatOptions().getParry()) {
+        ItemStack shield = target.getMainHandItem();
+
+        if (!ShieldUtil.isShield(shield)) {
             return false;
         }
 
-        if (!target.getMainHandItem().is(SCTags.WEAPONS_SHIELD.getTag())) {
-            return false;
-        }
-
-        if (!target.isUsingItem() || target.getUseItem() != target.getMainHandItem()) {
+        if (!target.isUsingItem() || target.getUseItem() != shield) {
             return false;
         }
 
         if (source.getDirectEntity() instanceof AbstractArrow) return false;
 
-        long blockStartTick = target.getTicksUsingItem();
-
-        if (blockStartTick > StoneyCore.getConfig().combatOptions().getParryWindowTicks()) {
+        // 0 = parry disabled (globally or for this weapon)
+        int parryWindow = ShieldUtil.getParryWindowTicks(shield);
+        if (parryWindow <= 0 || target.getTicksUsingItem() > parryWindow) {
             return false;
         }
 
@@ -348,8 +369,14 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         ItemStack shield = self.getUseItem();
 
         if (shield.isEmpty()
-                || !shield.is(SCTags.WEAPONS_SHIELD.getTag())
+                || !ShieldUtil.isShield(shield)
                 || !self.isUsingItem()) {
+            return;
+        }
+
+        // Parry-only shield: nothing is blocked outside of the parry (handled in hurt HEAD).
+        if (!ShieldUtil.canBlock(shield)) {
+            cir.setReturnValue(false);
             return;
         }
 

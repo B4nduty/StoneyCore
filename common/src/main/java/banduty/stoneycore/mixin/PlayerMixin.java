@@ -2,6 +2,7 @@ package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.melee.CombatSelect;
+import banduty.stoneycore.combat.melee.ShieldUtil;
 import banduty.stoneycore.combat.damagetype.EntityDamageUtil;
 import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.stamina.StaminaData;
@@ -39,7 +40,7 @@ public abstract class PlayerMixin {
     private void stoneycore$hurtCurrentlyUsedShield(float amount, CallbackInfo ci) {
         if (playerEntity.level().isClientSide()) return;
 
-        if (playerEntity.getUseItem().is(SCTags.WEAPONS_SHIELD.getTag())) {
+        if (ShieldUtil.isShield(playerEntity.getUseItem())) {
             int i = 1 + Mth.floor(amount);
             playerEntity.getUseItem().hurtAndBreak(i, playerEntity, LivingEntity.getSlotForHand(playerEntity.getUsedItemHand()));
             playerEntity.awardStat(Stats.ITEM_USED.get(playerEntity.getUseItem().getItem()));
@@ -66,7 +67,7 @@ public abstract class PlayerMixin {
 
         if (playerEntity.getRandom().nextFloat() < disableChance) {
             if (!playerEntity.isCreative()) {
-                int cooldownTicks = activeItem.is(SCTags.WEAPONS_SHIELD.getTag()) ? SHIELD_COOLDOWN_TICKS : VANILLA_SHIELD_COOLDOWN_TICKS;
+                int cooldownTicks = ShieldUtil.isShield(activeItem) ? SHIELD_COOLDOWN_TICKS : VANILLA_SHIELD_COOLDOWN_TICKS;
                 playerEntity.getCooldowns().addCooldown(activeItem.getItem(), cooldownTicks);
             }
             playerEntity.stopUsingItem();

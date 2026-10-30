@@ -10,16 +10,6 @@ public enum SCTags {
 
     // Weapon Tags
     /**
-     * If you want to have your Weapon act as a Shield
-     * <p>
-     * If you want to change the position of the Weapon,
-     * <p>
-     * you will need to add in your 3D Model file the predicate "blocking"
-     * <p>
-     * It's compatible with "bludgeoning" predicate
-     */
-    WEAPONS_SHIELD("weapons_shield"),
-    /**
      * If you want to have your Weapon deals x2 of its original baseDamage when hit from Behind
      */
     WEAPONS_DAMAGE_BEHIND("weapons_damage_behind"),

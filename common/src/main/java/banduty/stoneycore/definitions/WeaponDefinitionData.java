@@ -33,8 +33,22 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
 
     public static final StreamCodec<RegistryFriendlyByteBuf, WeaponDefinitionData> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
+    /**
+     * A melee weapon can be raised (shield behaviour) when blockingEnabled is true and/or parryWindow is not 0.
+     *
+     * @param parryWindow     parry window in ticks (0 = no parry, default; negative = use the global config value)
+     * @param blockingEnabled true = blocks damage while raised; false (default) with a parry window = parry-only
+     * @param blockCooldown   cooldown in ticks applied when the player stops blocking/parrying (0 = none)
+     */
     public record MeleeData(Map<String, Map<String, Float>> damage, Map<String, Double> radius, int[] piercingAnimation,
-                            int animation, double deflectChance, double bonusKnockback) {
+                            int animation, double deflectChance, double bonusKnockback,
+                            int parryWindow, boolean blockingEnabled, int blockCooldown) {
+
+        /** Keeps old call sites working: plain weapon (no parry, no blocking, no cooldown). */
+        public MeleeData(Map<String, Map<String, Float>> damage, Map<String, Double> radius, int[] piercingAnimation,
+                         int animation, double deflectChance, double bonusKnockback) {
+            this(damage, radius, piercingAnimation, animation, deflectChance, bonusKnockback, 0, false, 0);
+        }
 
         public static final Codec<MeleeData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.unboundedMap(Codec.STRING, Codec.unboundedMap(Codec.STRING, Codec.FLOAT)).xmap(
@@ -56,7 +70,10 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
                 ).optionalFieldOf("piercingAnimation", new int[0]).forGetter(MeleeData::piercingAnimation),
                 Codec.INT.optionalFieldOf("animation", 0).forGetter(MeleeData::animation),
                 Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(MeleeData::deflectChance),
-                Codec.DOUBLE.optionalFieldOf("bonusKnockback", 0.0).forGetter(MeleeData::bonusKnockback)
+                Codec.DOUBLE.optionalFieldOf("bonusKnockback", 0.0).forGetter(MeleeData::bonusKnockback),
+                Codec.INT.optionalFieldOf("parryWindow", 0).forGetter(MeleeData::parryWindow),
+                Codec.BOOL.optionalFieldOf("blockingEnabled", false).forGetter(MeleeData::blockingEnabled),
+                Codec.INT.optionalFieldOf("blockCooldown", 0).forGetter(MeleeData::blockCooldown)
         ).apply(instance, MeleeData::new));
     }
 

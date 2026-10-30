@@ -1,14 +1,12 @@
 package banduty.stoneycore.stamina;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.combat.melee.ShieldUtil;
 import banduty.stoneycore.config.IConfig;
 import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.data.IEntityDataSaver;
 import banduty.stoneycore.data.SCAttributes;
-import banduty.stoneycore.stamina.StaminaData;
-import banduty.stoneycore.data.SCTags;
 import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
-import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -113,7 +111,7 @@ public class StaminaUtil {
         boolean usingStamina = false;
         IConfig.CombatOptions config = StoneyCore.getConfig().combatOptions();
 
-        if (isSCWeapon(entity.getMainHandItem()) && entity.getMainHandItem().is(SCTags.WEAPONS_SHIELD.getTag()) && entity.isUsingItem() && entity.getUseItem() == entity.getMainHandItem()) { // Blocking
+        if (ShieldUtil.isShield(entity.getMainHandItem()) && entity.isUsingItem() && entity.getUseItem() == entity.getMainHandItem()) { // Blocking
             StaminaData.removeStamina(entity, config.blockingStaminaConstant() * WeightUtil.getWeight(entity) / 20.0);
             usingStamina = true;
         }
@@ -138,10 +136,6 @@ public class StaminaUtil {
     private static void applyStaminaEffects(LivingEntity entity, int fatigueLevel, int slownessLevel) {
         entity.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 20, fatigueLevel, false, false, false));
         entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, slownessLevel, false, false, false));
-    }
-
-    private static boolean isSCWeapon(ItemStack stack) {
-        return WeaponDefinitionsStorage.isMelee(stack);
     }
 
     private static boolean isWearingSCArmor(LivingEntity entity) {

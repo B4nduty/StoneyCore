@@ -1,6 +1,7 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.combat.damagetype.SCDamageType;
+import banduty.stoneycore.combat.melee.ShieldUtil;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
 import banduty.stoneycore.combat.weapon.SCWeaponUtil;
@@ -93,8 +94,7 @@ public abstract class ItemMixin {
     @Inject(method = "getUseAnimation", at = @At("HEAD"), cancellable = true)
     public void stoneycore$getUseAnimation(ItemStack stack, CallbackInfoReturnable<UseAnim> cir) {
         if (WeaponDefinitionsStorage.isMelee(stack)) {
-            boolean isShield = stack.is(SCTags.WEAPONS_SHIELD.getTag());
-            cir.setReturnValue(isShield ? UseAnim.BLOCK : UseAnim.NONE);
+            cir.setReturnValue(ShieldUtil.isShield(stack) ? UseAnim.BLOCK : UseAnim.NONE);
             return;
         }
 
@@ -111,7 +111,7 @@ public abstract class ItemMixin {
             return;
         }
 
-        if (WeaponDefinitionsStorage.isMelee(stack) && stack.is(SCTags.WEAPONS_SHIELD.getTag())) {
+        if (ShieldUtil.isShield(stack)) {
             cir.setReturnValue(72000);
         }
     }
@@ -120,6 +120,15 @@ public abstract class ItemMixin {
     public void stoneycore$onUseTick(Level level, LivingEntity livingEntity, ItemStack stack, int remainingUseTicks, CallbackInfo ci) {
 
         if (level.isClientSide()) return;
+
+        // Parry-only shield: lower it as soon as the parry window is over (cooldown is applied by stopUsingItem).
+        if (livingEntity instanceof Player shieldUser
+                && ShieldUtil.isParryOnly(stack)
+                && shieldUser.getTicksUsingItem() > ShieldUtil.getParryWindowTicks(stack)) {
+            shieldUser.stopUsingItem();
+            return;
+        }
+
         if (!WeaponDefinitionsStorage.isRanged(stack)) return;
 
         WeaponDefinitionData data = WeaponDefinitionsStorage.getData(stack);
@@ -169,7 +178,8 @@ public abstract class ItemMixin {
             return;
         }
 
-        if (stack.is(SCTags.WEAPONS_SHIELD.getTag())) {
+        // Only weapons whose definition allows blocking and/or parrying can be raised.
+        if (ShieldUtil.canRaise(stack)) {
             player.startUsingItem(hand);
             cir.setReturnValue(InteractionResultHolder.consume(stack));
             return;
