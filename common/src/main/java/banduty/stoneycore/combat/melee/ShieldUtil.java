@@ -22,7 +22,7 @@ public final class ShieldUtil {
         if (!combat.getParry()) return 0;
 
         if (melee.parryWindow() < 0) {
-            return Math.max(0, (int) combat.getParryWindowTicks());
+            return Math.max(0, combat.getParryWindowTicks());
         }
         return melee.parryWindow();
     }
