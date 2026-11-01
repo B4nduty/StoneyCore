@@ -41,7 +41,7 @@ public abstract class MobMixin {
 
         double damage = EntityDamageUtil.onDamage(livingTarget, stoneycore$mob, weaponStack);
 
-        if (weaponStack.is(SCTags.BROKEN_WEAPONS.getTag()) && weaponStack.getDamageValue() >= weaponStack.getMaxDamage() * 0.9f) {
+        if (weaponStack.is(SCTags.Item.BROKEN_WEAPONS.getTag()) && weaponStack.getDamageValue() >= weaponStack.getMaxDamage() * 0.9f) {
             damage *= 0.2f;
         }
 

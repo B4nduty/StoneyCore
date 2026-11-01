@@ -40,7 +40,7 @@ public class ItemClientMixin {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.shift-right_click-bludgeoning-piercing"));
             }
 
-            if (stack.is(SCTags.WEAPONS_HARVEST.getTag())) {
+            if (stack.is(SCTags.Item.WEAPONS_HARVEST.getTag())) {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.right_click-replant"));
             }
 
@@ -48,7 +48,7 @@ public class ItemClientMixin {
             double bludgeoning = SCWeaponUtil.getMaxDamage(SCDamageType.BLUDGEONING, item);
             double piercing = SCWeaponUtil.getMaxDamage(SCDamageType.PIERCING, item);
 
-            if (stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
+            if (stack.is(SCTags.Item.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
                 slashing *= 0.25f;
                 bludgeoning *= 0.25f;
                 piercing *= 0.25f;

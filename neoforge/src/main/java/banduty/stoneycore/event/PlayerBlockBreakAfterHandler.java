@@ -29,7 +29,7 @@ public class PlayerBlockBreakAfterHandler {
 
         ItemStack heldItem = player.getItemInHand(InteractionHand.MAIN_HAND);
 
-        if (heldItem.is(SCTags.WEAPONS_HARVEST.getTag())) {
+        if (heldItem.is(SCTags.Item.WEAPONS_HARVEST.getTag())) {
             Block block = state.getBlock();
 
             if (block instanceof CropBlock) {

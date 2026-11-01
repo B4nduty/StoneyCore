@@ -183,7 +183,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
     public void stoneycore$canDisableShield(CallbackInfoReturnable<Boolean> cir) {
         ItemStack mainStack = ((LivingEntity) (Object) this).getMainHandItem();
         boolean isWeaponOrInTag = mainStack.getItem() instanceof AxeItem
-                || mainStack.is(SCTags.WEAPONS_DISABLE_SHIELD.getTag());
+                || mainStack.is(SCTags.Item.WEAPONS_DISABLE_SHIELD.getTag());
 
         cir.setReturnValue(isWeaponOrInTag);
     }
@@ -381,7 +381,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         }
 
         if (source.getEntity() instanceof LivingEntity attacker
-                && attacker.getMainHandItem().is(SCTags.WEAPONS_BYPASS_BLOCK.getTag())) {
+                && attacker.getMainHandItem().is(SCTags.Item.WEAPONS_BYPASS_BLOCK.getTag())) {
             cir.setReturnValue(false);
             return;
         }

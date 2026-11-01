@@ -23,7 +23,7 @@ public record DamageResult(double damage, SCDamageType damageType) {
         }
 
         double baseDamage = SCWeaponUtil.calculateDamage(stack.getItem(), actualDistance, damageType);
-        if (stack.is(SCTags.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
+        if (stack.is(SCTags.Item.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
             baseDamage *= 0.25f;
         }
 
@@ -31,13 +31,13 @@ public record DamageResult(double damage, SCDamageType damageType) {
             baseDamage = EnchantmentHelper.modifyDamage(serverLevel, stack, target, attacker.damageSources().generic(), (float) baseDamage);
         }
 
-        if (stack.is(SCTags.WEAPONS_IGNORES_ARMOR.getTag())) {
+        if (stack.is(SCTags.Item.WEAPONS_IGNORES_ARMOR.getTag())) {
             return new DamageResult(baseDamage, damageType);
         }
 
         double calculatedDamage = SCDamageCalculator.applyArmor(target, baseDamage, damageType);
 
-        if (stack.is(SCTags.WEAPONS_DAMAGE_BEHIND.getTag())) {
+        if (stack.is(SCTags.Item.WEAPONS_DAMAGE_BEHIND.getTag())) {
             calculatedDamage = SCWeaponUtil.adjustDamageForBackstab(target, attacker.position(), calculatedDamage);
         }
 

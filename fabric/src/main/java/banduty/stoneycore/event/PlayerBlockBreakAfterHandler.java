@@ -21,7 +21,7 @@ public class PlayerBlockBreakAfterHandler implements PlayerBlockBreakEvents.Afte
     public void afterBlockBreak(Level level, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity) {
         ItemStack heldItem = player.getItemInHand(InteractionHand.MAIN_HAND);
 
-        if (heldItem.is(SCTags.WEAPONS_HARVEST.getTag())) {
+        if (heldItem.is(SCTags.Item.WEAPONS_HARVEST.getTag())) {
             Block block = state.getBlock();
 
             if (block instanceof CropBlock) {

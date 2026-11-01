@@ -15,7 +15,7 @@ public class SCDamageApplier {
 
         damage = EnchantmentHelper.modifyDamage(serverLevel, stack, target, serverLevel.damageSources().generic(), (float) damage);
 
-        if (stack.is(SCTags.WEAPONS_IGNORES_ARMOR.getTag()) &&
+        if (stack.is(SCTags.Item.WEAPONS_IGNORES_ARMOR.getTag()) &&
                 target.getHealth() - damage > 0) {
 
             target.setHealth((float) (target.getHealth() - damage));

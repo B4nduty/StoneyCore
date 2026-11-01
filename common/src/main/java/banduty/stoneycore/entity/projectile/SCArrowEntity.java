@@ -45,36 +45,14 @@ public abstract class SCArrowEntity extends AbstractArrow {
 
     @Override
     protected void onHitEntity(EntityHitResult entityHitResult) {
-        if (!(this.level() instanceof ServerLevel serverLevel)) return;
+        if (!(this.level() instanceof ServerLevel)) return;
 
-        if (entityHitResult.getEntity() instanceof LivingEntity livingEntity) {
-            if (this.getPickupItem().isEmpty()) {
-                return;
-            }
-            if (DeflectChanceHelper.shouldDeflect(livingEntity)) {
-                this.setDeltaMovement(this.getDeltaMovement().scale(0.5).scale(-1));
-                this.setBaseDamage(this.getBbHeight() * 0.5);
-                this.setYRot(this.getYRot() + 180);
-                if (this.getBaseDamage() <= 1) this.discard();
-                for (ServerPlayer player : serverLevel.players()) {
-                    if (player != null) {
-                        Vec3 playerPos = player.position();
-                        Vec3 impactPos = entityHitResult.getLocation();
-                        double distance = playerPos.distanceTo(impactPos);
-
-                        float volume = (float) Math.max(0, 1 - (distance * 0.1));
-
-                        this.playSound(SoundEvents.ANVIL_PLACE, volume, 2.5F / (this.random.nextFloat() * 0.2F + 0.9F));
-                    }
-                }
-                return;
-            }
+        if (entityHitResult.getEntity() instanceof LivingEntity && this.getPickupItem().isEmpty()) {
+            return;
         }
 
         onSCEntityHit(entityHitResult);
-
         this.discard();
-
     }
 
     protected void onSCEntityHit(EntityHitResult entityHitResult) {

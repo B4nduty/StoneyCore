@@ -313,7 +313,7 @@ public abstract class ItemMixin {
             cir.setReturnValue(InteractionResult.PASS);
         }
 
-        if (!WeaponDefinitionsStorage.isMelee(stack) || !stack.is(SCTags.WEAPONS_HARVEST.getTag())) return;
+        if (!WeaponDefinitionsStorage.isMelee(stack) || !stack.is(SCTags.Item.WEAPONS_HARVEST.getTag())) return;
 
         if (player != null) {
             stoneyCore$handleCropHarvest(level, pos, state, player, stack, context.getHand(), cir);

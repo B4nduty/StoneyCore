@@ -44,7 +44,7 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             }
         }
 
-        if (stack.is(SCTags.HIDE_NAME_TAG.getTag()))
+        if (stack.is(SCTags.Item.HIDE_NAME_TAG.getTag()))
             lines.add(Component.translatable("component.tooltip.stoneycore.hideNameTag").withStyle(ChatFormatting.BLUE));
         if (stack.is(ItemTags.FREEZE_IMMUNE_WEARABLES))
             lines.add(Component.translatable("component.tooltip.stoneycore.freezing").withStyle(ChatFormatting.BLUE));

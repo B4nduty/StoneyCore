@@ -18,7 +18,7 @@
     "MeleeAttackGoalMixin",
     "MobEntityAccessor",
     "MobMixin",
-    "PersistentProjectileEntityMixin",
+    "ProjectileMixin",
     "PlayerDataMixin",
     "PlayerMixin",
     "ServerPlayerMixin",
