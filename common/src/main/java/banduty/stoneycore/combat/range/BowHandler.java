@@ -14,31 +14,25 @@ public class BowHandler implements IRangedWeaponHandler {
     }
 
     @Override
-    public void shoot(Level level, LivingEntity livingEntity, ItemStack weapon) {
-    }
+    public void shoot(Level level, LivingEntity livingEntity, ItemStack weapon) { /* bows fire on release */ }
 
     @Override
     public void reload(Level level, LivingEntity livingEntity, ItemStack weapon) { /* bows don't reload */ }
 
     @Override
     public void handleRelease(ItemStack stack, Level level, LivingEntity livingEntity, int useTime, ItemStack arrowStack) {
-        if (level.isClientSide) return;
-
-        ItemStack ammo = arrowStack;
-
-        if (ammo.isEmpty()) {
-            if (!(livingEntity instanceof Player player && player.isCreative())) return;
-            ammo = new ItemStack(Items.ARROW);
-        }
+        if (level.isClientSide()) return;
 
         float pull = SCRangeWeaponUtil.getBowPullProgress(useTime);
         if (pull < 0.1f) return;
 
+        boolean creative = livingEntity instanceof Player player && player.isCreative();
+        if (arrowStack.isEmpty() && !creative) return;
+
+        ItemStack ammo = arrowStack.isEmpty() ? new ItemStack(Items.ARROW) : arrowStack;
         SCRangeWeaponUtil.shootArrow(level, stack, livingEntity, ammo, pull);
 
-        if (!(livingEntity instanceof Player player && player.isCreative())) {
-            arrowStack.shrink(1);
-        }
+        if (!creative) arrowStack.shrink(1);
     }
 
     @Override

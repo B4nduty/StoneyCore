@@ -6,50 +6,38 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class SCInventoryItemFinder {
-    public static ItemStack getItemFromInventory(ServerPlayer player, Item... items) {
-        return player.getInventory().items.stream()
-                .filter(stack -> java.util.Arrays.stream(items).anyMatch(item -> stack.getItem() == item))
-                .findFirst()
-                .orElse(ItemStack.EMPTY);
+    // Items.AIR is used as a "no alternative" placeholder in ammo requirements, and every
+    // empty slot reports AIR, so empty stacks must never count as a match.
+    private static boolean matches(ItemStack stack, Item... items) {
+        if (stack.isEmpty()) return false;
+        for (Item item : items) {
+            if (item != Items.AIR && stack.getItem() == item) return true;
+        }
+        return false;
     }
 
-    public static int getItemSlot(ServerPlayer player, ItemStack itemStack) {
-        return player.getInventory().items.stream()
-                .filter(stack -> stack == itemStack)
-                .map(player.getInventory().items::indexOf)
-                .findFirst()
-                .orElse(-1);
-    }
-
-    public static boolean areItemsInInventory(ItemStack[] itemStacks, int[] necessaryAmounts) {
-        if (itemStacks.length != necessaryAmounts.length) {
-            throw new IllegalArgumentException("ItemStacks and necessaryAmounts must have the same length.");
+    /** Removes up to {@code amount} items matching any of {@code items}, across as many stacks as needed. */
+    public static int consumeItems(ServerPlayer player, int amount, Item... items) {
+        int remaining = amount;
+        for (ItemStack stack : player.getInventory().items) {
+            if (remaining <= 0) break;
+            if (!matches(stack, items)) continue;
+            int taken = Math.min(remaining, stack.getCount());
+            stack.shrink(taken);
+            remaining -= taken;
         }
-
-        for (int i = 0; i < itemStacks.length; i++) {
-            ItemStack itemStack = itemStacks[i];
-            int necessaryAmount = necessaryAmounts[i];
-
-            if (itemStack.isEmpty() || itemStack.getCount() < necessaryAmount) {
-                return false;
-            }
-        }
-
-        return true;
+        if (remaining != amount) player.getInventory().setChanged();
+        return amount - remaining;
     }
 
     public static int countItem(ServerPlayer player, Item... items) {
         int count = 0;
 
         for (ItemStack stack : player.getInventory().items) {
-            for (Item item : items) {
-                if (stack.getItem() == item) {
-                    count += stack.getCount();
-                    break;
-                }
-            }
+            if (matches(stack, items)) count += stack.getCount();
         }
 
         return count;

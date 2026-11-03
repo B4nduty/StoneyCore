@@ -1,6 +1,5 @@
 package banduty.stoneycore.combat.mechanics;
 
-import banduty.stoneycore.util.SCInventoryItemFinder;
 import banduty.stoneycore.data.IEntityDataSaver;
 import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
 import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
@@ -62,20 +61,12 @@ public class MechanicsUtil {
     private static void completeReload(ServerPlayer player, ItemStack itemStack) {
         if (!player.isCreative()) {
             var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(itemStack);
-            ItemStack[] ammoItems = {
-                    SCInventoryItemFinder.getItemFromInventory(player, ammoReq.firstItem(), ammoReq.firstItem2nOption()),
-                    SCInventoryItemFinder.getItemFromInventory(player, ammoReq.secondItem(), ammoReq.secondItem2nOption()),
-                    SCInventoryItemFinder.getItemFromInventory(player, ammoReq.thirdItem(), ammoReq.thirdItem2nOption())
-            };
-
-            for (ItemStack ammoItem : ammoItems) {
-                if (ammoItem != null && !ammoItem.isEmpty()) {
-                    int slot = SCInventoryItemFinder.getItemSlot(player, ammoItem);
-                    if (slot >= 0 && slot < player.getInventory().getContainerSize()) {
-                        player.getInventory().removeItem(slot, 1);
-                    }
-                }
+            // Ammo is only checked when the reload starts; if it was dropped or used since, cancel instead of loading for free.
+            if (!SCRangeWeaponUtil.hasRequiredAmmo(player, ammoReq)) {
+                resetWeaponState(player, itemStack);
+                return;
             }
+            SCRangeWeaponUtil.consumeAmmo(player, ammoReq);
         }
 
         SCRangeWeaponUtil.setWeaponState(itemStack, new SCRangeWeaponUtil.WeaponState(false, true, false));

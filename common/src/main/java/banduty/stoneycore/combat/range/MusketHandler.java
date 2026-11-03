@@ -1,8 +1,8 @@
 package banduty.stoneycore.combat.range;
 
-import banduty.stoneycore.util.SCInventoryItemFinder;
 import banduty.stoneycore.combat.mechanics.MechanicsUtil;
 import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
+import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil.WeaponState;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -18,42 +18,21 @@ public class MusketHandler implements IRangedWeaponHandler {
     public void shoot(Level level, LivingEntity livingEntity, ItemStack weapon) {
         if (!canShoot(weapon)) return;
         SCRangeWeaponUtil.shootBullet(level, weapon, livingEntity);
-        SCRangeWeaponUtil.setWeaponState(weapon, new SCRangeWeaponUtil.WeaponState(false, false, true));
+        SCRangeWeaponUtil.setWeaponState(weapon, WeaponState.shooting());
     }
 
     @Override
     public void reload(Level level, LivingEntity livingEntity, ItemStack weapon) {
-        if (livingEntity instanceof ServerPlayer serverPlayer && serverPlayer.isCreative()) {
-            startReload(serverPlayer, weapon);
-            return;
-        }
+        if (!(livingEntity instanceof ServerPlayer player)) return;
+        if (!player.isCreative() && !SCRangeWeaponUtil.hasRequiredAmmo(player, SCRangeWeaponUtil.getAmmoRequirement(weapon))) return;
 
-        if (livingEntity instanceof ServerPlayer serverPlayer && hasRequiredAmmo(serverPlayer, weapon))
-            startReload(serverPlayer, weapon);
-
-    }
-
-    private static boolean hasRequiredAmmo(ServerPlayer livingEntity, ItemStack weapon) {
-        var ammoReq = SCRangeWeaponUtil.getAmmoRequirement(weapon);
-
-        if (SCInventoryItemFinder.countItem(livingEntity, ammoReq.firstItem(), ammoReq.firstItem2nOption())
-                < ammoReq.amountFirstItem()) return false;
-
-        if (SCInventoryItemFinder.countItem(livingEntity, ammoReq.secondItem(), ammoReq.secondItem2nOption())
-                < ammoReq.amountSecondItem()) return false;
-
-        return SCInventoryItemFinder.countItem(livingEntity, ammoReq.thirdItem(), ammoReq.thirdItem2nOption()) >= ammoReq.amountThirdItem();
-    }
-
-    private static void startReload(ServerPlayer livingEntity, ItemStack itemStack) {
-        var state = SCRangeWeaponUtil.getWeaponState(itemStack);
-        SCRangeWeaponUtil.setWeaponState(itemStack, new SCRangeWeaponUtil.WeaponState(true, state.isCharged(), false));
-        MechanicsUtil.incrementRechargeTime(livingEntity);
+        WeaponState state = SCRangeWeaponUtil.getWeaponState(weapon);
+        SCRangeWeaponUtil.setWeaponState(weapon, new WeaponState(true, state.isCharged(), false));
+        MechanicsUtil.incrementRechargeTime(player);
     }
 
     @Override
     public void handleRelease(ItemStack stack, Level level, LivingEntity livingEntity, int useTime, ItemStack arrowStack) {
-
     }
 
     @Override
@@ -63,6 +42,5 @@ public class MusketHandler implements IRangedWeaponHandler {
 
     @Override
     public void handleUsageTick(Level level, ItemStack stack, LivingEntity livingEntity, int useTime) {
-
     }
 }

@@ -19,6 +19,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -131,11 +132,10 @@ public abstract class ItemMixin {
 
         if (!WeaponDefinitionsStorage.isRanged(stack)) return;
 
-        WeaponDefinitionData data = WeaponDefinitionsStorage.getData(stack);
-        int useTime = data.ranged().maxUseTime() - remainingUseTicks;
-        if (RangedWeaponHandlers.get(data.ranged().id()).isPresent()) {
-            RangedWeaponHandlers.get(data.ranged().id()).get().handleUsageTick(level, stack, livingEntity, useTime);
-        }
+        WeaponDefinitionData.RangedData ranged = WeaponDefinitionsStorage.getData(stack).ranged();
+        int useTime = ranged.maxUseTime() - remainingUseTicks;
+        RangedWeaponHandlers.get(ranged.id())
+                .ifPresent(handler -> handler.handleUsageTick(level, stack, livingEntity, useTime));
 
         if (!(livingEntity instanceof Player player)) return;
 
@@ -228,7 +228,8 @@ public abstract class ItemMixin {
                 weaponState.isReloading(), false, true));
 
         if (!player.getAbilities().instabuild && needsFAS && player instanceof ServerPlayer serverPlayer) {
-            offHandStack.hurtAndBreak(1, serverPlayer, LivingEntity.getSlotForHand(hand));
+            // The flint and steel is in the offhand, whichever hand holds the gun.
+            offHandStack.hurtAndBreak(1, serverPlayer, EquipmentSlot.OFFHAND);
         }
 
         player.stopUsingItem();
@@ -237,16 +238,14 @@ public abstract class ItemMixin {
 
     @Unique
     private void stoneyCore$handleProjectileWeapon(InteractionHand hand, Player player, ItemStack stack, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
-        if (WeaponDefinitionsStorage.getData(stack).ranged().useAnim() == UseAnim.CROSSBOW) {
-            player.startUsingItem(hand);
+        UseAnim anim = WeaponDefinitionsStorage.getData(stack).ranged().useAnim();
+        if (anim == UseAnim.CROSSBOW) {
             cir.setReturnValue(SCRangeWeaponUtil.handleCrossbowUse(player.level(), player, hand, stack));
-        } else if (WeaponDefinitionsStorage.getData(stack).ranged().useAnim() == UseAnim.BOW) {
-            if (!player.isCreative())
-                if (SCRangeWeaponUtil.getArrowFromInventory(player).isEmpty()) {
-                    cir.setReturnValue(InteractionResultHolder.fail(stack));
-                    cir.cancel();
-                    return;
-                }
+            return;
+        }
+        if (anim == UseAnim.BOW && !player.isCreative() && SCRangeWeaponUtil.getArrowFromInventory(player).isEmpty()) {
+            cir.setReturnValue(InteractionResultHolder.fail(stack));
+            return;
         }
         player.startUsingItem(hand);
         cir.setReturnValue(InteractionResultHolder.consume(stack));
@@ -258,19 +257,13 @@ public abstract class ItemMixin {
         if (level.isClientSide()) return;
         if (!(user instanceof Player player)) return;
         if (!WeaponDefinitionsStorage.isRanged(stack)) return;
-        var def = WeaponDefinitionsStorage.getData(stack);
-        if (def == null || def.ranged() == null) return;
-        String type = def.ranged().id();
+        WeaponDefinitionData.RangedData ranged = WeaponDefinitionsStorage.getData(stack).ranged();
 
-        int useTime = WeaponDefinitionsStorage.getData(stack).ranged().maxUseTime() - remainingUseTicks;
-
-        ItemStack ammo = SCRangeWeaponUtil
-                .getArrowFromInventory(player)
-                .orElse(ItemStack.EMPTY);
-        if (!player.isCreative() && ammo.isEmpty()) {
-            return;
-        }
-        RangedWeaponHandlers.get(type)
+        int useTime = ranged.maxUseTime() - remainingUseTicks;
+        // Handlers decide what missing ammo means (the bow skips the shot; the crossbow still needs
+        // to clear its reloading flag), so always forward the release.
+        ItemStack ammo = SCRangeWeaponUtil.getArrowFromInventory(player).orElse(ItemStack.EMPTY);
+        RangedWeaponHandlers.get(ranged.id())
                 .ifPresent(h -> h.handleRelease(stack, level, player, useTime, ammo));
     }
 

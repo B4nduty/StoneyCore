@@ -1,12 +1,12 @@
 package banduty.stoneycore.combat.range;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class RangedWeaponHandlers {
-    private static final Map<String, IRangedWeaponHandler> HANDLERS = Collections.synchronizedMap(new HashMap<>());
+    // Looked up on every use tick; ConcurrentHashMap reads don't take a lock.
+    private static final Map<String, IRangedWeaponHandler> HANDLERS = new ConcurrentHashMap<>();
 
     private RangedWeaponHandlers() {
         throw new UnsupportedOperationException("Utility class");

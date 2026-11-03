@@ -1,21 +1,25 @@
 package banduty.stoneycore.combat.range;
 
-import banduty.stoneycore.data.SCDataComponents;
+import banduty.stoneycore.combat.mechanics.AttackSpeedHelper;
 import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil;
+import banduty.stoneycore.combat.weapon.SCRangeWeaponUtil.WeaponState;
+import banduty.stoneycore.data.SCDataComponents;
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArrowItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+
+import java.util.Optional;
 
 public class CrossbowHandler implements IRangedWeaponHandler {
     @Override
@@ -26,22 +30,14 @@ public class CrossbowHandler implements IRangedWeaponHandler {
     @Override
     public void shoot(Level level, LivingEntity livingEntity, ItemStack weapon) {
         if (level == null || livingEntity == null || weapon == null) return;
+        if (!SCRangeWeaponUtil.getWeaponState(weapon).isCharged()) return;
 
-        var weaponState = SCRangeWeaponUtil.getWeaponState(weapon);
-        if (!weaponState.isCharged()) return;
+        ResourceLocation loaded = weapon.get(SCDataComponents.LOADED_ARROW.get());
+        if (loaded == null) return;
+        if (!(BuiltInRegistries.ITEM.get(loaded) instanceof ArrowItem arrow)) return;
 
-        DataComponentMap components = weapon.getComponents();
-        if (components.isEmpty() || !components.has(SCDataComponents.LOADED_ARROW.get())) return;
-
-        Item arrowItem = BuiltInRegistries.ITEM.get(components.get(SCDataComponents.LOADED_ARROW.get()));
-        if (!(arrowItem instanceof ArrowItem arrow)) return;
-
-        ItemStack fakeArrow = new ItemStack(arrow);
-
-        SCRangeWeaponUtil.shootArrow(level, weapon, livingEntity, fakeArrow, 1.0f);
-
-        SCRangeWeaponUtil.setWeaponState(weapon, SCRangeWeaponUtil.WeaponState.idle());
-
+        SCRangeWeaponUtil.shootArrow(level, weapon, livingEntity, new ItemStack(arrow), 1.0f);
+        SCRangeWeaponUtil.setWeaponState(weapon, WeaponState.idle());
         weapon.remove(SCDataComponents.LOADED_ARROW.get());
 
         if (livingEntity instanceof ServerPlayer serverPlayer) {
@@ -51,18 +47,13 @@ public class CrossbowHandler implements IRangedWeaponHandler {
     }
 
     @Override
-    public void reload(Level level, LivingEntity livingEntity, ItemStack weapon) {
-
-    }
+    public void reload(Level level, LivingEntity livingEntity, ItemStack weapon) { /* loaded by holding use */ }
 
     @Override
     public void handleRelease(ItemStack stack, Level level, LivingEntity livingEntity, int useTime, ItemStack arrowStack) {
-        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack, livingEntity);
-        if (pullProgress < 1.0F) {
-            SCRangeWeaponUtil.WeaponState currentState = SCRangeWeaponUtil.getWeaponState(stack);
-            SCRangeWeaponUtil.setWeaponState(stack, new SCRangeWeaponUtil.WeaponState(
-                    false, currentState.isCharged(), currentState.isShooting()));
-        }
+        if (SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack, livingEntity) >= 1.0F) return;
+        WeaponState state = SCRangeWeaponUtil.getWeaponState(stack);
+        SCRangeWeaponUtil.setWeaponState(stack, new WeaponState(false, state.isCharged(), state.isShooting()));
     }
 
     @Override
@@ -72,69 +63,50 @@ public class CrossbowHandler implements IRangedWeaponHandler {
 
     @Override
     public void handleUsageTick(Level level, ItemStack stack, LivingEntity livingEntity, int useTime) {
-        if (level.isClientSide()) return;
-        if (useTime <= 1) return;
+        if (level.isClientSide() || useTime <= 1) return;
 
-        float pullProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, stack, livingEntity);
-        float prevProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime - 1, stack, livingEntity);
+        int chargeTime = AttackSpeedHelper.getReloadSpeedModified(livingEntity, stack);
+        float progress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime, chargeTime);
+        float prevProgress = SCRangeWeaponUtil.getCrossbowPullProgress(useTime - 1, chargeTime);
 
-        boolean hasAmmo = SCRangeWeaponUtil.getArrowFromInventory(livingEntity).isPresent();
-        if (!(livingEntity instanceof Player player && player.isCreative())) hasAmmo = true;
+        boolean creative = livingEntity instanceof Player player && player.isCreative();
+        Optional<ItemStack> arrow = SCRangeWeaponUtil.getArrowFromInventory(livingEntity);
+        boolean hasAmmo = creative || arrow.isPresent();
 
-        SCRangeWeaponUtil.WeaponState currentState = SCRangeWeaponUtil.getWeaponState(stack);
-        SCRangeWeaponUtil.WeaponState nextState = currentState;
+        WeaponState state = SCRangeWeaponUtil.getWeaponState(stack);
+        WeaponState next = state;
 
-        if (pullProgress < 1.0F) {
-            if (currentState.isCharged()) {
+        if (progress < 1.0F) {
+            if (state.isCharged()) {
                 shoot(level, livingEntity, stack);
-                nextState = SCRangeWeaponUtil.WeaponState.shooting();
-            } else if (hasAmmo) {
-                nextState = SCRangeWeaponUtil.WeaponState.reloading();
+                next = WeaponState.shooting();
             } else {
-                nextState = SCRangeWeaponUtil.WeaponState.idle();
+                next = hasAmmo ? WeaponState.reloading() : WeaponState.idle();
             }
         }
 
-        if (pullProgress >= 0.2F && prevProgress < 0.2F) {
-            level.playSound(null,
-                    livingEntity.getX(), livingEntity.getY(), livingEntity.getZ(),
-                    SoundEvents.CROSSBOW_LOADING_START,
-                    SoundSource.PLAYERS,
-                    0.5F, 1.0F);
+        if (crossed(prevProgress, progress, 0.2F)) playLoadingSound(level, livingEntity, SoundEvents.CROSSBOW_LOADING_START.value(), 0.5F, 1.0F);
+        if (crossed(prevProgress, progress, 0.5F)) playLoadingSound(level, livingEntity, SoundEvents.CROSSBOW_LOADING_MIDDLE.value(), 0.5F, 1.0F);
+
+        if (progress >= 1.0F && !state.isCharged() && hasAmmo) {
+            ItemStack ammo = arrow.orElseGet(() -> new ItemStack(Items.ARROW));
+            stack.set(SCDataComponents.LOADED_ARROW.get(), BuiltInRegistries.ITEM.getKey(ammo.getItem()));
+            // Shrink the exact stack the arrow type came from (it may be the offhand).
+            if (!creative && livingEntity instanceof Player) ammo.shrink(1);
+
+            playLoadingSound(level, livingEntity, SoundEvents.CROSSBOW_LOADING_END.value(), 1.0F,
+                    1.0F / (level.getRandom().nextFloat() * 0.5F + 1.0F));
+            next = WeaponState.charged();
         }
 
-        if (pullProgress >= 0.5F && prevProgress < 0.5F) {
-            level.playSound(null,
-                    livingEntity.getX(), livingEntity.getY(), livingEntity.getZ(),
-                    SoundEvents.CROSSBOW_LOADING_MIDDLE,
-                    SoundSource.PLAYERS,
-                    0.5F, 1.0F);
-        }
+        SCRangeWeaponUtil.setWeaponState(stack, next);
+    }
 
-        if (pullProgress >= 1.0F) {
-            if (!currentState.isCharged() && hasAmmo) {
-                ItemStack ammoStack = SCRangeWeaponUtil
-                        .getArrowFromInventory(livingEntity)
-                        .orElseGet(() -> new ItemStack(net.minecraft.world.item.Items.ARROW));
+    private static boolean crossed(float prev, float now, float threshold) {
+        return now >= threshold && prev < threshold;
+    }
 
-                if (livingEntity instanceof Player player && !player.isCreative()) {
-                    int slot = SCRangeWeaponUtil.getArrowSlot(player);
-                    if (slot >= 0) player.getInventory().removeItem(slot, 1);
-                }
-
-                stack.set(SCDataComponents.LOADED_ARROW.get(), BuiltInRegistries.ITEM.getKey(ammoStack.getItem()));
-
-                level.playSound(null,
-                        livingEntity.getX(), livingEntity.getY(), livingEntity.getZ(),
-                        SoundEvents.CROSSBOW_LOADING_END,
-                        SoundSource.PLAYERS,
-                        1.0F,
-                        1.0F / (level.getRandom().nextFloat() * 0.5F + 1.0F));
-
-                nextState = SCRangeWeaponUtil.WeaponState.charged();
-            }
-        }
-
-        SCRangeWeaponUtil.setWeaponState(stack, nextState);
+    private static void playLoadingSound(Level level, LivingEntity entity, SoundEvent sound, float volume, float pitch) {
+        level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), sound, SoundSource.PLAYERS, volume, pitch);
     }
 }
