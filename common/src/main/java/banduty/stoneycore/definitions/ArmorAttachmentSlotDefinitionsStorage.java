@@ -66,6 +66,19 @@ public class ArmorAttachmentSlotDefinitionsStorage {
                 .orElse(getDefaultData());
     }
 
+    public static List<ArmorAttachmentSlotDefinitionData> getSlotsForItem(Item item) {
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+
+        return DEFINITIONS.values().stream()
+                .filter(def -> def.items().contains(itemId))
+                .toList();
+    }
+
+    public static ArmorAttachmentSlotDefinitionData getDefinition(String slot) {
+        if (slot == null || slot.isEmpty()) return null;
+        return DEFINITIONS.get(slot);
+    }
+
     public static boolean containsItem(ItemStack itemStack) {
         if (itemStack == null || itemStack.isEmpty()) return false;
         return containsItem(itemStack.getItem());

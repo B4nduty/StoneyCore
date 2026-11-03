@@ -36,6 +36,9 @@
   "component.tooltip.stoneycore.openVisorDeflectChance": "Открытый визор: -5% шанс отражения",
   "component.tooltip.stoneycore.openVisorArmor": "Open Visor: -1 Armor",
   "component.tooltip.stoneycore.openVisorToughness": "Open Visor: -1 Toughness",
+  "component.tooltip.stoneycore.attachmentSlot": "Slot: %s (%s)",
+  "component.tooltip.stoneycore.requiredSlot": "Requires %s slot equipped first",
+  "attachment_slot.stoneycore.top_head": "Top Head",
   "component.tooltip.stoneycore.openVisorEatDrink": "Вы не можете §l§4есть и пить §rс §l§4закрытым визором",
 
   "text.config.stoneycore.title": "StoneyCore (точность перевода 98%)",

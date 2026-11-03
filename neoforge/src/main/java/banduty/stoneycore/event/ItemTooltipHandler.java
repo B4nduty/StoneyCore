@@ -1,6 +1,7 @@
 package banduty.stoneycore.event;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.client.item.AttachmentSlotTooltip;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
@@ -155,6 +156,8 @@ public class ItemTooltipHandler {
                 lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", formatValue(deflectChance * 100, false)).withStyle(ChatFormatting.BLUE));
             }
         }
+
+        AttachmentSlotTooltip.append(stack, lines);
 
         if (stack.getItem() instanceof ArmorAttachment armorAttachment && armorAttachment.hasOpenVisor(stack)) {
             lines.add(Component.translatable("component.tooltip.stoneycore.openVisor").withStyle(ChatFormatting.WHITE));
