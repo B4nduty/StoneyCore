@@ -87,13 +87,13 @@ public abstract class SCArrowEntity extends AbstractArrow {
 
         damage *= getDeltaMovement().length();
 
+        DamageSource source = this.damageSources().arrow(this, this.getOwner());
         if (this.level() instanceof ServerLevel serverLevel) {
             ItemStack weapon = stack != null && !stack.isEmpty() ? stack : this.getWeaponItem();
-            DamageSource source = serverLevel.damageSources().arrow(this, this.getOwner());
             damage = SCDamageCalculator.applyEnchantments(serverLevel, weapon, target, source, damage);
         }
 
-        damage = SCDamageCalculator.applyArmor(target, damage, getDamageType());
+        damage = SCDamageCalculator.applyArmor(target, damage, getDamageType(), source);
         SCDamageApplier.apply(target, this, stack, damage);
         if (this.isOnFire()) target.setRemainingFireTicks(5);
         return true;

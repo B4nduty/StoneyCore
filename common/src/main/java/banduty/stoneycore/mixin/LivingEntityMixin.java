@@ -1,7 +1,10 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import banduty.stoneycore.combat.melee.CombatSelect;
 import banduty.stoneycore.combat.melee.ShieldUtil;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
@@ -326,6 +329,24 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             cir.setReturnValue(false);
             cir.cancel();
         }
+    }
+
+    /**
+     * StoneyCore armor folds its own protection enchantments into its damage resistances when StoneyCore damage is
+     * calculated (SCDamageCalculator#applyArmor). For that hit, leave those pieces out of vanilla's enchantment
+     * protection so they are not counted twice. Other damage (fall, fire, vanilla mobs, ...) is unaffected.
+     */
+    @WrapOperation(
+            method = "getDamageAfterMagicAbsorb",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;getDamageProtection(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/damagesource/DamageSource;)F"
+            )
+    )
+    private float stoneycore$excludeSCArmorProtection(ServerLevel level, LivingEntity entity, DamageSource source, Operation<Float> original) {
+        float protection = original.call(level, entity, source);
+        if (!SCDamageCalculator.consumeEnchantmentsApplied(entity)) return protection;
+        return Math.max(0.0F, protection - SCDamageCalculator.getSCArmorEnchantmentProtection(level, entity, source));
     }
 
     @Inject(method = "actuallyHurt", at = @At("TAIL"))

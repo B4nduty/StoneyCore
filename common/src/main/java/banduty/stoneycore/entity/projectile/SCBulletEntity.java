@@ -69,7 +69,7 @@ public class SCBulletEntity extends AbstractArrow {
         double hitDamage = SCDamageCalculator.applyEnchantments(serverLevel, this.getWeaponItem(), entity, source, this.damage);
 
         if (entity instanceof LivingEntity target) {
-            hitDamage = SCDamageCalculator.applyArmor(target, hitDamage, this.damageType);
+            hitDamage = SCDamageCalculator.applyArmor(target, hitDamage, this.damageType, source);
             if (this.isOnFire() && entity.getType() != EntityType.ENDERMAN) target.igniteForSeconds(5);
             SCDamageApplier.apply(target, owner instanceof LivingEntity livingOwner ? livingOwner : this, ItemStack.EMPTY, hitDamage);
         } else {

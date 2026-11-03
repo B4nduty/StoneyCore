@@ -30,10 +30,10 @@ public record DamageResult(double damage, SCDamageType damageType) {
         // Vanilla enchantments scale the custom (slashing/piercing/bludgeoning) damage before armor resistances.
         // The vanilla enchantment pass in Player#attack / Mob#doHurtTarget is skipped for these weapons (see
         // PlayerMixin / MobMixin) so enchantments are only counted once.
+        DamageSource source = attacker instanceof Player player
+                ? attacker.damageSources().playerAttack(player)
+                : attacker.damageSources().mobAttack(attacker);
         if (attacker.level() instanceof ServerLevel serverLevel) {
-            DamageSource source = attacker instanceof Player player
-                    ? attacker.damageSources().playerAttack(player)
-                    : attacker.damageSources().mobAttack(attacker);
             baseDamage = SCDamageCalculator.applyEnchantments(serverLevel, stack, target, source, baseDamage);
         }
 
@@ -41,7 +41,7 @@ public record DamageResult(double damage, SCDamageType damageType) {
             return new DamageResult(baseDamage, damageType);
         }
 
-        double calculatedDamage = SCDamageCalculator.applyArmor(target, baseDamage, damageType);
+        double calculatedDamage = SCDamageCalculator.applyArmor(target, baseDamage, damageType, source);
 
         if (stack.is(SCTags.Item.WEAPONS_DAMAGE_BEHIND.getTag())) {
             calculatedDamage = SCWeaponUtil.adjustDamageForBackstab(target, attacker.position(), calculatedDamage);

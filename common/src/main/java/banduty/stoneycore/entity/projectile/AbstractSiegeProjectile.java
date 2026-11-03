@@ -46,7 +46,8 @@ public abstract class AbstractSiegeProjectile extends AbstractArrow {
         super.onHitEntity(entityHitResult);
         if (entityHitResult.getEntity().level().isClientSide()) return;
         if (entityHitResult.getEntity() instanceof LivingEntity target) {
-            double damage = SCDamageCalculator.applyArmor(target, (float) this.getBaseDamage(), this.damageType);
+            double damage = SCDamageCalculator.applyArmor(target, (float) this.getBaseDamage(), this.damageType,
+                    this.damageSources().arrow(this, this.getOwner()));
             if (this.getOwner() instanceof AbstractSiegeEntity abstractSiegeEntity) SCDamageApplier.apply(target, abstractSiegeEntity.getOwner(), ItemStack.EMPTY, damage);
         }
         setDeltaMovement(getDeltaMovement().scale(-0.9));
