@@ -1,6 +1,7 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.client.MinecraftS4S;
+import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.items.custom.hotiron.QuenchItem;
 import banduty.stoneycore.items.custom.Tongs;
@@ -14,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -54,12 +56,17 @@ public class ItemClientMixin {
                 piercing *= 0.25f;
             }
 
+            // Same order as DamageResult: broken penalty, then enchantments.
+            slashing = SCDamageCalculator.previewEnchantments(stack, slashing);
+            bludgeoning = SCDamageCalculator.previewEnchantments(stack, bludgeoning);
+            piercing = SCDamageCalculator.previewEnchantments(stack, piercing);
+
             if (hasSlashing)
-                tooltip.add(Component.translatable("component.tooltip.stoneycore.slashingDamage", slashing).withStyle(ChatFormatting.GREEN));
+                tooltip.add(Component.translatable("component.tooltip.stoneycore.slashingDamage", ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(slashing)).withStyle(ChatFormatting.GREEN));
             if (hasBludgeoning)
-                tooltip.add(Component.translatable("component.tooltip.stoneycore.bludgeoningDamage", bludgeoning).withStyle(ChatFormatting.GREEN));
+                tooltip.add(Component.translatable("component.tooltip.stoneycore.bludgeoningDamage", ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(bludgeoning)).withStyle(ChatFormatting.GREEN));
             if (hasPiercing)
-                tooltip.add(Component.translatable("component.tooltip.stoneycore.piercingDamage", piercing).withStyle(ChatFormatting.GREEN));
+                tooltip.add(Component.translatable("component.tooltip.stoneycore.piercingDamage", ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(piercing)).withStyle(ChatFormatting.GREEN));
         }
 
         if (WeaponDefinitionsStorage.isRanged(stack) && SCRangeWeaponUtil.getAmmoRequirement(stack) != SCRangeWeaponUtil.AmmoRequirement.EMPTY) {

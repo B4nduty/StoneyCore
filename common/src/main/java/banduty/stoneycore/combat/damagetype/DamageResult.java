@@ -1,13 +1,13 @@
 package banduty.stoneycore.combat.damagetype;
 
 import banduty.stoneycore.combat.melee.CombatSelect;
-import banduty.stoneycore.data.SCTags;
 import banduty.stoneycore.combat.weapon.SCWeaponUtil;
+import banduty.stoneycore.data.SCTags;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 public record DamageResult(double damage, SCDamageType damageType) {
     public static DamageResult calculateWeaponDamage(LivingEntity attacker, LivingEntity target, ItemStack stack) {
@@ -27,8 +27,14 @@ public record DamageResult(double damage, SCDamageType damageType) {
             baseDamage *= 0.25f;
         }
 
+        // Vanilla enchantments scale the custom (slashing/piercing/bludgeoning) damage before armor resistances.
+        // The vanilla enchantment pass in Player#attack / Mob#doHurtTarget is skipped for these weapons (see
+        // PlayerMixin / MobMixin) so enchantments are only counted once.
         if (attacker.level() instanceof ServerLevel serverLevel) {
-            baseDamage = EnchantmentHelper.modifyDamage(serverLevel, stack, target, attacker.damageSources().generic(), (float) baseDamage);
+            DamageSource source = attacker instanceof Player player
+                    ? attacker.damageSources().playerAttack(player)
+                    : attacker.damageSources().mobAttack(attacker);
+            baseDamage = SCDamageCalculator.applyEnchantments(serverLevel, stack, target, source, baseDamage);
         }
 
         if (stack.is(SCTags.Item.WEAPONS_IGNORES_ARMOR.getTag())) {

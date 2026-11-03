@@ -10,6 +10,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -56,14 +58,25 @@ public class SCBulletEntity extends AbstractArrow {
 
     @Override
     protected void onHitEntity(EntityHitResult entityHitResult) {
-        super.onHitEntity(entityHitResult);
-        if (this.level().isClientSide()) return;
+        // Vanilla AbstractArrow#onHitEntity is intentionally not called: it would deal its own arrow damage first,
+        // putting the target in hurt-cooldown frames so the StoneyCore damage below would be mostly absorbed.
+        if (!(this.level() instanceof ServerLevel serverLevel)) return;
 
-        if (entityHitResult.getEntity() instanceof LivingEntity target && this.getOwner() instanceof LivingEntity livingEntity) {
-            damage = SCDamageCalculator.applyArmor(target, this.damage, this.damageType);
-            SCDamageApplier.apply(target, livingEntity, ItemStack.EMPTY, damage);
-            if (this.isOnFire()) target.setRemainingFireTicks(5);
+        Entity entity = entityHitResult.getEntity();
+        Entity owner = this.getOwner();
+        DamageSource source = serverLevel.damageSources().arrow(this, owner != null ? owner : this);
+
+        double hitDamage = SCDamageCalculator.applyEnchantments(serverLevel, this.getWeaponItem(), entity, source, this.damage);
+
+        if (entity instanceof LivingEntity target) {
+            hitDamage = SCDamageCalculator.applyArmor(target, hitDamage, this.damageType);
+            if (this.isOnFire() && entity.getType() != EntityType.ENDERMAN) target.igniteForSeconds(5);
+            SCDamageApplier.apply(target, owner instanceof LivingEntity livingOwner ? livingOwner : this, ItemStack.EMPTY, hitDamage);
+        } else {
+            entity.hurt(source, (float) hitDamage);
         }
+
+        if (owner instanceof LivingEntity livingOwner) livingOwner.setLastHurtMob(entity);
         this.discard();
     }
 

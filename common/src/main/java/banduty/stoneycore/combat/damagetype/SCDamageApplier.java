@@ -7,13 +7,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 public class SCDamageApplier {
     public static void apply(LivingEntity target, Entity attacker, ItemStack stack, double damage) {
+        // Enchantments are applied by the caller (SCDamageCalculator#applyEnchantments) before armor resistances.
         if (attacker == null || !(attacker.level() instanceof ServerLevel serverLevel)) return;
-
-        damage = EnchantmentHelper.modifyDamage(serverLevel, stack, target, serverLevel.damageSources().generic(), (float) damage);
 
         if (stack.is(SCTags.Item.WEAPONS_IGNORES_ARMOR.getTag()) &&
                 target.getHealth() - damage > 0) {

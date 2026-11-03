@@ -4,11 +4,9 @@ import banduty.stoneycore.combat.damagetype.SCDamageApplier;
 import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.mixin.AbstractArrowAccessor;
-import banduty.stoneycore.combat.DeflectChanceHelper;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -16,7 +14,6 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class SCArrowEntity extends AbstractArrow {
@@ -89,6 +86,12 @@ public abstract class SCArrowEntity extends AbstractArrow {
         if (this.level().isClientSide()) return false;
 
         damage *= getDeltaMovement().length();
+
+        if (this.level() instanceof ServerLevel serverLevel) {
+            ItemStack weapon = stack != null && !stack.isEmpty() ? stack : this.getWeaponItem();
+            DamageSource source = serverLevel.damageSources().arrow(this, this.getOwner());
+            damage = SCDamageCalculator.applyEnchantments(serverLevel, weapon, target, source, damage);
+        }
 
         damage = SCDamageCalculator.applyArmor(target, damage, getDamageType());
         SCDamageApplier.apply(target, this, stack, damage);

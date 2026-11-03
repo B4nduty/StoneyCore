@@ -10,7 +10,10 @@ import banduty.stoneycore.data.SCTags;
 import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.stats.Stats;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -85,16 +88,10 @@ public abstract class PlayerMixin {
             index = 2
     )
     private float stoneycore$modifyDamage(float originalBaseDamage, Entity target) {
-        if (!(target instanceof LivingEntity livingTarget) || livingTarget.level().isClientSide()) return originalBaseDamage;
+        if (!stoneycore$usesSCMeleeDamage(target)) return originalBaseDamage;
 
+        LivingEntity livingTarget = (LivingEntity) target;
         ItemStack weaponStack = CombatSelect.getWeaponStack(playerEntity, playerEntity.getMainHandItem());
-
-        if (weaponStack == null || weaponStack.isEmpty() || weaponStack.is(Items.AIR)) {
-            return originalBaseDamage;
-        }
-        if (!WeaponDefinitionsStorage.isMelee(weaponStack)) {
-            return originalBaseDamage;
-        }
 
         double damage = EntityDamageUtil.onDamage(livingTarget, playerEntity, weaponStack);
 
@@ -103,5 +100,33 @@ public abstract class PlayerMixin {
         }
 
         return (float) Math.max(0.0, damage);
+    }
+
+    /**
+     * StoneyCore melee damage already has the weapon's enchantments applied (before armor resistances) in
+     * DamageResult, so skip vanilla's enchantment bonus for the main target to avoid counting it twice.
+     * Only the first call (main target) is wrapped; the sweep-attack call is left vanilla.
+     */
+    @WrapOperation(
+            method = "attack",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/entity/player/Player;getEnchantedDamage(Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/damagesource/DamageSource;)F",
+                    ordinal = 0
+            )
+    )
+    private float stoneycore$skipVanillaEnchantedDamage(Player instance, Entity target, float damage, DamageSource source, Operation<Float> original) {
+        if (stoneycore$usesSCMeleeDamage(target)) return damage;
+        return original.call(instance, target, damage, source);
+    }
+
+    @Unique
+    private boolean stoneycore$usesSCMeleeDamage(Entity target) {
+        if (!(target instanceof LivingEntity livingTarget) || livingTarget.level().isClientSide()) return false;
+
+        ItemStack weaponStack = CombatSelect.getWeaponStack(playerEntity, playerEntity.getMainHandItem());
+        if (weaponStack == null || weaponStack.isEmpty() || weaponStack.is(Items.AIR)) return false;
+
+        return WeaponDefinitionsStorage.isMelee(weaponStack);
     }
 }
