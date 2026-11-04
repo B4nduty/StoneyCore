@@ -1,5 +1,6 @@
 package banduty.stoneycore.definitions;
 
+import banduty.stoneycore.data.SCDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -12,11 +13,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WeaponDefinitionsStorage {
     protected static final Map<ResourceLocation, WeaponDefinitionData> DEFINITIONS = new ConcurrentHashMap<>();
 
+    /**
+     * The definition for this stack: the one named by its {@link SCDataComponents#WEAPON_DEFINITION} component if set
+     * and loaded, otherwise its item's. Prefer this over {@link #getData(Item)} whenever the stack is available.
+     */
     public static WeaponDefinitionData getData(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return getDefaultData();
         }
-        return getData(stack.getItem());
+        WeaponDefinitionData override = getOverride(stack);
+        return override != null ? override : getData(stack.getItem());
     }
 
     public static WeaponDefinitionData getData(Item item) {
@@ -24,9 +30,14 @@ public class WeaponDefinitionsStorage {
         return DEFINITIONS.getOrDefault(id, getDefaultData());
     }
 
+    private static WeaponDefinitionData getOverride(ItemStack stack) {
+        ResourceLocation id = stack.get(SCDataComponents.WEAPON_DEFINITION.get());
+        return id == null ? null : DEFINITIONS.get(id);
+    }
+
     public static boolean containsItem(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        return containsItem(stack.getItem());
+        return getOverride(stack) != null || containsItem(stack.getItem());
     }
 
     public static boolean containsItem(Item item) {
@@ -35,31 +46,40 @@ public class WeaponDefinitionsStorage {
 
     public static boolean isMelee(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        return isMelee(stack.getItem());
+        return isMelee(getData(stack));
     }
 
     public static boolean isRanged(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        return isRanged(stack.getItem());
+        return isRanged(getData(stack));
     }
 
     public static boolean isAmmo(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        return isAmmo(stack.getItem());
+        return isAmmo(getData(stack));
     }
 
     public static boolean isMelee(Item item) {
-        WeaponDefinitionData data = getData(item);
-        return data.melee() != null && data.usage().contains(WeaponDefinitionData.Usage.MELEE);
+        return isMelee(getData(item));
     }
 
     public static boolean isRanged(Item item) {
-        WeaponDefinitionData data = getData(item);
-        return data.ranged() != null && data.usage().contains(WeaponDefinitionData.Usage.RANGED);
+        return isRanged(getData(item));
     }
 
     public static boolean isAmmo(Item item) {
-        WeaponDefinitionData data = getData(item);
+        return isAmmo(getData(item));
+    }
+
+    private static boolean isMelee(WeaponDefinitionData data) {
+        return data.melee() != null && data.usage().contains(WeaponDefinitionData.Usage.MELEE);
+    }
+
+    private static boolean isRanged(WeaponDefinitionData data) {
+        return data.ranged() != null && data.usage().contains(WeaponDefinitionData.Usage.RANGED);
+    }
+
+    private static boolean isAmmo(WeaponDefinitionData data) {
         return data.ammo() != null && data.usage().contains(WeaponDefinitionData.Usage.AMMO);
     }
 

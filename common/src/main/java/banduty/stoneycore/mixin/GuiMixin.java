@@ -61,8 +61,7 @@ public class GuiMixin {
         }
 
         ItemStack mainHandStack = player.getMainHandItem();
-        Item item = mainHandStack.getItem();
-        if (!WeaponDefinitionsStorage.isMelee(item)) return;
+        if (!WeaponDefinitionsStorage.isMelee(mainHandStack)) return;
 
         Vec3 playerPos = player.position();
         double distance = client.crosshairPickEntity == null
@@ -70,20 +69,20 @@ public class GuiMixin {
                 : playerPos.distanceTo(client.crosshairPickEntity.position());
 
         SCDamageType damageType = SCDamageTypeResolver.determine(mainHandStack, player);
-        stoneyCore$calculateCrosshair(item, guiGraphics, distance, damageType);
+        stoneyCore$calculateCrosshair(mainHandStack, guiGraphics, distance, damageType);
 
         ci.cancel();
     }
 
     @Unique
-    private void stoneyCore$calculateCrosshair(Item item, GuiGraphics guiGraphics, double distance, SCDamageType damageType) {
+    private void stoneyCore$calculateCrosshair(ItemStack stack, GuiGraphics guiGraphics, double distance, SCDamageType damageType) {
         Minecraft client = Minecraft.getInstance();
         int centerX = client.getWindow().getGuiScaledWidth() / 2;
         int centerY = client.getWindow().getGuiScaledHeight() / 2;
 
-        double currentDamage = SCWeaponUtil.calculateDamage(item, distance, damageType);
+        double currentDamage = SCWeaponUtil.calculateDamage(stack, distance, damageType);
 
-        List<Double> damageValues = SCWeaponUtil.getSortedDamageValues(damageType, item);
+        List<Double> damageValues = SCWeaponUtil.getSortedDamageValues(damageType, stack);
 
         ResourceLocation texture;
         int color;

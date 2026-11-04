@@ -163,7 +163,7 @@ public abstract class ItemMixin {
 
     @Unique
     private void stoneyCore$handleWeaponUse(Level level, Player player, InteractionHand hand, ItemStack stack, CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
-        if (!level.isClientSide() && player.isShiftKeyDown() && SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, stack.getItem())) {
+        if (!level.isClientSide() && player.isShiftKeyDown() && SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, stack)) {
             stoneyCore$toggleBludgeoningMode(stack);
             cir.setReturnValue(InteractionResultHolder.success(stack));
             return;

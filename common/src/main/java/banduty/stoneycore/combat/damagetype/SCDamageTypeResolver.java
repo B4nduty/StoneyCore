@@ -6,36 +6,34 @@ import banduty.stoneycore.definitions.WeaponDefinitionData;
 import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
 import banduty.stoneycore.combat.weapon.SCWeaponUtil;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class SCDamageTypeResolver {
     public static SCDamageType determine(ItemStack stack, Player player) {
-        Item item = stack.getItem();
-
         boolean isBludgeoningNBT = Boolean.TRUE.equals(stack.get(SCDataComponents.BLUDGEONING.get()));
-        boolean isPiercingCombo = isPiercingAnimation(player, item);
+        boolean isPiercingCombo = isPiercingAnimation(player, stack);
 
         boolean bludgeoningToPiercing =
-                !SCWeaponUtil.hasDamageType(SCDamageType.SLASHING, item) &&
-                        SCWeaponUtil.hasDamageType(SCDamageType.PIERCING, item) &&
-                        SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, item);
+                !SCWeaponUtil.hasDamageType(SCDamageType.SLASHING, stack) &&
+                        SCWeaponUtil.hasDamageType(SCDamageType.PIERCING, stack) &&
+                        SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, stack);
 
-        if (isBludgeoningNBT || SCWeaponUtil.isOnlyDamageType(SCDamageType.BLUDGEONING, item)) {
+        if (isBludgeoningNBT || SCWeaponUtil.isOnlyDamageType(SCDamageType.BLUDGEONING, stack)) {
             return SCDamageType.BLUDGEONING;
         }
 
         if (isPiercingCombo || bludgeoningToPiercing ||
-                SCWeaponUtil.isOnlyDamageType(SCDamageType.PIERCING, item)) {
+                SCWeaponUtil.isOnlyDamageType(SCDamageType.PIERCING, stack)) {
             return SCDamageType.PIERCING;
         }
 
         return SCDamageType.SLASHING;
     }
 
-    private static boolean isPiercingAnimation(Player player, Item item) {
+    private static boolean isPiercingAnimation(Player player, ItemStack stack) {
         int comboCount = CombatSelect.getComboCount(player);
-        WeaponDefinitionData data = WeaponDefinitionsStorage.getData(item);
+        WeaponDefinitionData data = WeaponDefinitionsStorage.getData(stack);
+        if (data.melee() == null) return false;
 
         int[] piercingAnimations = data.melee().piercingAnimation();
         int animationTotal = data.melee().animation();

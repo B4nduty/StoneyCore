@@ -356,7 +356,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
 
             ItemStack stack = player.getMainHandItem();
 
-            if (WeaponDefinitionsStorage.isMelee(stack.getItem())
+            if (WeaponDefinitionsStorage.isMelee(stack)
                     && !player.hasEffect(MobEffects.WEAKNESS)) {
 
                 Services.CONFIG.sendDamageIndicator(

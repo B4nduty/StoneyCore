@@ -132,7 +132,7 @@ public abstract class DefinitionsProvider implements DataProvider {
         @Override
         public CompletableFuture<?> run(CachedOutput writer) {
             Map<ResourceLocation, WeaponDefinitionData> entries = new TreeMap<>();
-            generateDefinitions((item, definition) -> entries.put(BuiltInRegistries.ITEM.getKey(item), definition));
+            generateDefinitions(entries::put);
             List<CompletableFuture<?>> futures = new ArrayList<>();
             for (Map.Entry<ResourceLocation, WeaponDefinitionData> entry : entries.entrySet()) {
                 Path path = output.getOutputFolder().resolve("data/" + entry.getKey().getNamespace() + "/definitions/weapon/" + entry.getKey().getPath() + ".json");
@@ -147,7 +147,15 @@ public abstract class DefinitionsProvider implements DataProvider {
 
         @FunctionalInterface
         public interface WeaponConsumer {
-            void accept(Item item, WeaponDefinitionData definition);
+            /**
+             * Registers a definition under any id. Ids that don't match an item can be applied to individual stacks
+             * through the {@code stoneycore:weapon_definition} data component.
+             */
+            void accept(ResourceLocation id, WeaponDefinitionData definition);
+
+            default void accept(Item item, WeaponDefinitionData definition) {
+                accept(BuiltInRegistries.ITEM.getKey(item), definition);
+            }
 
             default void accept(WeaponDefinitionData definition, Item... items) {
                 for (Item item : items) {

@@ -17,6 +17,13 @@ public interface SCDataComponents {
     Supplier<DataComponentType<ResourceLocation>> LOADED_ARROW = register("loaded_arrow",
             builder -> builder.persistent(ResourceLocation.CODEC).networkSynchronized(ResourceLocation.STREAM_CODEC));
 
+    /**
+     * Overrides which weapon definition ({@code data/<ns>/definitions/weapon/<path>.json}) a stack uses instead of
+     * its item's own, e.g. to give one item different stats per stance. The definition doesn't need a matching item.
+     */
+    Supplier<DataComponentType<ResourceLocation>> WEAPON_DEFINITION = register("weapon_definition",
+            builder -> builder.persistent(ResourceLocation.CODEC).networkSynchronized(ResourceLocation.STREAM_CODEC));
+
     Supplier<DataComponentType<Long>> IGNITE_TIME = register("ignite_time",
             builder -> builder.persistent(Codec.LONG).networkSynchronized(ByteBufCodecs.VAR_LONG));
 

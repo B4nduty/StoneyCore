@@ -29,7 +29,7 @@ public class ModifiersUtil {
                 WeaponDefinitionsStorage.isMelee(itemStack);
 
         if (shouldHaveModifier) {
-            double extraReach = SCWeaponUtil.getMaxDistance(itemStack.getItem());
+            double extraReach = SCWeaponUtil.getMaxDistance(itemStack);
 
             updateModifier(attackRangeAttribute, ATTACK_RANGE_MODIFIER_ID, extraReach);
             updateModifier(rangeAttribute, RANGE_MODIFIER_ID, extraReach);

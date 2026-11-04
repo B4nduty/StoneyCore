@@ -15,14 +15,14 @@ public record DamageResult(double damage, SCDamageType damageType) {
 
         SCDamageType damageType = SCWeaponUtil.calculateDamageType(stack, comboCount);
 
-        double maxDistance = SCWeaponUtil.getMaxDistance(stack.getItem());
+        double maxDistance = SCWeaponUtil.getMaxDistance(stack);
         double actualDistance = attacker.position().distanceTo(target.position());
 
         if (actualDistance > maxDistance + 1) {
             return new DamageResult(0.0f, damageType);
         }
 
-        double baseDamage = SCWeaponUtil.calculateDamage(stack.getItem(), actualDistance, damageType);
+        double baseDamage = SCWeaponUtil.calculateDamage(stack, actualDistance, damageType);
         if (stack.is(SCTags.Item.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
             baseDamage *= 0.25f;
         }

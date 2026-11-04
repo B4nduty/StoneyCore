@@ -9,6 +9,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,12 +35,12 @@ public abstract class MeleeAttackGoalMixin {
 
     @Inject(method = "canPerformAttack", at = @At("HEAD"), cancellable = true)
     private void modifyAttackDistanceThreshold(LivingEntity enemy, CallbackInfoReturnable<Boolean> cir) {
-        Item item = this.mob.getMainHandItem().getItem();
+        ItemStack item = this.mob.getMainHandItem();
         if (!WeaponDefinitionsStorage.isMelee(item)) return;
         if (this.mob instanceof Zombie zombie) {
             // Choose reach distance with more chance on max damage distance
             if (!stoneycore$hasAttackReach) {
-                SCDamageType damageType = SCWeaponUtil.calculateDamageType(this.mob.getMainHandItem(), 0);
+                SCDamageType damageType = SCWeaponUtil.calculateDamageType(item, 0);
                 if (SCWeaponUtil.hasDamageType(SCDamageType.PIERCING, item)) damageType = SCDamageType.PIERCING;
                 else if (SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, item)) damageType = SCDamageType.BLUDGEONING;
 

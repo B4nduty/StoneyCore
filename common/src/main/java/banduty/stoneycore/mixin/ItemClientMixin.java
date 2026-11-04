@@ -28,11 +28,10 @@ import java.util.List;
 public class ItemClientMixin {
     @Inject(method = "appendHoverText", at = @At("HEAD"))
     public void stoneycore$appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag, CallbackInfo ci) {
-        Item item = stack.getItem();
         if (WeaponDefinitionsStorage.isMelee(stack)) {
-            boolean hasSlashing = SCWeaponUtil.hasDamageType(SCDamageType.SLASHING, item);
-            boolean hasPiercing = SCWeaponUtil.hasDamageType(SCDamageType.PIERCING, item);
-            boolean hasBludgeoning = SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, item);
+            boolean hasSlashing = SCWeaponUtil.hasDamageType(SCDamageType.SLASHING, stack);
+            boolean hasPiercing = SCWeaponUtil.hasDamageType(SCDamageType.PIERCING, stack);
+            boolean hasBludgeoning = SCWeaponUtil.hasDamageType(SCDamageType.BLUDGEONING, stack);
 
             if (hasSlashing && hasBludgeoning) {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.shift-right_click-bludgeoning"));
@@ -46,9 +45,9 @@ public class ItemClientMixin {
                 tooltip.add(Component.translatable("component.tooltip.stoneycore.right_click-replant"));
             }
 
-            double slashing = SCWeaponUtil.getMaxDamage(SCDamageType.SLASHING, item);
-            double bludgeoning = SCWeaponUtil.getMaxDamage(SCDamageType.BLUDGEONING, item);
-            double piercing = SCWeaponUtil.getMaxDamage(SCDamageType.PIERCING, item);
+            double slashing = SCWeaponUtil.getMaxDamage(SCDamageType.SLASHING, stack);
+            double bludgeoning = SCWeaponUtil.getMaxDamage(SCDamageType.BLUDGEONING, stack);
+            double piercing = SCWeaponUtil.getMaxDamage(SCDamageType.PIERCING, stack);
 
             if (stack.is(SCTags.Item.BROKEN_WEAPONS.getTag()) && stack.getDamageValue() >= stack.getMaxDamage() * 0.9f) {
                 slashing *= 0.25f;
