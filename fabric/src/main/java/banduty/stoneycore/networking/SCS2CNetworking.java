@@ -10,7 +10,6 @@ public class SCS2CNetworking {
         ClientPlayNetworking.registerGlobalReceiver(SyncDefinitionsPacket.ID, SyncDefinitionsPacket::handle);
         ClientPlayNetworking.registerGlobalReceiver(LandTitleS2CPacket.ID, LandTitleS2CPacket::handle);
         ClientPlayNetworking.registerGlobalReceiver(OutlineClaimS2CPacket.ID, OutlineClaimS2CPacket::handle);
-        ClientPlayNetworking.registerGlobalReceiver(SiegeYawS2CPacket.ID, SiegeYawS2CPacket::handle);
         ClientPlayNetworking.registerGlobalReceiver(DamageIndicatorS2CPacket.ID, DamageIndicatorS2CPacket::handle);
         ClientPlayNetworking.registerGlobalReceiver(LandClientDataS2CPacket.ID, LandClientDataS2CPacket::handle);
     }

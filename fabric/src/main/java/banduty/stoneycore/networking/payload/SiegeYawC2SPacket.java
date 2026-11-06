@@ -1,14 +1,12 @@
 package banduty.stoneycore.networking.payload;
 
-import banduty.stoneycore.entity.siege.AbstractSiegeEntity;
+import banduty.stoneycore.entity.siege.SiegeMovement;
 import banduty.stoneycore.networking.SCPayloads;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.animal.horse.Horse;
 
 public record SiegeYawC2SPacket(float yaw, float pitch) implements CustomPacketPayload {
     public static final Type<SiegeYawC2SPacket> ID = new Type<>(SCPayloads.SIEGE_YAW_PITCH_C2S_ID);
@@ -18,29 +16,10 @@ public record SiegeYawC2SPacket(float yaw, float pitch) implements CustomPacketP
             SiegeYawC2SPacket::new
     );
 
-    @Override public Type<? extends CustomPacketPayload> type() { return ID; }
+    @Override
+    public Type<? extends CustomPacketPayload> type() { return ID; }
 
     public void handle(ServerPlayNetworking.Context context) {
-        ServerPlayer player = context.player();
-        context.server().execute(() -> {
-            if (player.getVehicle() instanceof AbstractSiegeEntity siege) {
-                applyYawPitch(siege, yaw, pitch);
-            } else if (player.getVehicle() instanceof Horse horse && horse.getVehicle() instanceof AbstractSiegeEntity siege) {
-                applyYawPitch(siege, yaw, 0);
-            }
-        });
-    }
-
-    private void applyYawPitch(AbstractSiegeEntity siege, float yaw, float pitch) {
-        siege.setTrackedYaw(yaw);
-        siege.setYRot(yaw);
-        siege.setYHeadRot(yaw);
-        siege.setYBodyRot(yaw);
-        siege.lastRiderYaw = yaw;
-        if (pitch != 0) {
-            siege.setTrackedPitch(pitch);
-            siege.setXRot(pitch);
-            siege.lastRiderPitch = pitch;
-        }
+        context.server().execute(() -> SiegeMovement.applyClientAim(context.player(), yaw, pitch));
     }
 }

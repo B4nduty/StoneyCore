@@ -1,6 +1,7 @@
 package banduty.stoneycore.networking.payload;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.entity.siege.SiegeMovement;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -19,29 +20,12 @@ public record SiegeYawC2SPacket(float yaw, float pitch) implements CustomPacketP
             SiegeYawC2SPacket::new
     );
 
-    @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    @Override
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public void handle(IPayloadContext context) {
         if (context.player() instanceof ServerPlayer player) {
-            if (player.getVehicle() instanceof banduty.stoneycore.entity.siege.AbstractSiegeEntity siege) {
-                applyYawPitch(siege, this.yaw, this.pitch);
-            } else if (player.getVehicle() instanceof net.minecraft.world.entity.animal.horse.Horse horse &&
-                    horse.getVehicle() instanceof banduty.stoneycore.entity.siege.AbstractSiegeEntity siege) {
-                applyYawPitch(siege, this.yaw, 0);
-            }
-        }
-    }
-
-    private void applyYawPitch(banduty.stoneycore.entity.siege.AbstractSiegeEntity siege, float yaw, float pitch) {
-        siege.setTrackedYaw(yaw);
-        siege.setYRot(yaw);
-        siege.setYHeadRot(yaw);
-        siege.setYBodyRot(yaw);
-        siege.lastRiderYaw = yaw;
-        if (pitch != 0) {
-            siege.setTrackedPitch(pitch);
-            siege.setXRot(pitch);
-            siege.lastRiderPitch = pitch;
+            SiegeMovement.applyClientAim(player, yaw, pitch);
         }
     }
 }

@@ -1,45 +1,44 @@
 package banduty.stoneycore.entity.siege;
 
-import banduty.stoneycore.entity.siege.RotationAndMovementUtil;
-import banduty.stoneycore.entity.siege.SiegeProperties;
-import banduty.stoneycore.items.custom.SiegeSpawnerItem;
-import banduty.stoneycore.items.custom.SmithingHammer;
-import banduty.stoneycore.lands.Land;
-import banduty.stoneycore.lands.LandState;
-import banduty.stoneycore.platform.Services;
-import banduty.stoneycore.siege.SiegeManager;
-import banduty.stoneycore.definitions.DamageSourceConfig;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.definitions.SiegeEngineDefinitionData;
 import banduty.stoneycore.definitions.SiegeEngineDefinitionsStorage;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
+import banduty.stoneycore.entity.projectile.AbstractSiegeProjectile;
+import banduty.stoneycore.items.custom.SiegeSpawnerItem;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
+/**
+ * Base of every siege engine. It owns: synced state, owner, mounting, movement/facing, sounds, damage rules.
+ * Subclasses only describe WHAT the engine is ({@link #getProperties()}, seats) and WHAT it does
+ * ({@link #operate}); loading is provided by {@link StagedLoadingSiegeEntity} / {@link AmmoLoadingSiegeEntity}.
+ */
 public abstract class AbstractSiegeEntity extends LivingEntity {
+
+    public static final float MIN_PITCH = -20f;
+    public static final float MAX_PITCH = 10f;
 
     protected static final EntityDataAccessor<Float> TRACKED_YAW =
             SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.FLOAT);
@@ -47,30 +46,64 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
             SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.FLOAT);
     protected static final EntityDataAccessor<Integer> COOLDOWN =
             SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.INT);
-    protected static final EntityDataAccessor<Integer> LOAD_STAGE =
-            SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.INT);
-    protected static final EntityDataAccessor<String> AMMO_LOADED =
-            SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.STRING);
-    protected static final EntityDataAccessor<Integer> RELOAD_TIME =
-            SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.INT);
     protected static final EntityDataAccessor<Boolean> IS_PICKED =
-            SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.BOOLEAN);
-    protected static final EntityDataAccessor<Boolean> ATTACK_HAPPENED =
             SynchedEntityData.defineId(AbstractSiegeEntity.class, EntityDataSerializers.BOOLEAN);
 
     public float lastRiderYaw;
     public float lastRiderPitch;
     public float wheelRotation;
-    protected int moveTick;
-    protected boolean reloadSoundPlaying = false;
-    protected final Random random = new Random();
-    protected final Set<UUID> playersNotified = new HashSet<>();
-    protected Entity owner;
 
-    public AbstractSiegeEntity(EntityType<? extends LivingEntity> type, Level level) {
+    @Nullable
+    private UUID ownerUUID;
+    @Nullable
+    private SiegeSounds sounds;
+
+    protected AbstractSiegeEntity(EntityType<? extends LivingEntity> type, Level level) {
         super(type, level);
-        setNoGravity(false);
     }
+
+    // ------------------------------------------------------------------ definition
+
+    public abstract SiegeProperties getProperties();
+
+    /** Seat position in local space (x = right, y = up, z = backward). */
+    public abstract Vec3 getPassengerOffset(Entity entity);
+
+    public abstract Vec3 getPlayerPOV();
+
+    /** What a player does with this engine (load, fire, rotate...). Mounting is handled before this is called. */
+    protected abstract InteractionResult operate(Player player, ItemStack stack, ServerLevel level);
+
+    /** Called every server tick after movement, timers and sounds. */
+    protected void onSiegeTick(ServerLevel level) {}
+
+    /** True while the engine's "reload" sound loop should be playing. */
+    protected boolean isReloading() {
+        return false;
+    }
+
+    protected SCDamageType getDamageType() {
+        return SCDamageType.BLUDGEONING;
+    }
+
+    // ------------------------------------------------------------------ datapack stats
+
+    protected SiegeEngineDefinitionData stats() {
+        return SiegeEngineDefinitionsStorage.getData(this.getType());
+    }
+
+    public double getVelocity(Entity passenger) {
+        SiegeEngineDefinitionData data = stats();
+        return passenger instanceof Horse ? data.horseSpeed() : data.playerSpeed();
+    }
+
+    public double getKnockback() { return stats().knockback(); }
+    public double getBaseDamage() { return stats().baseDamage(); }
+    public int getBaseReload() { return stats().baseReload(); }
+    public float getProjectileSpeed() { return stats().projectileSpeed(); }
+    public float getAccuracyMultiplier() { return stats().accuracyMultiplier(); }
+
+    // ------------------------------------------------------------------ synced state
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
@@ -78,416 +111,225 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         builder.define(TRACKED_YAW, 0.0f);
         builder.define(TRACKED_PITCH, 0.0f);
         builder.define(COOLDOWN, 0);
-        builder.define(LOAD_STAGE, 0);
-        builder.define(AMMO_LOADED, "");
-        builder.define(RELOAD_TIME, 0);
         builder.define(IS_PICKED, false);
-        builder.define(ATTACK_HAPPENED, true);
     }
 
-    public void setTrackedYaw(float yaw) {
-        this.entityData.set(TRACKED_YAW, normalizeYaw(yaw));
+    public void setTrackedYaw(float yaw) { this.entityData.set(TRACKED_YAW, Mth.wrapDegrees(yaw)); }
+    public float getTrackedYaw() { return this.entityData.get(TRACKED_YAW); }
+
+    public void setTrackedPitch(float pitch) { this.entityData.set(TRACKED_PITCH, Mth.clamp(pitch, MIN_PITCH, MAX_PITCH)); }
+    public float getTrackedPitch() { return this.entityData.get(TRACKED_PITCH); }
+
+    public void setCooldown(int ticks) { this.entityData.set(COOLDOWN, Math.max(0, ticks)); }
+    public int getCooldown() { return this.entityData.get(COOLDOWN); }
+
+    /** Starts the engine's standard post-fire lock. */
+    protected void startCooldown() { setCooldown(getProperties().cooldownTicks()); }
+
+    public void setPicked(boolean picked) { this.entityData.set(IS_PICKED, picked); }
+    public boolean isPicked() { return this.entityData.get(IS_PICKED); }
+
+    public float getWheelRotation() { return wheelRotation; }
+
+    // ------------------------------------------------------------------ owner (persistent, UUID based)
+
+    public void setOwner(@Nullable Entity owner) {
+        this.ownerUUID = owner == null ? null : owner.getUUID();
     }
 
-    public float getTrackedYaw() {
-        return this.entityData.get(TRACKED_YAW);
+    @Nullable
+    public UUID getOwnerUUID() {
+        return ownerUUID;
     }
 
-    public void setTrackedPitch(float pitch) {
-        this.entityData.set(TRACKED_PITCH, Math.min(10, Math.max(pitch, -20)));
+    /** The player/mob currently responsible for this engine, or null if unknown or not loaded. */
+    @Nullable
+    public LivingEntity getOwner() {
+        if (ownerUUID == null || !(level() instanceof ServerLevel serverLevel)) return null;
+        return serverLevel.getEntity(ownerUUID) instanceof LivingEntity living ? living : null;
     }
 
-    public float getTrackedPitch() {
-        return this.entityData.get(TRACKED_PITCH);
+    public Entity getOwnerOrSelf() {
+        LivingEntity owner = getOwner();
+        return owner != null ? owner : this;
     }
 
-    public void setCooldown(int cooldown) {
-        this.entityData.set(COOLDOWN, Math.max(0, cooldown));
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        if (ownerUUID != null) tag.putUUID("SiegeOwner", ownerUUID);
     }
 
-    public int getCooldown() {
-        return this.entityData.get(COOLDOWN);
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        ownerUUID = tag.hasUUID("SiegeOwner") ? tag.getUUID("SiegeOwner") : null;
     }
 
-    public void setLoadStage(int stage) {
-        this.entityData.set(LOAD_STAGE, Math.max(0, stage));
+    // ------------------------------------------------------------------ facing
+
+    /** Single authority for horizontal facing: entity rotation and the synced copy always agree. */
+    public void setFacing(float yaw) {
+        setYRot(yaw);
+        setYHeadRot(yaw);
+        setYBodyRot(yaw);
+        lastRiderYaw = yaw;
+        entityData.set(TRACKED_YAW, Mth.wrapDegrees(yaw));
     }
 
-    public int getLoadStage() {
-        return this.entityData.get(LOAD_STAGE);
+    public void setAimPitch(float pitch) {
+        float clamped = Mth.clamp(pitch, MIN_PITCH, MAX_PITCH);
+        setXRot(clamped);
+        lastRiderPitch = clamped;
+        entityData.set(TRACKED_PITCH, clamped);
     }
 
-    public void setAmmoLoaded(String ammo) {
-        this.entityData.set(AMMO_LOADED, ammo == null ? "" : ammo);
-    }
-
-    public String getAmmoLoaded() {
-        return this.entityData.get(AMMO_LOADED);
-    }
-
-    public boolean hasAmmoLoaded() {
-        return !getAmmoLoaded().isEmpty();
-    }
-
-    public void setReloadTime(int time) {
-        this.entityData.set(RELOAD_TIME, Math.max(0, time));
-    }
-
-    public int getReloadTime() {
-        return this.entityData.get(RELOAD_TIME);
-    }
-
-    public boolean isReloadComplete() {
-        return getReloadTime() <= 0;
-    }
-
-    public void setPicked(boolean picked) {
-        this.entityData.set(IS_PICKED, picked);
-    }
-
-    public boolean isPicked() {
-        return this.entityData.get(IS_PICKED);
-    }
-
-    public void setAttackHappened(boolean happened) {
-        this.entityData.set(ATTACK_HAPPENED, happened);
-    }
-
-    public boolean hasAttackHappened() {
-        return this.entityData.get(ATTACK_HAPPENED);
-    }
-
-    public Entity getOwner() {
-        return owner;
-    }
-
-    public void setOwner(Entity owner) {
-        this.owner = owner;
-    }
-
-    public float getWheelRotation() {
-        return wheelRotation;
-    }
-
-    public abstract SiegeProperties getProperties();
-
-    public abstract Vec3 getPassengerOffset(Entity entity);
-
-    public abstract Vec3 getPlayerPOV();
-
-    public boolean canAddPassenger(Entity entity) {
-        return getPassengers().isEmpty() && (entity instanceof Player || entity instanceof Horse);
-    }
-
-    public void onSiegeTick(ServerLevel serverLevel) {
-    }
-
-    public void onAttack(ServerLevel serverLevel) {
-    }
-
-    public void onReloadStart(ServerLevel serverLevel) {
-    }
-
-    public void onLoadComplete(ServerLevel serverLevel) {
-    }
-
-    public SoundEvent getMoveSound() {
-        return getProperties().moveSound();
-    }
-
-    public SoundEvent getReloadSound() {
-        return getProperties().reloadSound();
-    }
-
-    public SoundEvent getShootSound() {
-        return getProperties().shootSound();
-    }
-
-    public SoundEvent getAttackSound() {
-        return getProperties().attackSound();
-    }
-
-    public abstract void triggerAnimation(String animationName);
-
-    public abstract void stopAnimation(String animationName);
+    // ------------------------------------------------------------------ tick
 
     @Override
     public void tick() {
         super.tick();
 
-        RotationAndMovementUtil.updateWheelRotation(this);
+        // LivingEntity#tick lets the body rotation drift towards the movement direction; undo that.
+        setFacing(getYRot());
+        setAimPitch(getXRot());
+        SiegeMovement.updateWheelRotation(this);
 
-        if (!(this.level() instanceof ServerLevel serverLevel)) return;
+        if (!(level() instanceof ServerLevel serverLevel)) return;
 
-        handleSiegeInitiation(serverLevel);
-        RotationAndMovementUtil.updateSiegeVelocity(this);
-        Services.ABSTRACT_SIEGE_ENTITY.updateSiegeNetworkData(serverLevel, this);
+        SiegeMovement.tickMovement(this);
 
-        updateEntityRotation();
-        updateTimers();
-        handleReloadSound(serverLevel);
-        handleMovementSounds(serverLevel);
-
-        onSiegeTick(serverLevel);
-        setPicked(getFirstPassenger() != null);
-    }
-
-    private void handleSiegeInitiation(ServerLevel serverLevel) {
-        if (getFirstPassenger() != null && SiegeManager.getPlayerSiege(serverLevel, getOwnerUUID()).isEmpty()) {
-            Optional<Land> currentLand = LandState.get(serverLevel).getLandAt(this.getOnPos());
-            if (currentLand.isPresent() && !currentLand.get().getOwnerUUID().equals(getOwnerUUID())) {
-                SiegeManager.startSiege(serverLevel, getOwnerUUID(), currentLand.get().getOwnerUUID());
-            }
-        }
-    }
-
-    private void updateEntityRotation() {
-        this.setYHeadRot(this.getTrackedYaw());
-        this.setTrackedYaw(this.getYRot());
-        this.setYRot(this.getYRot());
-        this.setYHeadRot(this.getYRot());
-        this.setYBodyRot(this.getYRot());
-        this.lastRiderYaw = this.getYRot();
-
-        this.setTrackedPitch(this.getXRot());
-        this.setXRot(this.getXRot());
-        this.lastRiderPitch = this.getXRot();
-
-        this.wheelRotation = this.getWheelRotation();
-        this.move(MoverType.SELF, this.getDeltaMovement());
-    }
-
-    private void updateTimers() {
         if (getCooldown() > 0) setCooldown(getCooldown() - 1);
-        if (getReloadTime() > 0) setReloadTime(getReloadTime() - 1);
-    }
+        tickTimers();
 
-    private void handleReloadSound(ServerLevel serverLevel) {
-        if (getReloadTime() > 0) {
-            playReloadSound(serverLevel);
-        } else {
-            stopReloadSound(serverLevel);
+        Vec3 velocity = getDeltaMovement();
+        sounds().tick(serverLevel, velocity.x != 0 || velocity.z != 0, isReloading());
+
+        Player rider = SiegeMovement.getRider(this);
+        if (rider != null && tickCount % 20 == 0) {
+            SiegeTrigger.tryStart(serverLevel, rider.getUUID(), getOnPos());
         }
+
+        setPicked(!getPassengers().isEmpty());
+        onSiegeTick(serverLevel);
     }
 
-    protected void handleMovementSounds(ServerLevel serverLevel) {
-        boolean isMoving = this.getDeltaMovement().x != 0 || this.getDeltaMovement().z != 0;
-
-        if (isMoving && isAlive()) {
-            if (this.moveTick >= getProperties().moveSoundDelay() || this.moveTick == 0) {
-                playSoundToNearbyPlayers(serverLevel, getMoveSound(), getProperties().moveSoundRange(), 1.0f);
-                if (this.moveTick != 0) this.moveTick = 0;
-            }
-            moveTick++;
-        } else if (this.moveTick != 0 || !isAlive()) {
-            this.moveTick = 0;
-            stopSoundForNearbyPlayers(serverLevel, getMoveSound());
-        }
-    }
-
-    protected void playSoundToNearbyPlayers(ServerLevel serverLevel, SoundEvent sound, double maxDistance, float baseVolume) {
-        serverLevel.players().forEach(p -> {
-            double distance = p.position().distanceTo(this.position());
-            if (distance <= maxDistance) {
-                float volume = (float) (baseVolume * (1.0 - distance / maxDistance));
-                if (volume > 0f) {
-                    p.playNotifySound(sound, SoundSource.AMBIENT, volume,
-                            random.nextFloat(0.75f, 1.25f));
-                }
-            }
-        });
-    }
-
-    protected void stopSoundForNearbyPlayers(ServerLevel serverLevel, SoundEvent sound) {
-        serverLevel.players().forEach(p -> {
-            p.connection.send(new ClientboundStopSoundPacket(sound.getLocation(), SoundSource.AMBIENT));
-        });
-    }
-
-    protected void playReloadSound(ServerLevel serverLevel) {
-        if (reloadSoundPlaying) return;
-
-        reloadSoundPlaying = true;
-
-        playSoundToNearbyPlayers(
-                serverLevel,
-                getReloadSound(),
-                getProperties().reloadSoundRange(),
-                1.0f
-        );
-    }
-
-    protected void stopReloadSound(ServerLevel serverLevel) {
-        if (!reloadSoundPlaying) return;
-
-        reloadSoundPlaying = false;
-
-        stopSoundForNearbyPlayers(
-                serverLevel,
-                getReloadSound()
-        );
-    }
-
-    protected void playShootSound(ServerLevel serverLevel) {
-        playSoundToNearbyPlayers(serverLevel, getShootSound(), getProperties().shootSoundRange(), 1.0f);
-    }
-
-    protected void playAttackSound(ServerLevel serverLevel) {
-        playSoundToNearbyPlayers(serverLevel, getAttackSound(), getProperties().attackSoundRange(), 1.0f);
-    }
-
-    private UUID getOwnerUUID() {
-        if (getFirstPassenger() instanceof Player player) return player.getUUID();
-        if (getFirstPassenger() instanceof TamableAnimal tameable &&
-                tameable.getFirstPassenger() instanceof Player player) return player.getUUID();
-        return null;
-    }
-
-    private float normalizeYaw(float yaw) {
-        yaw %= 360.0f;
-        if (yaw >= 180.0f) yaw -= 360.0f;
-        if (yaw < -180.0f) yaw += 360.0f;
-        return yaw;
-    }
+    /** Extra per-tick timers (reload countdown etc). */
+    protected void tickTimers() {}
 
     @Override
-    protected void removePassenger(Entity passenger) {
-        if (passenger.level() instanceof ServerLevel) {
-            float yaw = getTrackedYaw();
-            this.setYRot(yaw);
-            this.setYHeadRot(yaw);
-            this.setYBodyRot(yaw);
-            this.lastRiderYaw = yaw;
-
-            float pitch = getTrackedPitch();
-            this.setXRot(pitch);
-            this.lastRiderPitch = pitch;
-        }
-        super.removePassenger(passenger);
+    public void remove(RemovalReason reason) {
+        if (level() instanceof ServerLevel serverLevel) sounds().stopAll(serverLevel);
+        super.remove(reason);
     }
 
-    @Override
-    protected void positionRider(Entity entity, MoveFunction moveFunction) {
-        RotationAndMovementUtil.updatePassengerPosition(this, entity, moveFunction);
+    // ------------------------------------------------------------------ sounds / animations
+
+    protected SiegeSounds sounds() {
+        if (sounds == null) sounds = new SiegeSounds(this);
+        return sounds;
     }
+
+    protected void playShootSound(ServerLevel level) { sounds().playShoot(level); }
+
+    protected void playAttackSound(ServerLevel level) { sounds().playAttack(level); }
+
+    public void playAnimation(SiegeAnimation animation) {
+        if (this instanceof SiegeAnimatable animatable) animatable.triggerSiegeAnimation(animation);
+    }
+
+    // ------------------------------------------------------------------ aiming / projectiles
+
+    /** Random aim error in degrees, scaled by the datapack accuracy. */
+    protected float spread() {
+        return (random.nextFloat() - 0.5f) * 4 * getAccuracyMultiplier();
+    }
+
+    protected Vec3 aimDirection(float yawOffset) {
+        return SiegeMovement.direction(getYRot() + yawOffset + spread(), getXRot() + spread());
+    }
+
+    protected Vec3 flatAimDirection() {
+        return SiegeMovement.direction(getYRot() + spread(), 0);
+    }
+
+    protected Vec3 muzzle(float yawDegrees, double forward, double height) {
+        double yaw = Math.toRadians(yawDegrees);
+        return new Vec3(
+                getX() - Math.sin(yaw) * forward,
+                getY() + height - Math.sin(Math.toRadians(getXRot())),
+                getZ() + Math.cos(yaw) * forward);
+    }
+
+    /** Applies the standard engine stats to a projectile. The caller adds it to the level. */
+    protected void configure(AbstractSiegeProjectile projectile, Vec3 pos, Vec3 direction) {
+        projectile.setPos(pos);
+        projectile.setDeltaMovement(direction.scale(getProjectileSpeed() / 20.0));
+        projectile.setBaseDamage(getBaseDamage());
+        projectile.setDamageType(getDamageType());
+    }
+
+    // ------------------------------------------------------------------ damage
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
         Entity attacker = source.getEntity();
-        SiegeEngineDefinitionData siegeData = SiegeEngineDefinitionsStorage.getData(this.getType());
-        DamageSourceConfig damageConfig = siegeData.damageConfig();
-
         if (attacker == null || !(attacker.level() instanceof ServerLevel serverLevel)) {
             return super.hurt(source, amount);
         }
 
-        if (handleRepair(attacker, serverLevel)) return false;
-
-        if (attacker instanceof Player player && player.isCreative()) {
-            this.discard();
-            return true;
+        if (attacker instanceof Player player) {
+            if (SiegeDamageRules.isDisabled(serverLevel, player)) return false;
+            if (SiegeDamageRules.tryRepair(this, player, serverLevel)) return false;
+            if (player.isCreative()) {
+                this.discard();
+                return true;
+            }
         }
 
-        if (isDamageAllowed(attacker, source, damageConfig)) {
+        if (SiegeDamageRules.isAllowed(attacker, source, stats().damageConfig())) {
             return super.hurt(source, amount);
         }
-
         return false;
     }
 
-    private boolean handleRepair(Entity attacker, ServerLevel serverLevel) {
-        if (!(attacker instanceof Player player)) return false;
-
-        UUID playerId = player.getUUID();
-        Optional<SiegeManager.Siege> siegeOpt = SiegeManager.getPlayerSiege(serverLevel, playerId);
-        if (siegeOpt.isPresent() && siegeOpt.get().isDisabled(playerId)) return true;
-
-        if (player.getMainHandItem().getItem() instanceof SmithingHammer &&
-                getCooldown() == 0 && this.getHealth() < this.getMaxHealth()) {
-
-            this.setHealth(player.isCreative() ? this.getMaxHealth() :
-                    Math.min(this.getMaxHealth(), this.getHealth() + 1F));
-
-            if (!player.isCreative()) {
-                player.getMainHandItem().hurtAndBreak(1, serverLevel, (ServerPlayer) player, item -> {
-                    player.onEquippedItemBroken(item, EquipmentSlot.MAINHAND);
-                });
-                if (player.getMainHandItem().getDamageValue() >= player.getMainHandItem().getMaxDamage()) {
-                    player.getMainHandItem().setCount(0);
-                }
-            }
-
-            serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK,
-                    this.getX(), this.getY() + 1.0, this.getZ(),
-                    5, 0.3, 0.5, 0.3, 0.1);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isDamageAllowed(Entity attacker, DamageSource source, DamageSourceConfig damageConfig) {
-        String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(attacker.getType()).toString();
-        if (damageConfig.canEntityDamage(entityId)) return true;
-
-        if (attacker instanceof AbstractArrow && damageConfig.canDamageTypeDamage("projectile")) return true;
-
-        if ((source.is(DamageTypes.EXPLOSION) || source.is(DamageTypes.PLAYER_EXPLOSION)) &&
-                damageConfig.canDamageTypeDamage("explosion")) return true;
-
-        if (attacker instanceof LivingEntity livingAttacker) {
-            ItemStack heldItem = livingAttacker.getMainHandItem();
-            if (!heldItem.isEmpty()) {
-                String itemId = BuiltInRegistries.ITEM.getKey(heldItem.getItem()).toString();
-                return damageConfig.canItemDamage(itemId);
-            }
-        }
-
-        return false;
-    }
+    // ------------------------------------------------------------------ interaction
 
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
-        if (!(this.level() instanceof ServerLevel serverLevel) || hand != InteractionHand.MAIN_HAND) {
+        if (!(level() instanceof ServerLevel serverLevel) || hand != InteractionHand.MAIN_HAND) {
             return super.interact(player, hand);
         }
 
-        if (!canInteract(player, serverLevel)) {
-            return InteractionResult.FAIL;
-        }
+        if (!SiegeDamageRules.canOperate(serverLevel, player, getOnPos())) return InteractionResult.FAIL;
 
-        InteractionResult horseResult = handleHorseInteraction(player, serverLevel);
+        InteractionResult horseResult = handleHorseInteraction(player);
         if (horseResult != null) return horseResult;
 
-        return handleSiegeInteraction(player, hand, serverLevel);
-    }
+        if (!getPassengers().isEmpty()) return InteractionResult.FAIL;
 
-    private boolean canInteract(Player player, ServerLevel serverLevel) {
-        UUID playerId = player.getUUID();
-
-        Optional<SiegeManager.Siege> siegeOpt = SiegeManager.getPlayerSiege(serverLevel, playerId);
-        if (siegeOpt.map(siege -> siege.isDisabled(playerId)).orElse(false)) {
-            return false;
+        ItemStack stack = player.getItemInHand(hand);
+        if (shouldMount(player, stack)) {
+            player.startRiding(this);
+            setOwner(player);
+            return InteractionResult.SUCCESS;
         }
 
-        LandState stateManager = LandState.get(serverLevel);
-        Optional<Land> maybeLand = stateManager.getLandAt(this.getOnPos());
-        return maybeLand.map(land -> land.getOwnerUUID().equals(playerId) ||
-                        land.isAlly(playerId) || player.isCreative())
-                .orElse(true);
+        return operate(player, stack, serverLevel);
     }
 
-    private InteractionResult handleHorseInteraction(Player player, ServerLevel serverLevel) {
+    protected boolean shouldMount(Player player, ItemStack heldItem) {
+        return heldItem.isEmpty() && !player.isShiftKeyDown() && canAddPassenger(player);
+    }
+
+    @Nullable
+    private InteractionResult handleHorseInteraction(Player player) {
         if (getFirstPassenger() instanceof Mob mob) {
             if (player.getMainHandItem().is(Items.SHEARS)) {
                 mob.stopRiding();
-                double[] offset = calculateHorseDismountOffset(mob);
-                mob.setPos(this.getX() + offset[0], this.getY() + 0.5, this.getZ() + offset[1]);
-
-                ItemEntity leadEntity = new ItemEntity(this.level(),
-                        this.getX() + offset[0], this.getY() + 0.5, this.getZ() + offset[1],
-                        new ItemStack(Items.LEAD));
-                this.level().addFreshEntity(leadEntity);
-
+                Vec3 pos = position().add(SiegeMovement.localToWorld(getYRot(), getPassengerOffset(mob)));
+                mob.setPos(pos.x, getY() + 0.5, pos.z);
+                level().addFreshEntity(new ItemEntity(level(), pos.x, getY() + 0.5, pos.z, new ItemStack(Items.LEAD)));
                 player.playNotifySound(SoundEvents.SHEEP_SHEAR, SoundSource.NEUTRAL, 1.0f, 1.0f);
                 return InteractionResult.SUCCESS;
             }
@@ -496,22 +338,18 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         }
 
         if (getPassengers().isEmpty()) {
-            List<Entity> nearby = this.level().getEntities(player, this.getBoundingBox().inflate(4.0),
-                    entity -> entity instanceof Mob);
-
+            List<Entity> nearby = level().getEntities(player, getBoundingBox().inflate(4.0), e -> e instanceof Mob);
             for (Entity entity : nearby) {
-                if (canAddPassenger(entity) && entity instanceof Mob mob &&
-                        mob.getLeashHolder() == player && canAttachHorse(mob)) {
+                if (entity instanceof Mob mob && canAddPassenger(mob)
+                        && mob.getLeashHolder() == player && canAttachHorse(mob)) {
                     mob.dropLeash(true, false);
                     mob.stopRiding();
                     mob.startRiding(this);
-                    stopAnimation("set_up");
-                    triggerAnimation("pick_up");
+                    setOwner(player);
                     return InteractionResult.SUCCESS;
                 }
             }
         }
-
         return null;
     }
 
@@ -520,24 +358,16 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
         return !(mob instanceof Saddleable saddleable) || saddleable.isSaddled();
     }
 
-    protected double[] calculateHorseDismountOffset(Entity passenger) {
-        float yawRadians = (float) Math.toRadians(this.getVisualRotationYInDegrees());
-        double forwardX = -Math.sin(yawRadians);
-        double forwardZ = Math.cos(yawRadians);
-        double rightX = Math.cos(yawRadians);
-        double rightZ = Math.sin(yawRadians);
+    // ------------------------------------------------------------------ passengers
 
-        Vec3 offset = this.getPassengerOffset(passenger);
-        double leftOffset = offset.x;
-        double backOffset = offset.z;
-
-        double offsetX = rightX * leftOffset - forwardX * backOffset;
-        double offsetZ = rightZ * leftOffset - forwardZ * backOffset;
-
-        return new double[]{offsetX, offsetZ};
+    public boolean canAddPassenger(Entity entity) {
+        return getPassengers().isEmpty() && (entity instanceof Player || entity instanceof Horse);
     }
 
-    protected abstract InteractionResult handleSiegeInteraction(Player player, InteractionHand hand, ServerLevel serverLevel);
+    @Override
+    protected void positionRider(Entity entity, MoveFunction moveFunction) {
+        SiegeMovement.positionPassenger(this, entity, moveFunction);
+    }
 
     @Override
     public Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions dimensions, float scale) {
@@ -545,83 +375,37 @@ public abstract class AbstractSiegeEntity extends LivingEntity {
     }
 
     @Override
-    public boolean dismountsUnderwater() {
-        return true;
+    public Vec3 getDismountLocationForPassenger(LivingEntity passenger) {
+        Vec3 offset = SiegeMovement.localToWorld(getYRot(), getPassengerOffset(passenger));
+        return position().add(offset);
     }
 
     @Override
-    public boolean isPushable() {
-        return false;
-    }
+    public boolean dismountsUnderwater() { return true; }
+
+    // ------------------------------------------------------------------ boilerplate LivingEntity overrides
 
     @Override
-    public boolean isEffectiveAi() {
-        return false;
-    }
+    public boolean isPushable() { return false; }
 
     @Override
-    public Iterable<ItemStack> getArmorSlots() {
-        return List.of();
-    }
+    public boolean isEffectiveAi() { return false; }
 
     @Override
-    public ItemStack getItemBySlot(EquipmentSlot slot) {
-        return ItemStack.EMPTY;
-    }
+    public Iterable<ItemStack> getArmorSlots() { return List.of(); }
 
     @Override
-    public void setItemSlot(EquipmentSlot slot, ItemStack stack) {
-    }
+    public ItemStack getItemBySlot(EquipmentSlot slot) { return ItemStack.EMPTY; }
 
     @Override
-    public HumanoidArm getMainArm() {
-        return HumanoidArm.RIGHT;
-    }
+    public void setItemSlot(EquipmentSlot slot, ItemStack stack) {}
+
+    @Override
+    public HumanoidArm getMainArm() { return HumanoidArm.RIGHT; }
 
     @Override
     public ItemStack getPickResult() {
-        Item siegeSpawnerItem = SiegeSpawnerItem.byId(this.getType());
-        return siegeSpawnerItem == null ? ItemStack.EMPTY : new ItemStack(siegeSpawnerItem);
-    }
-
-    @Override
-    public Vec3 getDismountLocationForPassenger(LivingEntity passenger) {
-        float yawRadians = (float) Math.toRadians(getVisualRotationYInDegrees());
-        Vec3 offset = getPassengerOffset(passenger);
-
-        double forwardX = -Math.sin(yawRadians);
-        double forwardZ = Math.cos(yawRadians);
-        double rightX = Math.cos(yawRadians);
-        double rightZ = Math.sin(yawRadians);
-
-        double offsetX = rightX * offset.x - forwardX * offset.z;
-        double offsetZ = rightZ * offset.x - forwardZ * offset.z;
-
-        return new Vec3(getX() + offsetX, getY() + offset.y, getZ() + offsetZ);
-    }
-
-    public double getVelocity(Entity entity) {
-        SiegeEngineDefinitionData data = SiegeEngineDefinitionsStorage.getData(this.getType());
-        return entity instanceof Horse ? data.horseSpeed() : data.playerSpeed();
-    }
-
-    public double getKnockback() {
-        return SiegeEngineDefinitionsStorage.getData(this.getType()).knockback();
-    }
-
-    public double getBaseDamage() {
-        return SiegeEngineDefinitionsStorage.getData(this.getType()).baseDamage();
-    }
-
-    public int getBaseReload() {
-        return SiegeEngineDefinitionsStorage.getData(this.getType()).baseReload();
-    }
-
-    public float getProjectileSpeed() {
-        return SiegeEngineDefinitionsStorage.getData(this.getType()).projectileSpeed();
-    }
-
-    public float getAccuracyMultiplier() {
-        return SiegeEngineDefinitionsStorage.getData(this.getType()).accuracyMultiplier();
+        Item spawner = SiegeSpawnerItem.byId(this.getType());
+        return spawner == null ? ItemStack.EMPTY : new ItemStack(spawner);
     }
 }
