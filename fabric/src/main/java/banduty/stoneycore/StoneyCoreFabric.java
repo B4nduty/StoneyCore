@@ -6,6 +6,7 @@ import banduty.stoneycore.config.SCConfigs;
 import banduty.stoneycore.event.*;
 import banduty.stoneycore.event.custom.PlayerNameTagEvents;
 import banduty.stoneycore.items.SCItems;
+import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.networking.SCC2SNetworking;
 import banduty.stoneycore.networking.SCPayloads;
 import banduty.stoneycore.networking.payload.SyncDefinitionsPacket;
@@ -19,6 +20,7 @@ import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
@@ -69,6 +71,15 @@ public class StoneyCoreFabric implements ModInitializer {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ArmorAttachmentSlotDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new LandDefinitionsLoader());
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new SiegeEngineDefinitionsLoader());
+        // On /reload, resync definitions and refresh under-armor attributes for everyone online
+        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+            if (!success) return;
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                sendSyncDefinitions(player);
+                SCUnderArmor.refreshAttachmentAttributes(player);
+            }
+        });
+
         ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
 
             if (!(oldPlayer instanceof IEntityDataSaver oldSaver)) return;

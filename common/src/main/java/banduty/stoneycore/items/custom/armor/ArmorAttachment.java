@@ -45,15 +45,20 @@ public interface ArmorAttachment {
         }
 
         if (Boolean.TRUE.equals(attachmentStack.get(SCDataComponents.VISOR_OPEN.get()))) {
-            baseArmor -= 1.0;
-            baseToughness -= 1.0;
-            baseDeflect -= 0.05;
+            baseArmor = applyVisorPenalty(baseArmor, 1.0);
+            baseToughness = applyVisorPenalty(baseToughness, 1.0);
+            baseDeflect = applyVisorPenalty(baseDeflect, 0.05);
         }
 
         accumulator.accept(Attributes.ARMOR, baseArmor, AttributeModifier.Operation.ADD_VALUE);
         accumulator.accept(Attributes.ARMOR_TOUGHNESS, baseToughness, AttributeModifier.Operation.ADD_VALUE);
         accumulator.accept(SCAttributes.HUNGER_DRAIN_MULTIPLIER, baseHunger, AttributeModifier.Operation.ADD_VALUE);
         accumulator.accept(SCAttributes.DEFLECT_CHANCE, baseDeflect, AttributeModifier.Operation.ADD_VALUE);
+    }
+
+    /** An open visor removes up to {@code penalty} from a positive stat, but never pushes it below zero. */
+    private static double applyVisorPenalty(double value, double penalty) {
+        return value > 0 ? Math.max(0, value - penalty) : value;
     }
 
     @FunctionalInterface

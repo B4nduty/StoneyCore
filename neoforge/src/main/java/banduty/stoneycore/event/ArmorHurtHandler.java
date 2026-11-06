@@ -37,15 +37,12 @@ public class ArmorHurtHandler {
             UnderArmorContents contents = itemStack.getOrDefault(
                     SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
 
-            if (contents.isEmpty()) {
-                event.setNewDamage(slot, 0f);
-                continue;
-            }
+            // Bare under-armor takes durability damage normally
+            if (contents.isEmpty()) continue;
 
+            // With attachments equipped, the attachments absorb the damage and the under-armor is never damaged
             UnderArmorContents.Mutable mutableContents = new UnderArmorContents.Mutable(contents);
-            boolean slotProtected = mutableContents.damageAttachment(armorType, durabilityDamage, livingEntity);
-
-            if (slotProtected) {
+            if (mutableContents.damageAttachment(armorType, durabilityDamage, livingEntity)) {
                 UnderArmorContents newContents = mutableContents.toImmutable();
 
                 if (newContents.isEmpty()) {
@@ -55,9 +52,9 @@ public class ArmorHurtHandler {
                 }
 
                 scUnderArmor.rebuildAttachmentAttributes(itemStack);
-
-                event.setNewDamage(slot, 0f);
             }
+
+            event.setNewDamage(slot, 0f);
         }
     }
 }

@@ -18,12 +18,6 @@ public record ToggleVisorC2SPacket() implements CustomPacketPayload {
     @Override public Type<? extends CustomPacketPayload> type() { return ID; }
 
     public void handle(ServerPlayNetworking.Context context) {
-        ItemStack itemStack = context.player().getItemBySlot(EquipmentSlot.HEAD);
-        for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
-            if (armorAttachment.getItem() instanceof ArmorAttachment armorAttachmentI && armorAttachmentI.hasOpenVisor(armorAttachment)) {
-                boolean current = armorAttachment.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false);
-                armorAttachment.set(SCDataComponents.VISOR_OPEN.get(), !current);
-            }
-        }
+        SCUnderArmor.toggleVisor(context.player().getItemBySlot(EquipmentSlot.HEAD));
     }
 }

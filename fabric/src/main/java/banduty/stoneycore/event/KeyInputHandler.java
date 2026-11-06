@@ -62,20 +62,11 @@ public class KeyInputHandler {
 
                     if (!visorToggled && toggleVisorTicks >= StoneyCore.getConfig().combatOptions().getToggleVisorTime()) {
 
-                        // Determine visor state BEFORE toggle
-                        boolean isCurrentlyOpen = false;
-
-                        ItemStack itemStack = localPlayer.getItemBySlot(EquipmentSlot.HEAD);
-                        for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
-                            if (armorAttachment.getItem() instanceof ArmorAttachment armorAttachmentI && armorAttachmentI.hasOpenVisor(armorAttachment)) {
-                                isCurrentlyOpen = armorAttachment.getOrDefault(SCDataComponents.VISOR_OPEN.get(), false);
-                                armorAttachment.set(SCDataComponents.VISOR_OPEN.get(), !isCurrentlyOpen);
-                                break;
-                            }
-                        }
+                        // Predict the toggle client-side; the server applies the same logic and resyncs
+                        Boolean nowOpen = SCUnderArmor.toggleVisor(localPlayer.getItemBySlot(EquipmentSlot.HEAD));
 
                         // Play appropriate sound
-                        if (isCurrentlyOpen) {
+                        if (Boolean.FALSE.equals(nowOpen)) {
                             localPlayer.playSound(SCSounds.VISOR_CLOSE.get(), 1.0F, 1.0F);
                         } else {
                             localPlayer.playSound(SCSounds.VISOR_OPEN.get(), 1.0F, 1.0F);

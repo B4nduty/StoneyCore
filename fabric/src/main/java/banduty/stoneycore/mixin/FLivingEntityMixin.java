@@ -39,35 +39,27 @@ public abstract class FLivingEntityMixin extends Entity {
         }
 
         ArmorItem.Type slot = scUnderArmor.getType();
-        boolean slotProtected;
 
         UnderArmorContents contents = itemStack.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY);
 
-        if (!contents.isEmpty()) {
-            UnderArmorContents.Mutable mutableContents = new UnderArmorContents.Mutable(contents);
+        // Bare under-armor takes durability damage normally
+        if (contents.isEmpty()) {
+            original.call(itemStack, amount, entity, equipmentSlot);
+            return;
+        }
 
-            slotProtected = mutableContents.damageAttachment(slot, durabilityDamage, livingEntity);
+        // With attachments equipped, the attachments absorb the damage and the under-armor is never damaged
+        UnderArmorContents.Mutable mutableContents = new UnderArmorContents.Mutable(contents);
+        if (mutableContents.damageAttachment(slot, durabilityDamage, livingEntity)) {
+            UnderArmorContents newContents = mutableContents.toImmutable();
 
-            if (slotProtected) {
-                UnderArmorContents newContents = mutableContents.toImmutable();
-
-                if (newContents.isEmpty()) {
-                    itemStack.remove(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
-                } else {
-                    itemStack.set(
-                            SCDataComponents.UNDER_ARMOR_CONTENTS.get(),
-                            newContents
-                    );
-                }
-
-                if (itemStack.getItem() instanceof SCUnderArmor underArmor) {
-                    underArmor.rebuildAttachmentAttributes(itemStack);
-                }
+            if (newContents.isEmpty()) {
+                itemStack.remove(SCDataComponents.UNDER_ARMOR_CONTENTS.get());
+            } else {
+                itemStack.set(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), newContents);
             }
 
-            if (!slotProtected) {
-                original.call(itemStack, amount, entity, equipmentSlot);
-            }
+            scUnderArmor.rebuildAttachmentAttributes(itemStack);
         }
     }
 }
