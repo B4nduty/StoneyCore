@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,7 +43,7 @@ public class ArmorAttachmentDefinitionsStorage {
     }
 
     private static ArmorAttachmentDefinitionData getDefaultData() {
-        return new ArmorAttachmentDefinitionData(0, 0, 0, 0, 0, 0, 0, ResourceLocation.fromNamespaceAndPath("", ""));
+        return new ArmorAttachmentDefinitionData(0, 0, 0, 0, 0, 0, 0, ResourceLocation.fromNamespaceAndPath("", ""), List.of());
     }
 
     public static Map<ResourceLocation, ArmorAttachmentDefinitionData> getDefinitions() {

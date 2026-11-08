@@ -67,6 +67,7 @@ public abstract class DefinitionsProvider implements DataProvider {
             private float attackSpeed;
             private int rechargeTime;
             private ResourceLocation visor = ResourceLocation.fromNamespaceAndPath("","");
+            private final List<String> incompatibleSlots = new ArrayList<>();
             public static Builder create() { return new Builder(); }
             public Builder armor(double a, double t) { this.armor = a; this.toughness = t; return this; }
             public Builder weight(double w) { this.weight = w; return this; }
@@ -75,7 +76,11 @@ public abstract class DefinitionsProvider implements DataProvider {
             public Builder attackSpeed(float f) { this.attackSpeed = f; return this; }
             public Builder rechargeTime(int i) { this.rechargeTime = i; return this; }
             public Builder visor(ResourceLocation v) { this.visor = v; return this; }
-            public ArmorAttachmentDefinitionData build() { return new ArmorAttachmentDefinitionData(armor, toughness, hunger, deflect, weight, attackSpeed, rechargeTime, visor); }
+            public Builder incompatibleSlots(String... slots) {
+                this.incompatibleSlots.addAll(Arrays.asList(slots));
+                return this;
+            }
+            public ArmorAttachmentDefinitionData build() { return new ArmorAttachmentDefinitionData(armor, toughness, hunger, deflect, weight, attackSpeed, rechargeTime, visor, incompatibleSlots); }
         }
     }
 

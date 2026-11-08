@@ -1,9 +1,11 @@
 package banduty.stoneycore.items.custom.armor.underarmor;
 
+import banduty.stoneycore.data.SCDataComponents;
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.definitions.ArmorAttachmentDefinitionsStorage;
 import banduty.stoneycore.definitions.ArmorAttachmentSlotDefinitionData;
 import banduty.stoneycore.definitions.ArmorAttachmentSlotDefinitionsStorage;
+import banduty.stoneycore.util.SCInventoryItemFinder;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -110,8 +112,11 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                 if (!hasRequired) return null;
             }
 
-            ItemStack singleItem = incoming.copyWithCount(1);
             String incomingSlot = incomingSlotDef.slot();
+
+            if (conflictsWithWornAttachments(incoming, incomingSlot, armorType, player)) return null;
+
+            ItemStack singleItem = incoming.copyWithCount(1);
 
             for (int i = 0; i < this.attachments.size(); i++) {
                 ItemStack existing = this.attachments.get(i);
@@ -186,6 +191,37 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             this.attachments.removeIf(ItemStack::isEmpty);
 
             return true;
+        }
+
+        private boolean conflictsWithWornAttachments(ItemStack incoming, String incomingSlot,
+                                                     ArmorItem.Type targetType, Player player) {
+            List<String> incomingIncompatible = ArmorAttachmentDefinitionsStorage.getData(incoming).incompatibleSlots();
+
+            for (ArmorItem.Type type : ArmorItem.Type.values()) {
+                if (type == ArmorItem.Type.BODY) continue;
+
+                List<ItemStack> worn;
+                if (type == targetType) {
+                    worn = this.attachments;
+                } else {
+                    ItemStack piece = SCInventoryItemFinder.findUnderArmor(player, type);
+                    if (piece.isEmpty()) continue;
+                    worn = piece.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY)
+                            .attachments();
+                }
+
+                for (ItemStack existing : worn) {
+                    String existingSlot = ArmorAttachmentSlotDefinitionsStorage.getData(existing, type).slot();
+                    if (existingSlot.isEmpty()) continue;
+
+                    // The item in the same slot is about to be replaced, so it can't conflict
+                    if (type == targetType && Objects.equals(existingSlot, incomingSlot)) continue;
+
+                    if (incomingIncompatible.contains(existingSlot)) return true;
+                    if (ArmorAttachmentDefinitionsStorage.getData(existing).incompatibleSlots().contains(incomingSlot)) return true;
+                }
+            }
+            return false;
         }
 
         private void applyDamageToAttachment(AttachmentRef ref, int damageAmount, LivingEntity entity, ArmorItem.Type slot) {

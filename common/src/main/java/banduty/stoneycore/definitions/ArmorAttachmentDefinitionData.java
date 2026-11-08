@@ -7,8 +7,10 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.List;
+
 public record ArmorAttachmentDefinitionData(double armor, double toughness, double hungerDrainMultiplier,
-                                            double deflectChance, double weight, float attackSpeed, int rechargeTime, ResourceLocation visoredHelmet) {
+                                            double deflectChance, double weight, float attackSpeed, int rechargeTime, ResourceLocation visoredHelmet, List<String> incompatibleSlots) {
     public static final Codec<ArmorAttachmentDefinitionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.DOUBLE.optionalFieldOf("armor", 0.0).forGetter(ArmorAttachmentDefinitionData::armor),
             Codec.DOUBLE.optionalFieldOf("toughness", 0.0).forGetter(ArmorAttachmentDefinitionData::toughness),
@@ -17,7 +19,8 @@ public record ArmorAttachmentDefinitionData(double armor, double toughness, doub
             Codec.DOUBLE.optionalFieldOf("weight", 0.0).forGetter(ArmorAttachmentDefinitionData::weight),
             Codec.FLOAT.optionalFieldOf("attackSpeed", 0.0f).forGetter(ArmorAttachmentDefinitionData::attackSpeed),
             Codec.INT.optionalFieldOf("rechargeTime", 0).forGetter(ArmorAttachmentDefinitionData::rechargeTime),
-            ResourceLocation.CODEC.optionalFieldOf("visoredHelmet", ResourceLocation.fromNamespaceAndPath("","")).forGetter(ArmorAttachmentDefinitionData::visoredHelmet)
+            ResourceLocation.CODEC.optionalFieldOf("visoredHelmet", ResourceLocation.fromNamespaceAndPath("","")).forGetter(ArmorAttachmentDefinitionData::visoredHelmet),
+            Codec.STRING.listOf().optionalFieldOf("incompatibleSlots", List.of()).forGetter(ArmorAttachmentDefinitionData::incompatibleSlots)
     ).apply(instance, ArmorAttachmentDefinitionData::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ArmorAttachmentDefinitionData> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
