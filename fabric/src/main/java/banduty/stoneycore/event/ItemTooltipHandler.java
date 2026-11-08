@@ -2,6 +2,7 @@ package banduty.stoneycore.event;
 
 import banduty.stoneycore.client.item.AttachmentSlotTooltip;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
+import banduty.stoneycore.data.SCAttributes;
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.lands.LandType;
@@ -16,13 +17,17 @@ import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 import java.util.List;
 
@@ -31,6 +36,28 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
     public void getTooltip(ItemStack stack, Item.TooltipContext tooltipContext, TooltipFlag tooltipType, List<Component> lines) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
+        Component deflectName = Component.translatable(SCAttributes.DEFLECT_CHANCE.value().getDescriptionId());
+
+        for (int i = 0; i < lines.size(); i++) {
+            if (!(lines.get(i).getContents() instanceof TranslatableContents tc)) continue;
+            if (!tc.getKey().startsWith("attribute.modifier.")) continue;
+            if (tc.getArgs().length < 2 || !(tc.getArgs()[1] instanceof Component attrName)) continue;
+            if (!attrName.getString().equals(deflectName.getString())) continue;
+
+            double deflect = 0;
+            for (ItemAttributeModifiers.Entry entry : stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers()) {
+                if (entry.attribute().equals(SCAttributes.DEFLECT_CHANCE)
+                        && entry.modifier().operation() == AttributeModifier.Operation.ADD_VALUE) {
+                    deflect += entry.modifier().amount();
+                }
+            }
+            if (deflect != 0) {
+                lines.set(i, Component.translatable("component.tooltip.stoneycore.deflectChance",
+                        formatValue(deflect * 100, false)).withStyle(ChatFormatting.BLUE));
+            }
+            break;
+        }
+
         Component attackDamage = Component.translatable("attribute.name.generic.attack_damage");
         if (WeaponDefinitionsStorage.containsItem(stack)) lines.removeIf(line -> line.contains(attackDamage));
 
