@@ -255,7 +255,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         if (source.getDirectEntity() instanceof AbstractArrow) return false;
 
         // 0 = parry disabled (globally or for this weapon)
-        int parryWindow = ShieldUtil.getParryWindowTicks(shield);
+        int parryWindow = ShieldUtil.getParryWindowTicks(shield, target);
         if (parryWindow <= 0 || target.getTicksUsingItem() > parryWindow) {
             return false;
         }
@@ -373,6 +373,7 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         if ((Object) this instanceof LivingEntity livingEntity) {
             if (livingEntity.level().isClientSide()) return;
             IEntityDataSaver dataSaver = (IEntityDataSaver) livingEntity;
+            if (StaminaData.getCombatModeTime(dataSaver) <= 0) return;
             boolean staminaBlocked = StaminaData.isStaminaBlocked(dataSaver);
             boolean wearingSCArmor = stoneyCore$isWearingSCArmor(livingEntity);
             if (!staminaBlocked && wearingSCArmor) {

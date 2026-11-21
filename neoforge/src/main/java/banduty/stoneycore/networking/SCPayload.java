@@ -24,6 +24,7 @@ public class SCPayload {
         registrar.playToClient(LandTitleS2CPacket.TYPE, LandTitleS2CPacket.STREAM_CODEC, LandTitleS2CPacket::handle);
         registrar.playToClient(OutlineClaimS2CPacket.TYPE, OutlineClaimS2CPacket.STREAM_CODEC, OutlineClaimS2CPacket::handle);
         registrar.playToClient(StaminaBlockedS2CPacket.TYPE, StaminaBlockedS2CPacket.STREAM_CODEC, StaminaBlockedS2CPacket::handle);
+        registrar.playToClient(CombatModeS2CPacket.TYPE, CombatModeS2CPacket.STREAM_CODEC, CombatModeS2CPacket::handle);
         registrar.playToClient(DamageIndicatorS2CPacket.TYPE, DamageIndicatorS2CPacket.STREAM_CODEC, DamageIndicatorS2CPacket::handle);
         registrar.playToClient(SyncDefinitionsPacket.TYPE, SyncDefinitionsPacket.STREAM_CODEC, SyncDefinitionsPacket::handle);
     }

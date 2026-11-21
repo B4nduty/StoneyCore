@@ -6,6 +6,7 @@ import banduty.stoneycore.combat.range.CrossbowHandler;
 import banduty.stoneycore.combat.range.MusketHandler;
 import banduty.stoneycore.combat.range.RangedWeaponHandlers;
 import banduty.stoneycore.config.IConfig;
+import banduty.stoneycore.effect.SCEffects;
 import banduty.stoneycore.entity.SCEntities;
 import banduty.stoneycore.items.ModArmorMaterials;
 import banduty.stoneycore.items.SCItems;
@@ -39,6 +40,7 @@ public class StoneyCore {
         SCSounds.register();
         SCAttributes.register();
         SCDataComponents.register();
+        SCEffects.init();
 
         RangedWeaponHandlers.register(new BowHandler());
         RangedWeaponHandlers.register(new CrossbowHandler());

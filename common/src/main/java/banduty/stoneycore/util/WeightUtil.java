@@ -30,7 +30,7 @@ public class WeightUtil {
             }
         }
 
-        return weight;
+        return Math.max(0, weight);
     }
 
     public static double getWeight(LivingEntity entity) {

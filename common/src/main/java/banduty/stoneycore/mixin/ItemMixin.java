@@ -125,7 +125,7 @@ public abstract class ItemMixin {
         // Parry-only shield: lower it as soon as the parry window is over (cooldown is applied by stopUsingItem).
         if (livingEntity instanceof Player shieldUser
                 && ShieldUtil.isParryOnly(stack)
-                && shieldUser.getTicksUsingItem() > ShieldUtil.getParryWindowTicks(stack)) {
+                && shieldUser.getTicksUsingItem() > ShieldUtil.getParryWindowTicks(stack, livingEntity)) {
             shieldUser.stopUsingItem();
             return;
         }
@@ -177,10 +177,10 @@ public abstract class ItemMixin {
         }
 
         if (hand != InteractionHand.OFF_HAND && ShieldUtil.canBlock(player.getOffhandItem()) ||
-                (!ShieldUtil.canBlock(stack) && hand == InteractionHand.OFF_HAND && ShieldUtil.canRaise(player.getItemInHand(InteractionHand.MAIN_HAND)))) return;
+                (!ShieldUtil.canBlock(stack) && hand == InteractionHand.OFF_HAND && ShieldUtil.canRaise(player.getItemInHand(InteractionHand.MAIN_HAND), player))) return;
 
         // Only weapons whose definition allows blocking and/or parrying can be raised.
-        if (ShieldUtil.canRaise(stack)) {
+        if (ShieldUtil.canRaise(stack, player)) {
             player.startUsingItem(hand);
             cir.setReturnValue(InteractionResultHolder.consume(stack));
             return;

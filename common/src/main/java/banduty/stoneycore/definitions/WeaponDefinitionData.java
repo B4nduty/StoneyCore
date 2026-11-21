@@ -33,18 +33,10 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
 
     public static final StreamCodec<RegistryFriendlyByteBuf, WeaponDefinitionData> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
-    /**
-     * A melee weapon can be raised (shield behaviour) when blockingEnabled is true and/or parryWindow is not 0.
-     *
-     * @param parryWindow     parry window in ticks (0 = no parry, default; negative = use the global config value)
-     * @param blockingEnabled true = blocks damage while raised; false (default) with a parry window = parry-only
-     * @param blockCooldown   cooldown in ticks applied when the player stops blocking/parrying (0 = none)
-     */
     public record MeleeData(Map<String, Map<String, Float>> damage, Map<String, Double> radius, int[] piercingAnimation,
                             int animation, double deflectChance, double bonusKnockback,
                             int parryWindow, boolean blockingEnabled, int blockCooldown) {
 
-        /** Keeps old call sites working: plain weapon (no parry, no blocking, no cooldown). */
         public MeleeData(Map<String, Map<String, Float>> damage, Map<String, Double> radius, int[] piercingAnimation,
                          int animation, double deflectChance, double bonusKnockback) {
             this(damage, radius, piercingAnimation, animation, deflectChance, bonusKnockback, 0, false, 0);

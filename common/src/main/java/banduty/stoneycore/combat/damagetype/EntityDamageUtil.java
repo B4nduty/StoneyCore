@@ -1,5 +1,7 @@
 package banduty.stoneycore.combat.damagetype;
 
+import banduty.stoneycore.data.IEntityDataSaver;
+import banduty.stoneycore.stamina.StaminaData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -18,6 +20,8 @@ public class EntityDamageUtil {
             damageType = result.damageType();
             amount = result.damage();
         }
+
+        StaminaData.setCombatMode((IEntityDataSaver) target, 8 * 20);
 
         return Math.max(amount, 0.0);
     }

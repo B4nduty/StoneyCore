@@ -66,7 +66,7 @@ public class ItemInHandRendererMixin {
         int useTicks = player.getTicksUsingItem();
         float totalTicksElapsed = useTicks + partialTick;
 
-        int parryWindow = ShieldUtil.getParryWindowTicks(stack);
+        int parryWindow = ShieldUtil.getParryWindowTicks(stack, player);
         if (parryWindow > 0 && totalTicksElapsed > parryWindow) {
             float transitionProgress = totalTicksElapsed - parryWindow;
             tr = Math.min(1.0F, transitionProgress / TRANSITION_DURATION_TICKS);

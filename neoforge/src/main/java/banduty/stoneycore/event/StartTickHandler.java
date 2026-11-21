@@ -1,26 +1,17 @@
 package banduty.stoneycore.event;
 
-import banduty.stoneycore.stamina.StaminaUtil;
 import banduty.stoneycore.StoneyCore;
-import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.lands.ClaimWorker;
 import banduty.stoneycore.lands.Land;
 import banduty.stoneycore.lands.LandState;
 import banduty.stoneycore.lands.visitor.VisitorManager;
 import banduty.stoneycore.lands.visitor.VisitorTracker;
 import banduty.stoneycore.siege.SiegeManager;
-import banduty.stoneycore.client.render.land.OutlineClaimRenderer;
-import banduty.stoneycore.lands.LandTracker;
 import banduty.stoneycore.combat.mechanics.*;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -30,19 +21,12 @@ import java.util.*;
 @EventBusSubscriber(modid = StoneyCore.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class StartTickHandler {
     public static final Queue<ClaimWorker> CLAIM_TASKS = new LinkedList<>();
-    private static final ResourceLocation POWDER_SNOW_SLOW_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "powder_snow_slow");
 
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Pre event) {
         MinecraftServer server = event.getServer();
         processClaimTasks();
         VisitorTracker.tickCooldowns();
-
-        /*for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (!player.isSpectator()) {
-                updatePlayerTick(player);
-            }
-        }*/
 
         for (ServerLevel serverLevel : server.getAllLevels()) {
             checkAndRemoveBrokenLands(serverLevel);
@@ -55,47 +39,6 @@ public class StartTickHandler {
         ClaimWorker current = CLAIM_TASKS.peek();
         if (current != null && current.tick()) {
             CLAIM_TASKS.poll();
-        }
-    }
-
-    private static void updatePlayerTick(ServerPlayer player) {
-        boolean isDead = player.getHealth() <= 0;
-
-        ModifiersUtil.updatePlayerReachAttributes(player);
-        StaminaUtil.startStaminaTrack(player);
-
-        if (!isDead) {
-            handleFreezeImmunity(player);
-
-            MechanicsUtil.handlePlayerReload(player);
-
-            SwallowTailArrowUtil.startSwallowTailTickTrack(player);
-
-            LandTracker.trackPlayerLandMovement(player);
-        } else {
-            UUID playerId = player.getUUID();
-            SiegeManager.getPlayerSiege(player.serverLevel(), playerId)
-                    .ifPresent(siege -> siege.disablePlayer(playerId, player.serverLevel()));
-        }
-
-        OutlineClaimRenderer.renderOutlineClaim(player);
-    }
-
-    private static void handleFreezeImmunity(ServerPlayer player) {
-        for (ItemStack itemStack : player.getArmorSlots()) {
-            for (ItemStack armorAttachment : SCUnderArmor.getArmorAttachments(itemStack)) {
-                if (armorAttachment.is(ItemTags.FREEZE_IMMUNE_WEARABLES)) {
-                    player.setTicksFrozen(0);
-                    AttributeInstance entityAttributeInstance = player.getAttribute(Attributes.MOVEMENT_SPEED);
-                    if (entityAttributeInstance != null) {
-                        if (entityAttributeInstance.getModifier(POWDER_SNOW_SLOW_ID) != null) {
-                            entityAttributeInstance.removeModifier(POWDER_SNOW_SLOW_ID);
-                        }
-
-                    }
-                    break;
-                }
-            }
         }
     }
 

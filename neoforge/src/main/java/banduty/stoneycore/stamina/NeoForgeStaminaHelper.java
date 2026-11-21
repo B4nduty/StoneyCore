@@ -1,5 +1,6 @@
 package banduty.stoneycore.stamina;
 
+import banduty.stoneycore.networking.payload.CombatModeS2CPacket;
 import banduty.stoneycore.networking.payload.StaminaBlockedS2CPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -8,5 +9,11 @@ public class NeoForgeStaminaHelper implements StaminaHelper {
     @Override
     public void syncStaminaBlocked(boolean blocked, ServerPlayer player) {
         PacketDistributor.sendToPlayer(player, new StaminaBlockedS2CPacket(blocked));
+    }
+
+    @Override
+    public void syncCombatMode(int combatMode, ServerPlayer player) {
+        PacketDistributor.sendToPlayer(player, new CombatModeS2CPacket(combatMode));
+
     }
 }

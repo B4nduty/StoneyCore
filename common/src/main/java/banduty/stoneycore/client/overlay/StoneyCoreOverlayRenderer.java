@@ -104,7 +104,7 @@ public class StoneyCoreOverlayRenderer {
 
         double stamina = StaminaData.getStamina(player);
         double maxStamina = player.getAttributeValue(SCAttributes.MAX_STAMINA);
-        double secondLevel = maxStamina * 0.15d;
+        double staminaNoise = maxStamina * 0.2d;
 
         IEntityDataSaver dataSaver = (IEntityDataSaver) player;
 
@@ -112,7 +112,7 @@ public class StoneyCoreOverlayRenderer {
 
         if (!player.isCreative() && staminaBlocked && config.visualOptions().getLowStaminaIndicator()) {
 
-            double staminaPercentage = stamina / secondLevel;
+            double staminaPercentage = stamina / staminaNoise;
 
             if (config.combatOptions().getRealisticCombat()) {
                 if (noiseTextures == null) initNoiseTextures();

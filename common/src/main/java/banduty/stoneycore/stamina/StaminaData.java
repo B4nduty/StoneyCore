@@ -35,6 +35,8 @@ public class StaminaData {
 
     public static void removeStamina(LivingEntity livingEntity, double amount) {
         setStamina(livingEntity, -amount);
+        IEntityDataSaver iEntityDataSaver = (IEntityDataSaver) livingEntity;
+        setCombatMode(iEntityDataSaver, 8 * 20);
     }
 
     public static double getStamina(LivingEntity livingEntity) {
@@ -98,5 +100,20 @@ public class StaminaData {
                 : livingEntity.getAttributeValue(SCAttributes.MAX_STAMINA);
 
         setStamina(livingEntity, saved);
+    }
+
+    public static void setCombatMode(IEntityDataSaver livingEntity, int combatMode) {
+        livingEntity.stoneycore$getPersistentData().putInt("combat_mode", combatMode);
+        if (livingEntity instanceof ServerPlayer player) {
+            syncCombatMode(combatMode, player);
+        }
+    }
+
+    public static int getCombatModeTime(IEntityDataSaver livingEntity) {
+        return livingEntity.stoneycore$getPersistentData().getInt("combat_mode");
+    }
+
+    public static void syncCombatMode(int combatMode, ServerPlayer player) {
+        Services.STAMINA.syncCombatMode(combatMode, player);
     }
 }

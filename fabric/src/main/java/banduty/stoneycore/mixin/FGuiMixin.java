@@ -6,8 +6,6 @@ import banduty.stoneycore.platform.ClientPlatform;
 import banduty.stoneycore.data.IEntityDataSaver;
 import banduty.stoneycore.data.SCAttributes;
 import banduty.stoneycore.stamina.StaminaData;
-import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
-import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -16,7 +14,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -49,31 +46,30 @@ public class FGuiMixin {
         if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
-        if (player == null || player.isSpectator() || player.isCreative() || !stoneyCore$ableStaminaOverlay(player))
-            return;
+        if (player == null || player.isSpectator() || player.isCreative()) return;
+
         double maxStamina = player.getAttributeValue(SCAttributes.MAX_STAMINA);
         if (maxStamina <= 0) return;
+        double stamina = StaminaData.getStamina(player);
+        if (!stoneyCore$ableStaminaOverlay(player, stamina, maxStamina))
+            return;
 
         int staminaBarX = client.getWindow().getGuiScaledWidth() / 2;
         int staminaBarY = stoneyCore$getStaminaBarYPosition(player);
-        double stamina = StaminaData.getStamina(player);
         boolean isStaminaBlocked = StaminaData.isStaminaBlocked((IEntityDataSaver) player);
 
         stoneyCore$renderStaminaBar(guiGraphics, staminaBarX, staminaBarY, stamina, isStaminaBlocked);
     }
 
     @Unique
-    private boolean stoneyCore$ableStaminaOverlay(Player player) {
+    private boolean stoneyCore$ableStaminaOverlay(Player player, double stamina, double maxStamina) {
         if (player == null) return false;
 
-        boolean hasSCWeapon = WeaponDefinitionsStorage.isMelee(player.getMainHandItem());
-        if (hasSCWeapon) return true;
-        for (ItemStack stack : player.getArmorSlots()) {
-            if (ArmorDefinitionsStorage.containsItem(stack.getItem())) {
-                return true;
-            }
-        }
-        return false;
+        IEntityDataSaver iEntityDataSaver = (IEntityDataSaver) player;
+        boolean isInCombatMode = StaminaData.getCombatModeTime(iEntityDataSaver) > 0;
+        boolean fullStamina = stamina >= maxStamina;
+
+        return isInCombatMode || !fullStamina;
     }
 
     @Unique

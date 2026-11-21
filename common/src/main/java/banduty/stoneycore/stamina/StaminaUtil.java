@@ -3,21 +3,22 @@ package banduty.stoneycore.stamina;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.melee.ShieldUtil;
 import banduty.stoneycore.config.IConfig;
+import banduty.stoneycore.effect.SCEffects;
 import banduty.stoneycore.util.WeightUtil;
 import banduty.stoneycore.data.IEntityDataSaver;
 import banduty.stoneycore.data.SCAttributes;
-import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class StaminaUtil {
     public static void startStaminaTrack(LivingEntity entity) {
+        IEntityDataSaver dataSaver = (IEntityDataSaver) entity;
+        int combatModeTime = StaminaData.getCombatModeTime(dataSaver);
+        if (combatModeTime > 0) StaminaData.setCombatMode(dataSaver, combatModeTime - 1);
         if (StoneyCore.getConfig().combatOptions().disableStamina()) return;
         double maxStamina = entity.getAttributeValue(SCAttributes.MAX_STAMINA);
         double currentStamina = StaminaData.getStamina(entity);
@@ -37,7 +38,6 @@ public class StaminaUtil {
             StaminaData.setStamina(entity, maxStamina);
         }
 
-        IEntityDataSaver dataSaver = (IEntityDataSaver) entity;
         boolean wasUsingStamina = isUsingStamina(entity);
 
         if (wasUsingStamina) {
@@ -84,28 +84,23 @@ public class StaminaUtil {
     private static void handleStaminaEffects(LivingEntity entity, double currentStamina, double maxStamina) {
         IEntityDataSaver dataSaver = (IEntityDataSaver) entity;
 
-        double level1 = maxStamina * 0.30;
-        double level2 = maxStamina * 0.20;
-        double level3 = maxStamina * 0.10;
+        double level1 = maxStamina * 0.15;
 
         if (currentStamina <= 0) {
             StaminaData.setStaminaBlocked(dataSaver, true);
-            applyStaminaEffects(entity, 3, 3);
-        } else if (currentStamina <= level3) {
-            applyStaminaEffects(entity, 2, 2);
-        } else if (currentStamina <= level2) {
-            applyStaminaEffects(entity, 1, 1);
+            applyStaminaEffects(entity, 1);
         } else if (currentStamina <= level1) {
-            applyStaminaEffects(entity, 0, 0);
+            applyStaminaEffects(entity, 0);
         }
 
-        if (StaminaData.isStaminaBlocked(dataSaver) && currentStamina >= level3) {
+        if (StaminaData.isStaminaBlocked(dataSaver) && currentStamina >= level1) {
             StaminaData.setStaminaBlocked(dataSaver, false);
         }
     }
 
     private static boolean isUsingStamina(LivingEntity entity) {
         IEntityDataSaver dataSaver = (IEntityDataSaver) entity;
+        if (StaminaData.getCombatModeTime(dataSaver) <= 0) return false;
         if (StaminaData.isStaminaBlocked(dataSaver)) return false;
 
         boolean usingStamina = false;
@@ -115,8 +110,6 @@ public class StaminaUtil {
             StaminaData.removeStamina(entity, config.blockingStaminaConstant() * WeightUtil.getWeight(entity) / 20.0);
             usingStamina = true;
         }
-
-        if (!isWearingSCArmor(entity)) return usingStamina;
 
         if (entity.isPassenger()) return usingStamina;
 
@@ -133,17 +126,7 @@ public class StaminaUtil {
         return usingStamina;
     }
 
-    private static void applyStaminaEffects(LivingEntity entity, int fatigueLevel, int slownessLevel) {
-        entity.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 20, fatigueLevel, false, false, false));
-        entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, slownessLevel, false, false, false));
-    }
-
-    private static boolean isWearingSCArmor(LivingEntity entity) {
-        for (ItemStack armorStack : entity.getArmorSlots()) {
-            if (ArmorDefinitionsStorage.containsItem(armorStack.getItem())) {
-                return true;
-            }
-        }
-        return false;
+    private static void applyStaminaEffects(LivingEntity entity, int windedLevel) {
+        entity.addEffect(new MobEffectInstance(SCEffects.WINDED, 60, windedLevel, false, false, false));
     }
 }

@@ -14,6 +14,7 @@ public class SCPayloads {
     public static ResourceLocation SIEGE_YAW_PITCH_C2S_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "siege_yaw_pitch_c2s");
     public static ResourceLocation TOGGLE_VISOR_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "toggle_visor_c2s");
     public static ResourceLocation STAMINA_BLOCKED_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "stamina_blocked");
+    public static ResourceLocation COMBAT_MODE_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "combat_mode");
     public static ResourceLocation SYNC_DEFINITIONS = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "sync_definitions");
     public static ResourceLocation LAND_TITLE_PACKET_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "land_title_packet");
     public static ResourceLocation OUTLINE_CLAIM_PACKET_ID = ResourceLocation.fromNamespaceAndPath(StoneyCore.MOD_ID, "outline_claim_packet");
@@ -27,6 +28,7 @@ public class SCPayloads {
         registerC2S(ToggleVisorC2SPacket.ID, ToggleVisorC2SPacket.CODEC);
 
         registerS2C(StaminaBlockedS2CPacket.ID, StaminaBlockedS2CPacket.CODEC);
+        registerS2C(CombatModeS2CPacket.ID, CombatModeS2CPacket.CODEC);
         registerS2C(SyncDefinitionsPacket.ID, SyncDefinitionsPacket.CODEC);
         registerS2C(LandTitleS2CPacket.ID, LandTitleS2CPacket.CODEC);
         registerS2C(OutlineClaimS2CPacket.ID, OutlineClaimS2CPacket.CODEC);
