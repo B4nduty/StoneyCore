@@ -34,12 +34,13 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
     public static final StreamCodec<RegistryFriendlyByteBuf, WeaponDefinitionData> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
     public record MeleeData(Map<String, Map<String, Float>> damage, Map<String, Double> radius, int[] piercingAnimation,
-                            int animation, double deflectChance, double bonusKnockback,
-                            int parryWindow, boolean blockingEnabled, int blockCooldown) {
+                            int animation, double bonusKnockback,
+                            int parryWindow, boolean blockingEnabled, int blockCooldown,
+                            Map<String, Double> deflectChance) {
 
         public MeleeData(Map<String, Map<String, Float>> damage, Map<String, Double> radius, int[] piercingAnimation,
-                         int animation, double deflectChance, double bonusKnockback) {
-            this(damage, radius, piercingAnimation, animation, deflectChance, bonusKnockback, 0, false, 0);
+                         int animation, double bonusKnockback) {
+            this(damage, radius, piercingAnimation, animation, bonusKnockback, 0, false, 0, Map.of());
         }
 
         public static final Codec<MeleeData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -61,11 +62,15 @@ public record WeaponDefinitionData(EnumSet<Usage> usage, MeleeData melee, Ranged
                         array -> Arrays.stream(array).boxed().toList()
                 ).optionalFieldOf("piercingAnimation", new int[0]).forGetter(MeleeData::piercingAnimation),
                 Codec.INT.optionalFieldOf("animation", 0).forGetter(MeleeData::animation),
-                Codec.DOUBLE.optionalFieldOf("deflectChance", 0.0).forGetter(MeleeData::deflectChance),
                 Codec.DOUBLE.optionalFieldOf("bonusKnockback", 0.0).forGetter(MeleeData::bonusKnockback),
                 Codec.INT.optionalFieldOf("parryWindow", 0).forGetter(MeleeData::parryWindow),
                 Codec.BOOL.optionalFieldOf("blockingEnabled", false).forGetter(MeleeData::blockingEnabled),
-                Codec.INT.optionalFieldOf("blockCooldown", 0).forGetter(MeleeData::blockCooldown)
+                Codec.INT.optionalFieldOf("blockCooldown", 0).forGetter(MeleeData::blockCooldown),
+                Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).xmap(
+                        m -> { Map<String, Double> out = new HashMap<>();
+                            m.forEach((k, v) -> out.put(k.toUpperCase(), v)); return out; },
+                        m -> m
+                ).optionalFieldOf("deflectChance", Map.of()).forGetter(MeleeData::deflectChance)
         ).apply(instance, MeleeData::new));
     }
 

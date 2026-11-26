@@ -1,17 +1,18 @@
 package banduty.stoneycore.combat.weapon;
 
 import banduty.stoneycore.combat.damagetype.SCDamageType;
-import banduty.stoneycore.definitions.ArmorDefinitionData;
-import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
-import net.minecraft.world.item.Item;
+import banduty.stoneycore.data.SCAttributes;
+import net.minecraft.world.entity.LivingEntity;
 
+import java.util.EnumMap;
 import java.util.Map;
 
 public class SCArmorUtil {
-    public static double getResistance(SCDamageType type, Item item) {
-        ArmorDefinitionData attributeData = ArmorDefinitionsStorage.getData(item);
-        Map<String, Double> damageValues = attributeData.damageResistance();
-
-        return damageValues.getOrDefault(type.name(), 0d);
+    public static Map<SCDamageType, Double> getDeflectChances(LivingEntity entity) {
+        Map<SCDamageType, Double> chances = new EnumMap<>(SCDamageType.class);
+        for (SCDamageType type : SCDamageType.values()) {
+            chances.put(type, entity.getAttributeValue(SCAttributes.deflectChance(type)));
+        }
+        return chances;
     }
 }

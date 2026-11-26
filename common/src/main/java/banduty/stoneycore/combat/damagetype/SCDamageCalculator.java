@@ -1,7 +1,6 @@
 package banduty.stoneycore.combat.damagetype;
 
 import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
-import banduty.stoneycore.combat.weapon.SCArmorUtil;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
@@ -17,7 +16,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.apache.commons.lang3.mutable.MutableFloat;
@@ -75,12 +73,6 @@ public class SCDamageCalculator {
         return applyArmor(target, damage, type, null);
     }
 
-    /**
-     * Reduces {@code damage} by the resistances of each StoneyCore armor piece worn by {@code target}. When a
-     * {@code source} is given, each piece's own protection enchantments (Protection, Projectile Protection, ... - any
-     * enchantment with a {@code damage_protection} effect matching the source) strengthen that piece's resistance,
-     * using the vanilla scale of 4% per protection point, capped at 80%.
-     */
     public static double applyArmor(LivingEntity target, double damage, SCDamageType type, @Nullable DamageSource source) {
         ServerLevel level = source != null && target.level() instanceof ServerLevel serverLevel ? serverLevel : null;
         boolean wearsSCArmor = false;
@@ -90,11 +82,10 @@ public class SCDamageCalculator {
             if (!ArmorDefinitionsStorage.containsItem(armorStack.getItem())) continue;
             wearsSCArmor = true;
 
-            double resistance = getResistance(armorStack.getItem(), type);
             if (level != null) {
-                resistance = applyEnchantmentProtection(resistance, getEnchantmentProtection(level, target, armorStack, slot, source));
+                double reduction = applyEnchantmentProtection(0, getEnchantmentProtection(level, target, armorStack, slot, source));
+                damage *= Math.max(1 - reduction, 0);
             }
-            damage *= Math.max(1 - resistance, 0);
         }
 
         if (level != null && wearsSCArmor) {
@@ -145,17 +136,5 @@ public class SCDamageCalculator {
     public static boolean consumeEnchantmentsApplied(LivingEntity entity) {
         Long gameTime = ENCHANTMENTS_APPLIED.remove(entity);
         return gameTime != null && gameTime == entity.level().getGameTime();
-    }
-
-    public static double getResistance(Item item, SCDamageType type) {
-        if (type == null) {
-            return SCArmorUtil.getResistance(SCDamageType.BLUDGEONING, item);
-        }
-
-        return switch (type) {
-            case SLASHING -> SCArmorUtil.getResistance(SCDamageType.SLASHING, item);
-            case PIERCING -> SCArmorUtil.getResistance(SCDamageType.PIERCING, item);
-            case BLUDGEONING -> SCArmorUtil.getResistance(SCDamageType.BLUDGEONING, item);
-        };
     }
 }

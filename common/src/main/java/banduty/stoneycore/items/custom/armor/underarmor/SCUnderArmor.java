@@ -1,6 +1,7 @@
 package banduty.stoneycore.items.custom.armor.underarmor;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.items.custom.armor.ArmorAttachment;
 import banduty.stoneycore.data.SCAttributes;
 import banduty.stoneycore.data.SCDataComponents;
@@ -167,7 +168,7 @@ public class SCUnderArmor extends ArmorItem {
                 0.8F,
                 0.8F + player.getRandom().nextFloat() * 0.4F
         );
-        
+
     }
 
     @Override
@@ -218,7 +219,10 @@ public class SCUnderArmor extends ArmorItem {
 
         if (ArmorDefinitionsStorage.containsItem(stack)) {
             var data = ArmorDefinitionsStorage.getData(stack);
-            accumulator.accept(SCAttributes.DEFLECT_CHANCE, data.deflectChance(), AttributeModifier.Operation.ADD_VALUE);
+            for (SCDamageType type : SCDamageType.values()) {
+                accumulator.accept(SCAttributes.deflectChance(type), data.deflectChance().getOrDefault(type.name(), 0.0),
+                        AttributeModifier.Operation.ADD_VALUE);
+            }
         }
 
         for (ItemStack armorAttachmentStack : getArmorAttachments(stack)) {

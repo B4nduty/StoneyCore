@@ -1,5 +1,6 @@
 package banduty.stoneycore.items.custom.armor;
 
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.items.custom.armor.underarmor.SCUnderArmor;
 import banduty.stoneycore.items.custom.armor.underarmor.UnderArmorContents;
 import banduty.stoneycore.data.SCAttributes;
@@ -16,6 +17,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static banduty.stoneycore.util.SCInventoryItemFinder.findUnderArmor;
 
@@ -34,26 +38,28 @@ public interface ArmorAttachment {
         double baseArmor = 0;
         double baseToughness = 0;
         double baseHunger = 0;
-        double baseDeflect = 0;
+        Map<String, Double> baseDeflect = new HashMap<>();
 
         if (ArmorAttachmentDefinitionsStorage.containsItem(attachmentStack)) {
             var data = ArmorAttachmentDefinitionsStorage.getData(attachmentStack);
             baseArmor += data.armor();
             baseToughness += data.toughness();
             baseHunger += data.hungerDrainMultiplier();
-            baseDeflect += data.deflectChance();
+            data.deflectChance().forEach((type, chance) -> baseDeflect.merge(type, chance, Double::sum));
         }
 
         if (Boolean.TRUE.equals(attachmentStack.get(SCDataComponents.VISOR_OPEN.get()))) {
             baseArmor = applyVisorPenalty(baseArmor, 1.0);
             baseToughness = applyVisorPenalty(baseToughness, 1.0);
-            baseDeflect = applyVisorPenalty(baseDeflect, 0.05);
+            baseDeflect.replaceAll((type, chance) -> applyVisorPenalty(chance, 0.05));
         }
 
         accumulator.accept(Attributes.ARMOR, baseArmor, AttributeModifier.Operation.ADD_VALUE);
         accumulator.accept(Attributes.ARMOR_TOUGHNESS, baseToughness, AttributeModifier.Operation.ADD_VALUE);
         accumulator.accept(SCAttributes.HUNGER_DRAIN_MULTIPLIER, baseHunger, AttributeModifier.Operation.ADD_VALUE);
-        accumulator.accept(SCAttributes.DEFLECT_CHANCE, baseDeflect, AttributeModifier.Operation.ADD_VALUE);
+        for (SCDamageType type : SCDamageType.values()) {
+            accumulator.accept(SCAttributes.deflectChance(type), baseDeflect.getOrDefault(type.name(), 0.0), AttributeModifier.Operation.ADD_VALUE);
+        }
     }
 
     /** An open visor removes up to {@code penalty} from a positive stat, but never pushes it below zero. */

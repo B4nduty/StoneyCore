@@ -3,6 +3,9 @@ package banduty.stoneycore.mixin;
 import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
+import banduty.stoneycore.combat.damagetype.SCDamageTypeResolver;
+import banduty.stoneycore.combat.weapon.SCArmorUtil;
+import banduty.stoneycore.combat.weapon.SCWeaponUtil;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import banduty.stoneycore.combat.melee.CombatSelect;
@@ -51,6 +54,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Mixin(LivingEntity.class)
@@ -92,7 +96,9 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
             require = 1, allow = 1, at = @At("RETURN"))
     private static void stoneycore$addAttributes(final CallbackInfoReturnable<AttributeSupplier.Builder> info) {
         info.getReturnValue().add(SCAttributes.HUNGER_DRAIN_MULTIPLIER).add(SCAttributes.STAMINA)
-                .add(SCAttributes.MAX_STAMINA).add(SCAttributes.DEFLECT_CHANCE);
+                .add(SCAttributes.MAX_STAMINA)
+                .add(SCAttributes.SLASHING_DEFLECT_CHANCE).add(SCAttributes.BLUDGEONING_DEFLECT_CHANCE)
+                .add(SCAttributes.PIERCING_DEFLECT_CHANCE);
     }
 
     @Inject(method = "onEquipItem", at = @At("HEAD"))
@@ -208,13 +214,9 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         if (source.getEntity() == null) return;
 
         if (stoneyCore$handleParry(livingEntity, source)) {
-            cir.cancel();
+            cir.setReturnValue(false);
+            return;
         }
-
-//        Melee deflect chance
-//        if (DeflectChanceHelper.shouldDeflect(livingEntity)) {
-//            cir.cancel();
-//        }
 
         LandState stateManager = LandState.get(serverLevel);
         Optional<Land> maybeLand = stateManager.getLandAt(source.getEntity().getOnPos());
@@ -223,7 +225,13 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
                 !SiegeManager.getPlayerSiege(serverLevel, source.getEntity().getUUID())
                         .map(siege -> !siege.disabledPlayers.contains(source.getEntity().getUUID()))
                         .orElse(false)) {
-            cir.cancel();
+            cir.setReturnValue(false);
+            return;
+        }
+
+        if (stoneycore$rollDeflect(livingEntity, source)) {
+            cir.setReturnValue(false);
+            return;
         }
 
         if (livingEntity instanceof ServerPlayer serverPlayer
@@ -238,6 +246,31 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
                 stoneycore$droppedThisHit = true;
             }
         }
+    }
+
+    @Unique
+    private static boolean stoneycore$rollDeflect(LivingEntity victim, DamageSource source) {
+        if (!(source.getEntity() instanceof LivingEntity attacker)) return false;
+        if (source.getDirectEntity() != attacker) return false;
+
+        Map<SCDamageType, Double> armorChances = SCArmorUtil.getDeflectChances(victim);
+
+        ItemStack weapon = CombatSelect.getWeaponStack(attacker, ItemStack.EMPTY);
+        SCDamageType type = null;
+        double levelDamage = 0;
+        if (WeaponDefinitionsStorage.isMelee(weapon)) {
+            type = attacker instanceof Player player
+                    ? SCDamageTypeResolver.determine(weapon, player)
+                    : SCWeaponUtil.calculateDamageType(weapon, 0);
+            levelDamage = SCWeaponUtil.calculateDamage(weapon, attacker.position().distanceTo(victim.position()), type);
+        }
+
+        double chance = SCWeaponUtil.total(armorChances, weapon, type, levelDamage);
+        if (chance <= 0 || victim.getRandom().nextDouble() >= chance) return false;
+
+        victim.level().playSound(null, victim.getX(), victim.getY(), victim.getZ(),
+                SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.5F);
+        return true;
     }
 
     @Unique

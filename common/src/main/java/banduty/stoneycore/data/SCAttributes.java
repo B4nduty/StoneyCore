@@ -1,6 +1,7 @@
 package banduty.stoneycore.data;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.platform.Services;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -11,7 +12,17 @@ public interface SCAttributes {
     Holder<Attribute> HUNGER_DRAIN_MULTIPLIER = register("hunger_drain_multiplier", 0.0, -1024.0, 1024.0);
     Holder<Attribute> STAMINA = register("stamina", 20.0, 0.0, 1024.0);
     Holder<Attribute> MAX_STAMINA = register("max_stamina", 20.0, 0.0, 1024.0);
-    Holder<Attribute> DEFLECT_CHANCE = register("deflect_chance", 0.0, -1024.0, 1024.0);
+    Holder<Attribute> SLASHING_DEFLECT_CHANCE = register("slashing_deflect_chance", 0.0, -1024.0, 1024.0);
+    Holder<Attribute> BLUDGEONING_DEFLECT_CHANCE = register("bludgeoning_deflect_chance", 0.0, -1024.0, 1024.0);
+    Holder<Attribute> PIERCING_DEFLECT_CHANCE = register("piercing_deflect_chance", 0.0, -1024.0, 1024.0);
+
+    static Holder<Attribute> deflectChance(SCDamageType type) {
+        return switch (type) {
+            case SLASHING -> SLASHING_DEFLECT_CHANCE;
+            case BLUDGEONING -> BLUDGEONING_DEFLECT_CHANCE;
+            case PIERCING -> PIERCING_DEFLECT_CHANCE;
+        };
+    }
 
     private static Holder<Attribute> register(String name, double base, double min, double max) {
         return Services.PLATFORM.registerHolder(Registries.ATTRIBUTE, name,

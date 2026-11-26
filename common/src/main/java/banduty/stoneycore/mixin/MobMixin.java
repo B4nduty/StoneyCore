@@ -51,10 +51,6 @@ public abstract class MobMixin {
         return (float) Math.max(0.0, damage);
     }
 
-    /**
-     * StoneyCore melee damage already has the weapon's enchantments applied (before armor resistances) in
-     * DamageResult, so skip vanilla's enchantment pass to avoid counting it twice.
-     */
     @WrapOperation(
             method = "doHurtTarget",
             at = @At(

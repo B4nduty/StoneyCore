@@ -63,7 +63,8 @@ public abstract class DefinitionsProvider implements DataProvider {
         }
 
         public static class Builder {
-            private double armor, toughness, hunger, deflect, weight;
+            private double armor, toughness, hunger, weight;
+            private final Map<String, Double> deflect = new HashMap<>();
             private float attackSpeed;
             private int rechargeTime;
             private ResourceLocation visor = ResourceLocation.fromNamespaceAndPath("","");
@@ -72,7 +73,10 @@ public abstract class DefinitionsProvider implements DataProvider {
             public Builder armor(double a, double t) { this.armor = a; this.toughness = t; return this; }
             public Builder weight(double w) { this.weight = w; return this; }
             public Builder hunger(double h) { this.hunger = h; return this; }
-            public Builder deflect(double d) { this.deflect = d; return this; }
+            public Builder deflect(double slash, double bludg, double pierce) {
+                deflect.put("SLASHING", slash); deflect.put("BLUDGEONING", bludg); deflect.put("PIERCING", pierce); return this;
+            }
+            public Builder deflect(SCDamageType type, double chance) { deflect.put(type.name(), chance); return this; }
             public Builder attackSpeed(float f) { this.attackSpeed = f; return this; }
             public Builder rechargeTime(int i) { this.rechargeTime = i; return this; }
             public Builder visor(ResourceLocation v) { this.visor = v; return this; }
@@ -115,19 +119,15 @@ public abstract class DefinitionsProvider implements DataProvider {
         }
 
         public static class Builder {
-            private final Map<String, Double> res = new HashMap<>();
-            private double deflectChance;
+            private final Map<String, Double> typeDeflect = new HashMap<>();
             private double weight;
             public static Builder create() { return new Builder(); }
-            public Builder damageResistance(double slash, double bludg, double pierce) {
-                res.put("SLASHING", slash); res.put("BLUDGEONING", bludg); res.put("PIERCING", pierce); return this;
+            public Builder deflect(double slash, double bludg, double pierce) {
+                typeDeflect.put("SLASHING", slash); typeDeflect.put("BLUDGEONING", bludg); typeDeflect.put("PIERCING", pierce); return this;
             }
+            public Builder deflect(SCDamageType type, double chance) { typeDeflect.put(type.name(), chance); return this; }
             public Builder weight(double w) { this.weight = w; return this; }
-            public Builder deflectChance(double deflectChance) {
-                this.deflectChance = deflectChance;
-                return this;
-            }
-            public ArmorDefinitionData build() { return new ArmorDefinitionData(res, deflectChance, weight); }
+            public ArmorDefinitionData build() { return new ArmorDefinitionData(typeDeflect, weight); }
         }
     }
 
@@ -152,10 +152,6 @@ public abstract class DefinitionsProvider implements DataProvider {
 
         @FunctionalInterface
         public interface WeaponConsumer {
-            /**
-             * Registers a definition under any id. Ids that don't match an item can be applied to individual stacks
-             * through the {@code stoneycore:weapon_definition} data component.
-             */
             void accept(ResourceLocation id, WeaponDefinitionData definition);
 
             default void accept(Item item, WeaponDefinitionData definition) {
@@ -203,10 +199,11 @@ public abstract class DefinitionsProvider implements DataProvider {
             private final Map<String, Double> radius = new HashMap<>();
             private int anim = 0;
             private int[] pierceAnim = new int[0];
-            private double deflect, knockback;
+            private double knockback;
             private int parryWindow = 0;
             private boolean blockingEnabled = false;
             private int blockCooldown = 0;
+            private final Map<String, Double> deflect = new HashMap<>();
 
             public static MeleeBuilder create() { return new MeleeBuilder(); }
             public MeleeBuilder slashingDamage(float... values) {
@@ -237,13 +234,16 @@ public abstract class DefinitionsProvider implements DataProvider {
             }
             public void radius(int level, double blocks) { radius.put("level_" + level, blocks);}
             public MeleeBuilder knockback(double k) { this.knockback = k; return this; }
-            public MeleeBuilder deflect(double d) { this.deflect = d; return this; }
             public MeleeBuilder anim(int i) { this.anim = i; return this; }
             public MeleeBuilder pierceAnim(int... i) { this.pierceAnim = i; return this; }
             public MeleeBuilder parryWindow(int ticks) { this.parryWindow = ticks; return this; }
             public MeleeBuilder blockingEnabled(boolean enabled) { this.blockingEnabled = enabled; return this; }
             public MeleeBuilder blockCooldown(int ticks) { this.blockCooldown = ticks; return this; }
-            public WeaponDefinitionData.MeleeData build() { return new WeaponDefinitionData.MeleeData(damage, radius, pierceAnim, anim, deflect, knockback, parryWindow, blockingEnabled, blockCooldown); }
+            public MeleeBuilder deflect(SCDamageType type, double chance) { this.deflect.put(type.name(), chance); return this; }
+            public MeleeBuilder slashingDeflect(double chance) { return deflect(SCDamageType.SLASHING, chance); }
+            public MeleeBuilder bludgeoningDeflect(double chance) { return deflect(SCDamageType.BLUDGEONING, chance); }
+            public MeleeBuilder piercingDeflect(double chance) { return deflect(SCDamageType.PIERCING, chance); }
+            public WeaponDefinitionData.MeleeData build() { return new WeaponDefinitionData.MeleeData(damage, radius, pierceAnim, anim, knockback, parryWindow, blockingEnabled, blockCooldown, deflect); }
         }
 
         public static class RangedBuilder {

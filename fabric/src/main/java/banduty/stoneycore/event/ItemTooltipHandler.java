@@ -12,18 +12,18 @@ import banduty.stoneycore.data.SCTags;
 import banduty.stoneycore.definitions.ArmorAttachmentDefinitionsStorage;
 import banduty.stoneycore.definitions.ArmorDefinitionsStorage;
 import banduty.stoneycore.definitions.WeaponDefinitionsStorage;
-import banduty.stoneycore.combat.weapon.SCArmorUtil;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Holder;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -36,26 +36,29 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
     public void getTooltip(ItemStack stack, Item.TooltipContext tooltipContext, TooltipFlag tooltipType, List<Component> lines) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
-        Component deflectName = Component.translatable(SCAttributes.DEFLECT_CHANCE.value().getDescriptionId());
+        for (SCDamageType damageType : SCDamageType.values()) {
+            Holder<Attribute> deflectAttribute = SCAttributes.deflectChance(damageType);
+            Component deflectName = Component.translatable(deflectAttribute.value().getDescriptionId());
 
-        for (int i = 0; i < lines.size(); i++) {
-            if (!(lines.get(i).getContents() instanceof TranslatableContents tc)) continue;
-            if (!tc.getKey().startsWith("attribute.modifier.")) continue;
-            if (tc.getArgs().length < 2 || !(tc.getArgs()[1] instanceof Component attrName)) continue;
-            if (!attrName.getString().equals(deflectName.getString())) continue;
+            for (int i = 0; i < lines.size(); i++) {
+                if (!(lines.get(i).getContents() instanceof TranslatableContents tc)) continue;
+                if (!tc.getKey().startsWith("attribute.modifier.")) continue;
+                if (tc.getArgs().length < 2 || !(tc.getArgs()[1] instanceof Component attrName)) continue;
+                if (!attrName.getString().equals(deflectName.getString())) continue;
 
-            double deflect = 0;
-            for (ItemAttributeModifiers.Entry entry : stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers()) {
-                if (entry.attribute().equals(SCAttributes.DEFLECT_CHANCE)
-                        && entry.modifier().operation() == AttributeModifier.Operation.ADD_VALUE) {
-                    deflect += entry.modifier().amount();
+                double deflect = 0;
+                for (ItemAttributeModifiers.Entry entry : stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers()) {
+                    if (entry.attribute().equals(deflectAttribute)
+                            && entry.modifier().operation() == AttributeModifier.Operation.ADD_VALUE) {
+                        deflect += entry.modifier().amount();
+                    }
                 }
+                if (deflect != 0) {
+                    lines.set(i, Component.translatable("component.tooltip.stoneycore.deflect." + damageType.name().toLowerCase(),
+                            formatValue(deflect * 100, false)).withStyle(ChatFormatting.BLUE));
+                }
+                break;
             }
-            if (deflect != 0) {
-                lines.set(i, Component.translatable("component.tooltip.stoneycore.deflectChance",
-                        formatValue(deflect * 100, false)).withStyle(ChatFormatting.BLUE));
-            }
-            break;
         }
 
         Component attackDamage = Component.translatable("attribute.name.generic.attack_damage");
@@ -87,10 +90,10 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             if (bonusKnockback != 0) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.bonusKnockback", formatValue(bonusKnockback, true)).withStyle(ChatFormatting.AQUA));
             }
-            double deflectChance = WeaponDefinitionsStorage.getData(stack).melee().deflectChance();
-            if (deflectChance > 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", formatValue(deflectChance * 100, false)).withStyle(ChatFormatting.AQUA));
-            }
+            WeaponDefinitionsStorage.getData(stack).melee().deflectChance().forEach((type, chance) -> {
+                if (chance != 0) lines.add(Component.translatable("component.tooltip.stoneycore.deflect." + type.toLowerCase(),
+                        formatValue(chance * 100, false)).withStyle(ChatFormatting.AQUA));
+            });
         }
 
         if (WeaponDefinitionsStorage.isAmmo(stack)) {
@@ -98,19 +101,6 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             if (deflectChance != 0) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", formatValue(deflectChance * 100, false)).withStyle(ChatFormatting.AQUA));
             }
-        }
-
-        if (stack.getItem() instanceof ArmorItem armorItem && ArmorDefinitionsStorage.containsItem(armorItem)) {
-            double slashing = SCArmorUtil.getResistance(SCDamageType.SLASHING, armorItem) * 100;
-            double bludgeoning = SCArmorUtil.getResistance(SCDamageType.BLUDGEONING, armorItem) * 100;
-            double piercing = SCArmorUtil.getResistance(SCDamageType.PIERCING, armorItem) * 100;
-
-            if (slashing != 0)
-                lines.add(Component.translatable("component.tooltip.stoneycore.slashingResistance", formatValue(slashing, false)).withStyle(ChatFormatting.BLUE));
-            if (bludgeoning != 0)
-                lines.add(Component.translatable("component.tooltip.stoneycore.bludgeoningResistance", formatValue(bludgeoning, false)).withStyle(ChatFormatting.BLUE));
-            if (piercing != 0)
-                lines.add(Component.translatable("component.tooltip.stoneycore.piercingResistance", formatValue(piercing, false)).withStyle(ChatFormatting.BLUE));
         }
 
         if (ArmorDefinitionsStorage.containsItem(stack)) {
@@ -163,10 +153,10 @@ public class ItemTooltipHandler implements ItemTooltipCallback {
             if (hunger != 0) {
                 lines.add(Component.translatable("component.tooltip.stoneycore.hunger", formatValue(hunger, true)).withStyle(ChatFormatting.BLUE));
             }
-            double deflectChance = data.deflectChance();
-            if (deflectChance != 0) {
-                lines.add(Component.translatable("component.tooltip.stoneycore.deflectChance", formatValue(deflectChance * 100, false)).withStyle(ChatFormatting.BLUE));
-            }
+            data.deflectChance().forEach((type, chance) -> {
+                if (chance != 0) lines.add(Component.translatable("component.tooltip.stoneycore.deflect." + type.toLowerCase(),
+                        formatValue(chance * 100, false)).withStyle(ChatFormatting.BLUE));
+            });
         }
 
         AttachmentSlotTooltip.append(stack, lines);

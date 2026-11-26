@@ -270,4 +270,24 @@ public final class SCWeaponUtil {
 
         stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(hand));
     }
+
+    public static double weaponDeflect(ItemStack weapon, SCDamageType type, double damageDealt) {
+        if (type == null || !WeaponDefinitionsStorage.isMelee(weapon)) return 0;
+        double chance = WeaponDefinitionsStorage.getData(weapon).melee()
+                .deflectChance().getOrDefault(type.name(), 0.0);
+        double max = getMaxDamage(type, weapon);
+        if (chance == 0 || max <= 0) return 0;
+        return chance * Math.clamp(damageDealt / max, 0.0, 1.0);
+    }
+
+    public static double armorDeflect(Map<SCDamageType, Double> armorChances, SCDamageType type) {
+        if (armorChances.isEmpty()) return 0;
+        if (type != null) return armorChances.getOrDefault(type, 0.0);
+        return armorChances.values().stream().mapToDouble(Double::doubleValue).max().orElse(0);
+    }
+
+    public static double total(Map<SCDamageType, Double> armorChances, ItemStack weapon,
+                               SCDamageType type, double damageDealt) {
+        return Math.clamp(armorDeflect(armorChances, type) + weaponDeflect(weapon, type, damageDealt), 0.0, 1.0);
+    }
 }

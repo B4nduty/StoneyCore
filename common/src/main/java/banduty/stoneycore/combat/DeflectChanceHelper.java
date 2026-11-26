@@ -3,12 +3,8 @@ package banduty.stoneycore.combat;
 import banduty.stoneycore.data.SCAttributes;
 import banduty.stoneycore.data.SCTags;
 import banduty.stoneycore.mixin.AbstractArrowAccessor;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
@@ -22,7 +18,7 @@ public class DeflectChanceHelper {
     private static final Random random = new Random();
 
     public static boolean shouldDeflect(LivingEntity livingEntity) {
-        double totalDeflect = livingEntity.getAttributeValue(SCAttributes.DEFLECT_CHANCE);
+        double totalDeflect = livingEntity.getAttributeValue(SCAttributes.PIERCING_DEFLECT_CHANCE);
         return totalDeflect > random.nextDouble();
     }
 
