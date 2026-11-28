@@ -105,8 +105,8 @@ public class SCConfigs {
                 .defineInRange("parryKnockbackStrength", 0.75, 0, 99999);
 
         deflectStreakDecay = builder
-                .comment("Deflect Streak Decay | Default: 0.6")
-                .defineInRange("deflectStreakDecay", 0.6, 0, 99999);
+                .comment("Deflect Streak Decay | Default: 0.8")
+                .defineInRange("deflectStreakDecay", 0.8, 0, 99999);
 
         deflectStreakResetTicks = builder
                 .comment("Deflect Streak Reset Ticks | Default: 160")

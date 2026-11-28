@@ -39,7 +39,7 @@ public class SCConfigs implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     public double getParryKnockbackStrength = 0.75D;
     @ConfigEntry.Gui.Tooltip
-    public double getDeflectStreakDecay = 0.6D;
+    public double getDeflectStreakDecay = 0.8D;
     @ConfigEntry.Gui.Tooltip
     public int getDeflectStreakResetTicks = 8 * 20;
 
