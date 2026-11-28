@@ -66,6 +66,8 @@ public final class SCMobGearHandler {
     }
 
     private static void tryEquipArmor(Mob mob, RandomSource random, int color, float difficultyMultiplier) {
+        if (mob.isBaby()) return;
+
         if (random.nextFloat() >= BASE_ARMOR_CHANCE * difficultyMultiplier) return;
 
         for (EquipmentSlot slot : ARMOR_SLOTS) {

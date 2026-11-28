@@ -5,15 +5,13 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 
-/** The sound of a deflect: a different sound per damage type, with a randomised pitch so it never repeats exactly. */
 public final class DeflectSounds {
     private DeflectSounds() {}
 
     private record Cue(SoundEvent sound, float pitch, float variance) {}
 
-    // Placeholders from vanilla; swap in custom SoundEvents (e.g. registered in SCSounds) whenever you have them.
     private static final Cue SLASHING = new Cue(SoundEvents.ANVIL_PLACE, 1.7F, 0.25F);
-    private static final Cue BLUDGEONING = new Cue(SoundEvents.ANVIL_LAND, 0.9F, 0.2F);
+    private static final Cue BLUDGEONING = new Cue(SoundEvents.WOOL_HIT, 0.9F, 0.2F);
     private static final Cue PIERCING = new Cue(SoundEvents.CHAIN_HIT, 1.5F, 0.3F);
     private static final Cue UNKNOWN = new Cue(SoundEvents.SHIELD_BLOCK, 1.3F, 0.2F);
 
