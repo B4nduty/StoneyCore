@@ -74,7 +74,10 @@ public abstract class DefinitionsProvider implements DataProvider {
             public Builder weight(double w) { this.weight = w; return this; }
             public Builder hunger(double h) { this.hunger = h; return this; }
             public Builder deflect(double slash, double bludg, double pierce) {
-                deflect.put("SLASHING", slash); deflect.put("BLUDGEONING", bludg); deflect.put("PIERCING", pierce); return this;
+                if (slash != 0) deflect.put("SLASHING", slash);
+                if (bludg != 0) deflect.put("BLUDGEONING", bludg);
+                if (pierce != 0) deflect.put("PIERCING", pierce);
+                return this;
             }
             public Builder deflect(SCDamageType type, double chance) { deflect.put(type.name(), chance); return this; }
             public Builder attackSpeed(float f) { this.attackSpeed = f; return this; }
@@ -123,7 +126,10 @@ public abstract class DefinitionsProvider implements DataProvider {
             private double weight;
             public static Builder create() { return new Builder(); }
             public Builder deflect(double slash, double bludg, double pierce) {
-                typeDeflect.put("SLASHING", slash); typeDeflect.put("BLUDGEONING", bludg); typeDeflect.put("PIERCING", pierce); return this;
+                if (slash != 0) typeDeflect.put("SLASHING", slash);
+                if (bludg != 0) typeDeflect.put("BLUDGEONING", bludg);
+                if (pierce != 0) typeDeflect.put("PIERCING", pierce);
+                return this;
             }
             public Builder deflect(SCDamageType type, double chance) { typeDeflect.put(type.name(), chance); return this; }
             public Builder weight(double w) { this.weight = w; return this; }

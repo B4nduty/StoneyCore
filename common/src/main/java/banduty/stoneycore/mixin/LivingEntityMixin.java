@@ -1,6 +1,8 @@
 package banduty.stoneycore.mixin;
 
 import banduty.stoneycore.StoneyCore;
+import banduty.stoneycore.combat.DeflectChanceHelper;
+import banduty.stoneycore.combat.DeflectSounds;
 import banduty.stoneycore.combat.damagetype.SCDamageCalculator;
 import banduty.stoneycore.combat.damagetype.SCDamageType;
 import banduty.stoneycore.combat.damagetype.SCDamageTypeResolver;
@@ -266,10 +268,10 @@ public abstract class LivingEntityMixin extends Entity implements IEntityDataSav
         }
 
         double chance = SCWeaponUtil.total(armorChances, weapon, type, levelDamage);
-        if (chance <= 0 || victim.getRandom().nextDouble() >= chance) return false;
 
-        victim.level().playSound(null, victim.getX(), victim.getY(), victim.getZ(),
-                SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.5F);
+        if (!DeflectChanceHelper.rollWithStreak(victim, chance)) return false;
+
+        DeflectSounds.play(victim, type, 1.0F);
         return true;
     }
 

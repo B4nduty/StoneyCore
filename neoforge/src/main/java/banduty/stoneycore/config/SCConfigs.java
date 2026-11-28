@@ -25,6 +25,8 @@ public class SCConfigs {
 
     public static final ModConfigSpec.IntValue parryWindowTicks;
     public static final ModConfigSpec.DoubleValue parryKnockbackStrength;
+    public static final ModConfigSpec.DoubleValue deflectStreakDecay;
+    public static final ModConfigSpec.IntValue deflectStreakResetTicks;
 
     // Technical settings
     public static final ModConfigSpec.IntValue maxWorkPerTick;
@@ -101,6 +103,14 @@ public class SCConfigs {
         parryKnockbackStrength = builder
                 .comment("Parry Knockback Strength | Default: 0.75")
                 .defineInRange("parryKnockbackStrength", 0.75, 0, 99999);
+
+        deflectStreakDecay = builder
+                .comment("Deflect Streak Decay | Default: 0.6")
+                .defineInRange("deflectStreakDecay", 0.6, 0, 99999);
+
+        deflectStreakResetTicks = builder
+                .comment("Deflect Streak Reset Ticks | Default: 160")
+                .defineInRange("deflectStreakResetTicks", 8 * 20, 0, 99999);
 
         builder.pop();
 

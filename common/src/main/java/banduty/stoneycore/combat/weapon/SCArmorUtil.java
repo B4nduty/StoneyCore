@@ -15,4 +15,8 @@ public class SCArmorUtil {
         }
         return chances;
     }
+
+    public static double getPiercingDeflect(LivingEntity entity) {
+        return entity.getAttributeValue(SCAttributes.PIERCING_DEFLECT_CHANCE);
+    }
 }

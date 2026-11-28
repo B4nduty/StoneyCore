@@ -31,6 +31,10 @@ public interface IConfig {
         int getParryWindowTicks();
 
         double getParryKnockbackStrength();
+
+        double getDeflectStreakDecay();
+
+        int getDeflectStreakResetTicks();
     }
 
     interface VisualOptions {

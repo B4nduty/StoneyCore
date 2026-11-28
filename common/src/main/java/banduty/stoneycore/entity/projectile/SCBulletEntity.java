@@ -28,7 +28,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-public class SCBulletEntity extends AbstractArrow {
+public class SCBulletEntity extends AbstractArrow implements DamageTypedProjectile {
     private SCDamageType damageType;
     private double damage;
 
@@ -132,5 +132,10 @@ public class SCBulletEntity extends AbstractArrow {
 
     public void setDamageType(SCDamageType damageType) {
         this.damageType = damageType;
+    }
+
+    @Override
+    public SCDamageType getDamageType() {
+        return this.damageType;
     }
 }

@@ -38,6 +38,10 @@ public class SCConfigs implements ConfigData {
     public int getParryWindowTicks = 10;
     @ConfigEntry.Gui.Tooltip
     public double getParryKnockbackStrength = 0.75D;
+    @ConfigEntry.Gui.Tooltip
+    public double getDeflectStreakDecay = 0.6D;
+    @ConfigEntry.Gui.Tooltip
+    public int getDeflectStreakResetTicks = 8 * 20;
 
     @ConfigEntry.Gui.Tooltip
     public boolean getDamageIndicator = false;

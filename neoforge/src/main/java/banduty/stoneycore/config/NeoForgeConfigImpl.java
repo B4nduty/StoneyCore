@@ -78,6 +78,16 @@ public class NeoForgeConfigImpl extends ConfigImpl {
             public double getParryKnockbackStrength() {
                 return SCConfigs.parryKnockbackStrength.get();
             }
+
+            @Override
+            public double getDeflectStreakDecay() {
+                return SCConfigs.deflectStreakDecay.get();
+            }
+
+            @Override
+            public int getDeflectStreakResetTicks() {
+                return SCConfigs.deflectStreakResetTicks.get();
+            }
         };
     }
 

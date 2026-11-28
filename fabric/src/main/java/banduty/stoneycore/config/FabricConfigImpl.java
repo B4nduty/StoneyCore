@@ -80,6 +80,16 @@ public class FabricConfigImpl extends ConfigImpl {
             public double getParryKnockbackStrength() {
                 return StoneyCoreFabric.CONFIG.getParryKnockbackStrength;
             }
+
+            @Override
+            public double getDeflectStreakDecay()  {
+                return StoneyCoreFabric.CONFIG.getDeflectStreakDecay;
+            }
+
+            @Override
+            public int getDeflectStreakResetTicks()  {
+                return StoneyCoreFabric.CONFIG.getDeflectStreakResetTicks;
+            }
         };
     }
 

@@ -31,7 +31,7 @@ import java.util.UUID;
  * Entity hits are fully handled here (damage is applied once per entity, then the ball ricochets);
  * block hits go through {@link #onSiegeImpact}, which is the only thing subclasses implement.
  */
-public abstract class AbstractSiegeProjectile extends AbstractArrow {
+public abstract class AbstractSiegeProjectile extends AbstractArrow implements DamageTypedProjectile {
 
     private SCDamageType damageType = SCDamageType.BLUDGEONING;
     private final Set<Integer> damagedEntities = new HashSet<>();
@@ -44,6 +44,11 @@ public abstract class AbstractSiegeProjectile extends AbstractArrow {
 
     public void setDamageType(SCDamageType damageType) {
         this.damageType = damageType;
+    }
+
+    @Override
+    public SCDamageType getDamageType() {
+        return this.damageType;
     }
 
     /** What happens when this projectile hits a block fired by a siege engine (craters, fire, clouds...). */
@@ -108,8 +113,6 @@ public abstract class AbstractSiegeProjectile extends AbstractArrow {
         if (getOwner() instanceof AbstractSiegeEntity) onSiegeImpact(serverLevel, hit);
         discard();
     }
-
-    // ---- boilerplate
 
     @Override
     protected ItemStack getPickupItem() {

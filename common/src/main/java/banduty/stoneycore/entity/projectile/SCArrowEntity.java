@@ -16,7 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class SCArrowEntity extends AbstractArrow {
+public abstract class SCArrowEntity extends AbstractArrow implements DamageTypedProjectile {
 
     private SCDamageType damageType;
 
@@ -36,6 +36,7 @@ public abstract class SCArrowEntity extends AbstractArrow {
         this.damageType = damageType;
     }
 
+    @Override
     public SCDamageType getDamageType() {
         return this.damageType;
     }
