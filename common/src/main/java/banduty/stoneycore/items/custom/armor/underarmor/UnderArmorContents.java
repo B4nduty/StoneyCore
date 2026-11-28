@@ -12,7 +12,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 
@@ -83,11 +82,11 @@ public record UnderArmorContents(List<ItemStack> attachments) {
             this.attachments = new ArrayList<>(sanitize(contents.attachments()));
         }
 
-        public ItemStack tryInsert(ItemStack incoming, Player player, ItemStack underArmorStack) {
+        public ItemStack tryInsert(ItemStack incoming, LivingEntity livingEntity, ItemStack underArmorStack) {
             if (incoming.isEmpty() || !(incoming.getItem() instanceof ArmorAttachment armorAttachment))
                 return null;
 
-            if (!armorAttachment.canEquip(underArmorStack, player, incoming)) return null;
+            if (!armorAttachment.canEquip(underArmorStack, livingEntity, incoming)) return null;
 
             if (!(underArmorStack.getItem() instanceof ArmorItem armorItem)) return null;
             ArmorItem.Type armorType = armorItem.getType();
@@ -114,7 +113,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
 
             String incomingSlot = incomingSlotDef.slot();
 
-            if (conflictsWithWornAttachments(incoming, incomingSlot, armorType, player)) return null;
+            if (conflictsWithWornAttachments(incoming, incomingSlot, armorType, livingEntity)) return null;
 
             ItemStack singleItem = incoming.copyWithCount(1);
 
@@ -194,7 +193,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
         }
 
         private boolean conflictsWithWornAttachments(ItemStack incoming, String incomingSlot,
-                                                     ArmorItem.Type targetType, Player player) {
+                                                     ArmorItem.Type targetType, LivingEntity livingEntity) {
             List<String> incomingIncompatible = ArmorAttachmentDefinitionsStorage.getData(incoming).incompatibleSlots();
 
             for (ArmorItem.Type type : ArmorItem.Type.values()) {
@@ -204,7 +203,7 @@ public record UnderArmorContents(List<ItemStack> attachments) {
                 if (type == targetType) {
                     worn = this.attachments;
                 } else {
-                    ItemStack piece = SCInventoryItemFinder.findUnderArmor(player, type);
+                    ItemStack piece = SCInventoryItemFinder.findUnderArmor(livingEntity, type);
                     if (piece.isEmpty()) continue;
                     worn = piece.getOrDefault(SCDataComponents.UNDER_ARMOR_CONTENTS.get(), UnderArmorContents.EMPTY)
                             .attachments();

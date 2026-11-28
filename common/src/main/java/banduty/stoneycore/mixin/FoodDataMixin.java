@@ -1,5 +1,6 @@
 package banduty.stoneycore.mixin;
 
+import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.data.SCAttributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
@@ -22,6 +23,7 @@ public abstract class FoodDataMixin {
     @Inject(method = "addExhaustion", at = @At("HEAD"), cancellable = true)
     public void stoneycore$onAddExhaustion(float exhaustion, CallbackInfo ci) {
         if (player == null) return;
+        if (StoneyCore.getConfig().combatOptions().getRealisticCombat()) return;
 
         double totalHungerAddition = 1;
 

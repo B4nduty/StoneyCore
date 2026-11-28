@@ -1,5 +1,6 @@
 package banduty.stoneycore.mobgear;
 
+import banduty.stoneycore.StoneyCore;
 import banduty.stoneycore.data.SCDataComponents;
 import banduty.stoneycore.definitions.ArmorAttachmentSlotDefinitionData;
 import banduty.stoneycore.definitions.ArmorAttachmentSlotDefinitionsStorage;
@@ -27,8 +28,6 @@ public final class SCMobGearHandler {
     private static final float BASE_WEAPON_CHANCE = 2.0F;
 
     private static final float BASE_ARMOR_CHANCE = 2.0F;
-
-    private static final float PER_SLOT_CHANCE = 1.0F;
 
     private static final float ATTACHMENT_CHANCE = 0.8F;
 
@@ -73,7 +72,6 @@ public final class SCMobGearHandler {
         for (EquipmentSlot slot : ARMOR_SLOTS) {
             if (!SCMobGearRegistry.hasArmor(slot, mob)) continue;
             if (!mob.getItemBySlot(slot).isEmpty()) continue;
-            if (random.nextFloat() >= PER_SLOT_CHANCE) continue;
 
             Item armorPiece = SCMobGearRegistry.getRandomArmor(slot, mob, random);
             if (armorPiece == null) continue;
@@ -128,12 +126,12 @@ public final class SCMobGearHandler {
                 try {
                     ItemStack chosenStack = new ItemStack(chosen);
                     tryDye(chosenStack, random, color);
-                    if (mutable.tryInsert(chosenStack, null, stack) != null) {
+                    if (mutable.tryInsert(chosenStack, mob, stack) != null) {
                         changed = true;
                         changedThisPass = true;
                     }
-                } catch (NullPointerException ignored) {
-                    // Skip this one attachment; everything else already rolled still applies.
+                } catch (RuntimeException e) {
+                    StoneyCore.LOG.warn("Could not add attachment {} to a mob's {}", chosen, armorType, e);
                 }
             }
 

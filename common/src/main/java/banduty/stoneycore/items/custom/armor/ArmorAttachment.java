@@ -10,6 +10,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -29,7 +30,7 @@ public interface ArmorAttachment {
         return false;
     }
 
-    default boolean canEquip(ItemStack underArmorStack, Player player, ItemStack attachmentStack) {
+    default boolean canEquip(ItemStack underArmorStack, LivingEntity livingEntity, ItemStack attachmentStack) {
         return true;
     }
 
